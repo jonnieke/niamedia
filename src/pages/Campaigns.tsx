@@ -163,7 +163,7 @@ export default function Campaigns() {
           </div>
           <p className="text-white font-semibold mb-1">No campaigns yet</p>
           <p className="text-sm text-gray-500 mb-6 max-w-xs">
-            Generate your first AI-powered campaign â€” video scripts, captions, WhatsApp copy, and more.
+            Generate your first AI-powered campaign — video scripts, captions, WhatsApp copy, and more.
           </p>
           <Link to="/new-campaign" className="btn-primary text-sm px-6 py-2.5 gap-1.5">
             <Zap size={14} /> Create First Campaign

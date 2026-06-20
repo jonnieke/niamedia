@@ -66,7 +66,7 @@ function CertificateModal({ project, onClose }: { project: Project; onClose: () 
             </div>
             <p className="text-xs font-bold tracking-[0.3em] text-gray-500 uppercase mb-1">Certificate of</p>
             <h2 className="text-2xl font-black text-white mb-1 tracking-tight">AI Origin</h2>
-            <p className="text-xs text-gray-500 mb-6">Issued by Nia Media Ltd â€” Nairobi, Kenya</p>
+            <p className="text-xs text-gray-500 mb-6">Issued by Nia Media Ltd — Nairobi, Kenya</p>
 
             <div className="rounded-xl border border-gray-200 bg-white/3 p-5 text-left space-y-3 mb-6">
               {[
@@ -299,7 +299,7 @@ export default function ProjectReview() {
               {(isVideo || isAudio) && project.deliverable_url && (
                 <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <Lock size={12} /> Preview watermark active â€” accept to download full quality
+                    <Lock size={12} /> Preview watermark active — accept to download full quality
                   </div>
                   <button onClick={() => setWatermark(!watermark)}
                     className="text-xs text-purple-400 hover:text-purple-300 transition-colors">
@@ -314,12 +314,12 @@ export default function ProjectReview() {
               <div className="rounded-xl border border-gray-200 bg-white/2 p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <User size={13} className="text-purple-400" />
-                  <p className="text-xs font-semibold text-gray-800">Creator Notes â€” Iteration {latestRevision.iteration}</p>
+                  <p className="text-xs font-semibold text-gray-800">Creator Notes — Iteration {latestRevision.iteration}</p>
                   <span className="text-xs text-gray-500 ml-auto">
                     {new Date(latestRevision.requested_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 leading-relaxed">{latestRevision.notes ?? 'â€”'}</p>
+                <p className="text-sm text-gray-600 leading-relaxed">{latestRevision.notes ?? '—'}</p>
               </div>
             )}
 
@@ -351,7 +351,7 @@ export default function ProjectReview() {
                 {project.rights ?? 'All rights transfer to you upon acceptance and payment confirmation.'}
               </p>
               <div className="mt-3 space-y-1">
-                {['AI-generated â€” zero 3rd-party IP', 'Certificate of AI Origin on delivery', 'Exclusive rights to your account'].map(r => (
+                {['AI-generated — zero 3rd-party IP', 'Certificate of AI Origin on delivery', 'Exclusive rights to your account'].map(r => (
                   <div key={r} className="flex items-center gap-1.5 text-xs text-green-400">
                     <Check size={10} /> {r}
                   </div>
@@ -395,8 +395,8 @@ export default function ProjectReview() {
                     </label>
                     <textarea className="input w-full h-28 resize-none text-sm" rows={4}
                       placeholder={action === 'revision'
-                        ? 'Be specific â€” e.g. "Make the colour palette darker and more premium, increase CTA font size..."'
-                        : 'Optional â€” help us improve...'}
+                        ? 'Be specific — e.g. "Make the colour palette darker and more premium, increase CTA font size..."'
+                        : 'Optional — help us improve...'}
                       value={feedback} onChange={e => setFeedback(e.target.value)} />
                   </div>
                 )}

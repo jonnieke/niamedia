@@ -149,7 +149,7 @@ function AudioOrderRow({ order, onStatusChange }: {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-gray-800 truncate">{order.title}</p>
           <p className="text-xs text-gray-500">
-            {order.profiles?.name ?? 'â€”'} Â· {order.package}
+            {order.profiles?.name ?? '—'} Â· {order.package}
             {order.rush && <span className="ml-2 text-amber-400 font-semibold">âš¡ Rush</span>}
           </p>
         </div>
@@ -172,11 +172,11 @@ function AudioOrderRow({ order, onStatusChange }: {
               { label: 'Business', value: brief.business },
               { label: 'Voice', value: brief.voice },
               { label: 'Mood', value: brief.mood },
-              { label: 'Platforms', value: Array.isArray(brief.platforms) ? (brief.platforms as string[]).join(', ') : 'â€”' },
+              { label: 'Platforms', value: Array.isArray(brief.platforms) ? (brief.platforms as string[]).join(', ') : '—' },
             ].map(({ label, value }) => (
               <div key={label}>
                 <p className="text-gray-500 mb-0.5">{label}</p>
-                <p className="text-white font-medium">{value || 'â€”'}</p>
+                <p className="text-white font-medium">{value || '—'}</p>
               </div>
             ))}
             {brief.message && (
@@ -263,7 +263,7 @@ function LeadRow({ lead, onStatusChange }: {
           <Icon size={14} className="text-amber-400" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-800">{lead.name} â€” {lead.business}</p>
+          <p className="text-sm font-semibold text-gray-800">{lead.name} — {lead.business}</p>
           <p className="text-xs text-gray-500 capitalize">{lead.service.replace('-', ' ')} Â· {lead.industry}</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
@@ -358,7 +358,7 @@ function ProjectRow({ project, onStatusChange }: {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-gray-800 truncate">{project.title}</p>
-          <p className="text-xs text-gray-500">{project.profiles?.name ?? 'â€”'} Â· {project.package}</p>
+          <p className="text-xs text-gray-500">{project.profiles?.name ?? '—'} Â· {project.package}</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <StatusBadge status={project.status} />
@@ -483,7 +483,7 @@ export default function Admin() {
             <p className="text-sm text-amber-300 font-semibold">
               {actionNeeded} item{actionNeeded !== 1 ? 's' : ''} need your attention
               <span className="font-normal text-amber-400/70 ml-1.5">
-                â€” {pendingAudio > 0 ? `${pendingAudio} audio order${pendingAudio !== 1 ? 's' : ''} queued` : ''}
+                — {pendingAudio > 0 ? `${pendingAudio} audio order${pendingAudio !== 1 ? 's' : ''} queued` : ''}
                 {pendingAudio > 0 && pendingProjects > 0 ? ', ' : ''}
                 {pendingProjects > 0 ? `${pendingProjects} project${pendingProjects !== 1 ? 's' : ''} pending` : ''}
               </span>
@@ -561,7 +561,7 @@ export default function Admin() {
                       <div key={o.id} className="flex items-center justify-between px-5 py-3 gap-3">
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold text-gray-800 truncate">{o.title}</p>
-                          <p className="text-[11px] text-gray-500">{o.profiles?.name ?? 'â€”'}</p>
+                          <p className="text-[11px] text-gray-500">{o.profiles?.name ?? '—'}</p>
                         </div>
                         <StatusBadge status={o.status} />
                       </div>
@@ -722,7 +722,7 @@ export default function Admin() {
                       <Zap size={14} className={t.amount > 0 ? 'text-emerald-400' : 'text-purple-400'} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-800">{t.profiles?.name ?? 'â€”'}</p>
+                      <p className="text-sm font-semibold text-gray-800">{t.profiles?.name ?? '—'}</p>
                       <p className="text-xs text-gray-500 truncate">{t.description}</p>
                     </div>
                     <div className="text-right shrink-0">

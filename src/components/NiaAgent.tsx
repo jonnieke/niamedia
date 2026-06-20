@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
-/* â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Types ─────────────────────────────────────────────────── */
 interface Message {
   id: string
   role: 'user' | 'assistant'
@@ -27,9 +27,9 @@ interface SuggestedAction {
 type AgentState = 'idle' | 'listening' | 'thinking' | 'speaking'
 
 const GUEST_LIMIT = 30
-const OPENING_LINE = "Hey! I'm Nia, your AI marketing advisor. Tell me â€” what kind of business are you running?"
+const OPENING_LINE = "Hey! I'm Nia, your AI marketing advisor. Tell me — what kind of business are you running?"
 
-/* â”€â”€â”€ Waveform animation (CSS injected once) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Waveform animation (CSS injected once) ─────────────────── */
 const WAVE_STYLE = `
 @keyframes niaBeat {
   0%, 100% { transform: scaleY(0.15); }
@@ -49,7 +49,7 @@ const WAVE_STYLE = `
 }
 `
 
-/* â”€â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Sub-components ─────────────────────────────────────────── */
 function Waveform({ active }: { active: boolean }) {
   const bars = [0.4, 0.7, 1, 0.8, 0.6, 0.9, 0.5, 0.75, 0.45, 0.85, 0.6, 0.7, 0.4]
   return (
@@ -144,7 +144,7 @@ function Avatar({ state }: { state: AgentState }) {
   )
 }
 
-/* â”€â”€â”€ Main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Main component ─────────────────────────────────────────── */
 interface NiaAgentProps {
   onClose: () => void
 }
@@ -254,7 +254,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
     }
   }, [])
 
-  /* â”€â”€ Audio playback â”€â”€ */
+  /* ── Audio playback ── */
   const playAudio = useCallback(async (base64: string) => {
     setAgentState('speaking')
     try {
@@ -283,7 +283,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
     }
   }, [])
 
-  /* â”€â”€ Send message to agent â”€â”€ */
+  /* ── Send message to agent ── */
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim()
     if (!trimmed || agentState === 'thinking' || agentState === 'speaking' || guestExpired) return
@@ -345,7 +345,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
     }
   }, [messages, agentState, guestExpired, isGuest, guestStarted, voiceMode, speechSupported, brandContext, playAudio])
 
-  /* â”€â”€ Voice recognition â”€â”€ */
+  /* ── Voice recognition ── */
   const startListening = useCallback(() => {
     if (agentState !== 'idle' || guestExpired) return
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -408,7 +408,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
     setAgentState('idle')
   }
 
-  /* â”€â”€ Build campaign URL from suggested action â”€â”€ */
+  /* ── Build campaign URL from suggested action ── */
   const buildCampaignUrl = (action: SuggestedAction) => {
     const params = new URLSearchParams({
       business_name: action.brief.business || '',
@@ -606,7 +606,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
               <div className="p-5 text-center">
                 <p className="text-sm font-bold text-gray-900 mb-1">Your 30-second preview is up</p>
                 <p className="text-xs text-gray-500 mb-4">
-                  Sign up free to continue chatting with Nia â€” no credit card, no commitment.
+                  Sign up free to continue chatting with Nia — no credit card, no commitment.
                   Your conversation so far is saved.
                 </p>
                 <Link to="/register" onClick={onClose}
@@ -690,7 +690,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
   )
 }
 
-/* â”€â”€â”€ Floating trigger button (export separately for use in pages) â”€â”€ */
+/* ─── Floating trigger button (export separately for use in pages) ── */
 export function NiaAgentButton() {
   const [open, setOpen] = useState(false)
   return (

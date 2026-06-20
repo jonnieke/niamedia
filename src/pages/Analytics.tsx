@@ -144,7 +144,7 @@ export default function Analytics() {
               { label: 'Campaigns Created', value: stats?.campaigns ?? 0, icon: Zap, color: '#f59e0b', note: 'All time' },
               { label: 'Audio Orders', value: stats?.audioOrders ?? 0, icon: Music, color: '#10b981', note: 'Jingles, VO & Radio' },
               { label: 'Video Projects', value: stats?.videoProjects ?? 0, icon: Film, color: '#8b5cf6', note: 'Commercials & films' },
-              { label: 'Acceptance Rate', value: acceptanceRate !== null ? `${acceptanceRate}%` : 'â€”', icon: Target, color: '#3b82f6', note: 'Projects approved' },
+              { label: 'Acceptance Rate', value: acceptanceRate !== null ? `${acceptanceRate}%` : '—', icon: Target, color: '#3b82f6', note: 'Projects approved' },
             ].map(({ label, value, icon: Icon, color, note }) => (
               <div key={label} className="card-glow p-5">
                 <div className="flex items-start justify-between mb-3">
@@ -170,7 +170,7 @@ export default function Analytics() {
                 <TrendingUp size={12} /> +{pct}% vs previous period
               </div>
             </div>
-            <p className="text-[11px] text-gray-600 mb-3">Illustrative â€” connect social accounts to see live data</p>
+            <p className="text-[11px] text-gray-600 mb-3">Illustrative — connect social accounts to see live data</p>
             <ReachChart data={data.slice(-Math.min(data.length, 30))} />
             <div className="mt-2 flex justify-between text-[10px] text-gray-600">
               <span>{period === '7d' ? '7 days ago' : period === '30d' ? '30 days ago' : '90 days ago'}</span>
@@ -270,7 +270,7 @@ export default function Analytics() {
           ) : [
             { icon: Film,   label: 'Video Projects',  value: stats?.videoProjects ?? 0,  sub: 'Commercials & brand films', color: '#8b5cf6' },
             { icon: Music,  label: 'Audio Orders',     value: stats?.audioOrders ?? 0,    sub: 'Jingles, VO & Radio',       color: '#f59e0b' },
-            { icon: Target, label: 'Acceptance Rate',  value: acceptanceRate !== null ? `${acceptanceRate}%` : 'â€”', sub: 'Projects accepted', color: '#10b981' },
+            { icon: Target, label: 'Acceptance Rate',  value: acceptanceRate !== null ? `${acceptanceRate}%` : '—', sub: 'Projects accepted', color: '#10b981' },
           ].map(({ icon: Icon, label, value, sub, color }) => (
             <div key={label} className="card-glow p-5 flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"

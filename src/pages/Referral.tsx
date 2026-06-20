@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase'
 const TIERS = [
   { refs: 1, reward: 'KES 500 credit',    desc: 'Applied to your next invoice',       color: '#8b5cf6', icon: Zap },
   { refs: 3, reward: 'KES 2,000 credit',  desc: 'For 3 successful referrals',          color: '#3b82f6', icon: Star },
-  { refs: 5, reward: '1 Month Free',       desc: 'Growth Pack subscription â€” free',    color: '#10b981', icon: Gift },
+  { refs: 5, reward: '1 Month Free',       desc: 'Growth Pack subscription — free',    color: '#10b981', icon: Gift },
 ]
 
 interface Referral {
@@ -72,7 +72,7 @@ export default function Referral() {
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
             { label: 'Friends Referred', value: referrals.length, sub: `${activeRefs} active`, color: '#8b5cf6' },
-            { label: 'Credits Earned', value: totalCredit > 0 ? `KES ${totalCredit.toLocaleString()}` : 'â€”', sub: 'Applied to invoices', color: '#10b981' },
+            { label: 'Credits Earned', value: totalCredit > 0 ? `KES ${totalCredit.toLocaleString()}` : '—', sub: 'Applied to invoices', color: '#10b981' },
             { label: 'Next Reward', value: nextTier.reward, sub: `${refsToNext} more referral${refsToNext !== 1 ? 's' : ''}`, color: '#f59e0b' },
           ].map(({ label, value, sub, color }) => (
             <div key={label} className="card-glow p-5">
@@ -159,7 +159,7 @@ export default function Referral() {
                       {achieved && <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-green-500/20 text-green-400">Unlocked</span>}
                       {isCurrent && <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-400">Next goal</span>}
                     </div>
-                    <p className="text-xs text-gray-500">{tier.refs} successful referral{tier.refs !== 1 ? 's' : ''} â€” {tier.desc}</p>
+                    <p className="text-xs text-gray-500">{tier.refs} successful referral{tier.refs !== 1 ? 's' : ''} — {tier.desc}</p>
                   </div>
                   {isCurrent && (
                     <div className="w-24 shrink-0">
@@ -175,7 +175,7 @@ export default function Referral() {
             })}
           </div>
 
-          <p className="text-xs text-gray-600 mt-4">Credits are applied automatically to your next invoice. Rewards stack â€” reach all 3 tiers to earn everything.</p>
+          <p className="text-xs text-gray-600 mt-4">Credits are applied automatically to your next invoice. Rewards stack — reach all 3 tiers to earn everything.</p>
         </div>
 
         {/* Referral table */}

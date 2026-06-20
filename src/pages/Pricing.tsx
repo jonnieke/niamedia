@@ -10,12 +10,12 @@ const CHECK = ({ purple }: { purple?: boolean }) => (
 )
 
 const faqs = [
-  { q: 'Do I own the content?', a: 'Yes â€” 100%. All content (video, audio, copy) is AI-generated and copyright-free. Full rights transfer to you upon payment. A Certificate of AI Origin is issued for every video and audio project.' },
-  { q: 'Can I use the content on any platform?', a: 'Absolutely. Radio, TV, Instagram, TikTok, YouTube, Facebook, WhatsApp, billboards, in-store screens â€” your content, your rules.' },
-  { q: 'How long does production take?', a: 'Campaign copy: instant. Video projects: 3â€“5 business days per iteration. Audio (jingles, VO, radio spots): 3â€“5 business days. Rush delivery is available at a premium.' },
+  { q: 'Do I own the content?', a: 'Yes — 100%. All content (video, audio, copy) is AI-generated and copyright-free. Full rights transfer to you upon payment. A Certificate of AI Origin is issued for every video and audio project.' },
+  { q: 'Can I use the content on any platform?', a: 'Absolutely. Radio, TV, Instagram, TikTok, YouTube, Facebook, WhatsApp, billboards, in-store screens — your content, your rules.' },
+  { q: 'How long does production take?', a: 'Campaign copy: instant. Video projects: 3–5 business days per iteration. Audio (jingles, VO, radio spots): 3–5 business days. Rush delivery is available at a premium.' },
   { q: 'What are the revision limits?', a: 'Starter Pack video projects include 2 iterations. Growth and Business packs include unlimited revisions within the project scope. Audio orders include 2 revision rounds.' },
-  { q: 'Can I order audio without a video package?', a: 'Yes â€” Audio Studio is completely standalone with separate billing. You can order a jingle, VO, or radio spot without any other package.' },
-  { q: 'Is there a subscription?', a: 'Campaign copy packs can be monthly (Growth/Business). Video and audio projects are one-time per order â€” you pay per project, no recurring fees unless you choose monthly campaign content.' },
+  { q: 'Can I order audio without a video package?', a: 'Yes — Audio Studio is completely standalone with separate billing. You can order a jingle, VO, or radio spot without any other package.' },
+  { q: 'Is there a subscription?', a: 'Campaign copy packs can be monthly (Growth/Business). Video and audio projects are one-time per order — you pay per project, no recurring fees unless you choose monthly campaign content.' },
 ]
 
 const campaignPlans = [
@@ -41,7 +41,7 @@ const videoPlans = [
     label: 'Starter Film', price: 5000, period: 'one-time', popular: false,
     features: ['15s or 30s commercial', 'AI-generated footage', '1 voice style', '2 revision iterations', 'Cinematic or 2D style', 'Certificate of AI Origin'],
     cta: 'Order Starter Film',
-    tag: '15â€“30s',
+    tag: '15–30s',
   },
   {
     label: 'Growth Film', price: 30000, period: 'one-time', popular: true,
@@ -51,28 +51,28 @@ const videoPlans = [
   },
   {
     label: 'Business Film', price: 60000, period: 'one-time', popular: false,
-    features: ['2â€“5 min documentary or brand film', 'Full pre-production workflow', 'Avatar & narration selection', '2 revision iterations', 'Afro-fusion or international score', 'Certificate of AI Origin', 'Rush delivery included'],
+    features: ['2–5 min documentary or brand film', 'Full pre-production workflow', 'Avatar & narration selection', '2 revision iterations', 'Afro-fusion or international score', 'Certificate of AI Origin', 'Rush delivery included'],
     cta: 'Request Business Film',
-    tag: '2â€“5 min',
+    tag: '2–5 min',
   },
 ]
 
 const audioPlans = [
   {
     label: 'Jingle', prices: [{ label: '15s', price: 2000 }, { label: '30s', price: 3500 }, { label: '60s', price: 5500 }],
-    features: ['Brand melody + tagline', 'Custom voice selection', 'Kenyan / Swahili / English mix', '2 revision rounds', 'AI-generated â€” zero copyright', 'Certificate of AI Origin'],
+    features: ['Brand melody + tagline', 'Custom voice selection', 'Kenyan / Swahili / English mix', '2 revision rounds', 'AI-generated — zero copyright', 'Certificate of AI Origin'],
     cta: 'Order Jingle',
     color: '#8b5cf6',
   },
   {
     label: 'Voice Over', prices: [{ label: '30s', price: 1500 }, { label: '60s', price: 2500 }, { label: '2 min', price: 4000 }],
-    features: ['Professional AI voice read', '6 accent / gender options', 'Script editing included', '2 revision rounds', 'AI-generated â€” zero copyright', 'Certificate of AI Origin'],
+    features: ['Professional AI voice read', '6 accent / gender options', 'Script editing included', '2 revision rounds', 'AI-generated — zero copyright', 'Certificate of AI Origin'],
     cta: 'Order Voice Over',
     color: '#3b82f6',
   },
   {
     label: 'Radio Spot', prices: [{ label: '15s', price: 3500 }, { label: '30s', price: 5500 }, { label: '60s', price: 8000 }],
-    features: ['Full produced radio commercial', 'SFX + music bed + VO', 'Broadcast-ready master', '2 revision rounds', 'AI-generated â€” zero copyright', 'Certificate of AI Origin'],
+    features: ['Full produced radio commercial', 'SFX + music bed + VO', 'Broadcast-ready master', '2 revision rounds', 'AI-generated — zero copyright', 'Certificate of AI Origin'],
     cta: 'Order Radio Spot',
     color: '#10b981',
   },
@@ -193,7 +193,7 @@ export default function Pricing() {
           <div className="text-center max-w-2xl mx-auto mb-12">
             <span className="section-tag mb-3 inline-block">Pricing</span>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">One platform. Three services.</h1>
-            <p className="text-base text-gray-500">Campaign copy, video production, and audio â€” each with its own pricing. Pay for what you need.</p>
+            <p className="text-base text-gray-500">Campaign copy, video production, and audio — each with its own pricing. Pay for what you need.</p>
           </div>
 
           {/* Service switcher */}
@@ -232,12 +232,12 @@ export default function Pricing() {
             <>
               <div className="mb-6 p-4 rounded-xl border border-purple-500/20 bg-purple-500/8 flex items-center gap-3 max-w-2xl mx-auto">
                 <Shield size={16} className="text-purple-400 shrink-0" />
-                <p className="text-sm text-purple-300">Every video is AI-generated â€” zero third-party copyright. Certificate of AI Origin issued on delivery. Full rights yours.</p>
+                <p className="text-sm text-purple-300">Every video is AI-generated — zero third-party copyright. Certificate of AI Origin issued on delivery. Full rights yours.</p>
               </div>
               <div className="grid md:grid-cols-3 gap-6 mb-8">
                 {videoPlans.map(p => <VideoCard key={p.label} plan={p} />)}
               </div>
-              <p className="text-center text-xs text-gray-600">Human creative oversight on every project. 3â€“5 business days delivery per iteration.</p>
+              <p className="text-center text-xs text-gray-600">Human creative oversight on every project. 3–5 business days delivery per iteration.</p>
             </>
           )}
 
@@ -245,14 +245,14 @@ export default function Pricing() {
             <>
               <div className="mb-6 p-4 rounded-xl border border-green-500/20 bg-green-500/5 flex items-center gap-3 max-w-2xl mx-auto">
                 <Shield size={16} className="text-green-400 shrink-0" />
-                <p className="text-sm text-green-300">All audio is AI-generated â€” broadcast-ready, radio-approved, zero copyright. Separate billing â€” order audio standalone or with any package.</p>
+                <p className="text-sm text-green-300">All audio is AI-generated — broadcast-ready, radio-approved, zero copyright. Separate billing — order audio standalone or with any package.</p>
               </div>
               <div className="grid md:grid-cols-3 gap-6 mb-4">
                 {audioPlans.map(p => <AudioRow key={p.label} plan={p} />)}
               </div>
               <div className="mt-6 p-5 rounded-2xl border border-gray-200 bg-white/2 max-w-2xl mx-auto text-center">
                 <p className="text-sm font-bold text-gray-900 mb-1">Need a full radio package?</p>
-                <p className="text-xs text-gray-500 mb-4">3 Ã— 30s spots for A/B campaign rotation â€” KES 14,000</p>
+                <p className="text-xs text-gray-500 mb-4">3 Ã— 30s spots for A/B campaign rotation — KES 14,000</p>
                 <Link to="/audio-studio" className="btn-primary text-sm px-6 py-2.5 inline-flex">Order Radio Package</Link>
               </div>
             </>
@@ -297,7 +297,7 @@ export default function Pricing() {
           <div className="mt-16 text-center p-10 rounded-3xl border border-gray-200"
             style={{ background: 'linear-gradient(145deg, rgba(139,92,246,0.08), rgba(59,130,246,0.05))' }}>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Ready to create something great?</h2>
-            <p className="text-gray-500 mb-6 text-sm">Start free with Concept Studio â€” spin your idea into a professional script. No card required.</p>
+            <p className="text-gray-500 mb-6 text-sm">Start free with Concept Studio — spin your idea into a professional script. No card required.</p>
             <div className="flex gap-3 justify-center flex-wrap">
               <Link to="/register" className="btn-primary px-8 py-3">Get Started Free</Link>
               <Link to="/package-request" className="btn-secondary px-8 py-3">Talk to Us</Link>

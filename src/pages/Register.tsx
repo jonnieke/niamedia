@@ -61,7 +61,7 @@ export default function Register() {
         body: { user_id: userId, email, name },
       })
     } catch {
-      // Non-fatal â€” don't block signup on email failure
+      // Non-fatal — don't block signup on email failure
     }
   }
 

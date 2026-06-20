@@ -71,7 +71,7 @@ function BrandPreview({ kit, logo }: { kit: Kit; logo: string | null }) {
             <p className="text-xs text-gray-600 mb-3 leading-relaxed">
               {kit.business_description
                 ? kit.business_description.slice(0, 90) + (kit.business_description.length > 90 ? '...' : '')
-                : 'Your brand story goes here â€” vivid, compelling, and made for your audience.'}
+                : 'Your brand story goes here — vivid, compelling, and made for your audience.'}
             </p>
             <div className="flex items-center justify-between">
               <div className="px-4 py-2 rounded-lg text-xs font-bold text-gray-900"
@@ -95,7 +95,7 @@ function BrandPreview({ kit, logo }: { kit: Kit; logo: string | null }) {
           {[kit.primary_color, kit.secondary_color, kit.accent_color].map(c => (
             <div key={c} className="w-6 h-6 rounded-lg border border-gray-200" style={{ background: c }} title={c} />
           ))}
-          <p className="text-[10px] text-gray-600 ml-auto" style={{ fontFamily: font }}>Aa â€” {FONTS.find(f => f.id === kit.font)?.label}</p>
+          <p className="text-[10px] text-gray-600 ml-auto" style={{ fontFamily: font }}>Aa — {FONTS.find(f => f.id === kit.font)?.label}</p>
         </div>
       </div>
     </div>
@@ -310,7 +310,7 @@ export default function BrandKit() {
               </div>
               <div>
                 <label className="label">Target Customer</label>
-                <input className="input" placeholder="e.g. Young professionals aged 25â€“40 in Nairobi" value={kit.target_customer} onChange={set('target_customer')} />
+                <input className="input" placeholder="e.g. Young professionals aged 25–40 in Nairobi" value={kit.target_customer} onChange={set('target_customer')} />
               </div>
               <div>
                 <label className="label">Business Description</label>

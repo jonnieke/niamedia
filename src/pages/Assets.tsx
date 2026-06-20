@@ -130,7 +130,7 @@ function PreviewModal({ asset, onClose }: { asset: Asset; onClose: () => void })
             <div>
               <p className="text-white font-semibold mb-1">{asset.title}</p>
               <p className="text-sm text-gray-500">{asset.package}</p>
-              <p className="text-xs text-gray-600 mt-2">Audio â€” download to listen</p>
+              <p className="text-xs text-gray-600 mt-2">Audio — download to listen</p>
             </div>
           </div>
         ) : (
@@ -203,7 +203,7 @@ export default function Assets() {
           <div>
             <span className="section-tag mb-2 inline-block">Asset Library</span>
             <h1 className="text-2xl font-bold text-gray-900">Your Delivered Assets</h1>
-            <p className="text-gray-500 text-sm mt-0.5">All content you own â€” download anytime, use anywhere.</p>
+            <p className="text-gray-500 text-sm mt-0.5">All content you own — download anytime, use anywhere.</p>
           </div>
           <button onClick={() => navigate('/concept-studio')} className="btn-primary text-sm px-4 py-2">
             + New Project

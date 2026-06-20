@@ -226,7 +226,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
               {/* Credits badge */}
               <button onClick={() => setShowBuyCredits(true)}
-                title="Campaign credits â€” click to buy more"
+                title="Campaign credits — click to buy more"
                 className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
                   credits === 0
                     ? 'border-red-200 bg-red-50 text-red-600'

@@ -13,7 +13,7 @@ export default function Logo({ size = 'md', className = '' }: LogoProps) {
 
   return (
     <div className={`flex items-center ${s.gap} ${className}`}>
-      {/* Logo mark â€” gradient N with pixel dots */}
+      {/* Logo mark — gradient N with pixel dots */}
       <svg width={s.icon} height={s.icon} viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="brand-grad" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">

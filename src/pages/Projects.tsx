@@ -101,7 +101,7 @@ function ProjectCard({ project, onClick }: { project: UnifiedProject; onClick: (
         )}
         {project.status === 'ready-for-review' && (
           <div className="mt-3 flex items-center gap-1.5 text-purple-400 text-xs font-semibold">
-            <Eye size={12} /> Action required â€” review now
+            <Eye size={12} /> Action required — review now
             <ChevronRight size={12} className="ml-auto" />
           </div>
         )}
@@ -207,7 +207,7 @@ export default function Projects() {
               <p className="text-white font-semibold text-sm">
                 {actionable.length} project{actionable.length > 1 ? 's' : ''} ready for your review
               </p>
-              <p className="text-purple-300 text-xs">Accept, request changes, or decline â€” your feedback drives the next step.</p>
+              <p className="text-purple-300 text-xs">Accept, request changes, or decline — your feedback drives the next step.</p>
             </div>
             <button onClick={() => navigate(`/projects/${actionable[0].id}/review`)}
               className="btn-primary text-xs px-4 py-2 shrink-0">

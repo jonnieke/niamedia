@@ -14,10 +14,10 @@ const PLANS = [
 ]
 
 const BILLING_HISTORY = [
-  { id: 'inv-001', date: '2026-06-01', desc: 'Growth Pack â€” June 2026', amount: 30000, status: 'Paid' },
-  { id: 'inv-002', date: '2026-06-12', desc: 'Savanna Grill â€” Jingle 30s', amount: 5500, status: 'Paid' },
-  { id: 'inv-003', date: '2026-06-14', desc: 'Ruaka Heights â€” Video Commercial (Growth Film)', amount: 30000, status: 'Paid' },
-  { id: 'inv-004', date: '2026-05-01', desc: 'Growth Pack â€” May 2026', amount: 30000, status: 'Paid' },
+  { id: 'inv-001', date: '2026-06-01', desc: 'Growth Pack — June 2026', amount: 30000, status: 'Paid' },
+  { id: 'inv-002', date: '2026-06-12', desc: 'Savanna Grill — Jingle 30s', amount: 5500, status: 'Paid' },
+  { id: 'inv-003', date: '2026-06-14', desc: 'Ruaka Heights — Video Commercial (Growth Film)', amount: 30000, status: 'Paid' },
+  { id: 'inv-004', date: '2026-05-01', desc: 'Growth Pack — May 2026', amount: 30000, status: 'Paid' },
 ]
 
 function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
@@ -198,7 +198,7 @@ export default function Settings() {
                 <div>
                   <label className="label">Email Address</label>
                   <input className="input opacity-50 cursor-not-allowed" value={user?.email || ''} disabled />
-                  <p className="text-xs text-gray-600 mt-1">Email changes require verification â€” contact support.</p>
+                  <p className="text-xs text-gray-600 mt-1">Email changes require verification — contact support.</p>
                 </div>
               </div>
             </Card>
@@ -223,7 +223,7 @@ export default function Settings() {
             <div className="p-4 rounded-xl border border-purple-500/25 bg-purple-500/8 flex items-center gap-3 mb-2">
               <Zap size={15} className="text-purple-400 shrink-0" />
               <p className="text-sm text-purple-300">
-                You're on the <strong>Growth Pack</strong> â€” KES 30,000/month. Renews 1 Jul 2026.
+                You're on the <strong>Growth Pack</strong> — KES 30,000/month. Renews 1 Jul 2026.
               </p>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
@@ -323,7 +323,7 @@ export default function Settings() {
         {tab === 'notifications' && (
           <Card title="Notification Preferences" icon={Bell}>
             <div className="space-y-5">
-              <p className="text-xs text-gray-500 -mt-2 mb-4">Choose what you get notified about â€” in-app and by email.</p>
+              <p className="text-xs text-gray-500 -mt-2 mb-4">Choose what you get notified about — in-app and by email.</p>
               {[
                 { key: 'projectReady' as const, label: 'Project ready for review', desc: 'When a creative uploads your video or audio deliverable' },
                 { key: 'revisionDone' as const, label: 'Revision completed', desc: 'When iteration 2 is uploaded after your feedback' },
@@ -381,7 +381,7 @@ export default function Settings() {
             <Card title="Active Sessions" icon={Shield}>
               <div className="space-y-3">
                 {[
-                  { device: 'Chrome on Windows 11', location: 'Nairobi, Kenya', time: 'Now â€” Current session', current: true },
+                  { device: 'Chrome on Windows 11', location: 'Nairobi, Kenya', time: 'Now — Current session', current: true },
                   { device: 'Safari on iPhone 15', location: 'Nairobi, Kenya', time: '2 days ago', current: false },
                 ].map(s => (
                   <div key={s.device} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 bg-white/2">

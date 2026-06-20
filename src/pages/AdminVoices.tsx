@@ -192,8 +192,8 @@ export default function AdminVoices() {
           </div>
           <div className="mt-4 p-4 rounded-xl border border-blue-500/20 bg-blue-500/8 text-xs text-blue-300 space-y-1">
             <p className="font-semibold text-blue-200">How it works</p>
-            <p>1. Upload 1â€“5 high-quality audio samples per voice (MP3/WAV, 30sâ€“3 min each, clear speech, no background noise).</p>
-            <p>2. Click <strong>Clone Voice</strong> â€” ElevenLabs creates a voice model from your samples (takes ~30 seconds).</p>
+            <p>1. Upload 1–5 high-quality audio samples per voice (MP3/WAV, 30s–3 min each, clear speech, no background noise).</p>
+            <p>2. Click <strong>Clone Voice</strong> — ElevenLabs creates a voice model from your samples (takes ~30 seconds).</p>
             <p>3. Once <span className="text-green-400 font-semibold">Live Clone</span> appears, all Audio Studio orders and previews use your authentic African voice automatically.</p>
           </div>
         </div>
@@ -310,7 +310,7 @@ export default function AdminVoices() {
                           <p className="text-[10px] text-gray-600 mt-2 font-mono">ID: {profile.elevenlabs_voice_id}</p>
                         )}
                         {profile.status === 'failed' && (
-                          <p className="text-[10px] text-red-400 mt-2">Clone failed â€” check samples quality and try again.</p>
+                          <p className="text-[10px] text-red-400 mt-2">Clone failed — check samples quality and try again.</p>
                         )}
                       </div>
                     </div>

@@ -8,7 +8,7 @@ import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
-// â”€â”€â”€ Step definitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Step definitions ─────────────────────────────────────────────
 const STEPS = [
   { id: 1, label: 'Theme Colors',   icon: Palette },
   { id: 2, label: 'Mood & Tone',    icon: Heart },
@@ -19,7 +19,7 @@ const STEPS = [
   { id: 7, label: 'Review & Submit',icon: Star },
 ]
 
-// â”€â”€â”€ Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Data ─────────────────────────────────────────────────────────
 const COLOR_PALETTES = [
   { id: 'golden',    name: 'Golden Hour',    colors: ['#1a0e00','#3d2100','#c97d30','#f5c86e','#fff9f0'], desc: 'Warm, premium, trustworthy' },
   { id: 'ocean',     name: 'Ocean Deep',     colors: ['#020e1a','#05254d','#1a6fa6','#38bdf8','#e0f7ff'], desc: 'Corporate, calm, credible' },
@@ -42,10 +42,10 @@ const MOODS = [
   { id: 'emotional',    label: 'Emotional',    emoji: 'ðŸ’›', desc: 'Touches the heart. Stays in memory.' },
 ]
 
-const AGE_GROUPS = ['13â€“17', '18â€“24', '25â€“34', '35â€“44', '45â€“54', '55+']
+const AGE_GROUPS = ['13–17', '18–24', '25–34', '35–44', '45–54', '55+']
 const LOCATIONS   = ['Nairobi CBD', 'Westlands / Parklands', 'Nairobi Suburbs', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Pan-Kenya', 'East Africa']
 const INTERESTS   = ['Business & Finance', 'Real Estate', 'Family & Home', 'Tech & Innovation', 'Health & Fitness', 'Food & Lifestyle', 'Fashion & Beauty', 'Education & Career', 'Travel & Tourism', 'Entertainment']
-const INCOMES     = ['Budget (Under KES 30K/mo)', 'Middle (KES 30â€“80K/mo)', 'Upper-middle (KES 80â€“200K/mo)', 'Affluent (KES 200K+/mo)']
+const INCOMES     = ['Budget (Under KES 30K/mo)', 'Middle (KES 30–80K/mo)', 'Upper-middle (KES 80–200K/mo)', 'Affluent (KES 200K+/mo)']
 
 const VOICE_GENDERS   = [{ id: 'female', label: 'Female' }, { id: 'male', label: 'Male' }, { id: 'both', label: 'Mix of both' }, { id: 'none', label: 'No narrator' }]
 const VOICE_ACCENTS   = ['Kenyan English', 'Nigerian English', 'South African English', 'British English', 'American English', 'Kiswahili', 'Sheng / Code-switch']
@@ -62,14 +62,14 @@ const VISUAL_STYLES = [
 ]
 
 const AVATAR_STYLES = [
-  { id: 'none',        label: 'No Avatar',           emoji: 'ðŸš«', desc: 'Voiceover only â€” no on-screen presenter.' },
+  { id: 'none',        label: 'No Avatar',           emoji: 'ðŸš«', desc: 'Voiceover only — no on-screen presenter.' },
   { id: 'realistic',   label: 'Realistic Human',     emoji: 'ðŸ‘¤', desc: 'Photo-real AI-generated presenter. Looks like a real person.' },
   { id: 'illustrated', label: 'Illustrated Character',emoji: 'ðŸŽ¨', desc: 'Branded illustrated character. Custom to your brand.' },
   { id: '3d',          label: '3D Character',        emoji: 'ðŸ§Š', desc: 'Full 3D animated character. Cinematic and modern.' },
-  { id: 'abstract',    label: 'Abstract / Logo Anim',emoji: 'ðŸ’«', desc: 'No human form â€” animated brand identity or abstract shapes.' },
+  { id: 'abstract',    label: 'Abstract / Logo Anim',emoji: 'ðŸ’«', desc: 'No human form — animated brand identity or abstract shapes.' },
 ]
 
-// â”€â”€â”€ State shape â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── State shape ──────────────────────────────────────────────────
 interface PreProductionState {
   palette: string
   moods: string[]
@@ -91,7 +91,7 @@ const initial: PreProductionState = {
   visualStyle: '', avatarStyle: '',
 }
 
-// â”€â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Sub-components ────────────────────────────────────────────────
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button onClick={onClick}
@@ -115,7 +115,7 @@ function StepCard({ title, desc, children }: { title: string; desc: string; chil
   )
 }
 
-// â”€â”€â”€ Step components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Step components ───────────────────────────────────────────────
 function Step1({ state, setState }: { state: PreProductionState; setState: (s: Partial<PreProductionState>) => void }) {
   return (
     <StepCard title="Theme Colors" desc="Choose a colour palette that defines the visual world of your production.">
@@ -294,16 +294,16 @@ function Step7({ state, conceptTitle }: { state: PreProductionState; conceptTitl
 
   const rows = [
     { label: 'Concept', value: conceptTitle || 'Untitled Concept' },
-    { label: 'Colour Palette', value: palette?.name || 'â€”' },
-    { label: 'Mood', value: selectedMoods.map(m => m.label).join(', ') || 'â€”' },
-    { label: 'Ages', value: state.ages.join(', ') || 'â€”' },
-    { label: 'Locations', value: state.locations.join(', ') || 'â€”' },
-    { label: 'Interests', value: state.interests.join(', ') || 'â€”' },
-    { label: 'Income', value: state.income || 'â€”' },
-    { label: 'Narrator', value: [VOICE_GENDERS.find(g => g.id === state.voiceGender)?.label, state.voiceAccent, state.voiceTone].filter(Boolean).join(' Â· ') || 'â€”' },
-    { label: 'Music', value: state.musicGenre || 'â€”' },
-    { label: 'Visual Style', value: visualStyle?.label || 'â€”' },
-    { label: 'Avatar Style', value: avatarStyle?.label || 'â€”' },
+    { label: 'Colour Palette', value: palette?.name || '—' },
+    { label: 'Mood', value: selectedMoods.map(m => m.label).join(', ') || '—' },
+    { label: 'Ages', value: state.ages.join(', ') || '—' },
+    { label: 'Locations', value: state.locations.join(', ') || '—' },
+    { label: 'Interests', value: state.interests.join(', ') || '—' },
+    { label: 'Income', value: state.income || '—' },
+    { label: 'Narrator', value: [VOICE_GENDERS.find(g => g.id === state.voiceGender)?.label, state.voiceAccent, state.voiceTone].filter(Boolean).join(' Â· ') || '—' },
+    { label: 'Music', value: state.musicGenre || '—' },
+    { label: 'Visual Style', value: visualStyle?.label || '—' },
+    { label: 'Avatar Style', value: avatarStyle?.label || '—' },
   ]
 
   return (
@@ -340,7 +340,7 @@ function Step7({ state, conceptTitle }: { state: PreProductionState; conceptTitl
   )
 }
 
-// â”€â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Main page ─────────────────────────────────────────────────────
 export default function PreProduction() {
   const { user } = useAuth()
   const [params] = useSearchParams()
@@ -412,7 +412,7 @@ export default function PreProduction() {
           <span className="text-white">Pre-Production</span>
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Pre-Production Setup</h1>
-        <p className="text-sm text-gray-500 mt-1">"{conceptTitle}" â€” define the look, feel, and voice of your production.</p>
+        <p className="text-sm text-gray-500 mt-1">"{conceptTitle}" — define the look, feel, and voice of your production.</p>
       </div>
 
       <div className="grid lg:grid-cols-4 gap-6">

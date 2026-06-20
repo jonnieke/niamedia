@@ -111,7 +111,7 @@ export default function NewCampaign() {
       navigate('/campaign-results', { state: { form, content: data } })
     } catch (err: unknown) {
       clearInterval(stepInterval)
-      setError(err instanceof Error ? err.message : 'Generation failed â€” please try again.')
+      setError(err instanceof Error ? err.message : 'Generation failed — please try again.')
       setLoading(false)
     }
   }
@@ -179,7 +179,7 @@ export default function NewCampaign() {
               <SelectWrapper label="Tone" field="tone" options={tones} />
               <div>
                 <label className="label">Target audience</label>
-                <input className="input" placeholder="e.g. Young professionals aged 25â€“40" value={form.target_audience} onChange={set('target_audience')} required />
+                <input className="input" placeholder="e.g. Young professionals aged 25–40" value={form.target_audience} onChange={set('target_audience')} required />
               </div>
               <div>
                 <label className="label">Location</label>
@@ -233,7 +233,7 @@ export default function NewCampaign() {
               ))}
             </div>
             {language === 'sw' && (
-              <p className="text-xs text-gray-500 mt-2">All campaign copy will be generated in Kiswahili â€” captions, WhatsApp messages, scripts, and poster copy.</p>
+              <p className="text-xs text-gray-500 mt-2">All campaign copy will be generated in Kiswahili — captions, WhatsApp messages, scripts, and poster copy.</p>
             )}
           </div>
 

@@ -35,7 +35,7 @@ export default function Privacy() {
               <li>Process payments and send order confirmations.</li>
               <li>Send transactional emails (order updates, delivery notifications).</li>
               <li>Improve our AI models and platform features using anonymised usage data.</li>
-              <li>Send occasional product updates â€” you can unsubscribe at any time.</li>
+              <li>Send occasional product updates — you can unsubscribe at any time.</li>
             </ul>
           </section>
 
@@ -43,17 +43,17 @@ export default function Privacy() {
             <h2 className="text-base font-semibold text-gray-800 mb-3">4. Data Sharing</h2>
             <p className="mb-2">We do not sell your personal data. We share information only with:</p>
             <ul className="space-y-2 list-disc list-inside">
-              <li><strong className="text-gray-600">PesaPal</strong> â€” to process payments securely.</li>
-              <li><strong className="text-gray-600">ElevenLabs</strong> â€” to generate voice audio for your orders (script text only).</li>
-              <li><strong className="text-gray-600">Anthropic</strong> â€” to generate AI copy and scripts (brief content only).</li>
-              <li><strong className="text-gray-600">Supabase</strong> â€” our database and file storage provider, hosted in the EU.</li>
+              <li><strong className="text-gray-600">PesaPal</strong> — to process payments securely.</li>
+              <li><strong className="text-gray-600">ElevenLabs</strong> — to generate voice audio for your orders (script text only).</li>
+              <li><strong className="text-gray-600">Anthropic</strong> — to generate AI copy and scripts (brief content only).</li>
+              <li><strong className="text-gray-600">Supabase</strong> — our database and file storage provider, hosted in the EU.</li>
             </ul>
             <p className="mt-2">All third-party providers are bound by data processing agreements and handle data only to fulfil your order.</p>
           </section>
 
           <section>
             <h2 className="text-base font-semibold text-gray-800 mb-3">5. Data Retention</h2>
-            <p>We retain account and order data for 3 years after your last activity, or as required by Kenyan tax law. You may request earlier deletion by contacting us â€” see Section 8.</p>
+            <p>We retain account and order data for 3 years after your last activity, or as required by Kenyan tax law. You may request earlier deletion by contacting us — see Section 8.</p>
           </section>
 
           <section>

@@ -17,7 +17,7 @@ interface AudioPackage {
 
 const PACKAGES: Record<AudioType, AudioPackage[]> = {
   jingle: [
-    { id: 'j15', label: 'Jingle 15s', price: 2000, duration: '15 seconds', description: 'Brand melody, hook, tagline â€” perfect for social ads' },
+    { id: 'j15', label: 'Jingle 15s', price: 2000, duration: '15 seconds', description: 'Brand melody, hook, tagline — perfect for social ads' },
     { id: 'j30', label: 'Jingle 30s', price: 3500, duration: '30 seconds', description: 'Full brand song with verse, hook, and sign-off', popular: true },
     { id: 'j60', label: 'Jingle 60s', price: 5500, duration: '60 seconds', description: 'Extended radio-ready brand anthem with full arrangement' },
   ],
@@ -49,44 +49,44 @@ const VOICE_GROUPS: { label: string; emoji: string; voices: Voice[] }[] = [
     label: 'Kids',
     emoji: 'ðŸ§’',
     voices: [
-      { id: 'af-child-f', label: 'Girl â€” Bright & Clear', accent: 'AF', gender: 'F', ageGroup: 'Kids', ageTag: '6â€“12' },
-      { id: 'af-child-m', label: 'Boy â€” Playful', accent: 'AF', gender: 'M', ageGroup: 'Kids', ageTag: '6â€“12' },
+      { id: 'af-child-f', label: 'Girl — Bright & Clear', accent: 'AF', gender: 'F', ageGroup: 'Kids', ageTag: '6–12' },
+      { id: 'af-child-m', label: 'Boy — Playful', accent: 'AF', gender: 'M', ageGroup: 'Kids', ageTag: '6–12' },
     ],
   },
   {
     label: 'Teens',
     emoji: 'ðŸŽ¤',
     voices: [
-      { id: 'af-teen-f', label: 'Teen Girl â€” Energetic', accent: 'AF', gender: 'F', ageGroup: 'Teens', ageTag: '13â€“19' },
-      { id: 'af-teen-m', label: 'Teen Boy â€” Confident', accent: 'AF', gender: 'M', ageGroup: 'Teens', ageTag: '13â€“19' },
+      { id: 'af-teen-f', label: 'Teen Girl — Energetic', accent: 'AF', gender: 'F', ageGroup: 'Teens', ageTag: '13–19' },
+      { id: 'af-teen-m', label: 'Teen Boy — Confident', accent: 'AF', gender: 'M', ageGroup: 'Teens', ageTag: '13–19' },
     ],
   },
   {
     label: 'Young Adults',
     emoji: 'ðŸ‘¤',
     voices: [
-      { id: 'km-f', label: 'Kenyan English â€” Female', accent: 'KE', gender: 'F', ageGroup: 'Young Adult', ageTag: '20â€“35' },
-      { id: 'km-m', label: 'Kenyan English â€” Male', accent: 'KE', gender: 'M', ageGroup: 'Young Adult', ageTag: '20â€“35' },
-      { id: 'sw-f', label: 'Kiswahili â€” Female', accent: 'SW', gender: 'F', ageGroup: 'Young Adult', ageTag: '20â€“35' },
-      { id: 'sw-m', label: 'Kiswahili â€” Male', accent: 'SW', gender: 'M', ageGroup: 'Young Adult', ageTag: '20â€“35' },
-      { id: 'ng-f', label: 'Nigerian English â€” Female', accent: 'NG', gender: 'F', ageGroup: 'Young Adult', ageTag: '20â€“35' },
-      { id: 'sa-m', label: 'South African â€” Male', accent: 'SA', gender: 'M', ageGroup: 'Young Adult', ageTag: '20â€“35' },
+      { id: 'km-f', label: 'Kenyan English — Female', accent: 'KE', gender: 'F', ageGroup: 'Young Adult', ageTag: '20–35' },
+      { id: 'km-m', label: 'Kenyan English — Male', accent: 'KE', gender: 'M', ageGroup: 'Young Adult', ageTag: '20–35' },
+      { id: 'sw-f', label: 'Kiswahili — Female', accent: 'SW', gender: 'F', ageGroup: 'Young Adult', ageTag: '20–35' },
+      { id: 'sw-m', label: 'Kiswahili — Male', accent: 'SW', gender: 'M', ageGroup: 'Young Adult', ageTag: '20–35' },
+      { id: 'ng-f', label: 'Nigerian English — Female', accent: 'NG', gender: 'F', ageGroup: 'Young Adult', ageTag: '20–35' },
+      { id: 'sa-m', label: 'South African — Male', accent: 'SA', gender: 'M', ageGroup: 'Young Adult', ageTag: '20–35' },
     ],
   },
   {
     label: 'Mature',
     emoji: 'ðŸ§‘',
     voices: [
-      { id: 'af-mature-f', label: 'Mature â€” Female', accent: 'AF', gender: 'F', ageGroup: 'Mature', ageTag: '35â€“55' },
-      { id: 'af-mature-m', label: 'Mature â€” Male', accent: 'AF', gender: 'M', ageGroup: 'Mature', ageTag: '35â€“55' },
+      { id: 'af-mature-f', label: 'Mature — Female', accent: 'AF', gender: 'F', ageGroup: 'Mature', ageTag: '35–55' },
+      { id: 'af-mature-m', label: 'Mature — Male', accent: 'AF', gender: 'M', ageGroup: 'Mature', ageTag: '35–55' },
     ],
   },
   {
     label: 'Elder',
     emoji: 'ðŸ‘´',
     voices: [
-      { id: 'af-elder-f', label: 'Elder â€” Female', accent: 'AF', gender: 'F', ageGroup: 'Elder', ageTag: '55+' },
-      { id: 'af-elder-m', label: 'Elder â€” Male', accent: 'AF', gender: 'M', ageGroup: 'Elder', ageTag: '55+' },
+      { id: 'af-elder-f', label: 'Elder — Female', accent: 'AF', gender: 'F', ageGroup: 'Elder', ageTag: '55+' },
+      { id: 'af-elder-m', label: 'Elder — Male', accent: 'AF', gender: 'M', ageGroup: 'Elder', ageTag: '55+' },
     ],
   },
 ]
@@ -168,7 +168,7 @@ export default function AudioStudio() {
       void audio.play()
       setPreviewPlaying(voiceId)
     } catch {
-      // Button just stops spinning â€” preview is non-critical
+      // Button just stops spinning — preview is non-critical
     } finally {
       setPreviewLoading(null)
     }
@@ -271,7 +271,7 @@ export default function AudioStudio() {
             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-500/15 text-green-400">SEPARATE BILLING</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">Jingles, Voice Overs & Radio Spots</h1>
-          <p className="text-gray-500 mt-1">Professionally produced audio content â€” AI-generated, 100% copyright-free, all rights yours.</p>
+          <p className="text-gray-500 mt-1">Professionally produced audio content — AI-generated, 100% copyright-free, all rights yours.</p>
         </div>
 
         {/* Step indicator */}
@@ -374,7 +374,7 @@ export default function AudioStudio() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Target Audience</label>
-                <input className="input w-full" placeholder="e.g. Women 25â€“40, small business owners" value={brief.targetAudience}
+                <input className="input w-full" placeholder="e.g. Women 25–40, small business owners" value={brief.targetAudience}
                   onChange={e => setBrief(b => ({ ...b, targetAudience: e.target.value }))} />
               </div>
             </div>
@@ -483,7 +483,7 @@ export default function AudioStudio() {
                       <p className="text-sm text-gray-200 leading-relaxed">{cleanScript}</p>
                     </div>
                     <p className="text-[10px] text-gray-600 mt-3">
-                      AI-generated suggestion â€” our creative team will refine the final production to match your brief.
+                      AI-generated suggestion — our creative team will refine the final production to match your brief.
                     </p>
                   </div>
                 </div>
@@ -534,7 +534,7 @@ export default function AudioStudio() {
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <p className="text-sm font-semibold text-gray-800">Hear a free sample first</p>
-                    <p className="text-xs text-gray-500 mt-0.5">We'll read your message in your chosen voice â€” free, no commitment.</p>
+                    <p className="text-xs text-gray-500 mt-0.5">We'll read your message in your chosen voice — free, no commitment.</p>
                   </div>
                   <button
                     type="button"
@@ -584,7 +584,7 @@ export default function AudioStudio() {
                 <div>
                   <p className="text-xs text-gray-500 mb-0.5">Package</p>
                   <p className="text-white font-semibold">{selectedPkg.label}</p>
-                  <p className="text-xs text-gray-500">{selectedPkg.duration} â€” {typeInfo[audioType].label}</p>
+                  <p className="text-xs text-gray-500">{selectedPkg.duration} — {typeInfo[audioType].label}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-gray-900">KES {selectedPkg.price.toLocaleString()}</p>
@@ -607,7 +607,7 @@ export default function AudioStudio() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 mb-0.5">Platforms</p>
-                  <p className="text-white">{brief.platforms.join(', ') || 'â€”'}</p>
+                  <p className="text-white">{brief.platforms.join(', ') || '—'}</p>
                 </div>
                 <div className="col-span-2">
                   <p className="text-xs text-gray-500 mb-0.5">Key Message</p>
@@ -617,7 +617,7 @@ export default function AudioStudio() {
 
               <div className="border-t border-gray-200 pt-4 space-y-2">
                 <div className="flex items-center gap-2 text-xs text-green-400">
-                  <Check size={12} /> AI-generated â€” zero copyright issues
+                  <Check size={12} /> AI-generated — zero copyright issues
                 </div>
                 <div className="flex items-center gap-2 text-xs text-green-400">
                   <Check size={12} /> All rights transfer to you on delivery
@@ -638,7 +638,7 @@ export default function AudioStudio() {
                 </div>
                 <div>
                   <p className={`text-sm font-semibold ${rush ? 'text-amber-300' : 'text-white'}`}>24hr Express Delivery</p>
-                  <p className="text-xs text-gray-500">Delivered within 24 hours â€” guaranteed or full refund</p>
+                  <p className="text-xs text-gray-500">Delivered within 24 hours — guaranteed or full refund</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 shrink-0">
@@ -670,7 +670,7 @@ export default function AudioStudio() {
                 <p className="text-purple-400">
                   {rush
                     ? 'Production begins immediately after payment. Express delivery: within 24 hours, guaranteed.'
-                    : 'Production begins immediately after payment confirmation. Delivery within 3â€“5 business days.'}
+                    : 'Production begins immediately after payment confirmation. Delivery within 3–5 business days.'}
                 </p>
               </div>
             </div>
@@ -688,7 +688,7 @@ export default function AudioStudio() {
                       .from('audio_orders')
                       .insert({
                         user_id: user?.id,
-                        title: `${brief.business} â€” ${selectedPkg.label}`,
+                        title: `${brief.business} — ${selectedPkg.label}`,
                         audio_type: audioType,
                         package: selectedPkg.label,
                         status: 'queued',
@@ -706,7 +706,7 @@ export default function AudioStudio() {
                       body: {
                         orderId: order.id,
                         amountKes: priceKes,
-                        description: `${brief.business} â€” ${selectedPkg.label}`,
+                        description: `${brief.business} — ${selectedPkg.label}`,
                         callbackUrl: `${window.location.origin}/payment/callback`,
                         email: user?.email ?? '',
                         firstName: user?.name?.split(' ')[0] ?? '',
