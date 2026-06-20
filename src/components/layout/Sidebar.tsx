@@ -2,10 +2,14 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Plus, FolderOpen, Layers, Package,
   Palette, Settings, ShieldCheck, LogOut, BarChart2, Zap, Sparkles,
-  Film, Music, Shield, Gift,
+  Film, Music, Shield, Gift, X,
 } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
 import Logo from '../ui/Logo'
+
+interface SidebarProps {
+  onClose?: () => void
+}
 
 const navItems = [
   { to: '/dashboard',       icon: LayoutDashboard, label: 'Dashboard' },
@@ -24,23 +28,30 @@ const navItems = [
   { to: '/settings',        icon: Settings,        label: 'Settings' },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }: SidebarProps) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 
   return (
-    <aside className="fixed top-0 left-0 h-screen w-60 flex flex-col z-30 border-r border-white/6"
-      style={{ background: 'rgba(10,10,20,0.95)' }}>
+    <aside className="h-screen w-60 flex flex-col border-r border-white/6"
+      style={{ background: 'rgba(10,10,20,0.98)' }}>
 
-      {/* Logo */}
-      <div className="h-16 flex items-center px-5 border-b border-white/6">
+      {/* Logo row — close btn on mobile */}
+      <div className="h-16 flex items-center justify-between px-5 border-b border-white/6 shrink-0">
         <Logo size="sm" />
+        {onClose && (
+          <button onClick={onClose}
+            className="sm:hidden w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/8 transition-colors">
+            <X size={16} />
+          </button>
+        )}
       </div>
 
       {/* New Campaign CTA */}
-      <div className="px-3 pt-4 pb-2">
+      <div className="px-3 pt-4 pb-2 shrink-0">
         <NavLink
           to="/new-campaign"
+          onClick={onClose}
           className="flex items-center gap-2.5 w-full px-3.5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
           style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', boxShadow: '0 0 16px rgba(139,92,246,0.3)' }}
         >
@@ -60,6 +71,7 @@ export default function Sidebar() {
             <NavLink
               key={to}
               to={to}
+              onClick={onClose}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   isActive
@@ -83,6 +95,7 @@ export default function Sidebar() {
             <div className="my-2 border-t border-white/5" />
             <NavLink
               to="/admin"
+              onClick={onClose}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   isActive
@@ -99,7 +112,7 @@ export default function Sidebar() {
       </nav>
 
       {/* User */}
-      <div className="p-3 border-t border-white/6">
+      <div className="p-3 border-t border-white/6 shrink-0">
         <div className="flex items-center gap-3 px-3 py-2 mb-1 rounded-xl hover:bg-white/5 cursor-default">
           <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
             style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)' }}>

@@ -1,5 +1,5 @@
 import { ReactNode, useState, useRef, useEffect } from 'react'
-import { Bell, Plus, CheckCheck, Eye, CheckCircle, Info, AlertCircle, Zap } from 'lucide-react'
+import { Bell, Plus, CheckCheck, Eye, CheckCircle, Info, AlertCircle, Zap, Menu } from 'lucide-react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import { useAuth } from '../../lib/AuthContext'
@@ -67,7 +67,7 @@ function NotifPanel({ userId, onClose, onRead }: { userId: string; onClose: () =
   }
 
   return (
-    <div className="absolute top-full right-0 mt-2 w-80 rounded-2xl border border-white/10 shadow-2xl z-50 overflow-hidden"
+    <div className="absolute top-full right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-white/10 shadow-2xl z-50 overflow-hidden"
       style={{ background: '#12121e' }}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/8">
         <div className="flex items-center gap-2">
@@ -84,7 +84,7 @@ function NotifPanel({ userId, onClose, onRead }: { userId: string; onClose: () =
         )}
       </div>
 
-      <div className="max-h-80 overflow-y-auto divide-y divide-white/5">
+      <div className="max-h-72 overflow-y-auto divide-y divide-white/5">
         {notifs.length === 0 ? (
           <div className="py-10 text-center text-xs text-gray-600">No notifications yet</div>
         ) : notifs.map(n => {
@@ -120,11 +120,15 @@ function NotifPanel({ userId, onClose, onRead }: { userId: string; onClose: () =
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const location = useLocation()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showNotifs, setShowNotifs] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [credits, setCredits] = useState<number | null>(null)
   const [showBuyCredits, setShowBuyCredits] = useState(false)
   const bellRef = useRef<HTMLDivElement>(null)
+
+  // Close sidebar on route change (mobile nav)
+  useEffect(() => { setSidebarOpen(false) }, [location.pathname])
 
   // Refresh credits when returning from PesaPal payment
   useEffect(() => {
@@ -137,11 +141,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!user) return
-    // Fetch credits
     supabase.from('profiles').select('credits').eq('id', user.id).single()
       .then(({ data }) => { if (data) setCredits(data.credits) })
 
-    // Fetch initial unread count
     supabase
       .from('notifications')
       .select('id', { count: 'exact', head: true })
@@ -149,7 +151,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       .eq('read', false)
       .then(({ count }) => { if (count != null) setUnreadCount(count) })
 
-    // Real-time: increment badge when a new notification arrives
     const channel = supabase
       .channel(`notifs:${user.id}`)
       .on('postgres_changes', {
@@ -175,91 +176,133 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <>
-    {showBuyCredits && <BuyCreditsModal onClose={() => setShowBuyCredits(false)} />}
-    <div className="flex h-screen bg-ink-900 overflow-hidden">
-      <Sidebar />
-      <div className="flex-1 ml-60 flex flex-col overflow-hidden">
-        <header className="h-16 flex items-center justify-between px-8 border-b border-white/6 shrink-0"
-          style={{ background: 'rgba(10,10,20,0.8)', backdropFilter: 'blur(20px)' }}>
-          <div>
-            <p className="text-base font-bold text-white">
-              Welcome back, {user?.name?.split(' ')[0]} <span>👋</span>
-            </p>
-            <p className="text-xs text-gray-500">Let's create high-converting ads that grow your business.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link to="/new-campaign" className="btn-primary text-sm px-4 py-2">
-              <Plus size={15} /> New Campaign
-            </Link>
+      {showBuyCredits && <BuyCreditsModal onClose={() => setShowBuyCredits(false)} />}
 
-            {/* Credits badge */}
-            <button onClick={() => setShowBuyCredits(true)}
-              title="Campaign credits — click to buy more"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
-                credits === 0
-                  ? 'border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/15'
-                  : 'border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/15'
-              }`}>
-              <Zap size={12} />
-              {credits === null ? '…' : credits} {credits === 1 ? 'credit' : 'credits'}
-            </button>
+      <div className="flex h-screen bg-ink-900 overflow-hidden">
 
-            <div ref={bellRef} className="relative">
-              <button onClick={() => setShowNotifs(v => !v)}
-                className="relative w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
-                <Bell size={16} />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white"
-                    style={{ background: '#8b5cf6' }}>{unreadCount}</span>
-                )}
+        {/* Mobile backdrop */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 z-30 bg-black/60 sm:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* Sidebar — fixed on desktop, drawer on mobile */}
+        <div className={`
+          fixed top-0 left-0 h-screen z-40 transition-transform duration-300
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          sm:translate-x-0
+        `}>
+          <Sidebar onClose={() => setSidebarOpen(false)} />
+        </div>
+
+        {/* Main — offset on desktop only */}
+        <div className="flex-1 sm:ml-60 flex flex-col overflow-hidden min-w-0">
+
+          {/* Header */}
+          <header className="h-14 sm:h-16 flex items-center justify-between px-4 sm:px-8 border-b border-white/6 shrink-0 gap-3"
+            style={{ background: 'rgba(10,10,20,0.9)', backdropFilter: 'blur(20px)' }}>
+
+            {/* Left: hamburger (mobile) + title */}
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="sm:hidden w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white transition-colors shrink-0">
+                <Menu size={17} />
               </button>
-              {showNotifs && user && (
-                <NotifPanel
-                  userId={user.id}
-                  onClose={() => setShowNotifs(false)}
-                  onRead={() => setUnreadCount(0)}
-                />
-              )}
+              <div className="hidden sm:block min-w-0">
+                <p className="text-base font-bold text-white truncate">
+                  Welcome back, {user?.name?.split(' ')[0]} 👋
+                </p>
+                <p className="text-xs text-gray-500">Let's create high-converting ads that grow your business.</p>
+              </div>
+              {/* Mobile: just show first name */}
+              <p className="sm:hidden text-sm font-bold text-white truncate">
+                {user?.name?.split(' ')[0]}
+              </p>
             </div>
 
-            <div className="flex items-center gap-2 pl-2 border-l border-white/10">
-              <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
-                {user?.avatar_url ? (
-                  <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white"
-                    style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)' }}>
-                    {user?.name?.charAt(0).toUpperCase()}
-                  </div>
+            {/* Right: actions */}
+            <div className="flex items-center gap-2 shrink-0">
+              {/* New Campaign — hidden on mobile (use sidebar) */}
+              <Link to="/new-campaign" className="hidden sm:flex btn-primary text-sm px-4 py-2 items-center gap-1.5">
+                <Plus size={15} /> New Campaign
+              </Link>
+
+              {/* Credits badge */}
+              <button onClick={() => setShowBuyCredits(true)}
+                title="Campaign credits — click to buy more"
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
+                  credits === 0
+                    ? 'border-red-500/40 bg-red-500/10 text-red-400'
+                    : 'border-purple-500/30 bg-purple-500/10 text-purple-300'
+                }`}>
+                <Zap size={11} />
+                <span>{credits === null ? '…' : credits}</span>
+                <span className="hidden sm:inline">{credits === 1 ? ' credit' : ' credits'}</span>
+              </button>
+
+              {/* Bell */}
+              <div ref={bellRef} className="relative">
+                <button onClick={() => setShowNotifs(v => !v)}
+                  className="relative w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
+                  <Bell size={16} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white"
+                      style={{ background: '#8b5cf6' }}>{unreadCount}</span>
+                  )}
+                </button>
+                {showNotifs && user && (
+                  <NotifPanel
+                    userId={user.id}
+                    onClose={() => setShowNotifs(false)}
+                    onRead={() => setUnreadCount(0)}
+                  />
                 )}
               </div>
-              <div className="hidden sm:block">
-                <p className="text-xs font-semibold text-white leading-tight">{user?.name?.split(' ')[0]} {user?.name?.split(' ')[1]?.charAt(0)}.</p>
-                <p className="text-xs text-gray-500">{user?.role === 'admin' ? 'Pro Plan' : 'Free Plan'}</p>
+
+              {/* Avatar */}
+              <div className="flex items-center gap-2 pl-2 border-l border-white/10">
+                <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
+                  {user?.avatar_url ? (
+                    <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white"
+                      style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)' }}>
+                      {user?.name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div className="hidden md:block">
+                  <p className="text-xs font-semibold text-white leading-tight">{user?.name?.split(' ')[0]} {user?.name?.split(' ')[1]?.charAt(0)}.</p>
+                  <p className="text-xs text-gray-500">{user?.role === 'admin' ? 'Pro Plan' : 'Free Plan'}</p>
+                </div>
               </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        <main className="flex-1 overflow-y-auto">
-          <div className="max-w-6xl mx-auto px-8 py-8">
-            {children}
-          </div>
-        </main>
+          {/* Page content */}
+          <main className="flex-1 overflow-y-auto">
+            <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
+              {children}
+            </div>
+          </main>
+        </div>
+
+        {/* WhatsApp float */}
+        {import.meta.env.VITE_WHATSAPP_NUMBER && (
+          <a href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER}?text=Hi%20Nia%20Media%2C%20I%20need%20help%20commissioning%20content`}
+            target="_blank" rel="noopener noreferrer"
+            title="Chat with us on WhatsApp"
+            className="fixed bottom-6 right-4 sm:right-6 z-50 flex items-center justify-center rounded-full shadow-lg transition-transform hover:scale-110"
+            style={{ background: '#25D366', boxShadow: '0 4px 20px rgba(37,211,102,0.4)', width: 48, height: 48 }}>
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="white" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+          </a>
+        )}
       </div>
-
-      {import.meta.env.VITE_WHATSAPP_NUMBER && (
-        <a href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER}?text=Hi%20Nia%20Media%2C%20I%20need%20help%20commissioning%20content`}
-          target="_blank" rel="noopener noreferrer"
-          title="Chat with us on WhatsApp"
-          className="fixed bottom-6 right-6 z-50 flex items-center justify-center rounded-full shadow-lg transition-transform hover:scale-110"
-          style={{ background: '#25D366', boxShadow: '0 4px 20px rgba(37,211,102,0.4)', width: 52, height: 52 }}>
-          <svg viewBox="0 0 24 24" width="26" height="26" fill="white" xmlns="http://www.w3.org/2000/svg">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-          </svg>
-        </a>
-      )}
-    </div>
     </>
   )
 }
