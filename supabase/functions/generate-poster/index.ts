@@ -111,7 +111,9 @@ serve(async (req) => {
     })
 
   } catch (err) {
-    return new Response(JSON.stringify({ error: (err as Error).message }), {
+    const message = (err as Error).message ?? String(err)
+    console.error('[generate-poster] fatal:', message)
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...cors, 'Content-Type': 'application/json' },
     })

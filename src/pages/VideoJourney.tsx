@@ -585,11 +585,6 @@ export default function VideoJourney() {
   const [submitting, setSubmitting] = useState(false)
   const [userIndustry, setUserIndustry] = useState('Professional Services')
 
-  useEffect(() => {
-    if (!user?.id) return
-    supabase.from('brand_kits').select('industry').eq('user_id', user.id).maybeSingle()
-      .then(({ data }) => { if (data?.industry) setUserIndustry(data.industry) })
-  }, [user?.id])
 
   const style = VIDEO_STYLES.find(s => s.id === selectedStyle) ?? VIDEO_STYLES[0]
 
@@ -658,8 +653,10 @@ export default function VideoJourney() {
       )
       const firstError = results.find(r => r.error || r.data?.error)
       if (firstError) {
-        const msg = firstError.error?.message ?? firstError.data?.error ?? 'Image generation failed'
-        setMoodError(msg)
+        // Log full response so we can see the exact fal.ai error in the console
+        console.error('[generate-poster] error response:', JSON.stringify(firstError.data), firstError.error)
+        const msg = firstError.data?.error ?? firstError.error?.message ?? 'Image generation failed'
+        setMoodError(`${msg} — check console for details`)
         setMoodGenerating(false)
         return
       }
