@@ -238,10 +238,10 @@ export default function ConceptStudio() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-5 gap-6 items-start">
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
 
         {/* ── LEFT: Input panel ── */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="w-full lg:w-80 xl:w-96 shrink-0 space-y-4 relative z-10">
 
           {/* Input type tabs */}
           <div className="card-glow p-5">
@@ -358,20 +358,19 @@ export default function ConceptStudio() {
           {/* Format selector */}
           <div className="card-glow p-5">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Output Format</p>
-            <div className="space-y-1.5">
+            <div className="grid grid-cols-2 gap-2">
               {FORMAT_OPTIONS.map(opt => (
                 <button key={opt.id} onClick={() => setFormat(opt.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all ${
+                  className={`flex flex-col gap-1 px-3 py-2.5 rounded-xl border text-left transition-all ${
                     format === opt.id
                       ? 'border-purple-500/40 bg-purple-500/10'
                       : 'border-white/8 bg-white/2 hover:border-white/15 hover:bg-white/4'
                   }`}>
-                  <opt.icon size={15} className={format === opt.id ? 'text-purple-400' : 'text-gray-500'} />
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-semibold ${format === opt.id ? 'text-purple-200' : 'text-white'}`}>{opt.label}</p>
-                    <p className="text-xs text-gray-500">{opt.duration} · {opt.desc}</p>
+                  <div className="flex items-center gap-1.5">
+                    <opt.icon size={13} className={format === opt.id ? 'text-purple-400' : 'text-gray-500'} />
+                    <p className={`text-xs font-semibold leading-tight ${format === opt.id ? 'text-purple-200' : 'text-white'}`}>{opt.label}</p>
                   </div>
-                  {format === opt.id && <CheckCircle2 size={13} className="text-purple-400 shrink-0" />}
+                  <p className="text-[10px] text-gray-500 leading-tight">{opt.duration}</p>
                 </button>
               ))}
             </div>
@@ -394,7 +393,7 @@ export default function ConceptStudio() {
         </div>
 
         {/* ── RIGHT: Output panel ── */}
-        <div className="lg:col-span-3">
+        <div className="flex-1 min-w-0">
           {!concept && !loading && (
             <div className="card-glow p-10 text-center h-full flex flex-col items-center justify-center min-h-[400px]">
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5"
