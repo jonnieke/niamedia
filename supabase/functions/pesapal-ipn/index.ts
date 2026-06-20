@@ -18,7 +18,6 @@ async function getToken(): Promise<string> {
 }
 
 Deno.serve(async (req) => {
-  // PesaPal sends a GET with query params
   const url = new URL(req.url)
   const orderTrackingId = url.searchParams.get("OrderTrackingId")
   const orderMerchantReference = url.searchParams.get("OrderMerchantReference")
@@ -35,7 +34,6 @@ Deno.serve(async (req) => {
     )
     const statusData = await statusRes.json()
 
-    // payment_status_description values: "Completed", "Failed", "Invalid", "Reversed"
     const description = (statusData.payment_status_description as string) ?? "Unknown"
     const paymentStatus = description === "Completed" ? "paid"
       : description === "Failed" ? "failed"
@@ -47,39 +45,70 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     )
 
-    await supabase.from("audio_orders")
-      .update({
-        payment_status: paymentStatus,
-        order_tracking_id: orderTrackingId,
-        ...(paymentStatus === "paid" ? { status: "queued" } : {}),
-      })
-      .eq("id", orderMerchantReference)
+    // Route by order ID prefix: credit purchases start with "cred_"
+    if (orderMerchantReference.startsWith("cred_")) {
+      if (paymentStatus === "paid") {
+        // Look up the pending transaction to get user_id and credit amount
+        const { data: txn } = await supabase
+          .from("credit_transactions")
+          .select("user_id, amount")
+          .eq("order_id", orderMerchantReference)
+          .single()
 
-    // If paid, fire notify-admin
-    if (paymentStatus === "paid") {
-      const { data: order } = await supabase
-        .from("audio_orders")
-        .select("title, price_kes, user_id")
+        if (txn) {
+          await supabase.rpc("add_credits", {
+            p_user_id: txn.user_id,
+            p_amount: txn.amount,
+            p_description: `Credits purchased`,
+            p_order_id: orderMerchantReference,
+          })
+
+          // In-app notification
+          void supabase.from("notifications").insert({
+            user_id: txn.user_id,
+            title: "Credits added!",
+            body: `${txn.amount} campaign credit${txn.amount !== 1 ? "s" : ""} have been added to your account.`,
+            type: "success",
+            action_url: "/new-campaign",
+          })
+        }
+      } else {
+        await supabase.from("credit_transactions")
+          .update({ payment_status: paymentStatus, order_tracking_id: orderTrackingId })
+          .eq("order_id", orderMerchantReference)
+      }
+    } else {
+      // Audio order — existing logic
+      await supabase.from("audio_orders")
+        .update({
+          payment_status: paymentStatus,
+          order_tracking_id: orderTrackingId,
+          ...(paymentStatus === "paid" ? { status: "queued" } : {}),
+        })
         .eq("id", orderMerchantReference)
-        .single()
 
-      void supabase.functions.invoke("notify-admin", {
-        body: {
-          type: "new_order",
-          orderId: orderMerchantReference,
-          title: order?.title,
-          priceKes: order?.price_kes,
-          userId: order?.user_id,
-        },
-      })
+      if (paymentStatus === "paid") {
+        const { data: order } = await supabase
+          .from("audio_orders")
+          .select("title, price_kes, user_id")
+          .eq("id", orderMerchantReference)
+          .single()
+
+        void supabase.functions.invoke("notify-admin", {
+          body: {
+            type: "new_order",
+            orderId: orderMerchantReference,
+            title: order?.title,
+            priceKes: order?.price_kes,
+            userId: order?.user_id,
+          },
+        })
+      }
     }
 
-    // PesaPal requires "OK" as the response body
     return new Response("OK", { headers: { "Content-Type": "text/plain" } })
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Unknown error"
-    console.error("IPN error:", message)
-    // Still return OK so PesaPal stops retrying (we'll reconcile manually)
+    console.error("IPN error:", String(err))
     return new Response("OK", { headers: { "Content-Type": "text/plain" } })
   }
 })

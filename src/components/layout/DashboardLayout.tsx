@@ -1,9 +1,10 @@
 import { ReactNode, useState, useRef, useEffect } from 'react'
-import { Bell, Plus, CheckCheck, Eye, CheckCircle, Info, AlertCircle } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Bell, Plus, CheckCheck, Eye, CheckCircle, Info, AlertCircle, Zap } from 'lucide-react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import { useAuth } from '../../lib/AuthContext'
 import { supabase } from '../../lib/supabase'
+import BuyCreditsModal from '../BuyCreditsModal'
 
 interface DBNotification {
   id: string
@@ -118,12 +119,28 @@ function NotifPanel({ userId, onClose, onRead }: { userId: string; onClose: () =
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { user } = useAuth()
+  const location = useLocation()
   const [showNotifs, setShowNotifs] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [credits, setCredits] = useState<number | null>(null)
+  const [showBuyCredits, setShowBuyCredits] = useState(false)
   const bellRef = useRef<HTMLDivElement>(null)
+
+  // Refresh credits when returning from PesaPal payment
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    if (params.get('credits') === 'added') {
+      supabase.from('profiles').select('credits').eq('id', user?.id ?? '').single()
+        .then(({ data }) => { if (data) setCredits(data.credits) })
+    }
+  }, [location.search, user?.id])
 
   useEffect(() => {
     if (!user) return
+    // Fetch credits
+    supabase.from('profiles').select('credits').eq('id', user.id).single()
+      .then(({ data }) => { if (data) setCredits(data.credits) })
+
     // Fetch initial unread count
     supabase
       .from('notifications')
@@ -157,6 +174,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }, [])
 
   return (
+    <>
+    {showBuyCredits && <BuyCreditsModal onClose={() => setShowBuyCredits(false)} />}
     <div className="flex h-screen bg-ink-900 overflow-hidden">
       <Sidebar />
       <div className="flex-1 ml-60 flex flex-col overflow-hidden">
@@ -172,6 +191,18 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <Link to="/new-campaign" className="btn-primary text-sm px-4 py-2">
               <Plus size={15} /> New Campaign
             </Link>
+
+            {/* Credits badge */}
+            <button onClick={() => setShowBuyCredits(true)}
+              title="Campaign credits — click to buy more"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
+                credits === 0
+                  ? 'border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/15'
+                  : 'border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/15'
+              }`}>
+              <Zap size={12} />
+              {credits === null ? '…' : credits} {credits === 1 ? 'credit' : 'credits'}
+            </button>
 
             <div ref={bellRef} className="relative">
               <button onClick={() => setShowNotifs(v => !v)}
@@ -229,5 +260,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </a>
       )}
     </div>
+    </>
   )
 }

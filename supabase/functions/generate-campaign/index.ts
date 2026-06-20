@@ -1,4 +1,5 @@
 import Anthropic from "npm:@anthropic-ai/sdk"
+import { createClient } from "npm:@supabase/supabase-js@2"
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +13,29 @@ Deno.serve(async (req) => {
 
   try {
     const form = await req.json()
+
+    // Credit gate — only for authenticated users (guests/demo pass through)
+    const authHeader = req.headers.get("Authorization") ?? ""
+    const token = authHeader.replace("Bearer ", "")
+    if (token) {
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      )
+      const { data: { user } } = await supabase.auth.getUser(token)
+      if (user) {
+        const { data: spent } = await supabase.rpc("spend_credit", {
+          p_user_id: user.id,
+          p_description: `Campaign: ${form.product_name ?? "untitled"}`,
+        })
+        if (!spent) {
+          return new Response(JSON.stringify({ error: "insufficient_credits" }), {
+            status: 402,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          })
+        }
+      }
+    }
 
     const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") })
 

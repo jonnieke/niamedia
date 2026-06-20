@@ -3,8 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronDown, Zap, MessageSquare, Languages } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import NiaAgent from '../components/NiaAgent'
+import BuyCreditsModal from '../components/BuyCreditsModal'
 import { CampaignFormData } from '../types'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../lib/AuthContext'
 
 const industries = ['Real Estate', 'Hospitality', 'Education', 'Fintech', 'Restaurant', 'Travel', 'Retail', 'Health', 'Events', 'Professional Services', 'Other']
 const objectives = ['Get leads', 'Sell product', 'Promote offer', 'Increase bookings', 'Launch product', 'Grow social media', 'Drive WhatsApp enquiries']
@@ -36,13 +38,23 @@ function SectionCard({ title, children }: { title: string; children: React.React
 
 export default function NewCampaign() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [searchParams] = useSearchParams()
   const [form, setForm] = useState<CampaignFormData>(empty)
   const [language, setLanguage] = useState<'en' | 'sw'>('en')
   const [showNia, setShowNia] = useState(false)
+  const [showBuyCredits, setShowBuyCredits] = useState(false)
+  const [credits, setCredits] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(0)
   const [error, setError] = useState('')
+
+  // Fetch credit balance
+  useEffect(() => {
+    if (!user) return
+    supabase.from('profiles').select('credits').eq('id', user.id).single()
+      .then(({ data }) => { if (data) setCredits(data.credits) })
+  }, [user])
 
   // Pre-fill from Nia agent URL params
   useEffect(() => {
@@ -65,6 +77,13 @@ export default function NewCampaign() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+
+    // Gate: no credits
+    if (credits !== null && credits < 1) {
+      setShowBuyCredits(true)
+      return
+    }
+
     setLoading(true)
     setError('')
     setStep(0)
@@ -81,6 +100,12 @@ export default function NewCampaign() {
       clearInterval(stepInterval)
 
       if (fnError) throw new Error(fnError.message)
+      if (data?.error === 'insufficient_credits') {
+        setShowBuyCredits(true)
+        setLoading(false)
+        clearInterval(stepInterval)
+        return
+      }
       if (data?.error) throw new Error(data.error)
 
       navigate('/campaign-results', { state: { form, content: data } })
@@ -113,9 +138,12 @@ export default function NewCampaign() {
 
   const canSubmit = form.platforms.length > 0 && !!form.cta
 
+  const noCredits = credits !== null && credits < 1
+
   return (
     <DashboardLayout>
       {showNia && <NiaAgent onClose={() => setShowNia(false)} />}
+      {showBuyCredits && <BuyCreditsModal onClose={() => setShowBuyCredits(false)} />}
       <div className="max-w-2xl">
         <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
           <div>
@@ -215,21 +243,29 @@ export default function NewCampaign() {
             </div>
           )}
 
-          <button type="submit" className="btn-primary w-full py-4 text-sm" disabled={loading || !canSubmit}>
-            {loading ? (
-              <span className="flex items-center gap-2 justify-center">
-                <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                {GENERATING_STEPS[step]}
-              </span>
-            ) : (
-              <><Zap size={15} /> Generate Campaign</>
-            )}
-          </button>
+          {noCredits ? (
+            <button type="button" onClick={() => setShowBuyCredits(true)}
+              className="w-full py-4 text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
+              style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(59,130,246,0.15))', border: '1px solid rgba(139,92,246,0.4)', color: '#a78bfa' }}>
+              <Zap size={15} /> Buy Credits to Generate
+            </button>
+          ) : (
+            <button type="submit" className="btn-primary w-full py-4 text-sm" disabled={loading || !canSubmit}>
+              {loading ? (
+                <span className="flex items-center gap-2 justify-center">
+                  <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  {GENERATING_STEPS[step]}
+                </span>
+              ) : (
+                <><Zap size={15} /> Generate Campaign {credits !== null && <span className="opacity-60 text-xs ml-1">· {credits} credit{credits !== 1 ? 's' : ''} remaining</span>}</>
+              )}
+            </button>
+          )}
 
-          {!canSubmit && !loading && (
+          {!noCredits && !canSubmit && !loading && (
             <p className="text-xs text-gray-600 text-center -mt-2">Select at least one platform and a call to action to continue</p>
           )}
         </form>
