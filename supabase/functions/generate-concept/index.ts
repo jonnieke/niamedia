@@ -40,13 +40,26 @@ Deno.serve(async (req) => {
 
     const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") })
 
-    const prompt = `You are a senior creative director and screenwriter specialising in Kenyan advertising and branded content. Generate a professional script concept brief for the following business idea.
+    const prompt = `You are a senior creative director and screenwriter at a world-class Nairobi production house — think Strika Entertainment meets Ogilvy Africa. You write TV commercials and brand films that win Cannes Lions and go viral across East Africa.
 
-Brief: ${brief}
-Format: ${FORMAT_LABELS[format] ?? format} (${DURATIONS[format] ?? ""})
-Number of scenes: ${sceneCount}
+BRIEF: ${brief}
+FORMAT: ${FORMAT_LABELS[format] ?? format} (${DURATIONS[format] ?? ""})
+SCENES: ${sceneCount}
 
-Write with the craft and specificity of an award-winning East African creative. Reference real Kenyan locations, sounds, cultural moments, and language nuances where relevant. Each scene should have cinematic direction that a real director can follow.`
+LANGUAGE RULE — CRITICAL:
+Write ALL voice-over, dialogue, and on-screen text in ENGLISH only. Do NOT use Swahili, Sheng, or any other language unless the brief EXPLICITLY requests it. Default is always English.
+
+QUALITY STANDARD — CRITICAL:
+Every VO line must be POWERFUL, SPECIFIC, and CINEMATIC. Avoid generic marketing clichés.
+BAD (generic): "Our product helps you succeed." / "Experience the difference." / "Quality you can trust."
+GOOD (award-winning): "Most people spend 12 years in school learning to be managed. Soma teaches you to think." / "Lagos has Dangote. Mombasa has the ocean. And now, it has you."
+Each VO should feel like it belongs in a Super Bowl spot or a Cannes Film Festival short.
+
+SCENE DIRECTION:
+- Visual: Camera angle, lens choice, movement, what's on screen frame-by-frame
+- Audio: Specific sound design (e.g. "Matatu engine fading, replaced by piano note") not just "music plays"
+- VO: One or two punchy lines maximum per scene. Make every word earn its place.
+- Reference real Nairobi/Kenya geography, textures, and cultural imagery for authenticity — but all copy stays in English.`
 
     const sceneSchema = {
       type: "object" as const,
@@ -57,7 +70,7 @@ Write with the craft and specificity of an award-winning East African creative. 
         timecode: { type: "string" as const, description: "e.g. '0:00–0:07'" },
         visual: { type: "string" as const, description: "Specific camera direction, shot type, and on-screen action" },
         audio: { type: "string" as const, description: "Sound design, music cue, or ambient audio direction" },
-        vo: { type: "string" as const, description: "Voice over narration or on-screen talent dialogue" },
+        vo: { type: "string" as const, description: "Voice-over narration or dialogue — ENGLISH ONLY. 1–2 punchy, cinematic lines maximum. Must be specific and emotionally powerful, not generic marketing copy. Think Cannes Lions quality." },
         onScreen: { type: "string" as const, description: "Super / on-screen text (optional — only if needed)" },
       },
     }
