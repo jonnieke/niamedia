@@ -687,11 +687,22 @@ export default function VideoJourney() {
 
   const handleSubmit = async () => {
     setSubmitting(true)
-    await supabase.from('projects').insert({
+    const formatLabel = FORMAT_OPTIONS.find(f => f.id === format)?.label ?? format
+    const typeMap: Record<string, string> = {
+      'commercial-15': 'video-commercial',
+      'commercial-30': 'video-commercial',
+      'commercial-60': 'brand-film',
+      'documentary': 'documentary',
+    }
+    const { error } = await supabase.from('projects').insert({
       user_id: user?.id,
-      title: `${style.name} — ${FORMAT_OPTIONS.find(f => f.id === format)?.label ?? format}`,
-      status: 'pending_review',
-      description: JSON.stringify({
+      title: `${style.name} — ${formatLabel}`,
+      type: typeMap[format] ?? 'video-commercial',
+      package: 'Video Journey',
+      status: 'queued',
+      creator_name: '',
+      max_iterations: 3,
+      brief: JSON.stringify({
         style: style.id,
         styleName: style.name,
         format,
@@ -703,7 +714,7 @@ export default function VideoJourney() {
       }),
     })
     setSubmitting(false)
-    navigate('/projects', { state: { submitted: true } })
+    if (!error) navigate('/projects', { state: { submitted: true } })
   }
 
   return (
