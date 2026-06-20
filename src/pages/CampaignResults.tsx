@@ -5,6 +5,7 @@ import {
   Wand2, MessageSquare, Share2, Sparkles,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
+import PosterCanvas from '../components/PosterCanvas'
 import { CampaignFormData, GeneratedContent } from '../types'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
@@ -138,7 +139,7 @@ function Block({ label, content, blockKey, briefContext, showWhatsAppShare, onRe
   )
 }
 
-const tabs = ['Strategy', 'Video Script', 'Poster Copy', 'Captions', 'WhatsApp', 'Landing Page']
+const tabs = ['Strategy', 'Video Script', 'Poster Copy', 'Captions', 'WhatsApp', 'Landing Page', '🎨 Poster']
 
 /* â"€â"€â"€ Main page â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */
 export default function CampaignResults() {
@@ -429,6 +430,11 @@ export default function CampaignResults() {
           ))}
         </div>
       </div>
+    </div>,
+
+    /* Poster Generator */
+    <div key="poster">
+      <PosterCanvas form={form} content={content} />
     </div>,
   ]
 
