@@ -1,18 +1,26 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, X, ChevronDown } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import Logo from '../ui/Logo'
 
 const navItems = [
-  { label: 'Features', href: '#features' },
-  { label: 'Solutions', href: '#solutions', hasDropdown: true },
-  { label: 'Templates', href: '/templates' },
+  { label: 'How It Works', href: '#how-it-works' },
+  { label: 'Services', href: '#services' },
+  { label: 'Live Demo', href: '#demo' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'Resources', href: '#', hasDropdown: true },
 ]
 
 export default function PublicHeader() {
   const [open, setOpen] = useState(false)
+
+  const handleAnchor = (href: string) => {
+    setOpen(false)
+    if (!href.startsWith('#')) return
+    setTimeout(() => {
+      const el = document.querySelector(href)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 50)
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/6"
@@ -26,14 +34,17 @@ export default function PublicHeader() {
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-1">
           {navItems.map(item => (
-            <Link
-              key={item.label}
-              to={item.href.startsWith('/') ? item.href : '#'}
-              className="flex items-center gap-1 px-3.5 py-2 text-sm text-gray-400 hover:text-white font-medium rounded-lg hover:bg-white/5 transition-all"
-            >
-              {item.label}
-              {item.hasDropdown && <ChevronDown size={13} className="opacity-60" />}
-            </Link>
+            item.href.startsWith('#') ? (
+              <button key={item.label} onClick={() => handleAnchor(item.href)}
+                className="px-3.5 py-2 text-sm text-gray-400 hover:text-white font-medium rounded-lg hover:bg-white/5 transition-all">
+                {item.label}
+              </button>
+            ) : (
+              <Link key={item.label} to={item.href}
+                className="px-3.5 py-2 text-sm text-gray-400 hover:text-white font-medium rounded-lg hover:bg-white/5 transition-all">
+                {item.label}
+              </Link>
+            )
           ))}
         </nav>
 
@@ -43,15 +54,13 @@ export default function PublicHeader() {
             Login
           </Link>
           <Link to="/register" className="btn-primary px-5 py-2 text-sm">
-            Get Started
+            Get Started Free
           </Link>
         </div>
 
         {/* Mobile toggle */}
-        <button
-          className="md:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
-          onClick={() => setOpen(!open)}
-        >
+        <button className="md:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+          onClick={() => setOpen(!open)}>
           {open ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
@@ -60,14 +69,18 @@ export default function PublicHeader() {
       {open && (
         <div className="md:hidden border-t border-white/6 bg-ink-900 px-6 pb-5 pt-3">
           {navItems.map(item => (
-            <Link
-              key={item.label}
-              to={item.href.startsWith('/') ? item.href : '#'}
-              className="block py-3 text-sm text-gray-300 hover:text-white font-medium border-b border-white/5 last:border-0"
-              onClick={() => setOpen(false)}
-            >
-              {item.label}
-            </Link>
+            item.href.startsWith('#') ? (
+              <button key={item.label} onClick={() => handleAnchor(item.href)}
+                className="w-full text-left py-3 text-sm text-gray-300 hover:text-white font-medium border-b border-white/5 last:border-0">
+                {item.label}
+              </button>
+            ) : (
+              <Link key={item.label} to={item.href}
+                className="block py-3 text-sm text-gray-300 hover:text-white font-medium border-b border-white/5 last:border-0"
+                onClick={() => setOpen(false)}>
+                {item.label}
+              </Link>
+            )
           ))}
           <div className="flex gap-3 mt-4 pt-4 border-t border-white/5">
             <Link to="/login" className="btn-secondary flex-1 text-center text-sm" onClick={() => setOpen(false)}>Login</Link>

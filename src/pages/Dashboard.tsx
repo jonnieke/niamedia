@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Plus, MessageSquare, Film, ArrowRight,
-  BarChart2, Zap, FileText, BookOpen, Clock, TrendingUp, Target,
-  Eye, RefreshCw, CheckCircle, Music, Package, Shield, Info,
+  BarChart2, Zap, FileText, BookOpen, Clock, TrendingUp,
+  Eye, CheckCircle, Music, Package, Shield, Info, Sparkles,
   AlertCircle, Loader2,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
@@ -250,26 +250,27 @@ export default function Dashboard() {
         <Link to="/assets" className="btn-secondary text-xs px-4 py-2 shrink-0">View Library</Link>
       </div>
 
-      {/* Bottom performance stats */}
-      <div className="mt-6 grid sm:grid-cols-3 gap-4">
-        {[
-          { icon: Target, label: 'Avg. CTR This Month', value: '—', sub: 'Analytics coming soon', color: 'text-purple-400' },
-          { icon: TrendingUp, label: 'Total Leads Generated', value: '—', sub: 'Tracking not yet connected', color: 'text-blue-400' },
-          { icon: RefreshCw, label: 'Active Orders', value: stats.activeProjects, sub: 'In production queue', color: 'text-emerald-400' },
-        ].map(({ icon: Icon, label, value, sub, color }) => (
-          <div key={label} className="card p-5 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.2)' }}>
-              <Icon size={18} className={color} />
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">{label}</p>
-              <p className="text-xl font-extrabold text-white">{loading ? '—' : value}</p>
-              <p className="text-xs text-gray-600">{sub}</p>
-            </div>
+      {/* Get started nudge for new users */}
+      {!loading && stats.campaigns === 0 && stats.audioOrders === 0 && (
+        <div className="mt-6 rounded-2xl border border-purple-500/20 bg-purple-500/5 p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+            style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(59,130,246,0.3))' }}>
+            <Sparkles size={22} className="text-purple-300" />
           </div>
-        ))}
-      </div>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-white mb-0.5">Ready to create your first campaign?</p>
+            <p className="text-xs text-gray-500">It takes under 2 minutes. Tell us your business, audience, and goal — we'll generate professional ad copy instantly.</p>
+          </div>
+          <div className="flex gap-3 flex-wrap shrink-0">
+            <Link to="/new-campaign" className="btn-primary text-xs px-4 py-2">
+              Create Campaign <ArrowRight size={12} />
+            </Link>
+            <Link to="/audio-studio" className="btn-secondary text-xs px-4 py-2">
+              Order Audio
+            </Link>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   )
 }
