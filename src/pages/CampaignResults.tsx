@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
 import {
   Copy, Save, RefreshCw, Download, Check, Zap, Loader2,
@@ -9,7 +9,7 @@ import { CampaignFormData, GeneratedContent } from '../types'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
-/* ─── Copy button ────────────────────────────────────────────── */
+/* â"€â"€â"€ Copy button â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
   const copy = async () => {
@@ -25,7 +25,7 @@ function CopyButton({ text }: { text: string }) {
   )
 }
 
-/* ─── Block — with per-section tweak + optional WhatsApp share ─ */
+/* â"€â"€â"€ Block — with per-section tweak + optional WhatsApp share â"€ */
 interface BlockProps {
   label: string
   content: string
@@ -69,16 +69,16 @@ function Block({ label, content, blockKey, briefContext, showWhatsAppShare, onRe
   }
 
   return (
-    <div className="rounded-xl border border-white/8 overflow-hidden transition-all">
+    <div className="rounded-xl border border-gray-200 overflow-hidden transition-all">
       {/* Header row */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/6"
-        style={{ background: 'rgba(255,255,255,0.03)' }}>
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-200"
+        style={{ background: '#f9fafb' }}>
         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{label}</span>
         <div className="flex items-center gap-1">
           {showWhatsAppShare && (
             <>
               <button onClick={shareWhatsApp}
-                className="btn-ghost text-xs px-2.5 py-1.5 gap-1.5 text-green-400 hover:text-green-300">
+                className="btn-ghost text-xs px-2.5 py-1.5 gap-1.5 text-green-600 hover:text-green-700">
                 <MessageSquare size={12} /> Open in WhatsApp
               </button>
               <button onClick={copyForWhatsApp}
@@ -92,7 +92,7 @@ function Block({ label, content, blockKey, briefContext, showWhatsAppShare, onRe
           {!showWhatsAppShare && <CopyButton text={content} />}
           <button
             onClick={() => { setTweaking(t => !t); setFeedback('') }}
-            className={`btn-ghost text-xs px-2.5 py-1.5 gap-1.5 transition-colors ${tweaking ? 'text-purple-400' : ''}`}>
+            className={`btn-ghost text-xs px-2.5 py-1.5 gap-1.5 transition-colors ${tweaking ? 'text-purple-700' : ''}`}>
             <Wand2 size={12} /> Tweak
           </button>
         </div>
@@ -100,13 +100,12 @@ function Block({ label, content, blockKey, briefContext, showWhatsAppShare, onRe
 
       {/* Content */}
       <div className="p-4">
-        <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">{content}</p>
+        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{content}</p>
       </div>
 
       {/* Tweak panel */}
       {tweaking && (
-        <div className="px-4 pb-4 pt-3 border-t border-white/6"
-          style={{ background: 'rgba(139,92,246,0.04)' }}>
+        <div className="px-4 pb-4 pt-3 border-t border-gray-200" style={{ background: '#f5f3ff' }}>
           <p className="text-[10px] text-gray-500 mb-2 font-semibold uppercase tracking-widest">How should it change?</p>
           <div className="flex gap-2">
             <input
@@ -128,7 +127,7 @@ function Block({ label, content, blockKey, briefContext, showWhatsAppShare, onRe
           <div className="flex flex-wrap gap-1.5 mt-2">
             {['Shorter', 'More urgent', 'In Kiswahili', 'More conversational', 'Add a question'].map(s => (
               <button key={s} onClick={() => setFeedback(s)}
-                className="text-[10px] px-2 py-1 rounded-lg border border-white/8 text-gray-500 hover:text-gray-300 hover:border-purple-500/30 transition-all">
+                className="text-[10px] px-2 py-1 rounded-lg border border-gray-200 text-gray-500 hover:text-gray-600 hover:border-purple-500/30 transition-all">
                 {s}
               </button>
             ))}
@@ -141,7 +140,7 @@ function Block({ label, content, blockKey, briefContext, showWhatsAppShare, onRe
 
 const tabs = ['Strategy', 'Video Script', 'Poster Copy', 'Captions', 'WhatsApp', 'Landing Page']
 
-/* ─── Main page ──────────────────────────────────────────────── */
+/* â"€â"€â"€ Main page â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */
 export default function CampaignResults() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -318,7 +317,7 @@ export default function CampaignResults() {
   if (loadError) return (
     <DashboardLayout>
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-gray-400">{loadError}</p>
+        <p className="text-gray-500">{loadError}</p>
         <button onClick={() => navigate('/campaigns')} className="btn-secondary text-sm">Back to Campaigns</button>
       </div>
     </DashboardLayout>
@@ -352,11 +351,11 @@ export default function CampaignResults() {
       <Block label="Campaign Angle" {...blockProps('strategy.angle', content.strategy.angle)} />
       <Block label="Pain Point Addressed" {...blockProps('strategy.painPoint', content.strategy.painPoint)} />
       <Block label="Key Message" {...blockProps('strategy.keyMessage', content.strategy.keyMessage)} />
-      <div className="rounded-xl border border-white/8 p-4">
+      <div className="rounded-xl border border-gray-200 p-4">
         <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Recommended Platforms</p>
         <div className="flex flex-wrap gap-2">
           {content.strategy.platforms.map(p => (
-            <span key={p} className="px-3 py-1 rounded-full text-xs font-semibold text-white"
+            <span key={p} className="px-3 py-1 rounded-full text-xs font-semibold text-gray-800"
               style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)' }}>{p}</span>
           ))}
         </div>
@@ -393,9 +392,9 @@ export default function CampaignResults() {
 
     /* WhatsApp — with direct share */
     <div key="w" className="space-y-4">
-      <div className="p-4 rounded-xl border border-green-500/15 bg-green-500/5 text-xs text-gray-400 flex items-center gap-2">
-        <MessageSquare size={13} className="text-green-400 shrink-0" />
-        Each message has an <span className="text-green-400 font-semibold">Open in WhatsApp</span> button — tap it to send directly from your phone.
+      <div className="p-4 rounded-xl border border-green-200 bg-green-50 text-xs text-gray-600 flex items-center gap-2">
+        <MessageSquare size={13} className="text-green-600 shrink-0" />
+        Each message has an <span className="text-green-700 font-semibold">Open in WhatsApp</span> button — tap it to send directly from your phone.
       </div>
       <Block label="WhatsApp Status" {...blockProps('whatsapp.status', content.whatsapp.status, { showWhatsAppShare: true })} />
       <Block label="Broadcast Message" {...blockProps('whatsapp.broadcast', content.whatsapp.broadcast, { showWhatsAppShare: true })} />
@@ -406,11 +405,11 @@ export default function CampaignResults() {
     <div key="l" className="space-y-4">
       <Block label="Headline" {...blockProps('landingPage.headline', content.landingPage.headline)} />
       <Block label="Subheadline" {...blockProps('landingPage.subheadline', content.landingPage.subheadline)} />
-      <div className="rounded-xl border border-white/8 p-4">
+      <div className="rounded-xl border border-gray-200 p-4">
         <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Benefits</p>
         <ul className="space-y-2.5">
           {content.landingPage.benefits.map((b, i) => (
-            <li key={i} className="flex items-start gap-2.5 text-sm text-gray-300">
+            <li key={i} className="flex items-start gap-2.5 text-sm text-gray-600">
               <span className="mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0"
                 style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)' }}>{i + 1}</span>
               {b}
@@ -419,13 +418,13 @@ export default function CampaignResults() {
         </ul>
       </div>
       <Block label="CTA" {...blockProps('landingPage.cta', content.landingPage.cta)} />
-      <div className="rounded-xl border border-white/8 p-4">
+      <div className="rounded-xl border border-gray-200 p-4">
         <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">FAQs</p>
         <div className="space-y-4">
           {content.landingPage.faqs.map((faq, i) => (
-            <div key={i} className="border-b border-white/6 last:border-0 pb-4 last:pb-0">
-              <p className="text-sm font-semibold text-white mb-1.5">{faq.question}</p>
-              <p className="text-sm text-gray-400 leading-relaxed">{faq.answer}</p>
+            <div key={i} className="border-b border-gray-200 last:border-0 pb-4 last:pb-0">
+              <p className="text-sm font-semibold text-gray-800 mb-1.5">{faq.question}</p>
+              <p className="text-sm text-gray-500 leading-relaxed">{faq.answer}</p>
             </div>
           ))}
         </div>
@@ -442,10 +441,10 @@ export default function CampaignResults() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Zap size={16} className="text-purple-400" />
-            <h1 className="text-2xl font-bold text-white">{form.product_name}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{form.product_name}</h1>
             {hasRefinements && (
               <span className="text-[10px] px-2 py-0.5 rounded-md font-semibold"
-                style={{ background: 'rgba(139,92,246,0.2)', color: '#a78bfa' }}>
+                style={{ background: '#ede9fe', color: '#7c3aed' }}>
                 {Object.keys(refinements).length} section{Object.keys(refinements).length !== 1 ? 's' : ''} tweaked
               </span>
             )}
@@ -471,22 +470,22 @@ export default function CampaignResults() {
 
       {/* Tweak hint — first time only */}
       {!saved && (
-        <div className="mb-5 p-3.5 rounded-xl border border-purple-500/15 bg-purple-500/5 flex items-center gap-3">
-          <Wand2 size={14} className="text-purple-400 shrink-0" />
-          <p className="text-xs text-gray-400">
-            Click <span className="text-purple-300 font-semibold">Tweak</span> on any section to refine it — shorter, more urgent, in Kiswahili, or anything else.
+        <div className="mb-5 p-3.5 rounded-xl border border-purple-200 bg-purple-50 flex items-center gap-3">
+          <Wand2 size={14} className="text-purple-600 shrink-0" />
+          <p className="text-xs text-gray-600">
+            Click <span className="text-purple-700 font-semibold">Tweak</span> on any section to refine it — shorter, more urgent, in Kiswahili, or anything else.
           </p>
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 border-b border-white/6 overflow-x-auto">
+      <div className="flex gap-1 mb-6 border-b border-gray-200 overflow-x-auto">
         {tabs.map((tab, i) => (
           <button key={tab} onClick={() => setActiveTab(i)}
             className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all border-b-2 -mb-px whitespace-nowrap ${
               activeTab === i
-                ? 'border-purple-500 text-purple-300'
-                : 'border-transparent text-gray-500 hover:text-gray-300'
+                ? 'border-purple-600 text-purple-700 bg-purple-50/60'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}>
             {tab}
           </button>
@@ -497,23 +496,22 @@ export default function CampaignResults() {
 
       {/* Post-save referral nudge */}
       {showReferralNudge && (
-        <div className="mt-8 p-5 rounded-2xl border border-purple-500/20 bg-purple-500/5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: 'rgba(139,92,246,0.2)' }}>
-            <Sparkles size={18} className="text-purple-400" />
+        <div className="mt-8 p-5 rounded-2xl border border-purple-200 bg-purple-50 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#ede9fe' }}>
+            <Sparkles size={18} className="text-purple-600" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-bold text-white">Campaign saved — nice work!</p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Know a business that needs professional ads? Share your referral link and earn <span className="text-white font-semibold">KES 500 credit</span> for every friend who signs up.
+            <p className="text-sm font-bold text-gray-900">Campaign saved — nice work!</p>
+            <p className="text-xs text-gray-600 mt-0.5">
+              Know a business that needs professional ads? Share your referral link and earn <span className="text-purple-700 font-semibold">KES 500 credit</span> for every friend who signs up.
             </p>
           </div>
           <button onClick={copyReferralLink}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0"
             style={{
-              background: referralCopied ? 'rgba(16,185,129,0.15)' : 'rgba(139,92,246,0.2)',
-              border: `1px solid ${referralCopied ? 'rgba(16,185,129,0.3)' : 'rgba(139,92,246,0.35)'}`,
-              color: referralCopied ? '#34d399' : '#a78bfa',
+              background: referralCopied ? '#d1fae5' : '#ede9fe',
+              border: `1px solid ${referralCopied ? '#a7f3d0' : '#c4b5fd'}`,
+              color: referralCopied ? '#059669' : '#7c3aed',
             }}>
             {referralCopied ? <Check size={12} /> : <Share2 size={12} />}
             {referralCopied ? 'Link copied!' : 'Copy referral link'}
@@ -523,3 +521,4 @@ export default function CampaignResults() {
     </DashboardLayout>
   )
 }
+

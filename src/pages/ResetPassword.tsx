@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent } from 'react'
+﻿import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Eye, EyeOff, ArrowRight, Loader2, AlertCircle } from 'lucide-react'
 import Logo from '../components/ui/Logo'
@@ -44,14 +44,14 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-ink-900 flex items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%)', filter: 'blur(60px)' }} />
 
       <div className="w-full max-w-sm relative z-10">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex justify-center mb-6"><Logo size="md" /></Link>
-          <h1 className="text-2xl font-bold text-white">Set new password</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Set new password</h1>
           <p className="text-sm text-gray-500 mt-1">Choose a strong password for your account</p>
         </div>
 
@@ -62,13 +62,13 @@ export default function ResetPassword() {
                 style={{ background: 'rgba(16,185,129,0.15)', border: '2px solid rgba(16,185,129,0.3)' }}>
                 <ArrowRight size={24} className="text-emerald-400" />
               </div>
-              <h2 className="text-lg font-bold text-white mb-2">Password updated!</h2>
-              <p className="text-sm text-gray-400">Taking you to your dashboard…</p>
+              <h2 className="text-lg font-bold text-gray-900 mb-2">Password updated!</h2>
+              <p className="text-sm text-gray-500">Taking you to your dashboardâ€¦</p>
             </div>
           ) : !ready ? (
             <div className="text-center py-6">
               <Loader2 size={28} className="animate-spin text-purple-400 mx-auto mb-3" />
-              <p className="text-sm text-gray-400">Verifying reset link…</p>
+              <p className="text-sm text-gray-500">Verifying reset linkâ€¦</p>
               <p className="text-xs text-gray-600 mt-4">
                 Link expired?{' '}
                 <Link to="/forgot-password" className="text-purple-400 hover:text-purple-300">Request a new one</Link>
@@ -89,7 +89,7 @@ export default function ResetPassword() {
                       placeholder="At least 6 characters" value={password}
                       onChange={e => setPassword(e.target.value)} required autoFocus />
                     <button type="button" onClick={() => setShowPw(!showPw)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600">
                       {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
@@ -110,3 +110,4 @@ export default function ResetPassword() {
     </div>
   )
 }
+

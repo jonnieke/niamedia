@@ -1,4 +1,4 @@
-import { useState, FormEvent, useRef, useEffect } from 'react'
+﻿import { useState, FormEvent, useRef, useEffect } from 'react'
 import { Save, Upload, Globe, Instagram, Youtube, Facebook, Twitter, CheckCircle, Palette, Loader2 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase, uploadLogo } from '../lib/supabase'
@@ -45,18 +45,18 @@ const EMPTY: Kit = {
 function BrandPreview({ kit, logo }: { kit: Kit; logo: string | null }) {
   const font = FONTS.find(f => f.id === kit.font)?.style ?? 'Inter, sans-serif'
   return (
-    <div className="rounded-2xl border border-white/8 overflow-hidden sticky top-4">
-      <div className="px-5 py-4 border-b border-white/8 flex items-center gap-2">
+    <div className="rounded-2xl border border-gray-200 overflow-hidden sticky top-4">
+      <div className="px-5 py-4 border-b border-gray-200 flex items-center gap-2">
         <Palette size={14} className="text-purple-400" />
-        <p className="text-xs font-bold text-white">Live Brand Preview</p>
+        <p className="text-xs font-bold text-gray-900">Live Brand Preview</p>
       </div>
       <div className="p-4">
-        <div className="rounded-xl overflow-hidden border border-white/8" style={{ fontFamily: font }}>
+        <div className="rounded-xl overflow-hidden border border-gray-200" style={{ fontFamily: font }}>
           <div className="h-2" style={{ background: `linear-gradient(90deg, ${kit.primary_color}, ${kit.secondary_color})` }} />
-          <div className="p-5" style={{ background: '#0f0f1c' }}>
+          <div className="p-5" style={{ background: '#ffffff' }}>
             <div className="flex items-center gap-3 mb-4">
               {logo ? (
-                <img src={logo} alt="" className="w-10 h-10 rounded-xl object-cover border border-white/10" />
+                <img src={logo} alt="" className="w-10 h-10 rounded-xl object-cover border border-gray-200" />
               ) : (
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shrink-0"
                   style={{ background: `linear-gradient(135deg, ${kit.primary_color}, ${kit.secondary_color})` }}>
@@ -64,24 +64,24 @@ function BrandPreview({ kit, logo }: { kit: Kit; logo: string | null }) {
                 </div>
               )}
               <div>
-                <p className="text-sm font-bold text-white">{kit.business_name || 'Your Business'}</p>
-                {kit.tagline && <p className="text-xs text-gray-400 italic">{kit.tagline}</p>}
+                <p className="text-sm font-bold text-gray-900">{kit.business_name || 'Your Business'}</p>
+                {kit.tagline && <p className="text-xs text-gray-500 italic">{kit.tagline}</p>}
               </div>
             </div>
-            <p className="text-xs text-gray-300 mb-3 leading-relaxed">
+            <p className="text-xs text-gray-600 mb-3 leading-relaxed">
               {kit.business_description
                 ? kit.business_description.slice(0, 90) + (kit.business_description.length > 90 ? '...' : '')
-                : 'Your brand story goes here — vivid, compelling, and made for your audience.'}
+                : 'Your brand story goes here â€” vivid, compelling, and made for your audience.'}
             </p>
             <div className="flex items-center justify-between">
-              <div className="px-4 py-2 rounded-lg text-xs font-bold text-white"
+              <div className="px-4 py-2 rounded-lg text-xs font-bold text-gray-900"
                 style={{ background: `linear-gradient(135deg, ${kit.primary_color}, ${kit.secondary_color})` }}>
                 {kit.preferred_tone === 'Direct sales' ? 'Buy Now' : 'Learn More'}
               </div>
               {kit.phone && <span className="text-[10px] text-gray-500">{kit.phone}</span>}
             </div>
           </div>
-          <div className="px-5 py-3 flex items-center gap-3 border-t border-white/6" style={{ background: '#0a0a14' }}>
+          <div className="px-5 py-3 flex items-center gap-3 border-t border-gray-200" style={{ background: '#f1f5f9' }}>
             {kit.instagram && <span className="text-[10px] text-gray-500">@{kit.instagram}</span>}
             {kit.website && (
               <span className="text-[10px] ml-auto" style={{ color: kit.primary_color }}>
@@ -93,9 +93,9 @@ function BrandPreview({ kit, logo }: { kit: Kit; logo: string | null }) {
         <div className="mt-4 flex items-center gap-2">
           <p className="text-[10px] text-gray-600 mr-1">Palette</p>
           {[kit.primary_color, kit.secondary_color, kit.accent_color].map(c => (
-            <div key={c} className="w-6 h-6 rounded-lg border border-white/10" style={{ background: c }} title={c} />
+            <div key={c} className="w-6 h-6 rounded-lg border border-gray-200" style={{ background: c }} title={c} />
           ))}
-          <p className="text-[10px] text-gray-600 ml-auto" style={{ fontFamily: font }}>Aa — {FONTS.find(f => f.id === kit.font)?.label}</p>
+          <p className="text-[10px] text-gray-600 ml-auto" style={{ fontFamily: font }}>Aa â€” {FONTS.find(f => f.id === kit.font)?.label}</p>
         </div>
       </div>
     </div>
@@ -160,12 +160,12 @@ export default function BrandKit() {
 
   const chip = (active: boolean) =>
     `px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-      active ? 'text-white border-purple-500/60 bg-purple-500/20' : 'text-gray-400 border-white/10 bg-white/3 hover:border-white/20'
+      active ? 'text-white border-purple-500/60 bg-purple-500/20' : 'text-gray-500 border-gray-200 bg-white/3 hover:border-white/20'
     }`
 
   const Card = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div className="card-glow p-6">
-      <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5 pb-3 border-b border-white/6">{title}</h2>
+      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5 pb-3 border-b border-gray-200">{title}</h2>
       {children}
     </div>
   )
@@ -184,7 +184,7 @@ export default function BrandKit() {
     <DashboardLayout>
       <div className="mb-6">
         <span className="section-tag mb-2 inline-block">Brand Kit</span>
-        <h1 className="text-2xl font-bold text-white">Your Brand Identity</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Your Brand Identity</h1>
         <p className="text-sm text-gray-500 mt-1">Used to personalise every campaign, script, and audio brief.</p>
       </div>
 
@@ -206,17 +206,17 @@ export default function BrandKit() {
               <div>
                 <label className="label">Logo</label>
                 <div onClick={() => logoRef.current?.click()}
-                  className="border-2 border-dashed border-white/10 rounded-xl p-6 text-center hover:border-purple-500/30 transition-colors cursor-pointer flex items-center gap-4">
+                  className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-purple-500/30 transition-colors cursor-pointer flex items-center gap-4">
                   {logoPreview ? (
-                    <img src={logoPreview} alt="" className="w-16 h-16 rounded-xl object-cover border border-white/10 shrink-0" />
+                    <img src={logoPreview} alt="" className="w-16 h-16 rounded-xl object-cover border border-gray-200 shrink-0" />
                   ) : (
-                    <div className="w-16 h-16 rounded-xl border border-white/10 bg-white/3 flex items-center justify-center shrink-0">
+                    <div className="w-16 h-16 rounded-xl border border-gray-200 bg-white/3 flex items-center justify-center shrink-0">
                       <Upload size={20} className="text-gray-600" />
                     </div>
                   )}
                   <div className="text-left">
-                    <p className="text-sm font-semibold text-white">{logoPreview ? 'Logo uploaded' : 'Upload your logo'}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">PNG or SVG recommended · Max 2MB</p>
+                    <p className="text-sm font-semibold text-gray-800">{logoPreview ? 'Logo uploaded' : 'Upload your logo'}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">PNG or SVG recommended Â· Max 2MB</p>
                     {logoPreview && (
                       <button type="button" onClick={e => { e.stopPropagation(); setLogoPreview(null); setLogoFile(null); setKit(k => ({ ...k, logo_url: undefined })) }}
                         className="text-xs text-red-400 mt-1">Remove</button>
@@ -231,7 +231,7 @@ export default function BrandKit() {
                   <div key={field}>
                     <label className="label">{label} Color</label>
                     <div className="flex items-center gap-2">
-                      <input type="color" className="w-10 h-10 rounded-lg border border-white/10 bg-transparent cursor-pointer shrink-0"
+                      <input type="color" className="w-10 h-10 rounded-lg border border-gray-200 bg-transparent cursor-pointer shrink-0"
                         value={kit[field]} onChange={set(field)} />
                       <input className="input flex-1 font-mono text-xs" value={kit[field]} onChange={set(field)} />
                     </div>
@@ -244,9 +244,9 @@ export default function BrandKit() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {FONTS.map(f => (
                     <button key={f.id} type="button" onClick={() => setKit(p => ({ ...p, font: f.id }))}
-                      className={`p-3 rounded-xl border text-left transition-all ${kit.font === f.id ? 'border-purple-500/50 bg-purple-500/10' : 'border-white/8 bg-white/2 hover:border-white/15'}`}>
-                      <p className="text-xs text-gray-400 mb-0.5">Aa</p>
-                      <p className="text-sm font-semibold text-white" style={{ fontFamily: f.style }}>{f.label}</p>
+                      className={`p-3 rounded-xl border text-left transition-all ${kit.font === f.id ? 'border-purple-500/50 bg-purple-500/10' : 'border-gray-200 bg-white/2 hover:border-gray-300'}`}>
+                      <p className="text-xs text-gray-500 mb-0.5">Aa</p>
+                      <p className="text-sm font-semibold text-gray-800" style={{ fontFamily: f.style }}>{f.label}</p>
                       {kit.font === f.id && <CheckCircle size={12} className="text-purple-400 mt-1" />}
                     </button>
                   ))}
@@ -286,7 +286,7 @@ export default function BrandKit() {
                 <div key={field}>
                   <label className="label capitalize">{field}</label>
                   <div className="flex items-center gap-0">
-                    <div className="flex items-center gap-2 px-3 h-10 rounded-l-xl border border-r-0 border-white/10 bg-white/3 shrink-0">
+                    <div className="flex items-center gap-2 px-3 h-10 rounded-l-xl border border-r-0 border-gray-200 bg-white/3 shrink-0">
                       <Icon size={13} className="text-gray-500" />
                       <span className="text-xs text-gray-500">{prefix}</span>
                     </div>
@@ -310,7 +310,7 @@ export default function BrandKit() {
               </div>
               <div>
                 <label className="label">Target Customer</label>
-                <input className="input" placeholder="e.g. Young professionals aged 25–40 in Nairobi" value={kit.target_customer} onChange={set('target_customer')} />
+                <input className="input" placeholder="e.g. Young professionals aged 25â€“40 in Nairobi" value={kit.target_customer} onChange={set('target_customer')} />
               </div>
               <div>
                 <label className="label">Business Description</label>
@@ -322,7 +322,7 @@ export default function BrandKit() {
           </Card>
 
           <button type="submit" className="btn-primary w-full py-3 text-sm gap-2" disabled={saving}>
-            {saving ? <><Loader2 size={15} className="animate-spin" /> Saving…</> : <><Save size={15} />{saved ? 'Saved ✓' : 'Save Brand Kit'}</>}
+            {saving ? <><Loader2 size={15} className="animate-spin" /> Savingâ€¦</> : <><Save size={15} />{saved ? 'Saved âœ“' : 'Save Brand Kit'}</>}
           </button>
         </form>
 
@@ -333,3 +333,4 @@ export default function BrandKit() {
     </DashboardLayout>
   )
 }
+

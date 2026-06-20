@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+﻿import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   Plus, Clock, Megaphone, Loader2, Search, Trash2,
@@ -94,9 +94,9 @@ export default function Campaigns() {
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}>
-          <div className="w-full max-w-sm rounded-2xl border border-white/10 p-6"
-            style={{ background: '#12121e' }}>
-            <p className="text-sm font-bold text-white mb-2">Delete this campaign?</p>
+          <div className="w-full max-w-sm rounded-2xl border border-gray-200 p-6"
+            style={{ background: '#ffffff' }}>
+            <p className="text-sm font-bold text-gray-900 mb-2">Delete this campaign?</p>
             <p className="text-xs text-gray-500 mb-5">This can't be undone. The campaign will be permanently removed.</p>
             <div className="flex gap-3">
               <button onClick={() => setConfirmDelete(null)}
@@ -114,9 +114,9 @@ export default function Campaigns() {
 
       <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Campaigns</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Campaigns</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {loading ? 'Loading…' : `${campaigns.length} campaign${campaigns.length !== 1 ? 's' : ''} saved`}
+            {loading ? 'Loadingâ€¦' : `${campaigns.length} campaign${campaigns.length !== 1 ? 's' : ''} saved`}
           </p>
         </div>
         <Link to="/new-campaign" className="btn-primary text-sm gap-1.5 px-4 py-2">
@@ -131,7 +131,7 @@ export default function Campaigns() {
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
             <input
               className="input pl-9 text-sm w-full"
-              placeholder="Search campaigns…"
+              placeholder="Search campaignsâ€¦"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
@@ -163,7 +163,7 @@ export default function Campaigns() {
           </div>
           <p className="text-white font-semibold mb-1">No campaigns yet</p>
           <p className="text-sm text-gray-500 mb-6 max-w-xs">
-            Generate your first AI-powered campaign — video scripts, captions, WhatsApp copy, and more.
+            Generate your first AI-powered campaign â€” video scripts, captions, WhatsApp copy, and more.
           </p>
           <Link to="/new-campaign" className="btn-primary text-sm px-6 py-2.5 gap-1.5">
             <Zap size={14} /> Create First Campaign
@@ -188,7 +188,7 @@ export default function Campaigns() {
 
             return (
               <div key={c.id}
-                className="rounded-2xl border border-white/8 overflow-hidden flex flex-col transition-all hover:border-purple-500/25 group"
+                className="rounded-2xl border border-gray-200 overflow-hidden flex flex-col transition-all hover:border-purple-500/25 group"
                 style={{ background: 'rgba(255,255,255,0.02)' }}>
 
                 {/* Colour bar */}
@@ -198,7 +198,7 @@ export default function Campaigns() {
                   {/* Title + industry */}
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-white leading-snug line-clamp-2">{c.title}</p>
+                      <p className="text-sm font-bold text-gray-900 leading-snug line-clamp-2">{c.title}</p>
                       {meta?.business_name && (
                         <p className="text-xs text-gray-500 mt-0.5 truncate">{meta.business_name as string}</p>
                       )}
@@ -212,12 +212,12 @@ export default function Campaigns() {
                   {/* Meta row */}
                   <div className="flex flex-wrap gap-1.5 mb-4">
                     {objective && (
-                      <span className="px-2 py-0.5 rounded-lg text-[11px] text-gray-500 bg-white/4 border border-white/6">
+                      <span className="px-2 py-0.5 rounded-lg text-[11px] text-gray-500 bg-gray-50 border border-gray-200">
                         {objective}
                       </span>
                     )}
                     {tone && (
-                      <span className="px-2 py-0.5 rounded-lg text-[11px] text-gray-500 bg-white/4 border border-white/6 capitalize">
+                      <span className="px-2 py-0.5 rounded-lg text-[11px] text-gray-500 bg-gray-50 border border-gray-200 capitalize">
                         {tone}
                       </span>
                     )}
@@ -227,7 +227,7 @@ export default function Campaigns() {
                   {platforms.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-4">
                       {platforms.slice(0, 4).map(p => (
-                        <span key={p} className="px-2 py-0.5 text-[10px] rounded-md text-gray-600 border border-white/6">
+                        <span key={p} className="px-2 py-0.5 text-[10px] rounded-md text-gray-600 border border-gray-200">
                           {p}
                         </span>
                       ))}
@@ -240,7 +240,7 @@ export default function Campaigns() {
                   )}
 
                   {/* Footer */}
-                  <div className="mt-auto flex items-center justify-between pt-3 border-t border-white/6">
+                  <div className="mt-auto flex items-center justify-between pt-3 border-t border-gray-200">
                     <span className="flex items-center gap-1.5 text-[11px] text-gray-600">
                       <Clock size={10} />
                       {timeAgo(c.created_at)}
@@ -268,3 +268,4 @@ export default function Campaigns() {
     </DashboardLayout>
   )
 }
+

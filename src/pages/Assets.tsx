@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Film, Music, Mic, Radio, Download, Eye, Search,
@@ -36,8 +36,8 @@ function AssetCard({ asset, onPreview }: { asset: Asset; onPreview: () => void }
   const isVideo = meta?.category === 'video'
 
   return (
-    <div className="rounded-2xl border border-white/8 bg-white/2 overflow-hidden hover:border-purple-500/30 transition-all group">
-      <div className="relative h-40 bg-white/5 overflow-hidden">
+    <div className="rounded-2xl border border-gray-200 bg-white/2 overflow-hidden hover:border-purple-500/30 transition-all group">
+      <div className="relative h-40 bg-gray-50 overflow-hidden">
         {asset.deliverable_thumb ? (
           <img src={asset.deliverable_thumb} alt="" className="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity" />
         ) : (
@@ -56,7 +56,7 @@ function AssetCard({ asset, onPreview }: { asset: Asset; onPreview: () => void }
         </button>
 
         <div className="absolute top-3 left-3">
-          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold text-white"
+          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold text-gray-900"
             style={{ background: isVideo ? 'rgba(139,92,246,0.7)' : 'rgba(245,158,11,0.7)', backdropFilter: 'blur(4px)' }}>
             {meta?.label ?? asset.type}
           </span>
@@ -80,17 +80,17 @@ function AssetCard({ asset, onPreview }: { asset: Asset; onPreview: () => void }
 
         <div className="flex gap-2">
           <button onClick={onPreview}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-white/10 text-xs text-gray-300 hover:border-purple-500/40 hover:text-purple-300 transition-all">
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-gray-200 text-xs text-gray-600 hover:border-purple-500/40 hover:text-purple-300 transition-all">
             <Eye size={12} /> Preview
           </button>
           {asset.deliverable_url ? (
             <a href={asset.deliverable_url} download
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-white transition-all"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-gray-800 transition-all"
               style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)' }}>
               <Download size={12} /> Download
             </a>
           ) : (
-            <div className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-white/6 text-xs text-gray-600 cursor-not-allowed">
+            <div className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-gray-200 text-xs text-gray-600 cursor-not-allowed">
               Pending
             </div>
           )}
@@ -98,7 +98,7 @@ function AssetCard({ asset, onPreview }: { asset: Asset; onPreview: () => void }
 
         <div className="mt-3 flex items-center gap-1.5 text-[10px] text-green-500">
           <Shield size={10} />
-          Full rights transferred · AI-generated
+          Full rights transferred Â· AI-generated
         </div>
       </div>
     </div>
@@ -111,15 +111,15 @@ function PreviewModal({ asset, onClose }: { asset: Asset; onClose: () => void })
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}
       onClick={onClose}>
-      <div className="w-full max-w-3xl rounded-2xl border border-white/10 overflow-hidden"
-        style={{ background: '#12121e' }}
+      <div className="w-full max-w-3xl rounded-2xl border border-gray-200 overflow-hidden"
+        style={{ background: '#ffffff' }}
         onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
           <div>
-            <p className="text-sm font-bold text-white">{asset.title}</p>
+            <p className="text-sm font-bold text-gray-900">{asset.title}</p>
             <p className="text-xs text-gray-500">{asset.package}</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors text-lg leading-none">×</button>
+          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors text-lg leading-none">Ã—</button>
         </div>
 
         {isVideo && asset.deliverable_url ? (
@@ -129,15 +129,15 @@ function PreviewModal({ asset, onClose }: { asset: Asset; onClose: () => void })
             <img src={asset.deliverable_thumb} alt="" className="w-32 h-32 rounded-2xl object-cover" />
             <div>
               <p className="text-white font-semibold mb-1">{asset.title}</p>
-              <p className="text-sm text-gray-400">{asset.package}</p>
-              <p className="text-xs text-gray-600 mt-2">Audio — download to listen</p>
+              <p className="text-sm text-gray-500">{asset.package}</p>
+              <p className="text-xs text-gray-600 mt-2">Audio â€” download to listen</p>
             </div>
           </div>
         ) : (
           <div className="h-48 flex items-center justify-center text-gray-600 text-sm">No preview available yet</div>
         )}
 
-        <div className="px-5 py-4 border-t border-white/8 flex items-center justify-between">
+        <div className="px-5 py-4 border-t border-gray-200 flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-green-400">
             <Shield size={12} /> Full rights transferred upon delivery
           </div>
@@ -202,8 +202,8 @@ export default function Assets() {
         <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
           <div>
             <span className="section-tag mb-2 inline-block">Asset Library</span>
-            <h1 className="text-2xl font-bold text-white">Your Delivered Assets</h1>
-            <p className="text-gray-400 text-sm mt-0.5">All content you own — download anytime, use anywhere.</p>
+            <h1 className="text-2xl font-bold text-gray-900">Your Delivered Assets</h1>
+            <p className="text-gray-500 text-sm mt-0.5">All content you own â€” download anytime, use anywhere.</p>
           </div>
           <button onClick={() => navigate('/concept-studio')} className="btn-primary text-sm px-4 py-2">
             + New Project
@@ -228,7 +228,7 @@ export default function Assets() {
             {(['all', 'video', 'audio'] as const).map(f => (
               <button key={f} onClick={() => setFilter(f)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all capitalize flex items-center gap-1.5 ${
-                  filter === f ? 'border-purple-500/50 bg-purple-500/15 text-purple-300' : 'border-white/8 text-gray-400 hover:border-white/15'
+                  filter === f ? 'border-purple-500/50 bg-purple-500/15 text-purple-300' : 'border-gray-200 text-gray-500 hover:border-gray-300'
                 }`}>
                 {f === 'video' && <Film size={11} />}
                 {f === 'audio' && <Music size={11} />}
@@ -271,3 +271,4 @@ export default function Assets() {
     </DashboardLayout>
   )
 }
+

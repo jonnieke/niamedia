@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react'
+﻿import { useState, FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, Mail, Loader2 } from 'lucide-react'
 import Logo from '../components/ui/Logo'
@@ -26,14 +26,14 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-ink-900 flex items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%)', filter: 'blur(60px)' }} />
 
       <div className="w-full max-w-sm relative z-10">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex justify-center mb-6"><Logo size="md" /></Link>
-          <h1 className="text-2xl font-bold text-white">Reset your password</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Reset your password</h1>
           <p className="text-sm text-gray-500 mt-1">We'll send a reset link to your email</p>
         </div>
 
@@ -44,8 +44,8 @@ export default function ForgotPassword() {
                 style={{ background: 'rgba(139,92,246,0.15)', border: '2px solid rgba(139,92,246,0.3)' }}>
                 <Mail size={24} className="text-purple-400" />
               </div>
-              <h2 className="text-lg font-bold text-white mb-2">Check your inbox</h2>
-              <p className="text-sm text-gray-400 mb-6">
+              <h2 className="text-lg font-bold text-gray-900 mb-2">Check your inbox</h2>
+              <p className="text-sm text-gray-500 mb-6">
                 We sent a reset link to <strong className="text-white">{email}</strong>.
                 Click it to set a new password.
               </p>
@@ -83,8 +83,8 @@ export default function ForgotPassword() {
             </>
           )}
 
-          <div className="mt-5 pt-5 border-t border-white/6 text-center">
-            <Link to="/login" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-300 transition-colors">
+          <div className="mt-5 pt-5 border-t border-gray-200 text-center">
+            <Link to="/login" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-600 transition-colors">
               <ArrowLeft size={14} /> Back to Sign In
             </Link>
           </div>
@@ -93,3 +93,4 @@ export default function ForgotPassword() {
     </div>
   )
 }
+

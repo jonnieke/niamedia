@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+﻿import { useState, useRef } from 'react'
 import { Save, Bell, Shield, User, CreditCard, Check, ExternalLink, Zap, Film, Music, AlertCircle, Camera, Loader2 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { useAuth } from '../lib/AuthContext'
@@ -14,10 +14,10 @@ const PLANS = [
 ]
 
 const BILLING_HISTORY = [
-  { id: 'inv-001', date: '2026-06-01', desc: 'Growth Pack — June 2026', amount: 30000, status: 'Paid' },
-  { id: 'inv-002', date: '2026-06-12', desc: 'Savanna Grill — Jingle 30s', amount: 5500, status: 'Paid' },
-  { id: 'inv-003', date: '2026-06-14', desc: 'Ruaka Heights — Video Commercial (Growth Film)', amount: 30000, status: 'Paid' },
-  { id: 'inv-004', date: '2026-05-01', desc: 'Growth Pack — May 2026', amount: 30000, status: 'Paid' },
+  { id: 'inv-001', date: '2026-06-01', desc: 'Growth Pack â€” June 2026', amount: 30000, status: 'Paid' },
+  { id: 'inv-002', date: '2026-06-12', desc: 'Savanna Grill â€” Jingle 30s', amount: 5500, status: 'Paid' },
+  { id: 'inv-003', date: '2026-06-14', desc: 'Ruaka Heights â€” Video Commercial (Growth Film)', amount: 30000, status: 'Paid' },
+  { id: 'inv-004', date: '2026-05-01', desc: 'Growth Pack â€” May 2026', amount: 30000, status: 'Paid' },
 ]
 
 function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
@@ -68,9 +68,9 @@ export default function Settings() {
 
   const Card = ({ title, icon: Icon, children }: { title: string; icon: typeof User; children: React.ReactNode }) => (
     <div className="card-glow p-6">
-      <div className="flex items-center gap-2 mb-5 pb-3 border-b border-white/6">
+      <div className="flex items-center gap-2 mb-5 pb-3 border-b border-gray-200">
         <Icon size={14} className="text-purple-400" />
-        <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">{title}</h2>
+        <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest">{title}</h2>
       </div>
       {children}
     </div>
@@ -132,16 +132,16 @@ export default function Settings() {
     <DashboardLayout>
       <div className="max-w-3xl">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white">Settings</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
           <p className="text-sm text-gray-500 mt-1">Manage your account, plan, and preferences.</p>
         </div>
 
         {/* Tab bar */}
-        <div className="flex gap-1 mb-6 border-b border-white/6 overflow-x-auto">
+        <div className="flex gap-1 mb-6 border-b border-gray-200 overflow-x-auto">
           {tabs.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`px-4 py-2.5 text-xs font-semibold whitespace-nowrap rounded-t-lg transition-all border-b-2 -mb-px ${
-                tab === t.id ? 'border-purple-500 text-purple-300' : 'border-transparent text-gray-500 hover:text-gray-300'
+                tab === t.id ? 'border-purple-500 text-purple-300' : 'border-transparent text-gray-500 hover:text-gray-600'
               }`}>{t.label}</button>
           ))}
         </div>
@@ -150,7 +150,7 @@ export default function Settings() {
         {tab === 'profile' && (
           <div className="space-y-5">
             <Card title="Profile" icon={User}>
-              <div className="flex items-center gap-4 mb-5 pb-5 border-b border-white/6">
+              <div className="flex items-center gap-4 mb-5 pb-5 border-b border-gray-200">
                 <div className="relative shrink-0">
                   <input
                     ref={avatarInputRef}
@@ -168,7 +168,7 @@ export default function Settings() {
                     {avatarUrl ? (
                       <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-white"
+                      <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-900"
                         style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)' }}>
                         {name.charAt(0).toUpperCase() || 'U'}
                       </div>
@@ -182,9 +182,9 @@ export default function Settings() {
                   </button>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">{name}</p>
+                  <p className="text-sm font-semibold text-gray-800">{name}</p>
                   <p className="text-xs text-gray-500">{user?.email}</p>
-                  <p className="text-[10px] text-gray-600 mt-0.5">Click photo to change · PNG/JPG/WebP · max 2 MB</p>
+                  <p className="text-[10px] text-gray-600 mt-0.5">Click photo to change Â· PNG/JPG/WebP Â· max 2 MB</p>
                   <span className="inline-block mt-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-500/20 text-purple-300">
                     {user?.role === 'admin' ? 'Admin' : 'Growth Plan'}
                   </span>
@@ -198,7 +198,7 @@ export default function Settings() {
                 <div>
                   <label className="label">Email Address</label>
                   <input className="input opacity-50 cursor-not-allowed" value={user?.email || ''} disabled />
-                  <p className="text-xs text-gray-600 mt-1">Email changes require verification — contact support.</p>
+                  <p className="text-xs text-gray-600 mt-1">Email changes require verification â€” contact support.</p>
                 </div>
               </div>
             </Card>
@@ -212,7 +212,7 @@ export default function Settings() {
               disabled={profileSaving || !name.trim()}
               className="btn-primary w-full py-3 text-sm gap-2 disabled:opacity-50">
               <Save size={15} />
-              {profileSaving ? 'Saving…' : profileSaved ? 'Saved ✓' : 'Save Changes'}
+              {profileSaving ? 'Savingâ€¦' : profileSaved ? 'Saved âœ“' : 'Save Changes'}
             </button>
           </div>
         )}
@@ -223,7 +223,7 @@ export default function Settings() {
             <div className="p-4 rounded-xl border border-purple-500/25 bg-purple-500/8 flex items-center gap-3 mb-2">
               <Zap size={15} className="text-purple-400 shrink-0" />
               <p className="text-sm text-purple-300">
-                You're on the <strong>Growth Pack</strong> — KES 30,000/month. Renews 1 Jul 2026.
+                You're on the <strong>Growth Pack</strong> â€” KES 30,000/month. Renews 1 Jul 2026.
               </p>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
@@ -233,32 +233,32 @@ export default function Settings() {
                 const Icon = icons[plan.id]
                 return (
                   <div key={plan.id} className={`rounded-2xl border p-5 flex flex-col transition-all ${
-                    isCurrent ? 'border-purple-500/50 bg-purple-500/8' : 'border-white/8 bg-white/2 hover:border-white/15'
+                    isCurrent ? 'border-purple-500/50 bg-purple-500/8' : 'border-gray-200 bg-white/2 hover:border-gray-300'
                   }`}>
                     {plan.popular && (
-                      <span className="self-start mb-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
+                      <span className="self-start mb-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-gray-900"
                         style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)' }}>Most Popular</span>
                     )}
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${plan.color}20` }}>
                         <Icon size={15} style={{ color: plan.color }} />
                       </div>
-                      <p className="text-sm font-bold text-white">{plan.label}</p>
+                      <p className="text-sm font-bold text-gray-900">{plan.label}</p>
                       {isCurrent && <span className="ml-auto text-[10px] font-bold text-purple-400">Current</span>}
                     </div>
                     <p className="text-xl font-extrabold text-white mb-0.5">
                       {plan.price === 0 ? 'Free' : `KES ${plan.price.toLocaleString()}`}
-                      {plan.period && <span className="text-xs font-normal text-gray-400 ml-1">{plan.period}</span>}
+                      {plan.period && <span className="text-xs font-normal text-gray-500 ml-1">{plan.period}</span>}
                     </p>
                     <div className="my-3 space-y-1.5 flex-1">
                       {plan.features.map(f => (
-                        <div key={f} className="flex items-center gap-2 text-xs text-gray-300">
+                        <div key={f} className="flex items-center gap-2 text-xs text-gray-600">
                           <Check size={11} style={{ color: plan.color }} /> {f}
                         </div>
                       ))}
                     </div>
                     <button className={`w-full py-2 rounded-xl text-xs font-semibold transition-all ${
-                      isCurrent ? 'border border-white/10 text-gray-500 cursor-not-allowed' : 'btn-primary'
+                      isCurrent ? 'border border-gray-200 text-gray-500 cursor-not-allowed' : 'btn-primary'
                     }`} disabled={isCurrent}>
                       {isCurrent ? 'Current Plan' : plan.price > 30000 ? 'Upgrade' : plan.price === 0 ? 'Downgrade' : 'Switch'}
                     </button>
@@ -280,7 +280,7 @@ export default function Settings() {
                     <span className="text-green-400 font-bold text-xs">M</span>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-white">M-Pesa</p>
+                    <p className="text-sm font-semibold text-gray-800">M-Pesa</p>
                     <p className="text-xs text-gray-500">+254 7XX XXX XXX</p>
                   </div>
                   <button className="ml-auto text-xs text-purple-400 hover:text-purple-300">Change</button>
@@ -293,21 +293,21 @@ export default function Settings() {
             </div>
 
             <div className="card-glow overflow-hidden">
-              <div className="px-5 py-3.5 border-b border-white/6 flex items-center justify-between">
-                <h3 className="text-xs font-bold text-white uppercase tracking-wide">Invoice History</h3>
+              <div className="px-5 py-3.5 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wide">Invoice History</h3>
                 <span className="text-[10px] text-gray-600 italic">PesaPal integration coming soon</span>
               </div>
-              <div className="divide-y divide-white/5">
+              <div className="divide-y divide-gray-100">
                 {BILLING_HISTORY.map(inv => (
                   <div key={inv.id} className="flex items-center gap-4 px-5 py-3.5">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">{inv.desc}</p>
+                      <p className="text-sm font-semibold text-gray-800 truncate">{inv.desc}</p>
                       <p className="text-xs text-gray-500">
                         {new Date(inv.date).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })}
-                        {' · '}{inv.id}
+                        {' Â· '}{inv.id}
                       </p>
                     </div>
-                    <p className="text-sm font-bold text-white shrink-0">KES {inv.amount.toLocaleString()}</p>
+                    <p className="text-sm font-bold text-gray-900 shrink-0">KES {inv.amount.toLocaleString()}</p>
                     <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-green-500/15 text-green-400 shrink-0">{inv.status}</span>
                     <button className="text-gray-500 hover:text-purple-400 transition-colors shrink-0" title="Download invoice">
                       <ExternalLink size={13} />
@@ -323,7 +323,7 @@ export default function Settings() {
         {tab === 'notifications' && (
           <Card title="Notification Preferences" icon={Bell}>
             <div className="space-y-5">
-              <p className="text-xs text-gray-500 -mt-2 mb-4">Choose what you get notified about — in-app and by email.</p>
+              <p className="text-xs text-gray-500 -mt-2 mb-4">Choose what you get notified about â€” in-app and by email.</p>
               {[
                 { key: 'projectReady' as const, label: 'Project ready for review', desc: 'When a creative uploads your video or audio deliverable' },
                 { key: 'revisionDone' as const, label: 'Revision completed', desc: 'When iteration 2 is uploaded after your feedback' },
@@ -334,7 +334,7 @@ export default function Settings() {
               ].map(({ key, label, desc }) => (
                 <div key={key} className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm font-semibold text-white">{label}</p>
+                    <p className="text-sm font-semibold text-gray-800">{label}</p>
                     <p className="text-xs text-gray-500">{desc}</p>
                   </div>
                   <Toggle on={notifs[key]} onToggle={() => toggleN(key)} />
@@ -356,7 +356,7 @@ export default function Settings() {
                 </div>
                 <div>
                   <label className="label">Confirm New Password</label>
-                  <input type="password" className="input" placeholder="••••••••"
+                  <input type="password" className="input" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                     value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
                 </div>
                 {pwError && (
@@ -373,7 +373,7 @@ export default function Settings() {
                   onClick={handlePasswordChange}
                   disabled={pwSaving || !newPassword || !confirmPassword}
                   className="btn-primary text-sm px-5 py-2.5 disabled:opacity-50">
-                  {pwSaving ? 'Updating…' : 'Update Password'}
+                  {pwSaving ? 'Updatingâ€¦' : 'Update Password'}
                 </button>
               </div>
             </Card>
@@ -381,13 +381,13 @@ export default function Settings() {
             <Card title="Active Sessions" icon={Shield}>
               <div className="space-y-3">
                 {[
-                  { device: 'Chrome on Windows 11', location: 'Nairobi, Kenya', time: 'Now — Current session', current: true },
+                  { device: 'Chrome on Windows 11', location: 'Nairobi, Kenya', time: 'Now â€” Current session', current: true },
                   { device: 'Safari on iPhone 15', location: 'Nairobi, Kenya', time: '2 days ago', current: false },
                 ].map(s => (
-                  <div key={s.device} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-white/6 bg-white/2">
+                  <div key={s.device} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 bg-white/2">
                     <div>
-                      <p className="text-xs font-semibold text-white">{s.device}</p>
-                      <p className="text-[11px] text-gray-500">{s.location} · {s.time}</p>
+                      <p className="text-xs font-semibold text-gray-800">{s.device}</p>
+                      <p className="text-[11px] text-gray-500">{s.location} Â· {s.time}</p>
                     </div>
                     {s.current
                       ? <span className="text-[10px] font-bold text-green-400 px-2 py-0.5 rounded-md bg-green-500/15">Active</span>
@@ -411,3 +411,4 @@ export default function Settings() {
     </DashboardLayout>
   )
 }
+

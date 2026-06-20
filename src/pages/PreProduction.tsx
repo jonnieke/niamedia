@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
   CheckCircle2, ArrowRight, ArrowLeft, Send, AlertCircle,
@@ -8,7 +8,7 @@ import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
-// ─── Step definitions ─────────────────────────────────────────────
+// â”€â”€â”€ Step definitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const STEPS = [
   { id: 1, label: 'Theme Colors',   icon: Palette },
   { id: 2, label: 'Mood & Tone',    icon: Heart },
@@ -19,7 +19,7 @@ const STEPS = [
   { id: 7, label: 'Review & Submit',icon: Star },
 ]
 
-// ─── Data ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const COLOR_PALETTES = [
   { id: 'golden',    name: 'Golden Hour',    colors: ['#1a0e00','#3d2100','#c97d30','#f5c86e','#fff9f0'], desc: 'Warm, premium, trustworthy' },
   { id: 'ocean',     name: 'Ocean Deep',     colors: ['#020e1a','#05254d','#1a6fa6','#38bdf8','#e0f7ff'], desc: 'Corporate, calm, credible' },
@@ -32,20 +32,20 @@ const COLOR_PALETTES = [
 ]
 
 const MOODS = [
-  { id: 'cinematic',    label: 'Cinematic',    emoji: '🎬', desc: 'Epic, dramatic, large scale. Award-show energy.' },
-  { id: 'warm',         label: 'Warm & Human', emoji: '🌿', desc: 'Real people, real emotion, trust-building.' },
-  { id: 'bold',         label: 'Bold & Direct',emoji: '⚡', desc: 'No-nonsense. Statement-making. Attention-grabbing.' },
-  { id: 'luxury',       label: 'Luxury',       emoji: '✨', desc: 'Aspirational, refined, quiet confidence.' },
-  { id: 'playful',      label: 'Playful',      emoji: '🎉', desc: 'Fun, youthful, high energy. Shareability first.' },
-  { id: 'documentary',  label: 'Documentary',  emoji: '📽️', desc: 'Raw, real, story-first. Authentic footage.' },
-  { id: 'corporate',    label: 'Corporate',    emoji: '🏢', desc: 'Professional, structured, data-confident.' },
-  { id: 'emotional',    label: 'Emotional',    emoji: '💛', desc: 'Touches the heart. Stays in memory.' },
+  { id: 'cinematic',    label: 'Cinematic',    emoji: 'ðŸŽ¬', desc: 'Epic, dramatic, large scale. Award-show energy.' },
+  { id: 'warm',         label: 'Warm & Human', emoji: 'ðŸŒ¿', desc: 'Real people, real emotion, trust-building.' },
+  { id: 'bold',         label: 'Bold & Direct',emoji: 'âš¡', desc: 'No-nonsense. Statement-making. Attention-grabbing.' },
+  { id: 'luxury',       label: 'Luxury',       emoji: 'âœ¨', desc: 'Aspirational, refined, quiet confidence.' },
+  { id: 'playful',      label: 'Playful',      emoji: 'ðŸŽ‰', desc: 'Fun, youthful, high energy. Shareability first.' },
+  { id: 'documentary',  label: 'Documentary',  emoji: 'ðŸ“½ï¸', desc: 'Raw, real, story-first. Authentic footage.' },
+  { id: 'corporate',    label: 'Corporate',    emoji: 'ðŸ¢', desc: 'Professional, structured, data-confident.' },
+  { id: 'emotional',    label: 'Emotional',    emoji: 'ðŸ’›', desc: 'Touches the heart. Stays in memory.' },
 ]
 
-const AGE_GROUPS = ['13–17', '18–24', '25–34', '35–44', '45–54', '55+']
+const AGE_GROUPS = ['13â€“17', '18â€“24', '25â€“34', '35â€“44', '45â€“54', '55+']
 const LOCATIONS   = ['Nairobi CBD', 'Westlands / Parklands', 'Nairobi Suburbs', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Pan-Kenya', 'East Africa']
 const INTERESTS   = ['Business & Finance', 'Real Estate', 'Family & Home', 'Tech & Innovation', 'Health & Fitness', 'Food & Lifestyle', 'Fashion & Beauty', 'Education & Career', 'Travel & Tourism', 'Entertainment']
-const INCOMES     = ['Budget (Under KES 30K/mo)', 'Middle (KES 30–80K/mo)', 'Upper-middle (KES 80–200K/mo)', 'Affluent (KES 200K+/mo)']
+const INCOMES     = ['Budget (Under KES 30K/mo)', 'Middle (KES 30â€“80K/mo)', 'Upper-middle (KES 80â€“200K/mo)', 'Affluent (KES 200K+/mo)']
 
 const VOICE_GENDERS   = [{ id: 'female', label: 'Female' }, { id: 'male', label: 'Male' }, { id: 'both', label: 'Mix of both' }, { id: 'none', label: 'No narrator' }]
 const VOICE_ACCENTS   = ['Kenyan English', 'Nigerian English', 'South African English', 'British English', 'American English', 'Kiswahili', 'Sheng / Code-switch']
@@ -53,23 +53,23 @@ const VOICE_TONES     = ['Authoritative & Confident', 'Warm & Friendly', 'Energe
 const MUSIC_GENRES    = ['Afro-soul / Acoustic', 'Afro-beat / Afro-fusion', 'Orchestral / Cinematic', 'Electronic / Modern', 'Jazz / Lo-fi', 'Gospel / Inspirational', 'No music (silence or ASMR)']
 
 const VISUAL_STYLES = [
-  { id: 'cinematic',   label: 'Cinematic Live Action', emoji: '🎥', desc: 'Real actors, locations, professional filming. High-end commercial look.' },
-  { id: '3d',          label: '3D Animation',           emoji: '🧊', desc: 'Fully rendered 3D world. Characters, products, environments.' },
-  { id: '2d',          label: '2D Illustration',         emoji: '✏️', desc: 'Hand-drawn or vector animated. Expressive and brand-flexible.' },
-  { id: 'realistic',   label: 'Realistic Avatar-Led',   emoji: '🧑', desc: 'Photo-realistic AI avatars. Human delivery, no casting needed.' },
-  { id: 'documentary', label: 'Documentary Style',       emoji: '📹', desc: 'Raw, handheld. Authentic interviews and real environments.' },
-  { id: 'mixed',       label: 'Mixed Media',            emoji: '🎨', desc: 'Live action + motion graphics + animation combined.' },
+  { id: 'cinematic',   label: 'Cinematic Live Action', emoji: 'ðŸŽ¥', desc: 'Real actors, locations, professional filming. High-end commercial look.' },
+  { id: '3d',          label: '3D Animation',           emoji: 'ðŸ§Š', desc: 'Fully rendered 3D world. Characters, products, environments.' },
+  { id: '2d',          label: '2D Illustration',         emoji: 'âœï¸', desc: 'Hand-drawn or vector animated. Expressive and brand-flexible.' },
+  { id: 'realistic',   label: 'Realistic Avatar-Led',   emoji: 'ðŸ§‘', desc: 'Photo-realistic AI avatars. Human delivery, no casting needed.' },
+  { id: 'documentary', label: 'Documentary Style',       emoji: 'ðŸ“¹', desc: 'Raw, handheld. Authentic interviews and real environments.' },
+  { id: 'mixed',       label: 'Mixed Media',            emoji: 'ðŸŽ¨', desc: 'Live action + motion graphics + animation combined.' },
 ]
 
 const AVATAR_STYLES = [
-  { id: 'none',        label: 'No Avatar',           emoji: '🚫', desc: 'Voiceover only — no on-screen presenter.' },
-  { id: 'realistic',   label: 'Realistic Human',     emoji: '👤', desc: 'Photo-real AI-generated presenter. Looks like a real person.' },
-  { id: 'illustrated', label: 'Illustrated Character',emoji: '🎨', desc: 'Branded illustrated character. Custom to your brand.' },
-  { id: '3d',          label: '3D Character',        emoji: '🧊', desc: 'Full 3D animated character. Cinematic and modern.' },
-  { id: 'abstract',    label: 'Abstract / Logo Anim',emoji: '💫', desc: 'No human form — animated brand identity or abstract shapes.' },
+  { id: 'none',        label: 'No Avatar',           emoji: 'ðŸš«', desc: 'Voiceover only â€” no on-screen presenter.' },
+  { id: 'realistic',   label: 'Realistic Human',     emoji: 'ðŸ‘¤', desc: 'Photo-real AI-generated presenter. Looks like a real person.' },
+  { id: 'illustrated', label: 'Illustrated Character',emoji: 'ðŸŽ¨', desc: 'Branded illustrated character. Custom to your brand.' },
+  { id: '3d',          label: '3D Character',        emoji: 'ðŸ§Š', desc: 'Full 3D animated character. Cinematic and modern.' },
+  { id: 'abstract',    label: 'Abstract / Logo Anim',emoji: 'ðŸ’«', desc: 'No human form â€” animated brand identity or abstract shapes.' },
 ]
 
-// ─── State shape ──────────────────────────────────────────────────
+// â”€â”€â”€ State shape â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface PreProductionState {
   palette: string
   moods: string[]
@@ -91,12 +91,12 @@ const initial: PreProductionState = {
   visualStyle: '', avatarStyle: '',
 }
 
-// ─── Sub-components ────────────────────────────────────────────────
+// â”€â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button onClick={onClick}
       className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-        active ? 'text-white border-purple-500/60 bg-purple-500/20' : 'text-gray-400 border-white/10 bg-white/3 hover:border-white/20 hover:text-white'
+        active ? 'text-white border-purple-500/60 bg-purple-500/20' : 'text-gray-500 border-gray-200 bg-white/3 hover:border-white/20 hover:text-white'
       }`}>
       {children}
     </button>
@@ -107,7 +107,7 @@ function StepCard({ title, desc, children }: { title: string; desc: string; chil
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-xl font-bold text-white">{title}</h2>
+        <h2 className="text-xl font-bold text-gray-900">{title}</h2>
         <p className="text-sm text-gray-500 mt-1">{desc}</p>
       </div>
       {children}
@@ -115,7 +115,7 @@ function StepCard({ title, desc, children }: { title: string; desc: string; chil
   )
 }
 
-// ─── Step components ───────────────────────────────────────────────
+// â”€â”€â”€ Step components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Step1({ state, setState }: { state: PreProductionState; setState: (s: Partial<PreProductionState>) => void }) {
   return (
     <StepCard title="Theme Colors" desc="Choose a colour palette that defines the visual world of your production.">
@@ -123,7 +123,7 @@ function Step1({ state, setState }: { state: PreProductionState; setState: (s: P
         {COLOR_PALETTES.map(p => (
           <button key={p.id} onClick={() => setState({ palette: p.id })}
             className={`p-4 rounded-2xl border text-left transition-all ${
-              state.palette === p.id ? 'border-purple-500/60 bg-purple-500/8' : 'border-white/8 bg-white/2 hover:border-white/15'
+              state.palette === p.id ? 'border-purple-500/60 bg-purple-500/8' : 'border-gray-200 bg-white/2 hover:border-gray-300'
             }`}>
             <div className="flex gap-1.5 mb-3">
               {p.colors.map((c, i) => (
@@ -132,7 +132,7 @@ function Step1({ state, setState }: { state: PreProductionState; setState: (s: P
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-bold text-white">{p.name}</p>
+                <p className="text-sm font-bold text-gray-900">{p.name}</p>
                 <p className="text-xs text-gray-500">{p.desc}</p>
               </div>
               {state.palette === p.id && <CheckCircle2 size={16} className="text-purple-400 shrink-0" />}
@@ -153,13 +153,13 @@ function Step2({ state, setState }: { state: PreProductionState; setState: (s: P
           <button key={m.id} onClick={() => toggle(m.id)}
             disabled={!state.moods.includes(m.id) && state.moods.length >= 3}
             className={`p-4 rounded-2xl border text-left transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
-              state.moods.includes(m.id) ? 'border-purple-500/60 bg-purple-500/8' : 'border-white/8 bg-white/2 hover:border-white/15'
+              state.moods.includes(m.id) ? 'border-purple-500/60 bg-purple-500/8' : 'border-gray-200 bg-white/2 hover:border-gray-300'
             }`}>
             <div className="flex items-start gap-3">
               <span className="text-2xl">{m.emoji}</span>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-white">{m.label}</p>
+                  <p className="text-sm font-bold text-gray-900">{m.label}</p>
                   {state.moods.includes(m.id) && <CheckCircle2 size={14} className="text-purple-400" />}
                 </div>
                 <p className="text-xs text-gray-500 mt-0.5">{m.desc}</p>
@@ -180,19 +180,19 @@ function Step3({ state, setState }: { state: PreProductionState; setState: (s: P
     <StepCard title="Target Market" desc="Define exactly who this production is for.">
       <div className="space-y-6">
         <div>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Age Groups</p>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Age Groups</p>
           <div className="flex flex-wrap gap-2">{AGE_GROUPS.map(a => <Chip key={a} active={state.ages.includes(a)} onClick={() => toggleAge(a)}>{a}</Chip>)}</div>
         </div>
         <div>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Primary Locations</p>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Primary Locations</p>
           <div className="flex flex-wrap gap-2">{LOCATIONS.map(l => <Chip key={l} active={state.locations.includes(l)} onClick={() => toggleLoc(l)}>{l}</Chip>)}</div>
         </div>
         <div>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Interests & Lifestyle</p>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Interests & Lifestyle</p>
           <div className="flex flex-wrap gap-2">{INTERESTS.map(i => <Chip key={i} active={state.interests.includes(i)} onClick={() => toggleInt(i)}>{i}</Chip>)}</div>
         </div>
         <div>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Income Level</p>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Income Level</p>
           <div className="flex flex-wrap gap-2">{INCOMES.map(i => <Chip key={i} active={state.income === i} onClick={() => setState({ income: i })}>{i}</Chip>)}</div>
         </div>
       </div>
@@ -205,12 +205,12 @@ function Step4({ state, setState }: { state: PreProductionState; setState: (s: P
     <StepCard title="Voice & Sound" desc="Define the audio personality of your production.">
       <div className="space-y-6">
         <div>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Narrator Voice</p>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Narrator Voice</p>
           <div className="grid grid-cols-2 gap-2">
             {VOICE_GENDERS.map(g => (
               <button key={g.id} onClick={() => setState({ voiceGender: g.id })}
                 className={`p-3 rounded-xl border text-sm font-semibold transition-all ${
-                  state.voiceGender === g.id ? 'border-purple-500/60 bg-purple-500/15 text-purple-300' : 'border-white/8 text-gray-400 hover:border-white/15 hover:text-white'
+                  state.voiceGender === g.id ? 'border-purple-500/60 bg-purple-500/15 text-purple-300' : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:text-white'
                 }`}>
                 {g.label}
               </button>
@@ -218,15 +218,15 @@ function Step4({ state, setState }: { state: PreProductionState; setState: (s: P
           </div>
         </div>
         <div>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Accent / Language</p>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Accent / Language</p>
           <div className="flex flex-wrap gap-2">{VOICE_ACCENTS.map(a => <Chip key={a} active={state.voiceAccent === a} onClick={() => setState({ voiceAccent: a })}>{a}</Chip>)}</div>
         </div>
         <div>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Narration Tone</p>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Narration Tone</p>
           <div className="flex flex-wrap gap-2">{VOICE_TONES.map(t => <Chip key={t} active={state.voiceTone === t} onClick={() => setState({ voiceTone: t })}>{t}</Chip>)}</div>
         </div>
         <div>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Music Direction</p>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Music Direction</p>
           <div className="flex flex-wrap gap-2">{MUSIC_GENRES.map(m => <Chip key={m} active={state.musicGenre === m} onClick={() => setState({ musicGenre: m })}>{m}</Chip>)}</div>
         </div>
       </div>
@@ -241,13 +241,13 @@ function Step5({ state, setState }: { state: PreProductionState; setState: (s: P
         {VISUAL_STYLES.map(s => (
           <button key={s.id} onClick={() => setState({ visualStyle: s.id })}
             className={`p-5 rounded-2xl border text-left transition-all ${
-              state.visualStyle === s.id ? 'border-purple-500/60 bg-purple-500/8' : 'border-white/8 bg-white/2 hover:border-white/15'
+              state.visualStyle === s.id ? 'border-purple-500/60 bg-purple-500/8' : 'border-gray-200 bg-white/2 hover:border-gray-300'
             }`}>
             <div className="flex items-start gap-3">
               <span className="text-3xl">{s.emoji}</span>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-white">{s.label}</p>
+                  <p className="text-sm font-bold text-gray-900">{s.label}</p>
                   {state.visualStyle === s.id && <CheckCircle2 size={14} className="text-purple-400" />}
                 </div>
                 <p className="text-xs text-gray-500 mt-1 leading-snug">{s.desc}</p>
@@ -267,13 +267,13 @@ function Step6({ state, setState }: { state: PreProductionState; setState: (s: P
         {AVATAR_STYLES.map(a => (
           <button key={a.id} onClick={() => setState({ avatarStyle: a.id })}
             className={`p-5 rounded-2xl border text-left transition-all ${
-              state.avatarStyle === a.id ? 'border-purple-500/60 bg-purple-500/8' : 'border-white/8 bg-white/2 hover:border-white/15'
+              state.avatarStyle === a.id ? 'border-purple-500/60 bg-purple-500/8' : 'border-gray-200 bg-white/2 hover:border-gray-300'
             }`}>
             <div className="flex items-start gap-3">
               <span className="text-3xl">{a.emoji}</span>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-white">{a.label}</p>
+                  <p className="text-sm font-bold text-gray-900">{a.label}</p>
                   {state.avatarStyle === a.id && <CheckCircle2 size={14} className="text-purple-400" />}
                 </div>
                 <p className="text-xs text-gray-500 mt-1 leading-snug">{a.desc}</p>
@@ -294,22 +294,22 @@ function Step7({ state, conceptTitle }: { state: PreProductionState; conceptTitl
 
   const rows = [
     { label: 'Concept', value: conceptTitle || 'Untitled Concept' },
-    { label: 'Colour Palette', value: palette?.name || '—' },
-    { label: 'Mood', value: selectedMoods.map(m => m.label).join(', ') || '—' },
-    { label: 'Ages', value: state.ages.join(', ') || '—' },
-    { label: 'Locations', value: state.locations.join(', ') || '—' },
-    { label: 'Interests', value: state.interests.join(', ') || '—' },
-    { label: 'Income', value: state.income || '—' },
-    { label: 'Narrator', value: [VOICE_GENDERS.find(g => g.id === state.voiceGender)?.label, state.voiceAccent, state.voiceTone].filter(Boolean).join(' · ') || '—' },
-    { label: 'Music', value: state.musicGenre || '—' },
-    { label: 'Visual Style', value: visualStyle?.label || '—' },
-    { label: 'Avatar Style', value: avatarStyle?.label || '—' },
+    { label: 'Colour Palette', value: palette?.name || 'â€”' },
+    { label: 'Mood', value: selectedMoods.map(m => m.label).join(', ') || 'â€”' },
+    { label: 'Ages', value: state.ages.join(', ') || 'â€”' },
+    { label: 'Locations', value: state.locations.join(', ') || 'â€”' },
+    { label: 'Interests', value: state.interests.join(', ') || 'â€”' },
+    { label: 'Income', value: state.income || 'â€”' },
+    { label: 'Narrator', value: [VOICE_GENDERS.find(g => g.id === state.voiceGender)?.label, state.voiceAccent, state.voiceTone].filter(Boolean).join(' Â· ') || 'â€”' },
+    { label: 'Music', value: state.musicGenre || 'â€”' },
+    { label: 'Visual Style', value: visualStyle?.label || 'â€”' },
+    { label: 'Avatar Style', value: avatarStyle?.label || 'â€”' },
   ]
 
   return (
     <StepCard title="Review & Submit" desc="Confirm your pre-production brief before it goes to your creator.">
       <div className="card p-5 mb-6">
-        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Production Brief Summary</p>
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Production Brief Summary</p>
         <div className="space-y-3">
           {rows.map(({ label, value }) => (
             <div key={label} className="flex items-start gap-4">
@@ -319,7 +319,7 @@ function Step7({ state, conceptTitle }: { state: PreProductionState; conceptTitl
           ))}
         </div>
         {palette && (
-          <div className="mt-4 pt-4 border-t border-white/6">
+          <div className="mt-4 pt-4 border-t border-gray-200">
             <p className="text-xs text-gray-600 mb-2">Colour Palette Preview</p>
             <div className="flex gap-1.5 h-6">
               {palette.colors.map((c, i) => <div key={i} className="flex-1 rounded-md" style={{ background: c }} />)}
@@ -331,8 +331,8 @@ function Step7({ state, conceptTitle }: { state: PreProductionState; conceptTitl
         <div className="flex items-start gap-3">
           <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold text-white">Ready to go to production</p>
-            <p className="text-xs text-gray-400 mt-0.5">Once you submit, your creator receives this brief and will reach out within 24 hours to begin production.</p>
+            <p className="text-sm font-semibold text-gray-800">Ready to go to production</p>
+            <p className="text-xs text-gray-500 mt-0.5">Once you submit, your creator receives this brief and will reach out within 24 hours to begin production.</p>
           </div>
         </div>
       </div>
@@ -340,7 +340,7 @@ function Step7({ state, conceptTitle }: { state: PreProductionState; conceptTitl
   )
 }
 
-// ─── Main page ─────────────────────────────────────────────────────
+// â”€â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function PreProduction() {
   const { user } = useAuth()
   const [params] = useSearchParams()
@@ -391,8 +391,8 @@ export default function PreProduction() {
             style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(59,130,246,0.3))' }}>
             <CheckCircle2 size={36} className="text-purple-400" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-3">Brief Submitted!</h1>
-          <p className="text-gray-400 mb-2">Your pre-production brief for <span className="text-white font-semibold">"{conceptTitle}"</span> has been sent to your creator.</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">Brief Submitted!</h1>
+          <p className="text-gray-500 mb-2">Your pre-production brief for <span className="text-white font-semibold">"{conceptTitle}"</span> has been sent to your creator.</p>
           <p className="text-sm text-gray-500 mb-8">Expect a response within 24 hours. You'll receive updates via email and on your dashboard.</p>
           <div className="flex items-center justify-center gap-3">
             <Link to="/dashboard" className="btn-secondary px-6 py-2.5 text-sm">Back to Dashboard</Link>
@@ -411,8 +411,8 @@ export default function PreProduction() {
           <span>/</span>
           <span className="text-white">Pre-Production</span>
         </div>
-        <h1 className="text-2xl font-bold text-white">Pre-Production Setup</h1>
-        <p className="text-sm text-gray-500 mt-1">"{conceptTitle}" — define the look, feel, and voice of your production.</p>
+        <h1 className="text-2xl font-bold text-gray-900">Pre-Production Setup</h1>
+        <p className="text-sm text-gray-500 mt-1">"{conceptTitle}" â€” define the look, feel, and voice of your production.</p>
       </div>
 
       <div className="grid lg:grid-cols-4 gap-6">
@@ -430,11 +430,11 @@ export default function PreProduction() {
                     disabled={!done && !active}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
                       active ? 'bg-purple-500/15 text-purple-300 border border-purple-500/25'
-                      : done  ? 'text-gray-300 hover:bg-white/5 cursor-pointer'
+                      : done  ? 'text-gray-600 hover:bg-gray-50 cursor-pointer'
                       : 'text-gray-600 cursor-not-allowed'
                     }`}>
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
-                      done ? 'bg-emerald-500/20 text-emerald-400' : active ? 'bg-purple-500/30 text-purple-300' : 'bg-white/5 text-gray-600'
+                      done ? 'bg-emerald-500/20 text-emerald-400' : active ? 'bg-purple-500/30 text-purple-300' : 'bg-gray-50 text-gray-600'
                     }`}>
                       {done ? <CheckCircle2 size={14} /> : s.id}
                     </div>
@@ -446,12 +446,12 @@ export default function PreProduction() {
               })}
             </div>
             {/* Progress */}
-            <div className="mt-4 pt-4 border-t border-white/6">
+            <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="flex justify-between text-[10px] text-gray-600 mb-1.5">
                 <span>Progress</span>
                 <span>{Math.round(((step - 1) / STEPS.length) * 100)}%</span>
               </div>
-              <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-gray-50 rounded-full overflow-hidden">
                 <div className="h-full rounded-full transition-all duration-500"
                   style={{ width: `${((step - 1) / STEPS.length) * 100}%`, background: 'linear-gradient(90deg, #8b5cf6, #3b82f6)' }} />
               </div>
@@ -479,7 +479,7 @@ export default function PreProduction() {
           )}
           <div className="flex items-center justify-between">
             <button onClick={() => setStep(s => Math.max(1, s - 1))} disabled={step === 1}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-400 border border-white/10 bg-white/3 hover:border-white/20 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-500 border border-gray-200 bg-white/3 hover:border-white/20 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed">
               <ArrowLeft size={15} /> Back
             </button>
 
@@ -487,15 +487,15 @@ export default function PreProduction() {
 
             {step < STEPS.length ? (
               <button onClick={() => setStep(s => Math.min(STEPS.length, s + 1))}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-gray-900 transition-all"
                 style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', boxShadow: '0 0 16px rgba(139,92,246,0.35)' }}>
                 Next <ArrowRight size={15} />
               </button>
             ) : (
               <button onClick={handleSubmit} disabled={submitting}
-                className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-60"
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-gray-900 transition-all disabled:opacity-60"
                 style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 0 20px rgba(16,185,129,0.35)' }}>
-                <Send size={15} /> {submitting ? 'Submitting…' : 'Submit to Creator'}
+                <Send size={15} /> {submitting ? 'Submittingâ€¦' : 'Submit to Creator'}
               </button>
             )}
           </div>
@@ -504,3 +504,4 @@ export default function PreProduction() {
     </DashboardLayout>
   )
 }
+

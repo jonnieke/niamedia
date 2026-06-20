@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react'
+﻿import { useState, FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react'
 import Logo from '../components/ui/Logo'
@@ -18,7 +18,7 @@ function GoogleButton() {
 
   return (
     <button onClick={handleClick} disabled={loading} type="button"
-      className="w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-white/15 bg-white/5 text-sm font-semibold text-white hover:bg-white/10 transition-all disabled:opacity-50">
+      className="w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-gray-300 bg-gray-50 text-sm font-semibold text-gray-800 hover:bg-gray-100 transition-all disabled:opacity-50">
       {loading ? (
         <Loader2 size={18} className="animate-spin" />
       ) : (
@@ -29,7 +29,7 @@ function GoogleButton() {
           <path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7-5.4c-2.1 1.4-4.8 2.3-8.2 2.3-6.4 0-11.8-3.6-14.5-8.8l-7.8 6.2C6.6 42.7 14.6 48 24 48z"/>
         </svg>
       )}
-      {loading ? 'Redirecting…' : 'Continue with Google'}
+      {loading ? 'Redirectingâ€¦' : 'Continue with Google'}
     </button>
   )
 }
@@ -37,9 +37,9 @@ function GoogleButton() {
 function Divider() {
   return (
     <div className="flex items-center gap-3 my-5">
-      <div className="flex-1 h-px bg-white/8" />
+      <div className="flex-1 h-px bg-gray-100" />
       <span className="text-xs text-gray-600">or continue with email</span>
-      <div className="flex-1 h-px bg-white/8" />
+      <div className="flex-1 h-px bg-gray-100" />
     </div>
   )
 }
@@ -68,7 +68,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-ink-900 flex items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%)', filter: 'blur(60px)' }} />
 
@@ -77,7 +77,7 @@ export default function Login() {
           <Link to="/" className="inline-flex justify-center mb-6">
             <Logo size="md" />
           </Link>
-          <h1 className="text-2xl font-bold text-white">Welcome back</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
           <p className="text-sm text-gray-500 mt-1">Sign in to your account</p>
         </div>
 
@@ -106,7 +106,7 @@ export default function Login() {
                 <input type={showPw ? 'text' : 'password'} className="input pr-10" placeholder="Your password"
                   value={password} onChange={e => setPassword(e.target.value)} required />
                 <button type="button" onClick={() => setShowPw(!showPw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600">
                   {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -116,7 +116,7 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-5 pt-5 border-t border-white/6 text-center">
+          <div className="mt-5 pt-5 border-t border-gray-200 text-center">
             <p className="text-sm text-gray-500">
               Don't have an account?{' '}
               <Link to="/register" className="text-purple-400 hover:text-purple-300 font-semibold">Create one</Link>
@@ -128,3 +128,4 @@ export default function Login() {
     </div>
   )
 }
+

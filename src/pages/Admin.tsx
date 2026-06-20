@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import {
   Users, BarChart2, Package, TrendingUp, ShieldCheck,
   Film, Music, Upload, Eye, RefreshCw, CheckCircle, Clock,
@@ -79,16 +79,16 @@ async function notifyUser(userId: string, title: string, body: string, type: str
 
 const AUDIO_NOTIFS: Partial<Record<AudioStatus, { title: string; body: (t: string) => string; type: string }>> = {
   'in-production':    { title: 'Production started!',       body: t => `We've started working on "${t}". Expect delivery within the agreed timeline.`,      type: 'info' },
-  'ready-for-review': { title: 'Your audio is ready! 👂',   body: t => `"${t}" is ready for your review. Listen and approve or request changes.`,           type: 'action' },
-  'accepted':         { title: 'Audio approved ✓',          body: t => `"${t}" has been accepted and is in your Asset Library.`,                            type: 'success' },
-  'delivered':        { title: 'Audio delivered! 🎉',        body: t => `"${t}" has been delivered. Download it from your Assets Library.`,                  type: 'success' },
+  'ready-for-review': { title: 'Your audio is ready! ðŸ‘‚',   body: t => `"${t}" is ready for your review. Listen and approve or request changes.`,           type: 'action' },
+  'accepted':         { title: 'Audio approved âœ“',          body: t => `"${t}" has been accepted and is in your Asset Library.`,                            type: 'success' },
+  'delivered':        { title: 'Audio delivered! ðŸŽ‰',        body: t => `"${t}" has been delivered. Download it from your Assets Library.`,                  type: 'success' },
 }
 
 const PROJECT_NOTIFS: Partial<Record<ProjectStatus, { title: string; body: (t: string) => string; type: string }>> = {
-  'in-production':    { title: 'Production started! 🎬',    body: t => `"${t}" is now in active production.`,                                              type: 'info' },
-  'ready-for-review': { title: 'Your project is ready! 👀', body: t => `"${t}" is ready for your review. Open it to approve or request changes.`,          type: 'action' },
-  'accepted':         { title: 'Project approved ✓',        body: t => `"${t}" has been accepted and added to your Asset Library.`,                        type: 'success' },
-  'delivered':        { title: 'Project delivered! 🎉',      body: t => `"${t}" has been delivered. Check your Assets Library.`,                            type: 'success' },
+  'in-production':    { title: 'Production started! ðŸŽ¬',    body: t => `"${t}" is now in active production.`,                                              type: 'info' },
+  'ready-for-review': { title: 'Your project is ready! ðŸ‘€', body: t => `"${t}" is ready for your review. Open it to approve or request changes.`,          type: 'action' },
+  'accepted':         { title: 'Project approved âœ“',        body: t => `"${t}" has been accepted and added to your Asset Library.`,                        type: 'success' },
+  'delivered':        { title: 'Project delivered! ðŸŽ‰',      body: t => `"${t}" has been delivered. Check your Assets Library.`,                            type: 'success' },
 }
 
 const STATUS_COLOR: Record<string, { color: string; bg: string }> = {
@@ -147,10 +147,10 @@ function AudioOrderRow({ order, onStatusChange }: {
           <Icon size={14} className="text-purple-400" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-white truncate">{order.title}</p>
+          <p className="text-sm font-semibold text-gray-800 truncate">{order.title}</p>
           <p className="text-xs text-gray-500">
-            {order.profiles?.name ?? '—'} · {order.package}
-            {order.rush && <span className="ml-2 text-amber-400 font-semibold">⚡ Rush</span>}
+            {order.profiles?.name ?? 'â€”'} Â· {order.package}
+            {order.rush && <span className="ml-2 text-amber-400 font-semibold">âš¡ Rush</span>}
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
@@ -167,22 +167,22 @@ function AudioOrderRow({ order, onStatusChange }: {
       {expanded && (
         <div className="px-5 pb-4 space-y-3">
           {/* Brief */}
-          <div className="rounded-xl border border-white/6 bg-white/2 p-4 grid sm:grid-cols-2 gap-3 text-xs">
+          <div className="rounded-xl border border-gray-200 bg-white/2 p-4 grid sm:grid-cols-2 gap-3 text-xs">
             {[
               { label: 'Business', value: brief.business },
               { label: 'Voice', value: brief.voice },
               { label: 'Mood', value: brief.mood },
-              { label: 'Platforms', value: Array.isArray(brief.platforms) ? (brief.platforms as string[]).join(', ') : '—' },
+              { label: 'Platforms', value: Array.isArray(brief.platforms) ? (brief.platforms as string[]).join(', ') : 'â€”' },
             ].map(({ label, value }) => (
               <div key={label}>
                 <p className="text-gray-500 mb-0.5">{label}</p>
-                <p className="text-white font-medium">{value || '—'}</p>
+                <p className="text-white font-medium">{value || 'â€”'}</p>
               </div>
             ))}
             {brief.message && (
               <div className="sm:col-span-2">
                 <p className="text-gray-500 mb-0.5">Key Message</p>
-                <p className="text-gray-300 leading-relaxed">{brief.message as string}</p>
+                <p className="text-gray-600 leading-relaxed">{brief.message as string}</p>
               </div>
             )}
           </div>
@@ -195,7 +195,7 @@ function AudioOrderRow({ order, onStatusChange }: {
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all disabled:opacity-50 ${
                   order.status === s
                     ? 'border-purple-500/50 bg-purple-500/15 text-purple-300'
-                    : 'border-white/10 text-gray-400 hover:border-purple-500/30 hover:text-purple-300'
+                    : 'border-gray-200 text-gray-500 hover:border-purple-500/30 hover:text-purple-300'
                 }`}>
                 {s.replace(/-/g, ' ')}
               </button>
@@ -263,8 +263,8 @@ function LeadRow({ lead, onStatusChange }: {
           <Icon size={14} className="text-amber-400" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-white">{lead.name} — {lead.business}</p>
-          <p className="text-xs text-gray-500 capitalize">{lead.service.replace('-', ' ')} · {lead.industry}</p>
+          <p className="text-sm font-semibold text-gray-800">{lead.name} â€” {lead.business}</p>
+          <p className="text-xs text-gray-500 capitalize">{lead.service.replace('-', ' ')} Â· {lead.industry}</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold capitalize"
@@ -279,12 +279,12 @@ function LeadRow({ lead, onStatusChange }: {
 
       {expanded && (
         <div className="px-5 pb-4 space-y-3">
-          <div className="rounded-xl border border-white/6 bg-white/2 p-4 grid sm:grid-cols-2 gap-3 text-xs">
-            <div className="flex items-center gap-2 text-gray-300">
+          <div className="rounded-xl border border-gray-200 bg-white/2 p-4 grid sm:grid-cols-2 gap-3 text-xs">
+            <div className="flex items-center gap-2 text-gray-600">
               <Phone size={11} className="text-gray-500 shrink-0" />
               <a href={`tel:${lead.phone}`} className="hover:text-white transition-colors">{lead.phone}</a>
             </div>
-            <div className="flex items-center gap-2 text-gray-300">
+            <div className="flex items-center gap-2 text-gray-600">
               <Mail size={11} className="text-gray-500 shrink-0" />
               <a href={`mailto:${lead.email}`} className="hover:text-white transition-colors">{lead.email}</a>
             </div>
@@ -297,7 +297,7 @@ function LeadRow({ lead, onStatusChange }: {
             {!!lead.brief?.extra && (
               <div className="sm:col-span-2">
                 <p className="text-gray-500 mb-0.5">Brief</p>
-                <p className="text-gray-300 leading-relaxed">{String(lead.brief.extra)}</p>
+                <p className="text-gray-600 leading-relaxed">{String(lead.brief.extra)}</p>
               </div>
             )}
           </div>
@@ -309,7 +309,7 @@ function LeadRow({ lead, onStatusChange }: {
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all disabled:opacity-50 capitalize ${
                   lead.status === s
                     ? 'border-amber-500/50 bg-amber-500/15 text-amber-300'
-                    : 'border-white/10 text-gray-400 hover:border-amber-500/30 hover:text-amber-300'
+                    : 'border-gray-200 text-gray-500 hover:border-amber-500/30 hover:text-amber-300'
                 }`}>{s}</button>
             ))}
             {updating && <Loader2 size={14} className="text-amber-400 animate-spin" />}
@@ -318,11 +318,11 @@ function LeadRow({ lead, onStatusChange }: {
           <div className="flex gap-2">
             <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-green-500/30 text-green-400 hover:bg-green-500/10 transition-all">
-              WhatsApp →
+              WhatsApp â†’
             </a>
             <a href={`mailto:${lead.email}`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-white/10 text-gray-400 hover:border-white/20 transition-all">
-              Email →
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 hover:border-white/20 transition-all">
+              Email â†’
             </a>
           </div>
         </div>
@@ -357,8 +357,8 @@ function ProjectRow({ project, onStatusChange }: {
           {isAudio ? <Music size={14} className="text-purple-400" /> : <Film size={14} className="text-purple-400" />}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-white truncate">{project.title}</p>
-          <p className="text-xs text-gray-500">{project.profiles?.name ?? '—'} · {project.package}</p>
+          <p className="text-sm font-semibold text-gray-800 truncate">{project.title}</p>
+          <p className="text-xs text-gray-500">{project.profiles?.name ?? 'â€”'} Â· {project.package}</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <StatusBadge status={project.status} />
@@ -377,7 +377,7 @@ function ProjectRow({ project, onStatusChange }: {
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all disabled:opacity-50 ${
                   project.status === s
                     ? 'border-purple-500/50 bg-purple-500/15 text-purple-300'
-                    : 'border-white/10 text-gray-400 hover:border-purple-500/30 hover:text-purple-300'
+                    : 'border-gray-200 text-gray-500 hover:border-purple-500/30 hover:text-purple-300'
                 }`}>
                 {s.replace(/-/g, ' ')}
               </button>
@@ -465,13 +465,13 @@ export default function Admin() {
       <div className="mb-7">
         <div className="flex items-center gap-2 mb-1">
           <ShieldCheck size={18} className="text-purple-400" />
-          <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
           <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">Admin Only</span>
         </div>
         <p className="text-sm text-gray-500">Manage users, audio orders, and production projects.</p>
         <a href="/admin/voices"
           className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl text-xs font-semibold text-purple-300 border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 transition-all">
-          <Mic size={13} /> Voice Clone Studio →
+          <Mic size={13} /> Voice Clone Studio â†’
         </a>
       </div>
 
@@ -483,7 +483,7 @@ export default function Admin() {
             <p className="text-sm text-amber-300 font-semibold">
               {actionNeeded} item{actionNeeded !== 1 ? 's' : ''} need your attention
               <span className="font-normal text-amber-400/70 ml-1.5">
-                — {pendingAudio > 0 ? `${pendingAudio} audio order${pendingAudio !== 1 ? 's' : ''} queued` : ''}
+                â€” {pendingAudio > 0 ? `${pendingAudio} audio order${pendingAudio !== 1 ? 's' : ''} queued` : ''}
                 {pendingAudio > 0 && pendingProjects > 0 ? ', ' : ''}
                 {pendingProjects > 0 ? `${pendingProjects} project${pendingProjects !== 1 ? 's' : ''} pending` : ''}
               </span>
@@ -492,12 +492,12 @@ export default function Admin() {
           <div className="flex gap-2 shrink-0">
             {pendingAudio > 0 && (
               <button onClick={() => setTab(2)} className="text-xs px-3 py-1.5 rounded-lg border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition-all">
-                Audio Orders →
+                Audio Orders â†’
               </button>
             )}
             {pendingProjects > 0 && (
               <button onClick={() => setTab(3)} className="text-xs px-3 py-1.5 rounded-lg border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition-all">
-                Projects →
+                Projects â†’
               </button>
             )}
           </div>
@@ -505,11 +505,11 @@ export default function Admin() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-7 border-b border-white/6 overflow-x-auto">
+      <div className="flex gap-1 mb-7 border-b border-gray-200 overflow-x-auto">
         {tabs.map((t, i) => (
           <button key={t} onClick={() => setTab(i)}
             className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all border-b-2 -mb-px flex items-center gap-1.5 whitespace-nowrap ${
-              tab === i ? 'border-purple-500 text-purple-300' : 'border-transparent text-gray-500 hover:text-gray-300'
+              tab === i ? 'border-purple-500 text-purple-300' : 'border-transparent text-gray-500 hover:text-gray-600'
             }`}>
             {t}
             {t === 'Leads' && newLeads > 0 && (
@@ -552,16 +552,16 @@ export default function Admin() {
 
               <div className="grid lg:grid-cols-2 gap-5">
                 <div className="card-glow overflow-hidden">
-                  <div className="px-5 py-3.5 border-b border-white/6 flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-white">Latest Audio Orders</h3>
+                  <div className="px-5 py-3.5 border-b border-gray-200 flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-gray-900">Latest Audio Orders</h3>
                     <button onClick={() => setTab(2)} className="text-xs text-purple-400 hover:text-purple-300">View all</button>
                   </div>
                   <div className="divide-y divide-white/4">
                     {audioOrders.slice(0, 5).map(o => (
                       <div key={o.id} className="flex items-center justify-between px-5 py-3 gap-3">
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-white truncate">{o.title}</p>
-                          <p className="text-[11px] text-gray-500">{o.profiles?.name ?? '—'}</p>
+                          <p className="text-xs font-semibold text-gray-800 truncate">{o.title}</p>
+                          <p className="text-[11px] text-gray-500">{o.profiles?.name ?? 'â€”'}</p>
                         </div>
                         <StatusBadge status={o.status} />
                       </div>
@@ -573,22 +573,22 @@ export default function Admin() {
                 </div>
 
                 <div className="card-glow overflow-hidden">
-                  <div className="px-5 py-3.5 border-b border-white/6 flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-white">Recent Users</h3>
+                  <div className="px-5 py-3.5 border-b border-gray-200 flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-gray-900">Recent Users</h3>
                     <button onClick={() => setTab(4)} className="text-xs text-purple-400 hover:text-purple-300">View all</button>
                   </div>
                   <div className="divide-y divide-white/4">
                     {users.slice(0, 5).map(u => (
                       <div key={u.id} className="flex items-center gap-3 px-5 py-3">
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-gray-900 shrink-0"
                           style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)' }}>
                           {u.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-white truncate">{u.name}</p>
+                          <p className="text-xs font-semibold text-gray-800 truncate">{u.name}</p>
                           <p className="text-[11px] text-gray-500 truncate">{u.email}</p>
                         </div>
-                        <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${u.role === 'admin' ? 'bg-purple-500/20 text-purple-300' : 'bg-white/8 text-gray-400'}`}>
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${u.role === 'admin' ? 'bg-purple-500/20 text-purple-300' : 'bg-gray-100 text-gray-500'}`}>
                           {u.role}
                         </span>
                       </div>
@@ -607,7 +607,7 @@ export default function Admin() {
                   const count = leads.filter(l => l.status === s).length
                   const { color, bg } = LEAD_STATUS_COLORS[s]
                   return (
-                    <div key={s} className="rounded-xl border border-white/8 bg-white/2 p-3 text-center">
+                    <div key={s} className="rounded-xl border border-gray-200 bg-white/2 p-3 text-center">
                       <p className="text-xl font-bold" style={{ color }}>{count}</p>
                       <p className="text-[10px] text-gray-500 mt-0.5 capitalize">{s}</p>
                     </div>
@@ -643,7 +643,7 @@ export default function Admin() {
                   const count = audioOrders.filter(o => o.status === s).length
                   const { color, bg } = STATUS_COLOR[s]
                   return (
-                    <div key={s} className="rounded-xl border border-white/8 bg-white/2 p-3 text-center">
+                    <div key={s} className="rounded-xl border border-gray-200 bg-white/2 p-3 text-center">
                       <p className="text-xl font-bold" style={{ color }}>{count}</p>
                       <p className="text-[10px] text-gray-500 mt-0.5">{s.replace(/-/g, ' ')}</p>
                     </div>
@@ -709,7 +709,7 @@ export default function Admin() {
                 </div>
               </div>
 
-              <div className="card-glow divide-y divide-white/5">
+              <div className="card-glow divide-y divide-gray-100">
                 {creditTxns.length === 0 ? (
                   <div className="py-16 text-center text-gray-600">
                     <CreditCard size={28} className="mx-auto mb-2 opacity-30" />
@@ -722,7 +722,7 @@ export default function Admin() {
                       <Zap size={14} className={t.amount > 0 ? 'text-emerald-400' : 'text-purple-400'} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white">{t.profiles?.name ?? '—'}</p>
+                      <p className="text-sm font-semibold text-gray-800">{t.profiles?.name ?? 'â€”'}</p>
                       <p className="text-xs text-gray-500 truncate">{t.description}</p>
                     </div>
                     <div className="text-right shrink-0">
@@ -741,15 +741,15 @@ export default function Admin() {
 
           {/* Users */}
           {tab === 5 && (
-            <div className="card-glow divide-y divide-white/5">
+            <div className="card-glow divide-y divide-gray-100">
               {users.map(u => (
                 <div key={u.id} className="flex items-center gap-3 px-5 py-3.5 flex-wrap sm:flex-nowrap">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-gray-900 shrink-0"
                     style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)' }}>
                     {u.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white">{u.name}</p>
+                    <p className="text-sm font-semibold text-gray-800">{u.name}</p>
                     <p className="text-xs text-gray-500 truncate">{u.email}</p>
                   </div>
                   {/* Credits balance */}
@@ -762,13 +762,13 @@ export default function Admin() {
                     onClick={() => grantCredit(u.id)}
                     disabled={grantingCredit === u.id}
                     title="Grant 1 free credit"
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-white/10 text-gray-500 hover:border-emerald-500/30 hover:text-emerald-400 text-xs transition-all disabled:opacity-40 shrink-0">
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:border-emerald-500/30 hover:text-emerald-400 text-xs transition-all disabled:opacity-40 shrink-0">
                     {grantingCredit === u.id
                       ? <Loader2 size={11} className="animate-spin" />
                       : <Plus size={11} />}
                     Credit
                   </button>
-                  <span className={`text-xs px-2 py-0.5 rounded font-semibold shrink-0 ${u.role === 'admin' ? 'bg-purple-500/20 text-purple-300' : 'bg-white/8 text-gray-400'}`}>
+                  <span className={`text-xs px-2 py-0.5 rounded font-semibold shrink-0 ${u.role === 'admin' ? 'bg-purple-500/20 text-purple-300' : 'bg-gray-100 text-gray-500'}`}>
                     {u.role}
                   </span>
                   <span className="text-xs text-gray-600 shrink-0">
@@ -786,3 +786,4 @@ export default function Admin() {
     </DashboardLayout>
   )
 }
+

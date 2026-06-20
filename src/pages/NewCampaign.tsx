@@ -1,4 +1,4 @@
-import { useState, FormEvent, useEffect } from 'react'
+﻿import { useState, FormEvent, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronDown, Zap, MessageSquare, Languages } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
@@ -20,17 +20,17 @@ const empty: CampaignFormData = {
 }
 
 const GENERATING_STEPS = [
-  'Reading your brief…',
-  'Crafting your strategy…',
-  'Writing your video script…',
-  'Building social captions…',
-  'Finalising your campaign…',
+  'Reading your briefâ€¦',
+  'Crafting your strategyâ€¦',
+  'Writing your video scriptâ€¦',
+  'Building social captionsâ€¦',
+  'Finalising your campaignâ€¦',
 ]
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="card-glow p-6">
-      <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5 pb-3 border-b border-white/6">{title}</h2>
+      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5 pb-3 border-b border-gray-200">{title}</h2>
       {children}
     </div>
   )
@@ -111,7 +111,7 @@ export default function NewCampaign() {
       navigate('/campaign-results', { state: { form, content: data } })
     } catch (err: unknown) {
       clearInterval(stepInterval)
-      setError(err instanceof Error ? err.message : 'Generation failed — please try again.')
+      setError(err instanceof Error ? err.message : 'Generation failed â€” please try again.')
       setLoading(false)
     }
   }
@@ -133,7 +133,7 @@ export default function NewCampaign() {
     `px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
       active
         ? 'text-white border-purple-500/60 bg-purple-500/20'
-        : 'text-gray-400 border-white/10 bg-white/3 hover:border-white/20 hover:text-gray-200'
+        : 'text-gray-500 border-gray-200 bg-white/3 hover:border-white/20 hover:text-gray-200'
     }`
 
   const canSubmit = form.platforms.length > 0 && !!form.cta
@@ -147,11 +147,11 @@ export default function NewCampaign() {
       <div className="max-w-2xl">
         <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-bold text-white">New Campaign</h1>
+            <h1 className="text-2xl font-bold text-gray-900">New Campaign</h1>
             <p className="text-sm text-gray-500 mt-1">Fill in your brief and we'll generate a complete campaign.</p>
           </div>
           <button type="button" onClick={() => setShowNia(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white shrink-0 transition-all hover:opacity-90"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-800 shrink-0 transition-all hover:opacity-90"
             style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(59,130,246,0.2))', border: '1px solid rgba(139,92,246,0.35)' }}>
             <MessageSquare size={14} className="text-purple-400" />
             Fill brief with Nia AI
@@ -179,7 +179,7 @@ export default function NewCampaign() {
               <SelectWrapper label="Tone" field="tone" options={tones} />
               <div>
                 <label className="label">Target audience</label>
-                <input className="input" placeholder="e.g. Young professionals aged 25–40" value={form.target_audience} onChange={set('target_audience')} required />
+                <input className="input" placeholder="e.g. Young professionals aged 25â€“40" value={form.target_audience} onChange={set('target_audience')} required />
               </div>
               <div>
                 <label className="label">Location</label>
@@ -226,14 +226,14 @@ export default function NewCampaign() {
                   className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-all ${
                     language === lang
                       ? 'border-purple-500/60 bg-purple-500/15 text-white'
-                      : 'border-white/10 text-gray-500 hover:border-white/20 hover:text-gray-300'
+                      : 'border-gray-200 text-gray-500 hover:border-white/20 hover:text-gray-600'
                   }`}>
                   {lang === 'en' ? 'English' : 'Kiswahili'}
                 </button>
               ))}
             </div>
             {language === 'sw' && (
-              <p className="text-xs text-gray-500 mt-2">All campaign copy will be generated in Kiswahili — captions, WhatsApp messages, scripts, and poster copy.</p>
+              <p className="text-xs text-gray-500 mt-2">All campaign copy will be generated in Kiswahili â€” captions, WhatsApp messages, scripts, and poster copy.</p>
             )}
           </div>
 
@@ -260,7 +260,7 @@ export default function NewCampaign() {
                   {GENERATING_STEPS[step]}
                 </span>
               ) : (
-                <><Zap size={15} /> Generate Campaign {credits !== null && <span className="opacity-60 text-xs ml-1">· {credits} credit{credits !== 1 ? 's' : ''} remaining</span>}</>
+                <><Zap size={15} /> Generate Campaign {credits !== null && <span className="opacity-60 text-xs ml-1">Â· {credits} credit{credits !== 1 ? 's' : ''} remaining</span>}</>
               )}
             </button>
           )}
@@ -273,3 +273,4 @@ export default function NewCampaign() {
     </DashboardLayout>
   )
 }
+

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { Upload, Mic2, Trash2, Loader2, CheckCircle, XCircle, AlertCircle, Play, Pause, ChevronLeft, Volume2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import DashboardLayout from '../components/layout/DashboardLayout'
@@ -26,7 +26,7 @@ const AGE_GROUPS = ['Kids', 'Teens', 'Young Adult', 'Mature', 'Elder']
 
 const STATUS_CONFIG = {
   pending: { label: 'No Clone', color: 'text-gray-500', bg: 'bg-gray-500/10', icon: AlertCircle },
-  cloning: { label: 'Cloning…', color: 'text-amber-400', bg: 'bg-amber-500/10', icon: Loader2 },
+  cloning: { label: 'Cloningâ€¦', color: 'text-amber-400', bg: 'bg-amber-500/10', icon: Loader2 },
   ready:   { label: 'Live Clone', color: 'text-green-400', bg: 'bg-green-500/10', icon: CheckCircle },
   failed:  { label: 'Failed', color: 'text-red-400', bg: 'bg-red-500/10', icon: XCircle },
 }
@@ -178,7 +178,7 @@ export default function AdminVoices() {
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <Link to="/admin" className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 mb-4 transition-colors w-fit">
+          <Link to="/admin" className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-600 mb-4 transition-colors w-fit">
             <ChevronLeft size={13} /> Back to Admin
           </Link>
           <div className="flex items-center gap-3 mb-2">
@@ -186,14 +186,14 @@ export default function AdminVoices() {
               <Mic2 size={20} className="text-purple-400" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">Voice Clone Studio</h1>
-              <p className="text-xs text-gray-500">Upload African voice samples → clone → deploy to Audio Studio</p>
+              <h1 className="text-2xl font-bold text-gray-900">Voice Clone Studio</h1>
+              <p className="text-xs text-gray-500">Upload African voice samples â†’ clone â†’ deploy to Audio Studio</p>
             </div>
           </div>
           <div className="mt-4 p-4 rounded-xl border border-blue-500/20 bg-blue-500/8 text-xs text-blue-300 space-y-1">
             <p className="font-semibold text-blue-200">How it works</p>
-            <p>1. Upload 1–5 high-quality audio samples per voice (MP3/WAV, 30s–3 min each, clear speech, no background noise).</p>
-            <p>2. Click <strong>Clone Voice</strong> — ElevenLabs creates a voice model from your samples (takes ~30 seconds).</p>
+            <p>1. Upload 1â€“5 high-quality audio samples per voice (MP3/WAV, 30sâ€“3 min each, clear speech, no background noise).</p>
+            <p>2. Click <strong>Clone Voice</strong> â€” ElevenLabs creates a voice model from your samples (takes ~30 seconds).</p>
             <p>3. Once <span className="text-green-400 font-semibold">Live Clone</span> appears, all Audio Studio orders and previews use your authentic African voice automatically.</p>
           </div>
         </div>
@@ -215,17 +215,17 @@ export default function AdminVoices() {
 
                   return (
                     <div key={profile.slot_id}
-                      className="rounded-2xl border border-white/8 bg-white/2 overflow-hidden">
+                      className="rounded-2xl border border-gray-200 bg-white/2 overflow-hidden">
                       {/* Card header */}
-                      <div className="flex items-center justify-between px-4 py-3 border-b border-white/6">
+                      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
                         <div>
-                          <p className="text-sm font-semibold text-white">{profile.label}</p>
-                          <p className="text-[10px] text-gray-600">{profile.gender === 'F' ? 'Female' : 'Male'} · {group}</p>
+                          <p className="text-sm font-semibold text-gray-800">{profile.label}</p>
+                          <p className="text-[10px] text-gray-600">{profile.gender === 'F' ? 'Female' : 'Male'} Â· {group}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           {/* Preview button */}
                           <button onClick={() => void playPreview(profile.slot_id)}
-                            className="w-7 h-7 rounded-lg flex items-center justify-center bg-white/6 text-gray-400 hover:bg-white/12 hover:text-white transition-all"
+                            className="w-7 h-7 rounded-lg flex items-center justify-center bg-white/6 text-gray-500 hover:bg-white/12 hover:text-white transition-all"
                             title="Preview voice">
                             {previewLoading === profile.slot_id
                               ? <Loader2 size={12} className="animate-spin" />
@@ -248,10 +248,10 @@ export default function AdminVoices() {
                         ) : (
                           <div className="space-y-1.5 mb-3">
                             {slotSampleList.map(sample => (
-                              <div key={sample.id} className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-white/4">
+                              <div key={sample.id} className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-gray-50">
                                 <div className="flex items-center gap-2 min-w-0">
                                   <Mic2 size={11} className="text-purple-400 shrink-0" />
-                                  <span className="text-[11px] text-gray-300 truncate">{sample.file_name}</span>
+                                  <span className="text-[11px] text-gray-600 truncate">{sample.file_name}</span>
                                 </div>
                                 <button onClick={() => void deleteSample(sample)}
                                   className="text-gray-600 hover:text-red-400 transition-colors shrink-0"
@@ -277,9 +277,9 @@ export default function AdminVoices() {
                           <button
                             onClick={() => fileInputRefs.current[profile.slot_id]?.click()}
                             disabled={uploading[profile.slot_id]}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-300 border border-white/10 bg-white/4 hover:bg-white/8 transition-all disabled:opacity-50">
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-600 border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-all disabled:opacity-50">
                             {uploading[profile.slot_id]
-                              ? <><Loader2 size={11} className="animate-spin" /> Uploading…</>
+                              ? <><Loader2 size={11} className="animate-spin" /> Uploadingâ€¦</>
                               : <><Upload size={11} /> Add Samples</>}
                           </button>
 
@@ -288,10 +288,10 @@ export default function AdminVoices() {
                             <button
                               onClick={() => void cloneVoice(profile.slot_id)}
                               disabled={!canClone || isCloning}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white transition-all disabled:opacity-40"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-gray-800 transition-all disabled:opacity-40"
                               style={{ background: canClone && !isCloning ? 'linear-gradient(135deg, #8b5cf6, #3b82f6)' : 'rgba(139,92,246,0.2)' }}>
                               {isCloning
-                                ? <><Loader2 size={11} className="animate-spin" /> Cloning…</>
+                                ? <><Loader2 size={11} className="animate-spin" /> Cloningâ€¦</>
                                 : <><Mic2 size={11} /> Clone Voice</>}
                             </button>
                           ) : (
@@ -300,7 +300,7 @@ export default function AdminVoices() {
                               disabled={deleting[profile.slot_id]}
                               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-red-400 border border-red-500/20 bg-red-500/6 hover:bg-red-500/12 transition-all disabled:opacity-50">
                               {deleting[profile.slot_id]
-                                ? <><Loader2 size={11} className="animate-spin" /> Removing…</>
+                                ? <><Loader2 size={11} className="animate-spin" /> Removingâ€¦</>
                                 : <><Trash2 size={11} /> Remove Clone</>}
                             </button>
                           )}
@@ -310,7 +310,7 @@ export default function AdminVoices() {
                           <p className="text-[10px] text-gray-600 mt-2 font-mono">ID: {profile.elevenlabs_voice_id}</p>
                         )}
                         {profile.status === 'failed' && (
-                          <p className="text-[10px] text-red-400 mt-2">Clone failed — check samples quality and try again.</p>
+                          <p className="text-[10px] text-red-400 mt-2">Clone failed â€” check samples quality and try again.</p>
                         )}
                       </div>
                     </div>
@@ -324,3 +324,4 @@ export default function AdminVoices() {
     </DashboardLayout>
   )
 }
+

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -54,8 +54,8 @@ export default function PaymentCallback() {
               style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)' }}>
               <Loader2 size={32} className="text-purple-400 animate-spin" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Confirming your payment…</h2>
-            <p className="text-gray-400 text-sm">This usually takes a few seconds. Please don't close this tab.</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Confirming your paymentâ€¦</h2>
+            <p className="text-gray-500 text-sm">This usually takes a few seconds. Please don't close this tab.</p>
           </div>
         )}
 
@@ -65,9 +65,9 @@ export default function PaymentCallback() {
               style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)' }}>
               <CheckCircle size={36} className="text-green-400" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Payment Confirmed!</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Confirmed!</h2>
             {orderTitle && <p className="text-purple-300 font-medium mb-3">{orderTitle}</p>}
-            <p className="text-gray-400 text-sm mb-2">
+            <p className="text-gray-500 text-sm mb-2">
               Your brief is now in the production queue. A Nia Media creative will begin work shortly.
             </p>
             <p className="text-gray-500 text-xs mb-8">You'll receive an email notification when your audio is ready for review.</p>
@@ -78,8 +78,8 @@ export default function PaymentCallback() {
                 View My Projects
               </Link>
               <Link to="/audio-studio"
-                className="text-sm text-gray-400 hover:text-white transition-colors">
-                Order another audio →
+                className="text-sm text-gray-500 hover:text-white transition-colors">
+                Order another audio â†’
               </Link>
             </div>
           </div>
@@ -91,20 +91,20 @@ export default function PaymentCallback() {
               style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)' }}>
               <XCircle size={36} className="text-red-400" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Payment Not Completed</h2>
-            <p className="text-gray-400 text-sm mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Not Completed</h2>
+            <p className="text-gray-500 text-sm mb-8">
               Your payment didn't go through. No charges have been made. Please try again or contact support.
             </p>
             <div className="flex flex-col gap-3">
               <Link to="/audio-studio"
                 className="text-sm font-semibold"
                 style={{ color: '#8b5cf6' }}>
-                ← Back to Audio Studio
+                â† Back to Audio Studio
               </Link>
               {import.meta.env.VITE_WHATSAPP_NUMBER && (
                 <a href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER}?text=Hi, I had a payment issue for my audio order.`}
                   target="_blank" rel="noopener noreferrer"
-                  className="text-sm text-gray-400 hover:text-white transition-colors">
+                  className="text-sm text-gray-500 hover:text-white transition-colors">
                   Contact support via WhatsApp
                 </a>
               )}
@@ -118,22 +118,22 @@ export default function PaymentCallback() {
               style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)' }}>
               <AlertCircle size={36} className="text-amber-400" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Still Confirming…</h2>
-            <p className="text-gray-400 text-sm mb-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Still Confirmingâ€¦</h2>
+            <p className="text-gray-500 text-sm mb-4">
               Payment confirmation is taking longer than usual. If you completed the payment, your order will be processed automatically.
             </p>
             <p className="text-gray-500 text-xs mb-8">
-              Check your <strong className="text-gray-400">Projects</strong> page in a few minutes, or contact support with your tracking ID:
+              Check your <strong className="text-gray-500">Projects</strong> page in a few minutes, or contact support with your tracking ID:
               {trackingId && <span className="block mt-1 font-mono text-purple-400 text-xs">{trackingId}</span>}
             </p>
             <div className="flex flex-col gap-3">
               <Link to="/projects"
                 style={{ color: '#8b5cf6', fontSize: '0.875rem', fontWeight: 600 }}>
-                Check My Projects →
+                Check My Projects â†’
               </Link>
               <Link to="/audio-studio"
-                className="text-sm text-gray-500 hover:text-gray-300 transition-colors">
-                ← Back to Audio Studio
+                className="text-sm text-gray-500 hover:text-gray-600 transition-colors">
+                â† Back to Audio Studio
               </Link>
             </div>
           </div>
@@ -142,3 +142,4 @@ export default function PaymentCallback() {
     </div>
   )
 }
+

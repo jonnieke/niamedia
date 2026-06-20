@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+﻿import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, Mic, MicOff, Volume2, VolumeX, Send, ArrowRight, Loader2, Sparkles, MessageSquare } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
-/* ─── Types ─────────────────────────────────────────────────── */
+/* â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 interface Message {
   id: string
   role: 'user' | 'assistant'
@@ -27,9 +27,9 @@ interface SuggestedAction {
 type AgentState = 'idle' | 'listening' | 'thinking' | 'speaking'
 
 const GUEST_LIMIT = 30
-const OPENING_LINE = "Hey! I'm Nia, your AI marketing advisor. Tell me — what kind of business are you running?"
+const OPENING_LINE = "Hey! I'm Nia, your AI marketing advisor. Tell me â€” what kind of business are you running?"
 
-/* ─── Waveform animation (CSS injected once) ─────────────────── */
+/* â”€â”€â”€ Waveform animation (CSS injected once) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const WAVE_STYLE = `
 @keyframes niaBeat {
   0%, 100% { transform: scaleY(0.15); }
@@ -49,7 +49,7 @@ const WAVE_STYLE = `
 }
 `
 
-/* ─── Sub-components ─────────────────────────────────────────── */
+/* â”€â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function Waveform({ active }: { active: boolean }) {
   const bars = [0.4, 0.7, 1, 0.8, 0.6, 0.9, 0.5, 0.75, 0.45, 0.85, 0.6, 0.7, 0.4]
   return (
@@ -144,7 +144,7 @@ function Avatar({ state }: { state: AgentState }) {
   )
 }
 
-/* ─── Main component ─────────────────────────────────────────── */
+/* â”€â”€â”€ Main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 interface NiaAgentProps {
   onClose: () => void
 }
@@ -254,7 +254,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
     }
   }, [])
 
-  /* ── Audio playback ── */
+  /* â”€â”€ Audio playback â”€â”€ */
   const playAudio = useCallback(async (base64: string) => {
     setAgentState('speaking')
     try {
@@ -283,7 +283,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
     }
   }, [])
 
-  /* ── Send message to agent ── */
+  /* â”€â”€ Send message to agent â”€â”€ */
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim()
     if (!trimmed || agentState === 'thinking' || agentState === 'speaking' || guestExpired) return
@@ -345,7 +345,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
     }
   }, [messages, agentState, guestExpired, isGuest, guestStarted, voiceMode, speechSupported, brandContext, playAudio])
 
-  /* ── Voice recognition ── */
+  /* â”€â”€ Voice recognition â”€â”€ */
   const startListening = useCallback(() => {
     if (agentState !== 'idle' || guestExpired) return
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -408,7 +408,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
     setAgentState('idle')
   }
 
-  /* ── Build campaign URL from suggested action ── */
+  /* â”€â”€ Build campaign URL from suggested action â”€â”€ */
   const buildCampaignUrl = (action: SuggestedAction) => {
     const params = new URLSearchParams({
       business_name: action.brief.business || '',
@@ -454,20 +454,20 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
         )}
 
         {/* Header */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-white/6 shrink-0">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-200 shrink-0">
           <Avatar state={agentState} />
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <p className="font-bold text-white text-sm">Nia</p>
+              <p className="font-bold text-gray-900 text-sm">Nia</p>
               <span className="text-[10px] px-1.5 py-0.5 rounded-md font-semibold"
                 style={{ background: 'rgba(139,92,246,0.2)', color: '#a78bfa' }}>
                 AI Advisor
               </span>
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              {agentState === 'thinking' && <p className="text-xs text-gray-500">Thinking…</p>}
-              {agentState === 'listening' && <p className="text-xs text-red-400">Listening…</p>}
+              {agentState === 'thinking' && <p className="text-xs text-gray-500">Thinkingâ€¦</p>}
+              {agentState === 'listening' && <p className="text-xs text-red-400">Listeningâ€¦</p>}
               {agentState === 'speaking' && (
                 <div className="flex items-center gap-1.5">
                   <Waveform active />
@@ -487,7 +487,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
             {speechSupported && (
               <button
                 onClick={() => setVoiceMode(v => !v)}
-                className="p-2 rounded-xl transition-all hover:bg-white/5"
+                className="p-2 rounded-xl transition-all hover:bg-gray-50"
                 title={voiceMode ? 'Voice on' : 'Voice off'}
               >
                 {voiceMode
@@ -497,11 +497,11 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
             )}
             {/* Stop speaking */}
             {agentState === 'speaking' && (
-              <button onClick={stopSpeaking} className="p-2 rounded-xl text-gray-500 hover:text-white hover:bg-white/5 transition-all">
+              <button onClick={stopSpeaking} className="p-2 rounded-xl text-gray-500 hover:text-white hover:bg-gray-50 transition-all">
                 <MicOff size={16} />
               </button>
             )}
-            <button onClick={onClose} className="p-2 rounded-xl text-gray-500 hover:text-white hover:bg-white/5 transition-all">
+            <button onClick={onClose} className="p-2 rounded-xl text-gray-500 hover:text-white hover:bg-gray-50 transition-all">
               <X size={18} />
             </button>
           </div>
@@ -539,7 +539,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
             <div className="flex justify-end">
               <div className="max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed opacity-60"
                 style={{ background: 'rgba(139,92,246,0.2)', color: '#c4b5fd', border: '1px dashed rgba(139,92,246,0.4)', borderBottomRightRadius: 4 }}>
-                {interimText}…
+                {interimText}â€¦
               </div>
             </div>
           )}
@@ -547,7 +547,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
           {/* Typing indicator */}
           {agentState === 'thinking' && (
             <div className="flex justify-start">
-              <div className="rounded-2xl border border-white/7 bg-white/5" style={{ borderBottomLeftRadius: 4 }}>
+              <div className="rounded-2xl border border-white/7 bg-gray-50" style={{ borderBottomLeftRadius: 4 }}>
                 <TypingDots />
               </div>
             </div>
@@ -559,24 +559,24 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
               style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(59,130,246,0.07))' }}>
               <div className="px-4 py-3 border-b border-purple-500/15 flex items-center gap-2">
                 <Sparkles size={14} className="text-purple-400" />
-                <p className="text-xs font-bold text-white">Ready to create your campaign!</p>
+                <p className="text-xs font-bold text-gray-900">Ready to create your campaign!</p>
               </div>
               <div className="px-4 py-3 space-y-1">
                 {suggestedAction.brief.business && (
-                  <p className="text-xs text-gray-400"><span className="text-gray-500">Business:</span> {suggestedAction.brief.business}</p>
+                  <p className="text-xs text-gray-500"><span className="text-gray-500">Business:</span> {suggestedAction.brief.business}</p>
                 )}
                 {suggestedAction.brief.goal && (
-                  <p className="text-xs text-gray-400"><span className="text-gray-500">Goal:</span> {suggestedAction.brief.goal}</p>
+                  <p className="text-xs text-gray-500"><span className="text-gray-500">Goal:</span> {suggestedAction.brief.goal}</p>
                 )}
                 {suggestedAction.brief.platforms?.length > 0 && (
-                  <p className="text-xs text-gray-400"><span className="text-gray-500">Platforms:</span> {suggestedAction.brief.platforms.join(', ')}</p>
+                  <p className="text-xs text-gray-500"><span className="text-gray-500">Platforms:</span> {suggestedAction.brief.platforms.join(', ')}</p>
                 )}
               </div>
               <div className="px-4 pb-4 flex gap-2">
                 {isGuest ? (
                   <Link to="/register"
                     onClick={onClose}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold text-white"
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold text-gray-900"
                     style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)' }}>
                     Sign Up Free to Generate <ArrowRight size={12} />
                   </Link>
@@ -584,13 +584,13 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
                   <>
                     <button
                       onClick={() => { onClose(); navigate(buildCampaignUrl(suggestedAction)) }}
-                      className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold text-white"
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold text-gray-900"
                       style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)' }}>
                       Generate Campaign <ArrowRight size={12} />
                     </button>
                     <button
                       onClick={() => { onClose(); navigate('/audio-studio') }}
-                      className="px-4 py-2.5 rounded-xl text-xs font-semibold text-gray-300 border border-white/10 hover:border-purple-500/30 transition-all">
+                      className="px-4 py-2.5 rounded-xl text-xs font-semibold text-gray-600 border border-gray-200 hover:border-purple-500/30 transition-all">
                       Audio
                     </button>
                   </>
@@ -604,13 +604,13 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
             <div className="rounded-2xl border border-amber-500/25 overflow-hidden"
               style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(239,68,68,0.05))' }}>
               <div className="p-5 text-center">
-                <p className="text-sm font-bold text-white mb-1">Your 30-second preview is up</p>
-                <p className="text-xs text-gray-400 mb-4">
-                  Sign up free to continue chatting with Nia — no credit card, no commitment.
+                <p className="text-sm font-bold text-gray-900 mb-1">Your 30-second preview is up</p>
+                <p className="text-xs text-gray-500 mb-4">
+                  Sign up free to continue chatting with Nia â€” no credit card, no commitment.
                   Your conversation so far is saved.
                 </p>
                 <Link to="/register" onClick={onClose}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-gray-900"
                   style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)' }}>
                   Sign Up Free <ArrowRight size={14} />
                 </Link>
@@ -623,7 +623,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
         </div>
 
         {/* Input area */}
-        <div className="shrink-0 px-4 pb-4 pt-2 border-t border-white/6">
+        <div className="shrink-0 px-4 pb-4 pt-2 border-t border-gray-200">
           {/* Mic button when voice mode on + supported */}
           {speechSupported && voiceMode && !guestExpired && (
             <div className="flex justify-center mb-3">
@@ -654,15 +654,15 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
               placeholder={
-                guestExpired ? 'Sign up to continue…'
-                : agentState === 'listening' ? 'Listening…'
-                : agentState === 'thinking' ? 'Nia is thinking…'
-                : agentState === 'speaking' ? 'Nia is speaking…'
-                : speechSupported && voiceMode ? 'Or type here…'
-                : 'Type your message…'
+                guestExpired ? 'Sign up to continueâ€¦'
+                : agentState === 'listening' ? 'Listeningâ€¦'
+                : agentState === 'thinking' ? 'Nia is thinkingâ€¦'
+                : agentState === 'speaking' ? 'Nia is speakingâ€¦'
+                : speechSupported && voiceMode ? 'Or type hereâ€¦'
+                : 'Type your messageâ€¦'
               }
               disabled={guestExpired || agentState === 'listening' || agentState === 'thinking'}
-              className="flex-1 px-4 py-2.5 rounded-xl text-sm text-white placeholder-gray-600 bg-white/5 border border-white/8 focus:outline-none focus:border-purple-500/40 transition-colors disabled:opacity-50"
+              className="flex-1 px-4 py-2.5 rounded-xl text-sm text-white placeholder-gray-600 bg-gray-50 border border-gray-200 focus:outline-none focus:border-purple-500/40 transition-colors disabled:opacity-50"
             />
             <button
               onClick={handleSend}
@@ -677,7 +677,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
           {/* Bottom hint */}
           <p className="text-center text-[10px] text-gray-700 mt-2">
             {isGuest && !guestStarted
-              ? 'Free 30-second preview · No sign up required'
+              ? 'Free 30-second preview Â· No sign up required'
               : isGuest && !guestExpired
               ? `${guestTimeLeft}s of free conversation remaining`
               : !isGuest
@@ -690,7 +690,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
   )
 }
 
-/* ─── Floating trigger button (export separately for use in pages) ── */
+/* â”€â”€â”€ Floating trigger button (export separately for use in pages) â”€â”€ */
 export function NiaAgentButton() {
   const [open, setOpen] = useState(false)
   return (
@@ -698,7 +698,7 @@ export function NiaAgentButton() {
       {open && <NiaAgent onClose={() => setOpen(false)} />}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 left-6 z-40 flex items-center gap-2.5 pl-4 pr-5 py-3 rounded-2xl text-sm font-bold text-white shadow-2xl transition-all hover:scale-105 active:scale-95"
+        className="fixed bottom-6 left-6 z-40 flex items-center gap-2.5 pl-4 pr-5 py-3 rounded-2xl text-sm font-bold text-gray-900 shadow-2xl transition-all hover:scale-105 active:scale-95"
         style={{
           background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)',
           boxShadow: '0 0 32px rgba(139,92,246,0.45), 0 8px 24px rgba(0,0,0,0.4)',
@@ -715,3 +715,4 @@ export function NiaAgentButton() {
     </>
   )
 }
+

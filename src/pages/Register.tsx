@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react'
+﻿import { useState, FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, ArrowRight, CheckCircle2, Mail, Loader2 } from 'lucide-react'
 import Logo from '../components/ui/Logo'
@@ -18,7 +18,7 @@ function GoogleButton() {
 
   return (
     <button onClick={handleClick} disabled={loading} type="button"
-      className="w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-white/15 bg-white/5 text-sm font-semibold text-white hover:bg-white/10 transition-all disabled:opacity-50">
+      className="w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-gray-300 bg-gray-50 text-sm font-semibold text-gray-800 hover:bg-gray-100 transition-all disabled:opacity-50">
       {loading ? (
         <Loader2 size={18} className="animate-spin" />
       ) : (
@@ -29,7 +29,7 @@ function GoogleButton() {
           <path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7-5.4c-2.1 1.4-4.8 2.3-8.2 2.3-6.4 0-11.8-3.6-14.5-8.8l-7.8 6.2C6.6 42.7 14.6 48 24 48z"/>
         </svg>
       )}
-      {loading ? 'Redirecting…' : 'Continue with Google'}
+      {loading ? 'Redirectingâ€¦' : 'Continue with Google'}
     </button>
   )
 }
@@ -37,9 +37,9 @@ function GoogleButton() {
 function Divider() {
   return (
     <div className="flex items-center gap-3 my-5">
-      <div className="flex-1 h-px bg-white/8" />
+      <div className="flex-1 h-px bg-gray-100" />
       <span className="text-xs text-gray-600">or sign up with email</span>
-      <div className="flex-1 h-px bg-white/8" />
+      <div className="flex-1 h-px bg-gray-100" />
     </div>
   )
 }
@@ -55,13 +55,24 @@ export default function Register() {
   const [error, setError] = useState('')
   const [needsConfirmation, setNeedsConfirmation] = useState(false)
 
+  const triggerWelcomeEmail = async (userId: string) => {
+    try {
+      await supabase.functions.invoke('send-welcome-sequence', {
+        body: { user_id: userId, email, name },
+      })
+    } catch {
+      // Non-fatal â€” don't block signup on email failure
+    }
+  }
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
     setError('')
     setLoading(true)
     try {
-      const { needsConfirmation: confirm } = await register(name, email, password)
+      const { needsConfirmation: confirm, userId } = await register(name, email, password)
+      if (userId) void triggerWelcomeEmail(userId)
       if (confirm) {
         setNeedsConfirmation(true)
       } else {
@@ -76,15 +87,15 @@ export default function Register() {
 
   if (needsConfirmation) {
     return (
-      <div className="min-h-screen bg-ink-900 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
         <div className="w-full max-w-sm text-center">
           <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
             style={{ background: 'rgba(139,92,246,0.15)', border: '2px solid rgba(139,92,246,0.3)' }}>
             <Mail size={28} className="text-purple-400" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Check your email</h2>
-          <p className="text-sm text-gray-400 mb-6">
-            We sent a confirmation link to <strong className="text-white">{email}</strong>.
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Check your email</h2>
+          <p className="text-sm text-gray-500 mb-6">
+            We sent a confirmation link to <strong className="text-gray-900">{email}</strong>.
             Click it to activate your account, then come back and sign in.
           </p>
           <Link to="/login" className="btn-primary w-full py-3 text-sm inline-flex items-center justify-center gap-2">
@@ -102,14 +113,14 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-ink-900 flex items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%)', filter: 'blur(60px)' }} />
 
       <div className="w-full max-w-sm relative z-10">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex justify-center mb-6"><Logo size="md" /></Link>
-          <h1 className="text-2xl font-bold text-white">Create your account</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Create your account</h1>
           <p className="text-sm text-gray-500 mt-1">Start creating campaigns in minutes</p>
         </div>
 
@@ -136,17 +147,17 @@ export default function Register() {
                 <input type={showPw ? 'text' : 'password'} className="input pr-10" placeholder="At least 6 characters"
                   value={password} onChange={e => setPassword(e.target.value)} required />
                 <button type="button" onClick={() => setShowPw(!showPw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600">
                   {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
             <button type="submit" className="btn-primary w-full py-3 mt-2" disabled={loading}>
-              {loading ? 'Creating account…' : <><span>Create account</span><ArrowRight size={15} /></>}
+              {loading ? 'Creating accountâ€¦' : <><span>Create account</span><ArrowRight size={15} /></>}
             </button>
           </form>
 
-          <div className="mt-5 pt-5 border-t border-white/6">
+          <div className="mt-5 pt-5 border-t border-gray-200">
             <div className="flex flex-col gap-1.5 mb-5">
               {['No credit card required', 'Free to explore', 'Cancel anytime'].map(t => (
                 <div key={t} className="flex items-center gap-2">
@@ -165,3 +176,4 @@ export default function Register() {
     </div>
   )
 }
+

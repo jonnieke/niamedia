@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Film, Music, Mic, Radio, Clock, CheckCircle,
@@ -59,10 +59,10 @@ function PipelineBar({ current }: { current: ProjectStatus }) {
       {steps.map((s, i) => (
         <div key={s} className="flex items-center">
           <div className={`w-2.5 h-2.5 rounded-full transition-all ${
-            i < idx ? 'bg-purple-500' : i === idx ? 'bg-purple-400 ring-2 ring-purple-500/40' : 'bg-white/10'
+            i < idx ? 'bg-purple-500' : i === idx ? 'bg-purple-400 ring-2 ring-purple-500/40' : 'bg-gray-100'
           }`} />
           {i < steps.length - 1 && (
-            <div className={`h-0.5 w-8 transition-all ${i < idx ? 'bg-purple-500' : 'bg-white/8'}`} />
+            <div className={`h-0.5 w-8 transition-all ${i < idx ? 'bg-purple-500' : 'bg-gray-100'}`} />
           )}
         </div>
       ))}
@@ -73,9 +73,9 @@ function PipelineBar({ current }: { current: ProjectStatus }) {
 function ProjectCard({ project, onClick }: { project: UnifiedProject; onClick: () => void }) {
   const Icon = TYPE_ICON[project.type] || Film
   return (
-    <div className="rounded-2xl border border-white/8 bg-white/2 hover:border-white/15 hover:bg-white/4 transition-all overflow-hidden cursor-pointer group"
+    <div className="rounded-2xl border border-gray-200 bg-white/2 hover:border-gray-300 hover:bg-gray-50 transition-all overflow-hidden cursor-pointer group"
       onClick={onClick}>
-      <div className="relative h-36 bg-white/5 overflow-hidden">
+      <div className="relative h-36 bg-gray-50 overflow-hidden">
         {project.deliverableThumb ? (
           <img src={project.deliverableThumb} alt="" className="w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity" />
         ) : (
@@ -86,7 +86,7 @@ function ProjectCard({ project, onClick }: { project: UnifiedProject; onClick: (
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a14] via-transparent" />
         <div className="absolute top-3 right-3"><StatusBadge status={project.status} /></div>
         <div className="absolute bottom-3 left-3">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/50 text-xs text-gray-300">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/50 text-xs text-gray-600">
             <Icon size={11} />
             {project.type.replace(/-/g, ' ')}
           </div>
@@ -101,7 +101,7 @@ function ProjectCard({ project, onClick }: { project: UnifiedProject; onClick: (
         )}
         {project.status === 'ready-for-review' && (
           <div className="mt-3 flex items-center gap-1.5 text-purple-400 text-xs font-semibold">
-            <Eye size={12} /> Action required — review now
+            <Eye size={12} /> Action required â€” review now
             <ChevronRight size={12} className="ml-auto" />
           </div>
         )}
@@ -189,8 +189,8 @@ export default function Projects() {
             <div className="flex items-center gap-2 mb-1">
               <span className="section-tag">My Projects</span>
             </div>
-            <h1 className="text-2xl font-bold text-white">Production Pipeline</h1>
-            <p className="text-gray-400 text-sm mt-0.5">Track your concepts from queue to delivery.</p>
+            <h1 className="text-2xl font-bold text-gray-900">Production Pipeline</h1>
+            <p className="text-gray-500 text-sm mt-0.5">Track your concepts from queue to delivery.</p>
           </div>
           <button onClick={() => navigate('/concept-studio')} className="btn-primary text-sm px-4 py-2">
             + New Concept
@@ -207,7 +207,7 @@ export default function Projects() {
               <p className="text-white font-semibold text-sm">
                 {actionable.length} project{actionable.length > 1 ? 's' : ''} ready for your review
               </p>
-              <p className="text-purple-300 text-xs">Accept, request changes, or decline — your feedback drives the next step.</p>
+              <p className="text-purple-300 text-xs">Accept, request changes, or decline â€” your feedback drives the next step.</p>
             </div>
             <button onClick={() => navigate(`/projects/${actionable[0].id}/review`)}
               className="btn-primary text-xs px-4 py-2 shrink-0">
@@ -220,7 +220,7 @@ export default function Projects() {
           {(['all', ...PIPELINE] as const).map(s => (
             <button key={s} onClick={() => setFilter(s)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium border whitespace-nowrap transition-all ${
-                filter === s ? 'border-purple-500/50 bg-purple-500/15 text-purple-300' : 'border-white/8 text-gray-400 hover:border-white/15'
+                filter === s ? 'border-purple-500/50 bg-purple-500/15 text-purple-300' : 'border-gray-200 text-gray-500 hover:border-gray-300'
               }`}>
               {s === 'all' ? `All (${projects.length})` : STATUS_CONFIG[s].label}
             </button>
@@ -231,7 +231,7 @@ export default function Projects() {
           <div className="text-center py-20 text-gray-500">
             <Package size={36} className="mx-auto mb-3 opacity-30" />
             {projects.length === 0
-              ? <><p className="font-medium text-white mb-1">No projects yet</p><p className="text-sm">Commission your first campaign or audio order to get started.</p></>
+              ? <><p className="font-medium text-gray-800 mb-1">No projects yet</p><p className="text-sm">Commission your first campaign or audio order to get started.</p></>
               : <p>No projects in this status.</p>
             }
           </div>
@@ -244,7 +244,7 @@ export default function Projects() {
           </div>
         )}
 
-        <div className="mt-8 p-4 rounded-xl border border-white/6 bg-white/2 text-xs text-gray-500 flex gap-3">
+        <div className="mt-8 p-4 rounded-xl border border-gray-200 bg-white/2 text-xs text-gray-500 flex gap-3">
           <CheckCircle size={14} className="text-green-500 shrink-0 mt-0.5" />
           <p>All delivered content is AI-generated. Zero third-party copyright. Full ownership rights transfer to your account upon acceptance and payment confirmation. A Certificate of AI Origin is auto-issued on delivery.</p>
         </div>
@@ -252,3 +252,4 @@ export default function Projects() {
     </DashboardLayout>
   )
 }
+
