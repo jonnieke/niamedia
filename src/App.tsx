@@ -14,6 +14,7 @@ import BrandKit from './pages/BrandKit'
 import Admin from './pages/Admin'
 import Settings from './pages/Settings'
 import ConceptStudio from './pages/ConceptStudio'
+import VideoJourney from './pages/VideoJourney'
 import PreProduction from './pages/PreProduction'
 import Projects from './pages/Projects'
 import ProjectReview from './pages/ProjectReview'
@@ -61,6 +62,7 @@ function AppRoutes() {
       <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
       <Route path="/campaigns/:id" element={<ProtectedRoute><CampaignResults /></ProtectedRoute>} />
       <Route path="/concept-studio" element={<ProtectedRoute><ConceptStudio /></ProtectedRoute>} />
+      <Route path="/video-journey" element={<ProtectedRoute><VideoJourney /></ProtectedRoute>} />
       <Route path="/preproduction" element={<ProtectedRoute><PreProduction /></ProtectedRoute>} />
       <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
       <Route path="/projects/:id/review" element={<ProtectedRoute><ProjectReview /></ProtectedRoute>} />

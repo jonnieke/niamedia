@@ -1,5 +1,5 @@
 ﻿import { useState, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Mic, MicOff, ImagePlus, Type, Sparkles, RefreshCw,
   Download, ArrowRight, X, Film, Tv, BookOpen,
@@ -114,6 +114,7 @@ function ScriptDisplay({ concept }: { concept: GeneratedConcept }) {
 }
 
 export default function ConceptStudio() {
+  const navigate = useNavigate()
   const [inputTab, setInputTab] = useState<'text' | 'voice' | 'images'>('text')
   const [textInput, setTextInput] = useState('')
   const [format, setFormat] = useState<ScriptFormat>('commercial-30')
@@ -466,10 +467,11 @@ export default function ConceptStudio() {
                     <p className="text-sm font-bold text-gray-900">Ready to bring this to life?</p>
                     <p className="text-xs text-gray-500 mt-0.5">Push to development â€” a creator picks this up after you select your package.</p>
                   </div>
-                  <button onClick={() => setShowPaywall(true)}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-gray-900 shrink-0 transition-all"
+                  <button
+                    onClick={() => navigate('/video-journey', { state: { brief: activeInput } })}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white shrink-0 transition-all"
                     style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', boxShadow: '0 0 20px rgba(139,92,246,0.4)' }}>
-                    Push to Development <ArrowRight size={14} />
+                    Start Video Journey <ArrowRight size={14} />
                   </button>
                 </div>
                 <div className="mt-3 flex items-center gap-1.5">
