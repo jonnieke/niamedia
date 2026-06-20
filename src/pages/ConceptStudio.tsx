@@ -358,34 +358,22 @@ export default function ConceptStudio() {
           {/* Format selector */}
           <div className="card-glow p-5">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Output Format</p>
-            <div className="relative">
-              <button onClick={() => setFormatOpen(!formatOpen)}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-white/10 bg-white/3 hover:border-purple-500/30 transition-all">
-                <div className="flex items-center gap-3">
-                  <selectedFormat.icon size={16} className="text-purple-400" />
-                  <div className="text-left">
-                    <p className="text-sm font-semibold text-white">{selectedFormat.label}</p>
-                    <p className="text-xs text-gray-500">{selectedFormat.duration} · {selectedFormat.desc}</p>
+            <div className="space-y-1.5">
+              {FORMAT_OPTIONS.map(opt => (
+                <button key={opt.id} onClick={() => setFormat(opt.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all ${
+                    format === opt.id
+                      ? 'border-purple-500/40 bg-purple-500/10'
+                      : 'border-white/8 bg-white/2 hover:border-white/15 hover:bg-white/4'
+                  }`}>
+                  <opt.icon size={15} className={format === opt.id ? 'text-purple-400' : 'text-gray-500'} />
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-semibold ${format === opt.id ? 'text-purple-200' : 'text-white'}`}>{opt.label}</p>
+                    <p className="text-xs text-gray-500">{opt.duration} · {opt.desc}</p>
                   </div>
-                </div>
-                <ChevronDown size={14} className={`text-gray-500 transition-transform ${formatOpen ? 'rotate-180' : ''}`} />
-              </button>
-              {formatOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 rounded-xl border border-white/10 overflow-hidden z-20"
-                  style={{ background: '#0f0f1c' }}>
-                  {FORMAT_OPTIONS.map(opt => (
-                    <button key={opt.id} onClick={() => { setFormat(opt.id); setFormatOpen(false) }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 ${format === opt.id ? 'bg-purple-500/10' : ''}`}>
-                      <opt.icon size={15} className={format === opt.id ? 'text-purple-400' : 'text-gray-600'} />
-                      <div className="flex-1">
-                        <p className={`text-sm font-semibold ${format === opt.id ? 'text-purple-300' : 'text-white'}`}>{opt.label}</p>
-                        <p className="text-xs text-gray-500">{opt.duration} · {opt.desc}</p>
-                      </div>
-                      {format === opt.id && <CheckCircle2 size={13} className="text-purple-400" />}
-                    </button>
-                  ))}
-                </div>
-              )}
+                  {format === opt.id && <CheckCircle2 size={13} className="text-purple-400 shrink-0" />}
+                </button>
+              ))}
             </div>
           </div>
 
