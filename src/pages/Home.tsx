@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import PublicHeader from '../components/layout/PublicHeader'
 import Logo from '../components/ui/Logo'
+import { NiaAgentButton } from '../components/NiaAgent'
 import {
   ArrowRight, TrendingUp, Users, Target, Zap,
   Film, MessageSquare, FileText, Layout, Building2, Hotel,
@@ -604,6 +605,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ── FLOATING NIA BUTTON ── */}
+      <NiaAgentButton />
 
       {/* ── FOOTER ── */}
       <footer className="border-t border-white/6 py-10 px-6">

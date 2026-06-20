@@ -7,6 +7,7 @@ import {
   AlertCircle, Loader2,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
+import NiaAgent from '../components/NiaAgent'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
@@ -42,6 +43,7 @@ function timeAgo(iso: string) {
 
 export default function Dashboard() {
   const { user } = useAuth()
+  const [showNia, setShowNia] = useState(false)
 
   const [stats, setStats] = useState({ campaigns: 0, audioOrders: 0, deliveredAssets: 0, activeProjects: 0 })
   const [pipeline, setPipeline] = useState<{ id: string; title: string; type: string; status: string }[]>([])
@@ -80,6 +82,7 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
+      {showNia && <NiaAgent onClose={() => setShowNia(false)} />}
       {/* Stats */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
         {statCards.map(({ label, value, icon: Icon, change, up }) => (
@@ -108,6 +111,16 @@ export default function Dashboard() {
           <div className="card-glow p-5 h-full">
             <h2 className="text-sm font-bold text-white mb-4">Quick Actions</h2>
             <div className="space-y-2">
+              {/* Chat with Nia */}
+              <button onClick={() => setShowNia(true)}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold transition-all text-white"
+                style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(59,130,246,0.15))', border: '1px solid rgba(139,92,246,0.35)' }}>
+                <MessageSquare size={15} className="text-purple-400" />
+                Chat with Nia AI
+                <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded font-bold"
+                  style={{ background: 'rgba(139,92,246,0.3)', color: '#a78bfa' }}>NEW</span>
+              </button>
+
               {quickActions.map(({ label, icon: Icon, to, gradient, accent }: { label: string; icon: typeof Plus; to: string; gradient?: boolean; accent?: string }) => (
                 <Link key={label} to={to}
                   className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
