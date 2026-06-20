@@ -15,6 +15,10 @@ Deno.serve(async (req) => {
 
     const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") })
 
+    const languageInstruction = form.language === "sw"
+      ? "\n\nLANGUAGE: Generate ALL copy in Kiswahili. Use natural, conversational Swahili that feels authentic to Kenyan business communication — not a translation, but copy that a native Swahili speaker would write. Where English brand names or terms are standard, keep them."
+      : ""
+
     const prompt = `You are an expert marketing copywriter specialising in Kenyan small businesses. Generate a complete campaign for the following brief. Write in a voice that feels genuine and locally resonant — use the tone specified, avoid corporate jargon, and make each platform's copy feel native to that platform.
 
 Business: ${form.business_name} (${form.industry})
@@ -26,7 +30,7 @@ Offer: ${form.offer}
 Tone: ${form.tone}
 Platforms: ${(form.platforms as string[]).join(", ")}
 Call to Action: ${form.cta}
-Additional Notes: ${form.notes || "None"}
+Additional Notes: ${form.notes || "None"}${languageInstruction}
 
 Generate copy that a Kenyan small business owner would be proud to publish. Be specific, be compelling, avoid generic filler.`
 

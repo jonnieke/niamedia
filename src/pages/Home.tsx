@@ -4,12 +4,12 @@ import PublicHeader from '../components/layout/PublicHeader'
 import Logo from '../components/ui/Logo'
 import { NiaAgentButton } from '../components/NiaAgent'
 import {
-  ArrowRight, TrendingUp, Users, Target, Zap,
-  Film, MessageSquare, FileText, Layout, Building2, Hotel,
+  ArrowRight, TrendingUp, Target, Zap,
+  Film, MessageSquare, Building2, Hotel,
   GraduationCap, CreditCard, UtensilsCrossed, Plane,
   ShoppingBag, Calendar, Stethoscope, Briefcase,
   CheckCircle2, Star, BarChart2, MousePointerClick, Copy, Check,
-  Music, Shield, Sparkles, Clock,
+  Music, Shield, Sparkles, Clock, Loader2, Languages,
 } from 'lucide-react'
 
 /* ─── Mini dashboard mockup ─────────────────────────────────── */
@@ -89,40 +89,114 @@ function DashboardMockup() {
   )
 }
 
-/* ─── Campaign Output Demo ───────────────────────────────────── */
-const demoTabs = [
-  { id: 'caption', label: 'Instagram Caption' },
-  { id: 'whatsapp', label: 'WhatsApp Ad' },
+/* ─── Live AI Demo ───────────────────────────────────────────── */
+const DEMO_INDUSTRIES = [
+  'Real Estate', 'Hospitality', 'Education', 'Fintech / SACCO',
+  'Restaurant', 'Travel', 'Retail', 'Health & Wellness', 'Events', 'Professional Services',
+]
+const DEMO_STEPS = [
+  'Reading your brief…',
+  'Researching your market…',
+  'Crafting your strategy…',
+  'Writing your campaign copy…',
+  'Polishing your assets…',
+]
+const DEMO_TABS = [
+  { id: 'instagram', label: 'Instagram' },
+  { id: 'whatsapp', label: 'WhatsApp' },
   { id: 'script', label: 'Video Script' },
-  { id: 'poster', label: 'Poster Copy' },
+  { id: 'poster', label: 'Poster' },
 ]
 
-const demoOutput: Record<string, { heading: string; body: string }> = {
-  caption: {
-    heading: 'Instagram Caption',
-    body: `Your dream home is waiting in Ruaka.\n\nSunrise Gardens — Nairobi's most affordable 2 & 3 bedroom apartments with world-class finishes.\n\n✅ Ready to move in\n✅ Flexible payment plans\n✅ 10 minutes from Westlands\n\nBook a free site visit today. Only 12 units remaining.\n\nDM us "HOME" or call 0700 000 000\n\n#Nairobi #RealEstate #SunriseGardens #Ruaka #HomeOwnership`,
-  },
-  whatsapp: {
-    heading: 'WhatsApp Sales Message',
-    body: `Hello [Name] 👋\n\nThank you for your interest in Sunrise Gardens, Ruaka.\n\nHere's what makes us different:\n• 2BR from KES 6.5M | 3BR from KES 8.9M\n• 10% deposit, balance over 12 months\n• Fully fitted kitchen + secure parking\n• Title deed ready\n\nWe have an open day this Saturday 10AM–2PM.\n\nCan I reserve your slot? It's FREE and no obligation.\n\nReply YES and I'll send you directions.`,
-  },
-  script: {
-    heading: '15-Second Video Script',
-    body: `[HOOK — 0:00–0:03]\nVISUAL: Aerial shot of Ruaka skyline at golden hour.\nVO: "Still paying rent? Here's why that needs to stop."\n\n[PROBLEM — 0:03–0:07]\nVISUAL: Family in cramped rental apartment.\nVO: "Every month, you're building someone else's dream."\n\n[SOLUTION — 0:07–0:12]\nVISUAL: Sunrise Gardens exterior, bright and modern.\nVO: "Sunrise Gardens, Ruaka. Own your 2-bedroom home from KES 6.5M — 10% deposit only."\n\n[CTA — 0:12–0:15]\nVISUAL: WhatsApp button + phone number.\nVO: "12 units left. Call 0700 000 000 today."`,
-  },
-  poster: {
-    heading: 'Poster Copy',
-    body: `HEADLINE:\n"Stop Renting. Start Owning."\n\nSUB-HEADLINE:\nSunrise Gardens, Ruaka — Nairobi\n\nBODY:\n2 & 3 Bedroom Apartments\nFrom KES 6,500,000\n10% Deposit | Flexible Payment Plan\nTitle Deed Ready\n\nCTA:\n"Book a FREE Site Visit →"\n\nFOOTER:\nCall / WhatsApp: 0700 000 000\nwww.sunrisegardens.co.ke`,
-  },
+interface DemoOutput {
+  captions: { instagram: string; facebook: string; tiktok: string; linkedin: string }
+  whatsapp: { status: string; broadcast: string; reply: string }
+  videoScript: { hook: string; scene1: string; scene2: string; scene3: string; callToAction: string; visualDirection: string }
+  posterCopy: { headline: string; subheadline: string; offerText: string; cta: string }
+  strategy: { angle: string; keyMessage: string }
 }
 
 function CampaignOutputDemo() {
-  const [activeTab, setActiveTab] = useState('caption')
+  const [businessName, setBusinessName] = useState('')
+  const [industry, setIndustry] = useState('')
+  const [product, setProduct] = useState('')
+  const [language, setLanguage] = useState<'en' | 'sw'>('en')
+  const [loading, setLoading] = useState(false)
+  const [stepIdx, setStepIdx] = useState(0)
+  const [output, setOutput] = useState<DemoOutput | null>(null)
+  const [activeTab, setActiveTab] = useState('instagram')
   const [copied, setCopied] = useState(false)
-  const out = demoOutput[activeTab]
+  const [error, setError] = useState('')
+
+  const canGenerate = businessName.trim().length >= 2 && industry
+
+  const handleGenerate = async () => {
+    if (!canGenerate || loading) return
+    setLoading(true)
+    setError('')
+    setOutput(null)
+    setStepIdx(0)
+
+    const stepTimer = setInterval(() => {
+      setStepIdx(i => (i < DEMO_STEPS.length - 1 ? i + 1 : i))
+    }, 1400)
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-campaign`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY as string}`,
+        },
+        body: JSON.stringify({
+          business_name: businessName.trim(),
+          industry,
+          product_name: product.trim() || `${industry} services`,
+          objective: 'Get leads and grow brand awareness',
+          target_audience: 'Kenyan professionals and households',
+          location: 'Nairobi, Kenya',
+          offer: '',
+          tone: 'Professional, warm, and locally resonant',
+          platforms: ['Instagram', 'WhatsApp', 'Facebook'],
+          cta: 'Contact us today',
+          notes: 'Make the copy specific and locally resonant for the Kenyan market.',
+          language,
+        }),
+      })
+      clearInterval(stepTimer)
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setOutput(data as DemoOutput)
+      setActiveTab('instagram')
+    } catch {
+      clearInterval(stepTimer)
+      setError('Generation failed — please try again in a moment.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getTabContent = (): { heading: string; body: string } => {
+    if (!output) return { heading: '', body: '' }
+    switch (activeTab) {
+      case 'instagram': return { heading: 'Instagram Caption', body: output.captions.instagram }
+      case 'whatsapp': return { heading: 'WhatsApp Broadcast', body: output.whatsapp.broadcast }
+      case 'script': return {
+        heading: '15-Second Video Script',
+        body: `[HOOK]\n${output.videoScript.hook}\n\n[SCENE 1]\n${output.videoScript.scene1}\n\n[SCENE 2]\n${output.videoScript.scene2}\n\n[CTA]\n${output.videoScript.callToAction}`,
+      }
+      case 'poster': return {
+        heading: 'Poster Copy',
+        body: `HEADLINE:\n"${output.posterCopy.headline}"\n\nSUB-HEADLINE:\n${output.posterCopy.subheadline}\n\nOFFER:\n${output.posterCopy.offerText}\n\nCTA:\n"${output.posterCopy.cta}"`,
+      }
+      default: return { heading: '', body: '' }
+    }
+  }
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(out.body)
+    const { body } = getTabContent()
+    navigator.clipboard.writeText(body)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -132,79 +206,182 @@ function CampaignOutputDemo() {
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 60% 40% at 50% 50%, rgba(139,92,246,0.07) 0%, transparent 70%)' }} />
       <div className="max-w-7xl mx-auto relative">
         <div className="text-center mb-12">
-          <div className="section-tag mx-auto mb-4 w-fit">Live Preview</div>
-          <h2 className="text-3xl font-bold text-white mb-3">This is what you get — in 60 seconds</h2>
-          <p className="text-sm text-gray-500 max-w-md mx-auto">Real output from a Nairobi real estate brief. Four ready-to-use assets, generated instantly.</p>
+          <div className="section-tag mx-auto mb-4 w-fit">Live AI Demo</div>
+          <h2 className="text-3xl font-bold text-white mb-3">
+            {output ? `Your campaign for ${businessName}` : 'Generate your campaign — right now'}
+          </h2>
+          <p className="text-sm text-gray-500 max-w-md mx-auto">
+            {output ? 'Real AI output, ready to copy and publish.' : 'Type your business name. Get real ad copy in under 60 seconds. No sign-up.'}
+          </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
-          {/* Brief card */}
-          <div className="w-full lg:w-72 xl:w-80 shrink-0 card-glow p-6">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5 pb-3 border-b border-white/6">Campaign Brief</p>
-            <div className="space-y-4">
-              {[
-                { label: 'Business', value: 'Sunrise Gardens' },
-                { label: 'Industry', value: 'Real Estate' },
-                { label: 'Product', value: '2 & 3 BR Apartments, Ruaka' },
-                { label: 'Target Audience', value: 'Young professionals, 28–45, Nairobi' },
-                { label: 'Goal', value: 'Generate site visit bookings' },
-                { label: 'Tone', value: 'Professional · Warm · Urgent' },
-                { label: 'Platforms', value: 'Instagram, WhatsApp, Facebook' },
-              ].map(({ label, value }) => (
-                <div key={label}>
-                  <p className="text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">{label}</p>
-                  <p className="text-sm text-white">{value}</p>
+        {/* Input form */}
+        {!loading && !output && (
+          <div className="max-w-2xl mx-auto">
+            <div className="card-glow p-8">
+              <div className="space-y-4">
+                <div>
+                  <label className="label">Your business name *</label>
+                  <input
+                    className="input w-full text-base"
+                    placeholder="e.g. Sunrise Homes, Mama Pima SACCO, Safari Stays…"
+                    value={businessName}
+                    onChange={e => setBusinessName(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleGenerate()}
+                    autoFocus
+                  />
                 </div>
-              ))}
-            </div>
-            <div className="mt-6 pt-4 border-t border-white/6">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <p className="text-xs text-emerald-400 font-semibold">Generated in 48 seconds</p>
-              </div>
-            </div>
-          </div>
 
-          {/* Output panel */}
-          <div className="flex-1 min-w-0 card-glow overflow-hidden">
-            <div className="flex border-b border-white/6 overflow-x-auto">
-              {demoTabs.map(tab => (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-3 text-xs font-semibold whitespace-nowrap transition-colors flex-1 ${
-                    activeTab === tab.id
-                      ? 'text-white border-b-2 border-purple-500 bg-purple-500/5'
-                      : 'text-gray-500 hover:text-gray-300'
-                  }`}>
-                  {tab.label}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="label">Industry *</label>
+                    <select className="input w-full" value={industry} onChange={e => setIndustry(e.target.value)}>
+                      <option value="">Select industry…</option>
+                      {DEMO_INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">Language</label>
+                    <div className="flex gap-2 mt-1">
+                      {(['en', 'sw'] as const).map(lang => (
+                        <button key={lang} type="button" onClick={() => setLanguage(lang)}
+                          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
+                            language === lang
+                              ? 'border-purple-500/60 bg-purple-500/15 text-white'
+                              : 'border-white/10 text-gray-500 hover:border-white/20'
+                          }`}>
+                          <Languages size={12} />
+                          {lang === 'en' ? 'English' : 'Kiswahili'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="label">What are you promoting? <span className="text-gray-600">(optional)</span></label>
+                  <input
+                    className="input w-full"
+                    placeholder="e.g. 2BR apartments from KES 6.5M, monthly savings account, weekend lunch special…"
+                    value={product}
+                    onChange={e => setProduct(e.target.value)}
+                  />
+                </div>
+
+                {error && <p className="text-xs text-red-400">{error}</p>}
+
+                <button onClick={handleGenerate} disabled={!canGenerate}
+                  className="btn-primary w-full py-3.5 text-sm gap-2 disabled:opacity-40">
+                  <Zap size={15} /> Generate My Campaign — Free
                 </button>
-              ))}
-            </div>
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-bold text-white">{out.heading}</p>
-                <button onClick={handleCopy}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                  style={{
-                    background: copied ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)',
-                    color: copied ? '#34d399' : '#9ca3af',
-                    border: `1px solid ${copied ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.08)'}`,
-                  }}>
-                  {copied ? <Check size={12} /> : <Copy size={12} />}
-                  {copied ? 'Copied!' : 'Copy'}
-                </button>
-              </div>
-              <pre className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap font-sans">{out.body}</pre>
-            </div>
-            <div className="px-6 pb-6 pt-2 border-t border-white/6">
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-500">Get this for your business — from <span className="text-white font-semibold">KES 5,000</span></p>
-                <Link to="/register" className="btn-primary text-xs px-4 py-2">
-                  Create Mine <ArrowRight size={12} />
-                </Link>
+                <p className="text-center text-xs text-gray-600">No account needed · Takes 30–60 seconds</p>
               </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Loading state */}
+        {loading && (
+          <div className="max-w-lg mx-auto text-center py-12">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
+              style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', boxShadow: '0 0 40px rgba(139,92,246,0.4)' }}>
+              <Loader2 size={28} className="text-white animate-spin" />
+            </div>
+            <p className="text-white font-semibold mb-2">{DEMO_STEPS[stepIdx]}</p>
+            <p className="text-xs text-gray-600 mb-6">Generating for <span className="text-purple-400">{businessName}</span>…</p>
+            <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+              <div className="h-full rounded-full transition-all duration-1000"
+                style={{
+                  width: `${Math.round(((stepIdx + 1) / DEMO_STEPS.length) * 100)}%`,
+                  background: 'linear-gradient(90deg, #8b5cf6, #3b82f6)',
+                }} />
+            </div>
+            <p className="text-xs text-gray-600 mt-2">Step {stepIdx + 1} of {DEMO_STEPS.length}</p>
+          </div>
+        )}
+
+        {/* Output */}
+        {output && !loading && (
+          <>
+            <div className="flex flex-col lg:flex-row gap-6 items-start">
+              {/* Brief summary */}
+              <div className="w-full lg:w-72 xl:w-80 shrink-0 card-glow p-6">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5 pb-3 border-b border-white/6">Your Brief</p>
+                <div className="space-y-4">
+                  {[
+                    { label: 'Business', value: businessName },
+                    { label: 'Industry', value: industry },
+                    { label: 'Goal', value: 'Get leads & grow awareness' },
+                    { label: 'Language', value: language === 'sw' ? 'Kiswahili' : 'English' },
+                    { label: 'Strategy', value: output.strategy.angle },
+                  ].map(({ label, value }) => (
+                    <div key={label}>
+                      <p className="text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">{label}</p>
+                      <p className="text-sm text-white leading-snug">{value}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 pt-4 border-t border-white/6 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <p className="text-xs text-emerald-400 font-semibold">Generated by Nia AI</p>
+                  </div>
+                  <Link to="/register" className="btn-primary w-full text-center text-xs py-2.5">
+                    Get My Full Campaign <ArrowRight size={12} />
+                  </Link>
+                  <button onClick={() => setOutput(null)}
+                    className="w-full text-xs text-gray-600 hover:text-gray-400 transition-colors text-center py-1">
+                    Try a different business
+                  </button>
+                </div>
+              </div>
+
+              {/* Output panel */}
+              <div className="flex-1 min-w-0 card-glow overflow-hidden">
+                <div className="flex border-b border-white/6 overflow-x-auto">
+                  {DEMO_TABS.map(tab => (
+                    <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                      className={`px-4 py-3 text-xs font-semibold whitespace-nowrap transition-colors flex-1 ${
+                        activeTab === tab.id
+                          ? 'text-white border-b-2 border-purple-500 bg-purple-500/5'
+                          : 'text-gray-500 hover:text-gray-300'
+                      }`}>
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm font-bold text-white">{getTabContent().heading}</p>
+                    <button onClick={handleCopy}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                      style={{
+                        background: copied ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)',
+                        color: copied ? '#34d399' : '#9ca3af',
+                        border: `1px solid ${copied ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                      }}>
+                      {copied ? <Check size={12} /> : <Copy size={12} />}
+                      {copied ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
+                  <pre className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap font-sans max-h-72 overflow-y-auto">
+                    {getTabContent().body}
+                  </pre>
+                </div>
+                <div className="px-6 pb-6 pt-2 border-t border-white/6">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <p className="text-xs text-gray-500">
+                      This is just the preview. The full campaign includes <span className="text-white">6 asset types + a full strategy brief</span>.
+                    </p>
+                    <Link to="/register" className="btn-primary text-xs px-4 py-2 shrink-0">
+                      Get Full Campaign — KES 5,000 <ArrowRight size={12} />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </section>
   )
@@ -341,7 +518,7 @@ export default function Home() {
                 label: 'Video Production',
                 tag: 'From KES 5,000',
                 desc: 'Human creative + AI tools produce broadcast-quality commercials, brand films, and documentaries.',
-                items: ['15s / 30s / 60s commercials', 'Brand films & documentaries', 'AI-generated footage & avatars', '2 revision rounds included', 'Certificate of AI Origin'],
+                items: ['15s / 30s / 60s commercials', 'Brand films & documentaries', 'AI-generated footage & avatars', '2 revision rounds included', 'Full exclusive rights on delivery'],
                 cta: 'Start a Video Concept',
                 to: '/register',
               },
@@ -351,7 +528,7 @@ export default function Home() {
                 label: 'Audio Studio',
                 tag: 'From KES 1,500',
                 desc: 'Radio-ready jingles, professional voice overs, and produced radio spots — separately billed.',
-                items: ['Brand jingles (15s, 30s, 60s)', 'African voice overs — 14 voices', 'Fully produced radio spots', 'Kiswahili & English mix', 'Zero copyright — all rights yours'],
+                items: ['Brand jingles (15s, 30s, 60s)', 'African voice overs — 14 voices', 'Fully produced radio spots', 'Kiswahili & English mix', 'All rights yours on delivery'],
                 cta: 'Order Audio',
                 to: '/register',
               },
@@ -387,8 +564,8 @@ export default function Home() {
               <Shield size={18} className="text-green-400" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-bold text-white">100% AI-Generated. Zero Copyright Risk.</p>
-              <p className="text-xs text-gray-400 mt-0.5">All video and audio is AI-generated — no third-party assets. Full exclusive rights transfer to you on delivery. Certificate of AI Origin issued for every project.</p>
+              <p className="text-sm font-bold text-white">Full rights. Zero agency markup.</p>
+              <p className="text-xs text-gray-400 mt-0.5">All creative is produced exclusively for you — no stock libraries, no shared assets. Full exclusive rights transfer on delivery. You own everything.</p>
             </div>
             <Link to="/pricing" className="btn-secondary text-xs px-4 py-2 shrink-0 whitespace-nowrap">
               See All Pricing <ArrowRight size={12} className="inline" />

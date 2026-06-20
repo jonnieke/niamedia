@@ -1,7 +1,8 @@
-import { useState, FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ChevronDown, Zap } from 'lucide-react'
+import { useState, FormEvent, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { ChevronDown, Zap, MessageSquare, Languages } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
+import NiaAgent from '../components/NiaAgent'
 import { CampaignFormData } from '../types'
 import { supabase } from '../lib/supabase'
 
@@ -35,10 +36,25 @@ function SectionCard({ title, children }: { title: string; children: React.React
 
 export default function NewCampaign() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [form, setForm] = useState<CampaignFormData>(empty)
+  const [language, setLanguage] = useState<'en' | 'sw'>('en')
+  const [showNia, setShowNia] = useState(false)
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(0)
   const [error, setError] = useState('')
+
+  // Pre-fill from Nia agent URL params
+  useEffect(() => {
+    const fields: Partial<CampaignFormData> = {}
+    if (searchParams.get('business_name')) fields.business_name = searchParams.get('business_name')!
+    if (searchParams.get('industry')) fields.industry = searchParams.get('industry')!
+    if (searchParams.get('product_name')) fields.product_name = searchParams.get('product_name')!
+    if (searchParams.get('target_audience')) fields.target_audience = searchParams.get('target_audience')!
+    if (searchParams.get('objective')) fields.objective = searchParams.get('objective')!
+    if (searchParams.get('tone')) fields.tone = searchParams.get('tone')!
+    if (Object.keys(fields).length > 0) setForm(prev => ({ ...prev, ...fields }))
+  }, [searchParams])
 
   const set = (field: keyof CampaignFormData) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -60,7 +76,7 @@ export default function NewCampaign() {
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke('generate-campaign', {
-        body: form,
+        body: { ...form, language },
       })
       clearInterval(stepInterval)
 
@@ -99,10 +115,19 @@ export default function NewCampaign() {
 
   return (
     <DashboardLayout>
+      {showNia && <NiaAgent onClose={() => setShowNia(false)} />}
       <div className="max-w-2xl">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-white">New Campaign</h1>
-          <p className="text-sm text-gray-500 mt-1">Fill in your business details and we'll generate a complete campaign.</p>
+        <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-2xl font-bold text-white">New Campaign</h1>
+            <p className="text-sm text-gray-500 mt-1">Fill in your brief and we'll generate a complete campaign.</p>
+          </div>
+          <button type="button" onClick={() => setShowNia(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white shrink-0 transition-all hover:opacity-90"
+            style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(59,130,246,0.2))', border: '1px solid rgba(139,92,246,0.35)' }}>
+            <MessageSquare size={14} className="text-purple-400" />
+            Fill brief with Nia AI
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -163,6 +188,26 @@ export default function NewCampaign() {
               </div>
             </div>
           </SectionCard>
+
+          {/* Language toggle */}
+          <div className="card-glow p-5">
+            <label className="label mb-3 flex items-center gap-1.5"><Languages size={13} /> Output language</label>
+            <div className="flex gap-2">
+              {(['en', 'sw'] as const).map(lang => (
+                <button key={lang} type="button" onClick={() => setLanguage(lang)}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-all ${
+                    language === lang
+                      ? 'border-purple-500/60 bg-purple-500/15 text-white'
+                      : 'border-white/10 text-gray-500 hover:border-white/20 hover:text-gray-300'
+                  }`}>
+                  {lang === 'en' ? 'English' : 'Kiswahili'}
+                </button>
+              ))}
+            </div>
+            {language === 'sw' && (
+              <p className="text-xs text-gray-500 mt-2">All campaign copy will be generated in Kiswahili — captions, WhatsApp messages, scripts, and poster copy.</p>
+            )}
+          </div>
 
           {error && (
             <div className="p-3 rounded-xl border border-red-500/30 bg-red-500/10 text-sm text-red-400">

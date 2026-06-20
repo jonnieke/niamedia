@@ -73,11 +73,16 @@ export default function Dashboard() {
     })
   }, [user])
 
+  // Estimated savings vs agency rates (campaign copy agency rate ~KES 15K, audio ~KES 25K)
+  const agencyEquivalent = stats.campaigns * 15000 + stats.audioOrders * 25000
+  const niaPaid = stats.campaigns * 5000 + stats.audioOrders * 8000
+  const saved = agencyEquivalent - niaPaid
+
   const statCards = [
     { label: 'Total Campaigns', value: stats.campaigns, icon: BarChart2, change: 'All time', up: true },
     { label: 'Audio Orders', value: stats.audioOrders, icon: Music, change: 'Jingles, VO & Radio', up: true },
     { label: 'Delivered Assets', value: stats.deliveredAssets, icon: FileText, change: 'Ready to download', up: true },
-    { label: 'In Production', value: stats.activeProjects, icon: BookOpen, change: 'Active jobs', up: false },
+    { label: 'Saved vs Agency', value: saved > 0 ? `KES ${(saved / 1000).toFixed(0)}K` : '—', icon: TrendingUp, change: 'vs traditional agency', up: saved > 0 },
   ]
 
   return (

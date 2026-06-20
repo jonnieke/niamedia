@@ -189,9 +189,11 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
     setSpeechSupported('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
   }, [])
 
-  // Load brand context for logged-in users
+  // Load brand context + previous conversation for logged-in users
   useEffect(() => {
     if (!user) return
+
+    // Brand kit
     supabase
       .from('brand_kits')
       .select('business_name, industry')
@@ -200,6 +202,26 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
       .then(({ data }) => {
         if (data?.business_name) setBrandContext({ businessName: data.business_name, industry: data.industry ?? undefined })
       })
+
+    // Previous session
+    supabase
+      .from('conversation_sessions')
+      .select('messages')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.messages && Array.isArray(data.messages) && data.messages.length > 2) {
+          // Restore previous messages but add a "welcome back" note
+          const prev = data.messages as Message[]
+          const welcomeBack: Message = {
+            id: 'wb',
+            role: 'assistant',
+            content: `Welcome back! I remember we were chatting about ${brandContext?.businessName ?? 'your business'}. Want to pick up where we left off, or start fresh?`,
+          }
+          setMessages([welcomeBack, ...prev.slice(-6)]) // last 6 messages + welcome
+        }
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
   // Auto-scroll
@@ -298,6 +320,15 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
       setMessages(prev => [...prev, agentMsg])
 
       if (data.suggestedAction) setSuggestedAction(data.suggestedAction)
+
+      // Persist conversation for logged-in users
+      if (user) {
+        const allMsgs = [...messages, userMsg, agentMsg]
+        supabase.from('conversation_sessions').upsert(
+          { user_id: user.id, messages: allMsgs, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id' }
+        ).then(() => {/* silent */})
+      }
 
       if (data.audio && voiceMode) {
         await playAudio(data.audio)
