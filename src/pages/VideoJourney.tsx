@@ -109,139 +109,59 @@ const FORMAT_OPTIONS = [
 const STEPS = ['Style', 'Script', 'Scenes', 'Mood Board', 'Storyboard', 'Sign Off']
 const STEP_COLORS = ['#7c3aed', '#2563eb', '#059669', '#d97706', '#dc2626', '#0891b2']
 
-// ─── Style card visual previews ────────────────────────────────────────────────
+// ─── Style card image preview ──────────────────────────────────────────────────
 
-function StyleCardVisual({ id, name }: { id: string; name: string }) {
-  if (id === 'cinematic') return (
-    <div className="relative h-44 overflow-hidden" style={{ background: 'linear-gradient(165deg, #06080e 0%, #0d1829 55%, #080c12 100%)' }}>
-      {/* Letterbox bars */}
-      <div className="absolute top-0 inset-x-0 h-5" style={{ background: '#000' }} />
-      <div className="absolute bottom-0 inset-x-0 h-5" style={{ background: '#000' }} />
-      {/* Vignette */}
-      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, transparent 25%, rgba(0,0,0,0.75) 100%)' }} />
-      {/* Corner marks */}
-      {[['top-7 left-4','borderTop','borderLeft'],['top-7 right-4','borderTop','borderRight'],['bottom-7 left-4','borderBottom','borderLeft'],['bottom-7 right-4','borderBottom','borderRight']].map(([pos, b1, b2], i) => (
-        <div key={i} className={`absolute ${pos} w-4 h-4`} style={{ [b1]: '1.5px solid rgba(251,191,36,0.55)', [b2]: '1.5px solid rgba(251,191,36,0.55)' }} />
-      ))}
-      {/* Horizontal scan line */}
-      <div className="absolute left-4 right-4" style={{ top: '50%', height: '1px', background: 'rgba(251,191,36,0.12)' }} />
-      {/* Text */}
-      <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 text-center">
-        <p className="text-white font-black tracking-[0.18em] uppercase" style={{ fontSize: '18px', letterSpacing: '0.2em', textShadow: '0 0 40px rgba(99,102,241,0.6)' }}>{name}</p>
-        <p className="text-[10px] tracking-widest mt-1.5" style={{ color: 'rgba(251,191,36,0.6)' }}>DEEP FOCUS · FILM GRAIN · DRAMA</p>
+function StyleCardImage({ style, imageUrl, loading }: {
+  style: VideoStyle
+  imageUrl?: string
+  loading: boolean
+}) {
+  if (imageUrl) {
+    return (
+      <div className="relative h-44 overflow-hidden bg-gray-900">
+        <img
+          src={imageUrl}
+          alt={style.name}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+        {/* Subtle bottom fade so the white text bar blends softly */}
+        <div className="absolute inset-x-0 bottom-0 h-12"
+          style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 100%)' }} />
+        <span className="absolute top-2.5 left-3 text-xl leading-none drop-shadow-lg">{style.emoji}</span>
       </div>
-      {/* Frame counter */}
-      <div className="absolute bottom-6 right-4 text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.2)' }}>001 / 024</div>
-    </div>
-  )
+    )
+  }
 
-  if (id === 'cartoon') return (
-    <div className="relative h-44 overflow-hidden bg-white" style={{ border: '4px solid #1a1a1a' }}>
-      {/* Halftone dots bg */}
-      <div className="absolute inset-0" style={{
-        backgroundImage: 'radial-gradient(circle, rgba(124,58,237,0.15) 1.5px, transparent 1.5px)',
-        backgroundSize: '14px 14px',
-      }} />
-      {/* Bold diagonal accent */}
-      <div className="absolute" style={{ top: '-20px', right: '-20px', width: '120px', height: '120px', background: '#f59e0b', transform: 'rotate(45deg)', opacity: 0.9 }} />
-      <div className="absolute" style={{ top: '-20px', right: '-20px', width: '100px', height: '100px', background: '#7c3aed', transform: 'rotate(45deg)' }} />
-      {/* Speech bubble mock */}
-      <div className="absolute bottom-6 right-5 px-2.5 py-1 rounded-xl bg-white border-2 border-gray-900 shadow-md" style={{ fontSize: '11px', fontWeight: 900 }}>POW!</div>
-      {/* Text */}
-      <div className="absolute inset-x-4 top-1/2 -translate-y-1/2">
-        <p className="font-black text-gray-900 leading-tight" style={{ fontSize: '19px', letterSpacing: '-0.02em', WebkitTextStroke: '1px #1a1a1a' }}>{name.toUpperCase()}</p>
-        <p className="text-[10px] font-bold mt-1.5 text-gray-600 tracking-wide">BOLD OUTLINES · FLAT COLOUR · ENERGY</p>
+  if (loading) {
+    return (
+      <div className="relative h-44 overflow-hidden" style={{ background: style.gradient }}>
+        <div className="absolute inset-0 animate-pulse opacity-20"
+          style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)' }} />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Loader2 size={20} className="animate-spin opacity-30" style={{ color: style.accent }} />
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
 
-  if (id === 'bold-graphic') return (
-    <div className="relative h-44 overflow-hidden" style={{ background: '#080808' }}>
-      {/* Diagonal red block */}
-      <div className="absolute" style={{ top: '-60px', right: '-40px', width: '200px', height: '200px', background: '#dc2626', transform: 'rotate(15deg)', opacity: 0.9 }} />
-      {/* Yellow accent */}
-      <div className="absolute" style={{ top: '0', right: '0', width: '60px', height: '4px', background: '#fbbf24' }} />
-      {/* Grid lines */}
-      <div className="absolute inset-0" style={{
-        backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
-        backgroundSize: '24px 24px',
-      }} />
-      {/* Text */}
-      <div className="absolute bottom-5 left-4 right-4">
-        <p className="text-white font-black leading-none" style={{ fontSize: '22px', letterSpacing: '-0.03em' }}>{name.toUpperCase()}</p>
-        <div className="h-0.5 w-12 mt-2 mb-1.5" style={{ background: '#dc2626' }} />
-        <p className="text-[10px] tracking-widest" style={{ color: 'rgba(255,255,255,0.35)' }}>HIGH CONTRAST · IMPACT · GEOMETRY</p>
-      </div>
-    </div>
-  )
-
-  if (id === 'documentary') return (
-    <div className="relative h-44 overflow-hidden" style={{ background: 'linear-gradient(150deg, #2c1f12 0%, #5c3a1e 50%, #3d2b1a 100%)' }}>
-      {/* Grain texture */}
-      <div className="absolute inset-0" style={{
-        backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.08\'/%3E%3C/svg%3E")',
-        opacity: 0.5,
-      }} />
-      {/* Warm vignette */}
-      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 30% 50%, rgba(255,165,50,0.08) 0%, rgba(0,0,0,0.6) 80%)' }} />
-      {/* Scratch lines */}
-      <div className="absolute inset-y-0 left-1/3" style={{ width: '1px', background: 'rgba(255,255,255,0.04)' }} />
-      {/* Text */}
-      <div className="absolute inset-x-4 top-1/2 -translate-y-1/2">
-        <p className="text-[10px] tracking-widest mb-2" style={{ color: 'rgba(252,211,77,0.55)' }}>FILMED ON LOCATION</p>
-        <p className="font-bold leading-tight" style={{ fontSize: '19px', color: '#fef3c7', letterSpacing: '-0.01em' }}>{name}</p>
-        <p className="text-[10px] mt-2" style={{ color: 'rgba(252,211,77,0.45)' }}>RAW LIGHT · REAL PEOPLE · TRUTH</p>
-      </div>
-    </div>
-  )
-
-  if (id === 'luxury') return (
-    <div className="relative h-44 overflow-hidden" style={{ background: '#060606' }}>
-      {/* Gold border lines */}
-      <div className="absolute inset-3" style={{ border: '1px solid rgba(212,175,55,0.2)' }} />
-      <div className="absolute top-5 left-5 right-5" style={{ height: '1px', background: 'rgba(212,175,55,0.15)' }} />
-      <div className="absolute bottom-5 left-5 right-5" style={{ height: '1px', background: 'rgba(212,175,55,0.15)' }} />
-      {/* Corner ornaments */}
-      <div className="absolute top-3 left-3 w-2 h-2" style={{ borderTop: '1px solid rgba(212,175,55,0.5)', borderLeft: '1px solid rgba(212,175,55,0.5)' }} />
-      <div className="absolute top-3 right-3 w-2 h-2" style={{ borderTop: '1px solid rgba(212,175,55,0.5)', borderRight: '1px solid rgba(212,175,55,0.5)' }} />
-      <div className="absolute bottom-3 left-3 w-2 h-2" style={{ borderBottom: '1px solid rgba(212,175,55,0.5)', borderLeft: '1px solid rgba(212,175,55,0.5)' }} />
-      <div className="absolute bottom-3 right-3 w-2 h-2" style={{ borderBottom: '1px solid rgba(212,175,55,0.5)', borderRight: '1px solid rgba(212,175,55,0.5)' }} />
-      {/* Gold accent line */}
-      <div className="absolute left-1/2 -translate-x-1/2" style={{ top: '28px', width: '30px', height: '1px', background: 'rgba(212,175,55,0.6)' }} />
-      {/* Text */}
-      <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 text-center">
-        <p className="font-light tracking-[0.3em] uppercase" style={{ fontSize: '11px', color: 'rgba(212,175,55,0.6)', marginBottom: '6px' }}>PRESTIGE</p>
-        <p className="font-light tracking-[0.12em] uppercase" style={{ fontSize: '17px', color: '#e8d5a3', letterSpacing: '0.15em' }}>{name}</p>
-        <p className="font-light tracking-widest mt-2" style={{ fontSize: '9px', color: 'rgba(212,175,55,0.35)' }}>SLOW CINEMA · GOLD TONES · ASPIRATION</p>
-      </div>
-    </div>
-  )
-
-  // minimal
+  // Fallback if generation failed
   return (
-    <div className="relative h-44 overflow-hidden" style={{ background: '#f8fafc' }}>
-      {/* Top accent line */}
-      <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: 'linear-gradient(90deg, #7c3aed, #2563eb)' }} />
-      {/* Soft grid */}
-      <div className="absolute inset-0" style={{
-        backgroundImage: 'linear-gradient(rgba(148,163,184,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.08) 1px, transparent 1px)',
-        backgroundSize: '32px 32px',
-      }} />
-      {/* Accent shape */}
-      <div className="absolute right-8 top-1/2 -translate-y-1/2 rounded-xl" style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, rgba(124,58,237,0.1), rgba(37,99,235,0.1))', border: '1px solid rgba(124,58,237,0.15)' }} />
-      {/* Text */}
-      <div className="absolute inset-x-6 top-1/2 -translate-y-1/2">
-        <div className="w-8 h-0.5 mb-3" style={{ background: '#7c3aed' }} />
-        <p className="font-semibold text-gray-700" style={{ fontSize: '17px', letterSpacing: '-0.01em' }}>{name}</p>
-        <p className="text-gray-400 mt-1.5" style={{ fontSize: '10px', letterSpacing: '0.08em' }}>WHITE SPACE · CLARITY · INTENTION</p>
-      </div>
+    <div className="relative h-44 overflow-hidden flex items-center justify-center" style={{ background: style.gradient }}>
+      <span className="text-5xl opacity-25">{style.emoji}</span>
     </div>
   )
 }
 
+
+
 // ─── Step 0: Style Picker ───────────────────────────────────────────────────────
 
-function StylePicker({ selected, onSelect }: { selected: string; onSelect: (id: string) => void }) {
+function StylePicker({ selected, onSelect, styleImages, thumbsLoading }: {
+  selected: string
+  onSelect: (id: string) => void
+  styleImages: Record<string, string>
+  thumbsLoading: boolean
+}) {
   return (
     <div>
       <div className="mb-8 text-center">
@@ -260,7 +180,7 @@ function StylePicker({ selected, onSelect }: { selected: string; onSelect: (id: 
                 : 'ring-1 ring-gray-200 hover:ring-gray-300 hover:shadow-lg hover:-translate-y-0.5'
             }`}
               style={selected === style.id ? { '--tw-ring-color': style.accent, boxShadow: `0 8px 32px ${style.accent}30` } as React.CSSProperties : undefined}>
-              <StyleCardVisual id={style.id} name={style.name} />
+              <StyleCardImage style={style} imageUrl={styleImages[style.id]} loading={thumbsLoading} />
               <div className="bg-white px-4 py-3 flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-bold text-gray-900">{style.name}</p>
@@ -727,7 +647,25 @@ export default function VideoJourney() {
   const [generatingFrameId, setGeneratingFrameId] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [userIndustry, setUserIndustry] = useState('Professional Services')
+  const [styleImages, setStyleImages] = useState<Record<string, string>>({})
+  const [thumbsLoading, setThumbsLoading] = useState(false)
 
+
+  useEffect(() => {
+    setThumbsLoading(true)
+    Promise.all(
+      VIDEO_STYLES.map(s =>
+        supabase.functions.invoke('generate-style-thumb', { body: { style_id: s.id } })
+          .then(({ data }) => ({ id: s.id, url: (data?.url as string) ?? '' }))
+          .catch(() => ({ id: s.id, url: '' }))
+      )
+    ).then(results => {
+      const imgs: Record<string, string> = {}
+      for (const r of results) { if (r.url) imgs[r.id] = r.url }
+      setStyleImages(imgs)
+      setThumbsLoading(false)
+    })
+  }, [])
 
   const style = VIDEO_STYLES.find(s => s.id === selectedStyle) ?? VIDEO_STYLES[0]
 
@@ -910,7 +848,7 @@ export default function VideoJourney() {
 
       {/* Step content */}
       <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
-        {step === 0 && <StylePicker selected={selectedStyle} onSelect={setSelectedStyle} />}
+        {step === 0 && <StylePicker selected={selectedStyle} onSelect={setSelectedStyle} styleImages={styleImages} thumbsLoading={thumbsLoading} />}
         {step === 1 && (
           <ScriptStep brief={brief} setBrief={setBrief} format={format} setFormat={setFormat}
             scenes={scenes} onGenerate={handleGenerateScript} generating={scriptGenerating} error={scriptError} />
