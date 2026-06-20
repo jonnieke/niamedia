@@ -796,10 +796,18 @@ export default function VideoJourney() {
       )
       const firstError = results.find(r => r.error || r.data?.error)
       if (firstError) {
-        // Log full response so we can see the exact fal.ai error in the console
-        console.error('[generate-poster] error response:', JSON.stringify(firstError.data), firstError.error)
-        const msg = firstError.data?.error ?? firstError.error?.message ?? 'Image generation failed'
-        setMoodError(`${msg} — check console for details`)
+        // FunctionsHttpError hides the body in error.context (the raw Response)
+        let msg = firstError.data?.error ?? 'Image generation failed'
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const rawText = await (firstError.error as any)?.context?.text?.()
+          if (rawText) {
+            const parsed = JSON.parse(rawText)
+            msg = parsed?.error ?? rawText
+          }
+        } catch { /* fall through */ }
+        console.error('[generate-poster] actual error:', msg)
+        setMoodError(msg)
         setMoodGenerating(false)
         return
       }
