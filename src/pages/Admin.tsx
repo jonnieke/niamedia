@@ -3,6 +3,7 @@ import {
   Users, BarChart2, Package, TrendingUp, ShieldCheck,
   Film, Music, Upload, Eye, RefreshCw, CheckCircle, Clock,
   AlertCircle, Loader2, Radio, Mic, Phone, Mail, Inbox,
+  Zap, Plus, CreditCard,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
@@ -58,7 +59,18 @@ interface Profile {
   name: string
   email: string
   role: string
+  credits: number
   created_at: string
+}
+
+interface CreditTxn {
+  id: string
+  user_id: string
+  amount: number
+  description: string
+  payment_status: string
+  created_at: string
+  profiles?: { name: string; email: string }
 }
 
 async function notifyUser(userId: string, title: string, body: string, type: string, actionUrl?: string) {
@@ -384,7 +396,9 @@ export default function Admin() {
   const [projects, setProjects] = useState<Project[]>([])
   const [users, setUsers] = useState<Profile[]>([])
   const [leads, setLeads] = useState<Lead[]>([])
+  const [creditTxns, setCreditTxns] = useState<CreditTxn[]>([])
   const [loading, setLoading] = useState(true)
+  const [grantingCredit, setGrantingCredit] = useState<string | null>(null)
 
   useEffect(() => {
     Promise.all([
@@ -392,14 +406,29 @@ export default function Admin() {
       supabase.from('projects').select('*, profiles(name, email)').order('created_at', { ascending: false }),
       supabase.from('profiles').select('*').order('created_at', { ascending: false }),
       supabase.from('package_requests').select('*').order('created_at', { ascending: false }),
-    ]).then(([{ data: ao }, { data: pr }, { data: us }, { data: lr }]) => {
+      supabase.from('credit_transactions').select('*, profiles(name, email)').eq('payment_status', 'paid').order('created_at', { ascending: false }).limit(100),
+    ]).then(([{ data: ao }, { data: pr }, { data: us }, { data: lr }, { data: ct }]) => {
       setAudioOrders((ao ?? []) as AudioOrder[])
       setProjects((pr ?? []) as Project[])
       setUsers((us ?? []) as Profile[])
       setLeads((lr ?? []) as Lead[])
+      setCreditTxns((ct ?? []) as CreditTxn[])
       setLoading(false)
     })
   }, [])
+
+  const grantCredit = async (userId: string) => {
+    setGrantingCredit(userId)
+    await supabase.rpc('add_credits', {
+      p_user_id: userId,
+      p_amount: 1,
+      p_description: 'Admin grant',
+      p_order_id: `admin_${Date.now()}`,
+    })
+    await notifyUser(userId, 'Credit granted!', 'An admin has added 1 campaign credit to your account.', 'success', '/new-campaign')
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, credits: (u.credits ?? 0) + 1 } : u))
+    setGrantingCredit(null)
+  }
 
   const handleAudioStatusChange = (id: string, status: AudioStatus) =>
     setAudioOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o))
@@ -415,15 +444,20 @@ export default function Admin() {
   const newLeads = leads.filter(l => l.status === 'new').length
   const actionNeeded = pendingAudio + pendingProjects
 
-  const totalRevenue = audioOrders.reduce((sum, o) => sum + (o.price_kes ?? 0), 0)
+  const audioRevenue = audioOrders.reduce((sum, o) => sum + (o.price_kes ?? 0), 0)
+  const creditRevenue = creditTxns.filter(t => t.amount > 0).reduce((sum, t) => {
+    const pkg: Record<number, number> = { 1: 500, 5: 2000, 12: 4000 }
+    return sum + (pkg[t.amount] ?? t.amount * 500)
+  }, 0)
+  const totalRevenue = audioRevenue + creditRevenue
 
-  const tabs = ['Overview', 'Leads', 'Audio Orders', 'Projects', 'Users']
+  const tabs = ['Overview', 'Leads', 'Audio Orders', 'Projects', 'Credits', 'Users']
 
   const stats = [
     { label: 'New Leads', value: newLeads, icon: Inbox, sub: `${leads.length} total`, color: 'text-amber-400' },
     { label: 'Total Users', value: users.length, icon: Users, sub: `${users.filter(u => u.role === 'admin').length} admin`, color: 'text-purple-400' },
     { label: 'Audio Orders', value: audioOrders.length, icon: Package, sub: `${pendingAudio} pending`, color: 'text-blue-400' },
-    { label: 'Est. Revenue', value: `KES ${(totalRevenue / 1000).toFixed(0)}K`, icon: TrendingUp, sub: 'Audio orders', color: 'text-emerald-400' },
+    { label: 'Est. Revenue', value: `KES ${(totalRevenue / 1000).toFixed(0)}K`, icon: TrendingUp, sub: `Audio + credits`, color: 'text-emerald-400' },
   ]
 
   return (
@@ -441,11 +475,40 @@ export default function Admin() {
         </a>
       </div>
 
+      {/* Action-needed banner */}
+      {!loading && actionNeeded > 0 && (
+        <div className="mb-5 p-4 rounded-xl border border-amber-500/25 bg-amber-500/8 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <AlertCircle size={16} className="text-amber-400 shrink-0" />
+            <p className="text-sm text-amber-300 font-semibold">
+              {actionNeeded} item{actionNeeded !== 1 ? 's' : ''} need your attention
+              <span className="font-normal text-amber-400/70 ml-1.5">
+                — {pendingAudio > 0 ? `${pendingAudio} audio order${pendingAudio !== 1 ? 's' : ''} queued` : ''}
+                {pendingAudio > 0 && pendingProjects > 0 ? ', ' : ''}
+                {pendingProjects > 0 ? `${pendingProjects} project${pendingProjects !== 1 ? 's' : ''} pending` : ''}
+              </span>
+            </p>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            {pendingAudio > 0 && (
+              <button onClick={() => setTab(2)} className="text-xs px-3 py-1.5 rounded-lg border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition-all">
+                Audio Orders →
+              </button>
+            )}
+            {pendingProjects > 0 && (
+              <button onClick={() => setTab(3)} className="text-xs px-3 py-1.5 rounded-lg border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition-all">
+                Projects →
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Tabs */}
-      <div className="flex gap-1 mb-7 border-b border-white/6">
+      <div className="flex gap-1 mb-7 border-b border-white/6 overflow-x-auto">
         {tabs.map((t, i) => (
           <button key={t} onClick={() => setTab(i)}
-            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all border-b-2 -mb-px flex items-center gap-1.5 ${
+            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all border-b-2 -mb-px flex items-center gap-1.5 whitespace-nowrap ${
               tab === i ? 'border-purple-500 text-purple-300' : 'border-transparent text-gray-500 hover:text-gray-300'
             }`}>
             {t}
@@ -454,6 +517,9 @@ export default function Admin() {
             )}
             {t === 'Audio Orders' && pendingAudio > 0 && (
               <span className="w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center bg-purple-500 text-white">{pendingAudio}</span>
+            )}
+            {t === 'Credits' && creditTxns.length > 0 && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400">{creditTxns.length}</span>
             )}
           </button>
         ))}
@@ -621,23 +687,91 @@ export default function Admin() {
             </div>
           )}
 
-          {/* Users */}
+          {/* Credits */}
           {tab === 4 && (
+            <div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+                <div className="card-glow p-5">
+                  <p className="text-2xl font-extrabold text-white">{creditTxns.filter(t => t.amount > 0).length}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Credit purchases</p>
+                </div>
+                <div className="card-glow p-5">
+                  <p className="text-2xl font-extrabold text-emerald-400">
+                    KES {(creditRevenue / 1000).toFixed(0)}K
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">Credit revenue</p>
+                </div>
+                <div className="card-glow p-5">
+                  <p className="text-2xl font-extrabold text-purple-400">
+                    {creditTxns.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0)}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">Credits sold</p>
+                </div>
+              </div>
+
+              <div className="card-glow divide-y divide-white/5">
+                {creditTxns.length === 0 ? (
+                  <div className="py-16 text-center text-gray-600">
+                    <CreditCard size={28} className="mx-auto mb-2 opacity-30" />
+                    <p className="text-sm">No credit purchases yet</p>
+                  </div>
+                ) : creditTxns.map(t => (
+                  <div key={t.id} className="flex items-center gap-4 px-5 py-3.5">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ background: t.amount > 0 ? 'rgba(16,185,129,0.12)' : 'rgba(139,92,246,0.12)' }}>
+                      <Zap size={14} className={t.amount > 0 ? 'text-emerald-400' : 'text-purple-400'} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-white">{t.profiles?.name ?? '—'}</p>
+                      <p className="text-xs text-gray-500 truncate">{t.description}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className={`text-sm font-bold ${t.amount > 0 ? 'text-emerald-400' : 'text-purple-400'}`}>
+                        {t.amount > 0 ? `+${t.amount}` : t.amount} credit{Math.abs(t.amount) !== 1 ? 's' : ''}
+                      </p>
+                      <p className="text-[11px] text-gray-600">
+                        {new Date(t.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Users */}
+          {tab === 5 && (
             <div className="card-glow divide-y divide-white/5">
               {users.map(u => (
-                <div key={u.id} className="flex items-center gap-4 px-5 py-3.5">
+                <div key={u.id} className="flex items-center gap-3 px-5 py-3.5 flex-wrap sm:flex-nowrap">
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
                     style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)' }}>
                     {u.name.charAt(0).toUpperCase()}
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-white">{u.name}</p>
-                    <p className="text-xs text-gray-500">{u.email}</p>
+                    <p className="text-xs text-gray-500 truncate">{u.email}</p>
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded font-semibold ${u.role === 'admin' ? 'bg-purple-500/20 text-purple-300' : 'bg-white/8 text-gray-400'}`}>
+                  {/* Credits balance */}
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-purple-500/20 bg-purple-500/8 shrink-0">
+                    <Zap size={11} className="text-purple-400" />
+                    <span className="text-xs font-semibold text-purple-300">{u.credits ?? 0}</span>
+                  </div>
+                  {/* Grant credit */}
+                  <button
+                    onClick={() => grantCredit(u.id)}
+                    disabled={grantingCredit === u.id}
+                    title="Grant 1 free credit"
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-white/10 text-gray-500 hover:border-emerald-500/30 hover:text-emerald-400 text-xs transition-all disabled:opacity-40 shrink-0">
+                    {grantingCredit === u.id
+                      ? <Loader2 size={11} className="animate-spin" />
+                      : <Plus size={11} />}
+                    Credit
+                  </button>
+                  <span className={`text-xs px-2 py-0.5 rounded font-semibold shrink-0 ${u.role === 'admin' ? 'bg-purple-500/20 text-purple-300' : 'bg-white/8 text-gray-400'}`}>
                     {u.role}
                   </span>
-                  <span className="text-xs text-gray-600">
+                  <span className="text-xs text-gray-600 shrink-0">
                     {new Date(u.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </span>
                 </div>
