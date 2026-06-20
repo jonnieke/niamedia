@@ -338,9 +338,9 @@ function SceneEditor({ scenes, setScenes, brief, styleName, onEnhance, enhancing
 
 // ─── Step 3: Mood Board ─────────────────────────────────────────────────────────
 
-function MoodBoardStep({ style, images, onGenerate, generating }: {
+function MoodBoardStep({ style, images, onGenerate, generating, error }: {
   style: VideoStyle; images: string[]
-  onGenerate: () => void; generating: boolean
+  onGenerate: () => void; generating: boolean; error: string
 }) {
   return (
     <div>
@@ -357,8 +357,16 @@ function MoodBoardStep({ style, images, onGenerate, generating }: {
           </div>
           <p className="text-sm font-bold text-gray-900 mb-1">Generate your {style.name} mood board</p>
           <p className="text-xs text-gray-500 mb-6 max-w-xs mx-auto">4 AI reference images matching your visual style — free, no credits needed.</p>
-          <button onClick={onGenerate}
-            className="px-8 py-3 rounded-xl text-sm font-bold text-white flex items-center gap-2 mx-auto transition-all"
+          {error && (
+            <div className="mb-4 mx-auto max-w-sm p-3 rounded-xl border border-red-200 bg-red-50 text-xs text-red-600">
+              <strong>Generation failed:</strong> {error}
+              {error.toLowerCase().includes('falai') || error.toLowerCase().includes('api') ? (
+                <p className="mt-1 text-red-500">Check that FALAI_API_KEY is set in Supabase → Edge Functions → Secrets.</p>
+              ) : null}
+            </div>
+          )}
+          <button onClick={onGenerate} disabled={generating}
+            className="px-8 py-3 rounded-xl text-sm font-bold text-white flex items-center gap-2 mx-auto transition-all disabled:opacity-50"
             style={{ background: 'linear-gradient(135deg, #d97706, #f59e0b)', boxShadow: '0 4px 20px rgba(217,119,6,0.35)' }}>
             <Palette size={15} /> Generate Mood Board
           </button>
@@ -571,6 +579,7 @@ export default function VideoJourney() {
   const [enhancingId, setEnhancingId] = useState<string | null>(null)
   const [moodImages, setMoodImages] = useState<string[]>([])
   const [moodGenerating, setMoodGenerating] = useState(false)
+  const [moodError, setMoodError] = useState('')
   const [frameImages, setFrameImages] = useState<Record<string, string>>({})
   const [generatingFrameId, setGeneratingFrameId] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -578,7 +587,7 @@ export default function VideoJourney() {
 
   useEffect(() => {
     if (!user?.id) return
-    supabase.from('brand_kits').select('industry').eq('user_id', user.id).single()
+    supabase.from('brand_kits').select('industry').eq('user_id', user.id).maybeSingle()
       .then(({ data }) => { if (data?.industry) setUserIndustry(data.industry) })
   }, [user?.id])
 
@@ -635,19 +644,32 @@ export default function VideoJourney() {
   }
 
   const handleGenerateMoodBoard = async () => {
+    if (moodGenerating) return
     setMoodGenerating(true)
-    const falStyles: ('bold' | 'minimal' | 'vibrant')[] = [style.falStyle, 'vibrant', 'minimal', style.falStyle]
-    const results = await Promise.all(
-      falStyles.map(fs =>
-        supabase.functions.invoke('generate-poster', {
-          body: { industry: userIndustry, business_name: 'Mood Board', style: fs, unlock: false },
-        })
+    setMoodError('')
+    try {
+      const falStyles: ('bold' | 'minimal' | 'vibrant')[] = [style.falStyle, 'vibrant', 'minimal', style.falStyle]
+      const results = await Promise.all(
+        falStyles.map(fs =>
+          supabase.functions.invoke('generate-poster', {
+            body: { industry: userIndustry, business_name: 'Mood Board', style: fs, unlock: false },
+          })
+        )
       )
-    )
-    const imgs = results
-      .map(r => r.data?.images?.bold ?? r.data?.images?.minimal ?? r.data?.images?.vibrant ?? '')
-      .filter(Boolean)
-    setMoodImages(imgs)
+      const firstError = results.find(r => r.error || r.data?.error)
+      if (firstError) {
+        const msg = firstError.error?.message ?? firstError.data?.error ?? 'Image generation failed'
+        setMoodError(msg)
+        setMoodGenerating(false)
+        return
+      }
+      const imgs = results
+        .map(r => r.data?.images?.bold ?? r.data?.images?.minimal ?? r.data?.images?.vibrant ?? '')
+        .filter(Boolean)
+      setMoodImages(imgs)
+    } catch (e) {
+      setMoodError((e as Error).message ?? 'Unexpected error')
+    }
     setMoodGenerating(false)
   }
 
@@ -739,7 +761,7 @@ export default function VideoJourney() {
             onEnhance={handleEnhanceScene} enhancingId={enhancingId} />
         )}
         {step === 3 && (
-          <MoodBoardStep style={style} images={moodImages} onGenerate={handleGenerateMoodBoard} generating={moodGenerating} />
+          <MoodBoardStep style={style} images={moodImages} onGenerate={handleGenerateMoodBoard} generating={moodGenerating} error={moodError} />
         )}
         {step === 4 && (
           <StoryboardStep scenes={scenes} style={style} frameImages={frameImages}
