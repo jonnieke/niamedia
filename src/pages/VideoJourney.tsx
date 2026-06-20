@@ -109,42 +109,169 @@ const FORMAT_OPTIONS = [
 const STEPS = ['Style', 'Script', 'Scenes', 'Mood Board', 'Storyboard', 'Sign Off']
 const STEP_COLORS = ['#7c3aed', '#2563eb', '#059669', '#d97706', '#dc2626', '#0891b2']
 
+// ─── Style card visual previews ────────────────────────────────────────────────
+
+function StyleCardVisual({ id, name }: { id: string; name: string }) {
+  if (id === 'cinematic') return (
+    <div className="relative h-44 overflow-hidden" style={{ background: 'linear-gradient(165deg, #06080e 0%, #0d1829 55%, #080c12 100%)' }}>
+      {/* Letterbox bars */}
+      <div className="absolute top-0 inset-x-0 h-5" style={{ background: '#000' }} />
+      <div className="absolute bottom-0 inset-x-0 h-5" style={{ background: '#000' }} />
+      {/* Vignette */}
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, transparent 25%, rgba(0,0,0,0.75) 100%)' }} />
+      {/* Corner marks */}
+      {[['top-7 left-4','borderTop','borderLeft'],['top-7 right-4','borderTop','borderRight'],['bottom-7 left-4','borderBottom','borderLeft'],['bottom-7 right-4','borderBottom','borderRight']].map(([pos, b1, b2], i) => (
+        <div key={i} className={`absolute ${pos} w-4 h-4`} style={{ [b1]: '1.5px solid rgba(251,191,36,0.55)', [b2]: '1.5px solid rgba(251,191,36,0.55)' }} />
+      ))}
+      {/* Horizontal scan line */}
+      <div className="absolute left-4 right-4" style={{ top: '50%', height: '1px', background: 'rgba(251,191,36,0.12)' }} />
+      {/* Text */}
+      <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 text-center">
+        <p className="text-white font-black tracking-[0.18em] uppercase" style={{ fontSize: '18px', letterSpacing: '0.2em', textShadow: '0 0 40px rgba(99,102,241,0.6)' }}>{name}</p>
+        <p className="text-[10px] tracking-widest mt-1.5" style={{ color: 'rgba(251,191,36,0.6)' }}>DEEP FOCUS · FILM GRAIN · DRAMA</p>
+      </div>
+      {/* Frame counter */}
+      <div className="absolute bottom-6 right-4 text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.2)' }}>001 / 024</div>
+    </div>
+  )
+
+  if (id === 'cartoon') return (
+    <div className="relative h-44 overflow-hidden bg-white" style={{ border: '4px solid #1a1a1a' }}>
+      {/* Halftone dots bg */}
+      <div className="absolute inset-0" style={{
+        backgroundImage: 'radial-gradient(circle, rgba(124,58,237,0.15) 1.5px, transparent 1.5px)',
+        backgroundSize: '14px 14px',
+      }} />
+      {/* Bold diagonal accent */}
+      <div className="absolute" style={{ top: '-20px', right: '-20px', width: '120px', height: '120px', background: '#f59e0b', transform: 'rotate(45deg)', opacity: 0.9 }} />
+      <div className="absolute" style={{ top: '-20px', right: '-20px', width: '100px', height: '100px', background: '#7c3aed', transform: 'rotate(45deg)' }} />
+      {/* Speech bubble mock */}
+      <div className="absolute bottom-6 right-5 px-2.5 py-1 rounded-xl bg-white border-2 border-gray-900 shadow-md" style={{ fontSize: '11px', fontWeight: 900 }}>POW!</div>
+      {/* Text */}
+      <div className="absolute inset-x-4 top-1/2 -translate-y-1/2">
+        <p className="font-black text-gray-900 leading-tight" style={{ fontSize: '19px', letterSpacing: '-0.02em', WebkitTextStroke: '1px #1a1a1a' }}>{name.toUpperCase()}</p>
+        <p className="text-[10px] font-bold mt-1.5 text-gray-600 tracking-wide">BOLD OUTLINES · FLAT COLOUR · ENERGY</p>
+      </div>
+    </div>
+  )
+
+  if (id === 'bold-graphic') return (
+    <div className="relative h-44 overflow-hidden" style={{ background: '#080808' }}>
+      {/* Diagonal red block */}
+      <div className="absolute" style={{ top: '-60px', right: '-40px', width: '200px', height: '200px', background: '#dc2626', transform: 'rotate(15deg)', opacity: 0.9 }} />
+      {/* Yellow accent */}
+      <div className="absolute" style={{ top: '0', right: '0', width: '60px', height: '4px', background: '#fbbf24' }} />
+      {/* Grid lines */}
+      <div className="absolute inset-0" style={{
+        backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
+        backgroundSize: '24px 24px',
+      }} />
+      {/* Text */}
+      <div className="absolute bottom-5 left-4 right-4">
+        <p className="text-white font-black leading-none" style={{ fontSize: '22px', letterSpacing: '-0.03em' }}>{name.toUpperCase()}</p>
+        <div className="h-0.5 w-12 mt-2 mb-1.5" style={{ background: '#dc2626' }} />
+        <p className="text-[10px] tracking-widest" style={{ color: 'rgba(255,255,255,0.35)' }}>HIGH CONTRAST · IMPACT · GEOMETRY</p>
+      </div>
+    </div>
+  )
+
+  if (id === 'documentary') return (
+    <div className="relative h-44 overflow-hidden" style={{ background: 'linear-gradient(150deg, #2c1f12 0%, #5c3a1e 50%, #3d2b1a 100%)' }}>
+      {/* Grain texture */}
+      <div className="absolute inset-0" style={{
+        backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.08\'/%3E%3C/svg%3E")',
+        opacity: 0.5,
+      }} />
+      {/* Warm vignette */}
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 30% 50%, rgba(255,165,50,0.08) 0%, rgba(0,0,0,0.6) 80%)' }} />
+      {/* Scratch lines */}
+      <div className="absolute inset-y-0 left-1/3" style={{ width: '1px', background: 'rgba(255,255,255,0.04)' }} />
+      {/* Text */}
+      <div className="absolute inset-x-4 top-1/2 -translate-y-1/2">
+        <p className="text-[10px] tracking-widest mb-2" style={{ color: 'rgba(252,211,77,0.55)' }}>FILMED ON LOCATION</p>
+        <p className="font-bold leading-tight" style={{ fontSize: '19px', color: '#fef3c7', letterSpacing: '-0.01em' }}>{name}</p>
+        <p className="text-[10px] mt-2" style={{ color: 'rgba(252,211,77,0.45)' }}>RAW LIGHT · REAL PEOPLE · TRUTH</p>
+      </div>
+    </div>
+  )
+
+  if (id === 'luxury') return (
+    <div className="relative h-44 overflow-hidden" style={{ background: '#060606' }}>
+      {/* Gold border lines */}
+      <div className="absolute inset-3" style={{ border: '1px solid rgba(212,175,55,0.2)' }} />
+      <div className="absolute top-5 left-5 right-5" style={{ height: '1px', background: 'rgba(212,175,55,0.15)' }} />
+      <div className="absolute bottom-5 left-5 right-5" style={{ height: '1px', background: 'rgba(212,175,55,0.15)' }} />
+      {/* Corner ornaments */}
+      <div className="absolute top-3 left-3 w-2 h-2" style={{ borderTop: '1px solid rgba(212,175,55,0.5)', borderLeft: '1px solid rgba(212,175,55,0.5)' }} />
+      <div className="absolute top-3 right-3 w-2 h-2" style={{ borderTop: '1px solid rgba(212,175,55,0.5)', borderRight: '1px solid rgba(212,175,55,0.5)' }} />
+      <div className="absolute bottom-3 left-3 w-2 h-2" style={{ borderBottom: '1px solid rgba(212,175,55,0.5)', borderLeft: '1px solid rgba(212,175,55,0.5)' }} />
+      <div className="absolute bottom-3 right-3 w-2 h-2" style={{ borderBottom: '1px solid rgba(212,175,55,0.5)', borderRight: '1px solid rgba(212,175,55,0.5)' }} />
+      {/* Gold accent line */}
+      <div className="absolute left-1/2 -translate-x-1/2" style={{ top: '28px', width: '30px', height: '1px', background: 'rgba(212,175,55,0.6)' }} />
+      {/* Text */}
+      <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 text-center">
+        <p className="font-light tracking-[0.3em] uppercase" style={{ fontSize: '11px', color: 'rgba(212,175,55,0.6)', marginBottom: '6px' }}>PRESTIGE</p>
+        <p className="font-light tracking-[0.12em] uppercase" style={{ fontSize: '17px', color: '#e8d5a3', letterSpacing: '0.15em' }}>{name}</p>
+        <p className="font-light tracking-widest mt-2" style={{ fontSize: '9px', color: 'rgba(212,175,55,0.35)' }}>SLOW CINEMA · GOLD TONES · ASPIRATION</p>
+      </div>
+    </div>
+  )
+
+  // minimal
+  return (
+    <div className="relative h-44 overflow-hidden" style={{ background: '#f8fafc' }}>
+      {/* Top accent line */}
+      <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: 'linear-gradient(90deg, #7c3aed, #2563eb)' }} />
+      {/* Soft grid */}
+      <div className="absolute inset-0" style={{
+        backgroundImage: 'linear-gradient(rgba(148,163,184,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.08) 1px, transparent 1px)',
+        backgroundSize: '32px 32px',
+      }} />
+      {/* Accent shape */}
+      <div className="absolute right-8 top-1/2 -translate-y-1/2 rounded-xl" style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, rgba(124,58,237,0.1), rgba(37,99,235,0.1))', border: '1px solid rgba(124,58,237,0.15)' }} />
+      {/* Text */}
+      <div className="absolute inset-x-6 top-1/2 -translate-y-1/2">
+        <div className="w-8 h-0.5 mb-3" style={{ background: '#7c3aed' }} />
+        <p className="font-semibold text-gray-700" style={{ fontSize: '17px', letterSpacing: '-0.01em' }}>{name}</p>
+        <p className="text-gray-400 mt-1.5" style={{ fontSize: '10px', letterSpacing: '0.08em' }}>WHITE SPACE · CLARITY · INTENTION</p>
+      </div>
+    </div>
+  )
+}
+
 // ─── Step 0: Style Picker ───────────────────────────────────────────────────────
 
 function StylePicker({ selected, onSelect }: { selected: string; onSelect: (id: string) => void }) {
   return (
     <div>
       <div className="mb-8 text-center">
-        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: STEP_COLORS[0] }}>Step 1 of 6</p>
-        <h2 className="text-2xl font-extrabold text-gray-900 mb-2">What visual style suits your brand?</h2>
-        <p className="text-gray-500 text-sm">This sets the tone for every frame, scene, and edit decision downstream.</p>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-3" style={{ background: 'rgba(124,58,237,0.08)', color: '#7c3aed', border: '1px solid rgba(124,58,237,0.15)' }}>
+          Step 1 of 6 — Visual Style
+        </span>
+        <h2 className="text-2xl font-extrabold text-gray-900 mb-2">What should this feel like?</h2>
+        <p className="text-gray-500 text-sm max-w-sm mx-auto">Your style shapes every lighting call, edit cut, and colour grade. Choose the one that fits your brand's personality.</p>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {VIDEO_STYLES.map(style => (
-          <button key={style.id} onClick={() => onSelect(style.id)}
-            className={`relative rounded-2xl overflow-hidden text-left transition-all border-2 ${
+          <button key={style.id} onClick={() => onSelect(style.id)} className="text-left group">
+            <div className={`rounded-2xl overflow-hidden transition-all duration-200 ${
               selected === style.id
-                ? 'shadow-lg scale-[1.02]'
-                : 'border-transparent hover:shadow-md'
+                ? 'ring-2 shadow-xl'
+                : 'ring-1 ring-gray-200 hover:ring-gray-300 hover:shadow-lg hover:-translate-y-0.5'
             }`}
-            style={selected === style.id ? { borderColor: style.accent } : undefined}>
-            <div className="h-28 flex flex-col items-center justify-center gap-2 relative"
-              style={{ background: style.gradient }}>
-              <span className="text-3xl">{style.emoji}</span>
-              <div className="flex gap-1.5 absolute bottom-3 right-3">
-                {style.palette.map((c, i) => (
-                  <div key={i} className="w-3 h-3 rounded-full border border-white/30" style={{ background: c }} />
-                ))}
-              </div>
-              {selected === style.id && (
-                <div className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-white flex items-center justify-center shadow">
-                  <Check size={12} style={{ color: style.accent }} />
+              style={selected === style.id ? { '--tw-ring-color': style.accent, boxShadow: `0 8px 32px ${style.accent}30` } as React.CSSProperties : undefined}>
+              <StyleCardVisual id={style.id} name={style.name} />
+              <div className="bg-white px-4 py-3 flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-bold text-gray-900">{style.name}</p>
+                  <p className="text-xs text-gray-500 mt-0.5 leading-snug">{style.desc}</p>
                 </div>
-              )}
-            </div>
-            <div className="bg-white p-3.5 border-t border-gray-100">
-              <p className="text-xs font-bold text-gray-900 mb-0.5">{style.name}</p>
-              <p className="text-[11px] text-gray-500 leading-snug">{style.desc}</p>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all ${
+                  selected === style.id ? 'border-purple-600 bg-purple-600' : 'border-gray-300'
+                }`}>
+                  {selected === style.id && <Check size={10} className="text-white" />}
+                </div>
+              </div>
             </div>
           </button>
         ))}
@@ -211,18 +338,34 @@ function ScriptStep({ brief, setBrief, format, setFormat, scenes, onGenerate, ge
               <RefreshCw size={11} className={generating ? 'animate-spin' : ''} /> Regenerate
             </button>
           </div>
-          <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+          <div className="space-y-3">
             {scenes.map(scene => (
-              <div key={scene.id} className="bg-white rounded-xl border border-gray-200 p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold text-white"
+              <div key={scene.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                {/* Scene header */}
+                <div className="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100" style={{ background: '#f8fafc' }}>
+                  <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0 text-[11px] font-black text-white"
                     style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)' }}>
                     {scene.number}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-gray-900">{scene.title} <span className="text-gray-400 font-normal">[{scene.timecode}]</span></p>
-                    <p className="text-xs text-gray-500 mt-1 leading-snug line-clamp-2">{scene.vo}</p>
+                  <p className="text-xs font-bold text-gray-900 flex-1">{scene.title}</p>
+                  <span className="text-[10px] text-gray-400 font-mono">{scene.timecode}</span>
+                </div>
+                {/* Scene fields */}
+                <div className="px-4 py-3 space-y-2">
+                  <div className="flex gap-2">
+                    <span className="text-[10px] font-bold tracking-widest w-12 shrink-0 pt-0.5" style={{ color: '#2563eb' }}>VISUAL</span>
+                    <p className="text-xs text-gray-500 leading-relaxed">{scene.visual}</p>
                   </div>
+                  <div className="flex gap-2">
+                    <span className="text-[10px] font-bold tracking-widest w-12 shrink-0 pt-0.5" style={{ color: '#059669' }}>VO</span>
+                    <p className="text-sm text-gray-800 leading-relaxed font-medium italic">"{scene.vo}"</p>
+                  </div>
+                  {scene.audio && (
+                    <div className="flex gap-2">
+                      <span className="text-[10px] font-bold tracking-widest w-12 shrink-0 pt-0.5" style={{ color: '#d97706' }}>AUDIO</span>
+                      <p className="text-xs text-gray-400 leading-relaxed">{scene.audio}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
