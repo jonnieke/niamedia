@@ -1,7 +1,7 @@
 import Anthropic from "npm:@anthropic-ai/sdk"
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://niamedia.co.ke",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 }
 

@@ -237,7 +237,13 @@ export default function PosterCanvas({ form, content }: Props) {
     setError('')
     try {
       const { data, error: fnErr } = await supabase.functions.invoke('generate-poster', {
-        body: { industry: form.industry, business_name: form.business_name, unlock: false },
+        body: {
+          industry: form.industry, business_name: form.business_name,
+          product_name: form.product_name, location: form.location,
+          offer: form.offer, tone: form.tone, target_audience: form.target_audience,
+          design_direction: form.notes,
+          unlock: false,
+        },
       })
       if (fnErr || data?.error) throw new Error(data?.error ?? fnErr?.message)
       setImages({ bold: data.images.bold })
@@ -246,7 +252,7 @@ export default function PosterCanvas({ form, content }: Props) {
       setError((e as Error).message)
       setPhase('idle')
     }
-  }, [form.industry, form.business_name])
+  }, [form.industry, form.business_name, form.product_name, form.location, form.offer, form.tone, form.target_audience, form.notes])
 
   // Unlock: spend 1 credit, generate all 3 styles
   const unlock = async () => {
@@ -256,7 +262,13 @@ export default function PosterCanvas({ form, content }: Props) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const { data, error: fnErr } = await supabase.functions.invoke('generate-poster', {
-        body: { industry: form.industry, business_name: form.business_name, unlock: true },
+        body: {
+          industry: form.industry, business_name: form.business_name,
+          product_name: form.product_name, location: form.location,
+          offer: form.offer, tone: form.tone, target_audience: form.target_audience,
+          design_direction: form.notes,
+          unlock: true,
+        },
         headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
       })
       if (data?.error === 'insufficient_credits') { setShowBuyModal(true); setPhase('preview'); return }

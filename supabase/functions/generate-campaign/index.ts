@@ -2,7 +2,7 @@ import Anthropic from "npm:@anthropic-ai/sdk"
 import { createClient } from "npm:@supabase/supabase-js@2"
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://niamedia.co.ke",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 }
 
@@ -14,14 +14,16 @@ Deno.serve(async (req) => {
   try {
     const form = await req.json()
 
-    // Credit gate — only for authenticated users (guests/demo pass through)
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    )
+
     const authHeader = req.headers.get("Authorization") ?? ""
     const token = authHeader.replace("Bearer ", "")
+
     if (token) {
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      )
+      // Authenticated user — spend a credit
       const { data: { user } } = await supabase.auth.getUser(token)
       if (user) {
         const { data: spent } = await supabase.rpc("spend_credit", {
@@ -35,6 +37,32 @@ Deno.serve(async (req) => {
           })
         }
       }
+    } else {
+      // Unauthenticated demo — rate-limit to 5 per IP per day
+      const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim()
+        ?? req.headers.get("cf-connecting-ip")
+        ?? "unknown"
+      const dayKey = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+      const rateLimitKey = `demo_rate:${ip}:${dayKey}`
+
+      const { data: existing } = await supabase
+        .from("demo_rate_limits")
+        .select("count")
+        .eq("key", rateLimitKey)
+        .maybeSingle()
+
+      const count = (existing?.count ?? 0) as number
+      if (count >= 5) {
+        return new Response(
+          JSON.stringify({ error: "demo_limit_reached", message: "You've used today's free demo limit. Sign up for full access." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        )
+      }
+
+      await supabase.from("demo_rate_limits").upsert(
+        { key: rateLimitKey, count: count + 1, last_used: new Date().toISOString() },
+        { onConflict: "key" },
+      )
     }
 
     const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") })

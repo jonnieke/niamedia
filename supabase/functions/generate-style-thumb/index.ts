@@ -2,7 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { Image } from 'https://deno.land/x/imagescript@1.3.0/mod.ts'
 
 const cors = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://niamedia.co.ke',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 

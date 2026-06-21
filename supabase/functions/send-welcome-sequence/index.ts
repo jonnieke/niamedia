@@ -7,7 +7,7 @@ const FROM_EMAIL = 'Nia Media <hello@niamedia.co.ke>'
 const APP_URL = Deno.env.get('APP_URL') ?? 'https://niamedia.co.ke'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://niamedia.co.ke',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 

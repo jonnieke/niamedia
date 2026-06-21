@@ -56,21 +56,35 @@ Deno.serve(async (req) => {
           .single()
 
         if (txn) {
-          await supabase.rpc("add_credits", {
-            p_user_id: txn.user_id,
-            p_amount: txn.amount,
-            p_description: `Credits purchased`,
-            p_order_id: orderMerchantReference,
-          })
+          // Idempotency: only add credits if this order isn't already marked paid
+          const { data: alreadyPaid } = await supabase
+            .from("credit_transactions")
+            .select("id")
+            .eq("order_id", orderMerchantReference)
+            .eq("payment_status", "paid")
+            .maybeSingle()
 
-          // In-app notification
-          void supabase.from("notifications").insert({
-            user_id: txn.user_id,
-            title: "Credits added!",
-            body: `${txn.amount} campaign credit${txn.amount !== 1 ? "s" : ""} have been added to your account.`,
-            type: "success",
-            action_url: "/new-campaign",
-          })
+          if (!alreadyPaid) {
+            await supabase.rpc("add_credits", {
+              p_user_id: txn.user_id,
+              p_amount: txn.amount,
+              p_description: `Credits purchased`,
+              p_order_id: orderMerchantReference,
+            })
+
+            await supabase
+              .from("credit_transactions")
+              .update({ payment_status: "paid", order_tracking_id: orderTrackingId })
+              .eq("order_id", orderMerchantReference)
+
+            void supabase.from("notifications").insert({
+              user_id: txn.user_id,
+              title: "Credits added!",
+              body: `${txn.amount} campaign credit${txn.amount !== 1 ? "s" : ""} have been added to your account.`,
+              type: "success",
+              action_url: "/new-campaign",
+            })
+          }
         }
       } else {
         await supabase.from("credit_transactions")

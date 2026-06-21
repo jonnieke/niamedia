@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { Image } from 'https://deno.land/x/imagescript@1.3.0/mod.ts'
 
 const cors = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://niamedia.co.ke',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -55,12 +55,23 @@ async function compressToJpeg(base64Png: string, width: number, quality: number)
   return `data:image/jpeg;base64,${btoa(binary)}`
 }
 
-async function generateOne(key: string, industry: string, style: string): Promise<string> {
-  const industryDesc = INDUSTRY_PROMPTS[industry] ?? `${industry} business in Kenya, professional commercial photography`
-  const styleDesc = STYLE_MODIFIERS[style] ?? STYLE_MODIFIERS.bold
-  const prompt = `Professional marketing poster background: ${industryDesc}, ${styleDesc}, no text overlay, no logos, no faces, Kenya East Africa, high quality commercial photography`
+async function generateOne(key: string, ctx: {
+  industry: string; style: string
+  business_name?: string; product_name?: string; location?: string
+  offer?: string; tone?: string; target_audience?: string; design_direction?: string
+}): Promise<string> {
+  const industryDesc = INDUSTRY_PROMPTS[ctx.industry] ?? `${ctx.industry} business in Kenya, professional commercial photography`
+  const styleDesc = STYLE_MODIFIERS[ctx.style] ?? STYLE_MODIFIERS.bold
+  const extras: string[] = []
+  if (ctx.product_name) extras.push(`featuring ${ctx.product_name}`)
+  if (ctx.offer) extras.push(ctx.offer)
+  if (ctx.location) extras.push(`in ${ctx.location}`)
+  if (ctx.target_audience) extras.push(`appealing to ${ctx.target_audience}`)
+  if (ctx.tone) extras.push(`${ctx.tone.toLowerCase()} mood`)
+  if (ctx.design_direction) extras.push(ctx.design_direction)
+  const contextClause = extras.length > 0 ? `, ${extras.join(', ')}` : ''
+  const prompt = `Professional marketing poster background for ${ctx.business_name ?? 'a business'}: ${industryDesc}${contextClause}, ${styleDesc}, no text overlay, no logos, no human faces, Kenya East Africa, high quality commercial photography`
   const rawBase64 = await geminiImage(key, prompt)
-  // Portrait 3:4 mood board — resize to 360px wide, JPEG q72 → ~30–60 KB
   return compressToJpeg(rawBase64, 360, 72)
 }
 
@@ -68,14 +79,20 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   try {
-    const { industry, business_name, style = 'bold', unlock = false } = await req.json()
+    const body = await req.json()
+    const {
+      industry, business_name, product_name, location, offer, tone, target_audience, design_direction,
+      style = 'bold', unlock = false,
+    } = body
 
     const GEMINI_KEY = Deno.env.get('GEMINI_API_KEY')
     if (!GEMINI_KEY) throw new Error('GEMINI_API_KEY not configured')
 
+    const ctx = { industry: industry ?? business_name ?? 'Professional Services', business_name, product_name, location, offer, tone, target_audience, design_direction }
+
     // Preview mode — 1 image, no credit required
     if (!unlock) {
-      const imageData = await generateOne(GEMINI_KEY, industry ?? business_name ?? 'Professional Services', 'bold')
+      const imageData = await generateOne(GEMINI_KEY, { ...ctx, style: 'bold' })
       return new Response(JSON.stringify({ images: { bold: imageData } }), {
         headers: { ...cors, 'Content-Type': 'application/json' },
       })
@@ -101,9 +118,9 @@ serve(async (req) => {
     }
 
     const [bold, minimal, vibrant] = await Promise.all([
-      generateOne(GEMINI_KEY, industry, 'bold'),
-      generateOne(GEMINI_KEY, industry, 'minimal'),
-      generateOne(GEMINI_KEY, industry, 'vibrant'),
+      generateOne(GEMINI_KEY, { ...ctx, style: 'bold' }),
+      generateOne(GEMINI_KEY, { ...ctx, style: 'minimal' }),
+      generateOne(GEMINI_KEY, { ...ctx, style: 'vibrant' }),
     ])
 
     return new Response(JSON.stringify({ images: { bold, minimal, vibrant }, unlocked: true }), {
