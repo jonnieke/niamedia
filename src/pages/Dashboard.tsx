@@ -50,6 +50,7 @@ export default function Dashboard() {
   const [pipeline, setPipeline] = useState<{ id: string; title: string; type: string; status: string }[]>([])
   const [notifs, setNotifs] = useState<{ id: string; title: string; body: string; type: string; read: boolean; action_url?: string; created_at: string }[]>([])
   const [loading, setLoading] = useState(true)
+  const [credits, setCredits] = useState<number | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -58,13 +59,15 @@ export default function Dashboard() {
       supabase.from('audio_orders').select('id, status', { count: 'exact' }).eq('user_id', user.id),
       supabase.from('projects').select('id, title, type, status').eq('user_id', user.id).order('created_at', { ascending: false }).limit(4),
       supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
-    ]).then(([{ count: campCount }, { data: audioData, count: audioCount }, { data: projData }, { data: notifData }]) => {
+      supabase.from('profiles').select('credits').eq('id', user.id).single(),
+    ]).then(([{ count: campCount }, { data: audioData, count: audioCount }, { data: projData }, { data: notifData }, { data: creditData }]) => {
       const audioOrders = audioData ?? []
       const delivered = audioOrders.filter(a => a.status === 'delivered' || a.status === 'accepted').length
       const active = audioOrders.filter(a => !['delivered', 'accepted'].includes(a.status)).length
       setStats({ campaigns: campCount ?? 0, audioOrders: audioCount ?? 0, deliveredAssets: delivered, activeProjects: active })
       setPipeline(projData ?? [])
       setNotifs(notifData ?? [])
+      if (creditData) setCredits(creditData.credits)
       setLoading(false)
     })
   }, [user])
@@ -90,7 +93,15 @@ export default function Dashboard() {
             {isNew ? 'Welcome! Your workspace is ready — start your first campaign.' : `You have ${unread} unread notification${unread !== 1 ? 's' : ''}.`}
           </p>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-3 shrink-0 flex-wrap justify-end">
+          {credits !== null && (
+            <Link to="/new-campaign"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-colors"
+              style={{ borderColor: credits > 0 ? '#c4b5fd' : '#fca5a5', background: credits > 0 ? '#ede9fe' : '#fef2f2', color: credits > 0 ? '#6d28d9' : '#dc2626' }}>
+              <Zap size={12} />
+              {credits} credit{credits !== 1 ? 's' : ''} remaining
+            </Link>
+          )}
           <button onClick={() => setShowNia(true)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
             style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 4px 14px rgba(124,58,237,0.35)' }}>

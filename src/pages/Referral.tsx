@@ -26,7 +26,7 @@ export default function Referral() {
   const [loading, setLoading] = useState(true)
 
   const referralCode = user ? `NIA-${user.id.slice(0, 6).toUpperCase()}` : 'NIA-XXXXXX'
-  const referralUrl = `https://niamedia.co.ke/join?ref=${referralCode}`
+  const referralUrl = `https://niamedia.co.ke/register?ref=${referralCode}`
 
   useEffect(() => {
     if (!user) { setLoading(false); return }

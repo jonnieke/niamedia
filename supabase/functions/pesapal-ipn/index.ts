@@ -84,6 +84,36 @@ Deno.serve(async (req) => {
               type: "success",
               action_url: "/new-campaign",
             })
+
+            // Referral reward: if this buyer was referred, activate and credit the referrer
+            const { data: referral } = await supabase
+              .from("referrals")
+              .select("id, referrer_id")
+              .eq("referred_user_id", txn.user_id)
+              .eq("status", "pending")
+              .maybeSingle()
+
+            if (referral) {
+              await supabase
+                .from("referrals")
+                .update({ status: "active", credit_kes: 500 })
+                .eq("id", referral.id)
+
+              await supabase.rpc("add_credits", {
+                p_user_id: referral.referrer_id,
+                p_amount: 1,
+                p_description: "Referral reward",
+                p_order_id: `ref_${referral.id}`,
+              })
+
+              void supabase.from("notifications").insert({
+                user_id: referral.referrer_id,
+                title: "Referral reward!",
+                body: "Someone you referred just subscribed. 1 free credit added to your account.",
+                type: "success",
+                action_url: "/referral",
+              })
+            }
           }
         }
       } else {

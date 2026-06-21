@@ -439,6 +439,17 @@ function VideoRequestExpandedRow({ request, onStatusChange }: {
     await supabase.from('video_requests').update({ status }).eq('id', request.id)
     const notif = VIDEO_REQUEST_NOTIFS[status]
     if (notif) await notifyUser(request.user_id, notif.title, notif.body(request.title), notif.type, '/request-video')
+    if (status === "in-production" || status === "delivered" || status === "contacted") {
+      supabase.functions.invoke("notify-video-status", {
+        body: {
+          user_email: request.profiles?.email,
+          user_name: request.profiles?.name,
+          title: request.title,
+          business_name: request.business_name,
+          status,
+        },
+      }).catch(() => {})
+    }
     onStatusChange(request.id, status)
     setUpdating(false)
   }

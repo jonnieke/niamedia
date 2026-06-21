@@ -99,10 +99,10 @@ export default function VideoRequest() {
         <p className="text-gray-500 text-sm leading-relaxed mb-8">
           Your video request has been received. Nia Media will review the script and contact you with confirmation within 24 hours.
         </p>
-        <button onClick={() => navigate('/campaigns')}
+        <button onClick={() => navigate('/my-requests')}
           className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white"
           style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
-          Back to Campaigns
+          Track My Requests
         </button>
       </div>
     </DashboardLayout>

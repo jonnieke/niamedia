@@ -80,6 +80,7 @@ export default function Register() {
         await supabase.from('referrals').insert({
           referrer_id: referrer.id,
           referred_user_id: userId,
+          referee_email: email,
           status: 'pending',
         })
       }
