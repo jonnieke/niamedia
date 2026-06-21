@@ -15,7 +15,7 @@ import {
 /* ─── Live AI Demo ─────────────────────────────────────────────── */
 const DEMO_INDUSTRIES = [
   'Real Estate', 'Hospitality', 'Education', 'Fintech / SACCO',
-  'Restaurant', 'Travel', 'Retail', 'Health & Wellness', 'Events', 'Professional Services',
+  'Restaurant', 'Travel', 'Retail', 'Health & Wellness', 'Events', 'Professional Services', 'Faith & Community',
 ]
 const DEMO_STEPS = [
   'Reading your brief…',
@@ -404,14 +404,14 @@ export default function Home() {
               </div>
 
               <h1 className="font-extrabold leading-[1.05] tracking-tight mb-6" style={{ fontSize: 'clamp(40px, 6vw, 64px)', color: '#ffffff' }}>
-                Stop writing ads.<br />
+                Create campaign-ready ads<br />
                 <span style={{ background: 'linear-gradient(90deg, #c4b5fd 0%, #7dd3fc 50%, #6ee7b7 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                  Start launching campaigns.
+                  without writing prompts.
                 </span>
               </h1>
 
               <p className="text-lg leading-relaxed mb-8 max-w-lg" style={{ color: 'rgba(255,255,255,0.62)' }}>
-                AI-generated video scripts, WhatsApp copy, social captions, jingles — tailored to <em style={{ color: 'rgba(255,255,255,0.85)', fontStyle: 'normal', fontWeight: 600 }}>your</em> Kenyan business. Ready in under 60 seconds.
+                Nia Media turns your product, service, event, or offer into social media captions, WhatsApp copy, poster copy, video scripts, and downloadable posters — built for growing African businesses.
               </p>
 
               <div className="flex flex-wrap gap-3 mb-10">
@@ -730,6 +730,20 @@ export default function Home() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── VIDEO UPSELL ─────────────────────────────────────── */}
+      <section className="py-12 px-6" style={{ background: '#ffffff' }}>
+        <div className="mt-0 max-w-2xl mx-auto text-center bg-white rounded-2xl border border-gray-200 p-8">
+          <Film size={24} className="text-purple-600 mx-auto mb-3" />
+          <h3 className="text-lg font-bold text-gray-900 mb-2">Need the final video too?</h3>
+          <p className="text-sm text-gray-500 mb-5 leading-relaxed">
+            Generate your script instantly, then let Nia Media turn it into a polished campaign video for WhatsApp, Instagram, TikTok, Facebook, or YouTube. Short campaign videos can be delivered within 24–48 hours depending on scope and asset availability.
+          </p>
+          <Link to="/request-video" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
+            <Film size={14} /> Request Video Production
+          </Link>
         </div>
       </section>
 

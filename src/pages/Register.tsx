@@ -29,7 +29,7 @@ function GoogleButton() {
           <path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7-5.4c-2.1 1.4-4.8 2.3-8.2 2.3-6.4 0-11.8-3.6-14.5-8.8l-7.8 6.2C6.6 42.7 14.6 48 24 48z"/>
         </svg>
       )}
-      {loading ? 'Redirectingâ€¦' : 'Continue with Google'}
+      {loading ? 'Redirecting...' : 'Continue with Google'}
     </button>
   )
 }
@@ -153,7 +153,7 @@ export default function Register() {
               </div>
             </div>
             <button type="submit" className="btn-primary w-full py-3 mt-2" disabled={loading}>
-              {loading ? 'Creating accountâ€¦' : <><span>Create account</span><ArrowRight size={15} /></>}
+              {loading ? 'Creating account...' : <><span>Create account</span><ArrowRight size={15} /></>}
             </button>
           </form>
 

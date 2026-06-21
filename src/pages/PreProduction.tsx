@@ -495,7 +495,7 @@ export default function PreProduction() {
               <button onClick={handleSubmit} disabled={submitting}
                 className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-gray-900 transition-all disabled:opacity-60"
                 style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 0 20px rgba(16,185,129,0.35)' }}>
-                <Send size={15} /> {submitting ? 'Submittingâ€¦' : 'Submit to Creator'}
+                <Send size={15} /> {submitting ? 'Submitting...' : 'Submit to Creator'}
               </button>
             )}
           </div>

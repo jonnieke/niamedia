@@ -116,7 +116,7 @@ export default function Campaigns() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Campaigns</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {loading ? 'Loadingâ€¦' : `${campaigns.length} campaign${campaigns.length !== 1 ? 's' : ''} saved`}
+            {loading ? 'Loading...' : `${campaigns.length} campaign${campaigns.length !== 1 ? 's' : ''} saved`}
           </p>
         </div>
         <Link to="/new-campaign" className="btn-primary text-sm gap-1.5 px-4 py-2">
@@ -131,7 +131,7 @@ export default function Campaigns() {
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
             <input
               className="input pl-9 text-sm w-full"
-              placeholder="Search campaignsâ€¦"
+              placeholder="Search campaigns..."
               value={search}
               onChange={e => setSearch(e.target.value)}
             />

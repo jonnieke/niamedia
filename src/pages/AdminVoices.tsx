@@ -26,7 +26,7 @@ const AGE_GROUPS = ['Kids', 'Teens', 'Young Adult', 'Mature', 'Elder']
 
 const STATUS_CONFIG = {
   pending: { label: 'No Clone', color: 'text-gray-500', bg: 'bg-gray-500/10', icon: AlertCircle },
-  cloning: { label: 'Cloningâ€¦', color: 'text-amber-400', bg: 'bg-amber-500/10', icon: Loader2 },
+  cloning: { label: 'Cloning...', color: 'text-amber-400', bg: 'bg-amber-500/10', icon: Loader2 },
   ready:   { label: 'Live Clone', color: 'text-green-400', bg: 'bg-green-500/10', icon: CheckCircle },
   failed:  { label: 'Failed', color: 'text-red-400', bg: 'bg-red-500/10', icon: XCircle },
 }
@@ -279,7 +279,7 @@ export default function AdminVoices() {
                             disabled={uploading[profile.slot_id]}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-600 border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-all disabled:opacity-50">
                             {uploading[profile.slot_id]
-                              ? <><Loader2 size={11} className="animate-spin" /> Uploadingâ€¦</>
+                              ? <><Loader2 size={11} className="animate-spin" /> Uploading...</>
                               : <><Upload size={11} /> Add Samples</>}
                           </button>
 
@@ -291,7 +291,7 @@ export default function AdminVoices() {
                               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-gray-800 transition-all disabled:opacity-40"
                               style={{ background: canClone && !isCloning ? 'linear-gradient(135deg, #8b5cf6, #3b82f6)' : 'rgba(139,92,246,0.2)' }}>
                               {isCloning
-                                ? <><Loader2 size={11} className="animate-spin" /> Cloningâ€¦</>
+                                ? <><Loader2 size={11} className="animate-spin" /> Cloning...</>
                                 : <><Mic2 size={11} /> Clone Voice</>}
                             </button>
                           ) : (
@@ -300,7 +300,7 @@ export default function AdminVoices() {
                               disabled={deleting[profile.slot_id]}
                               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-red-400 border border-red-500/20 bg-red-500/6 hover:bg-red-500/12 transition-all disabled:opacity-50">
                               {deleting[profile.slot_id]
-                                ? <><Loader2 size={11} className="animate-spin" /> Removingâ€¦</>
+                                ? <><Loader2 size={11} className="animate-spin" /> Removing...</>
                                 : <><Trash2 size={11} /> Remove Clone</>}
                             </button>
                           )}

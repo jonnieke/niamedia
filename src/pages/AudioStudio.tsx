@@ -442,14 +442,14 @@ export default function AudioStudio() {
                   style={{ background: 'rgba(139,92,246,0.15)', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.3)' }}
                   title={brief.message ? 'Improve with AI' : 'Generate with AI'}>
                   {briefLoading
-                    ? <><Loader2 size={11} className="animate-spin" /> Writingâ€¦</>
+                    ? <><Loader2 size={11} className="animate-spin" /> Writing...</>
                     : brief.message
                       ? <><RefreshCw size={11} /> Improve with AI</>
                       : <><Sparkles size={11} /> Free AI Assist</>}
                 </button>
               </div>
               <textarea className="input w-full h-28 resize-none" rows={4}
-                placeholder="What should the audio communicate? Include tagline, offers, CTA, or any specific phrases to include or avoidâ€¦"
+                placeholder="What should the audio communicate? Include tagline, offers, CTA, or any specific phrases to include or avoid..."
                 value={brief.message} onChange={e => setBrief(b => ({ ...b, message: e.target.value }))} />
               {!brief.business && !brief.message && (
                 <p className="text-[10px] text-gray-600 mt-1">Fill in your Business Name first, then click AI Assist to auto-generate a direction.</p>
@@ -459,7 +459,7 @@ export default function AudioStudio() {
             {/* AI-generated sample script */}
             {aiScript && (() => {
               const cleanScript = aiScript
-                .replace(/\[pause\]/gi, 'â€¦')
+                .replace(/\[pause\]/gi, '...')
                 .replace(/\[.*?\]/g, '')
                 .replace(/\s{2,}/g, ' ')
                 .trim()
@@ -543,7 +543,7 @@ export default function AudioStudio() {
                     className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-gray-800 transition-all disabled:opacity-50"
                     style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)' }}>
                     {sampleLoading
-                      ? <><Loader2 size={13} className="animate-spin" /> Generatingâ€¦</>
+                      ? <><Loader2 size={13} className="animate-spin" /> Generating...</>
                       : samplePlaying
                         ? <><Pause size={13} /> Pause</>
                         : sampleUrl
@@ -724,7 +724,7 @@ export default function AudioStudio() {
                 }}
                 className="btn-primary px-8 py-2.5 text-sm flex items-center gap-2 disabled:opacity-60">
                 {paying
-                  ? <><Loader2 size={14} className="animate-spin" /> Redirecting to paymentâ€¦</>
+                  ? <><Loader2 size={14} className="animate-spin" /> Redirecting to payment...</>
                   : <><Lock size={14} /> Pay KES {(selectedPkg.price + (rush ? Math.round(selectedPkg.price * 0.4) : 0)).toLocaleString()} via PesaPal</>}
               </button>
             </div>

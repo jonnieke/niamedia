@@ -233,7 +233,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     : 'border-purple-200 bg-purple-50 text-purple-700'
                 }`}>
                 <Zap size={11} />
-                <span>{credits === null ? 'â€¦' : credits}</span>
+                <span>{credits === null ? '...' : credits}</span>
                 <span className="hidden sm:inline">{credits === 1 ? ' credit' : ' credits'}</span>
               </button>
 

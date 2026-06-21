@@ -54,7 +54,7 @@ Offer: ${form.offer}
 Tone: ${form.tone}
 Platforms: ${(form.platforms as string[]).join(", ")}
 Call to Action: ${form.cta}
-Additional Notes: ${form.notes || "None"}${languageInstruction}
+Additional Notes: ${form.notes || "None"}${languageInstruction}${form.industry === 'Faith & Community' ? '\n\nFAITH & COMMUNITY INSTRUCTION: Create respectful, welcoming, non-exploitative copy suitable for churches, mosques, ministries, community groups, outreach programs, and faith-based events. Avoid exaggerated spiritual claims, manipulative fundraising language, or insensitive wording. Keep tone warm, clear, and community-centered.' : ''}
 
 Generate copy that a Kenyan small business owner would be proud to publish. Be specific, be compelling, avoid generic filler.`
 

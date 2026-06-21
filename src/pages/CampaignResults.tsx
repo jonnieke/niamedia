@@ -2,7 +2,7 @@
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
 import {
   Copy, Save, RefreshCw, Download, Check, Zap, Loader2,
-  Wand2, MessageSquare, Share2, Sparkles, ImageIcon, X,
+  Wand2, MessageSquare, Share2, Sparkles, ImageIcon, X, Film,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import PosterCanvas from '../components/PosterCanvas'
@@ -375,6 +375,18 @@ export default function CampaignResults() {
 
     /* Video Script */
     <div key="v" className="space-y-4">
+      {/* Produce this video upsell */}
+      <div className="flex items-center justify-between p-4 rounded-2xl border border-purple-100 bg-purple-50">
+        <div>
+          <p className="text-sm font-bold text-purple-900">Want us to produce this video?</p>
+          <p className="text-xs text-purple-600 mt-0.5">Turn this script into a polished video — WhatsApp, TikTok, Instagram, or YouTube.</p>
+        </div>
+        <button onClick={() => navigate('/request-video', { state: { form, script: Object.values(getMergedContent()?.videoScript ?? {}).join('\n\n') } })}
+          className="shrink-0 ml-4 px-4 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1.5"
+          style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
+          <Film size={13} /> Produce this video
+        </button>
+      </div>
       <Block label="Hook (Opening)" {...blockProps('videoScript.hook', content.videoScript.hook)} />
       <Block label="Scene 1" {...blockProps('videoScript.scene1', content.videoScript.scene1)} />
       <Block label="Scene 2" {...blockProps('videoScript.scene2', content.videoScript.scene2)} />

@@ -63,12 +63,12 @@ export default function ResetPassword() {
                 <ArrowRight size={24} className="text-emerald-400" />
               </div>
               <h2 className="text-lg font-bold text-gray-900 mb-2">Password updated!</h2>
-              <p className="text-sm text-gray-500">Taking you to your dashboardâ€¦</p>
+              <p className="text-sm text-gray-500">Taking you to your dashboard...</p>
             </div>
           ) : !ready ? (
             <div className="text-center py-6">
               <Loader2 size={28} className="animate-spin text-purple-400 mx-auto mb-3" />
-              <p className="text-sm text-gray-500">Verifying reset linkâ€¦</p>
+              <p className="text-sm text-gray-500">Verifying reset link...</p>
               <p className="text-xs text-gray-600 mt-4">
                 Link expired?{' '}
                 <Link to="/forgot-password" className="text-purple-400 hover:text-purple-300">Request a new one</Link>

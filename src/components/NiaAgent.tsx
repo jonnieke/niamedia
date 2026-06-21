@@ -466,8 +466,8 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
               </span>
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              {agentState === 'thinking' && <p className="text-xs text-gray-500">Thinkingâ€¦</p>}
-              {agentState === 'listening' && <p className="text-xs text-red-400">Listeningâ€¦</p>}
+              {agentState === 'thinking' && <p className="text-xs text-gray-500">Thinking...</p>}
+              {agentState === 'listening' && <p className="text-xs text-red-400">Listening...</p>}
               {agentState === 'speaking' && (
                 <div className="flex items-center gap-1.5">
                   <Waveform active />
@@ -539,7 +539,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
             <div className="flex justify-end">
               <div className="max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed opacity-60"
                 style={{ background: 'rgba(139,92,246,0.2)', color: '#c4b5fd', border: '1px dashed rgba(139,92,246,0.4)', borderBottomRightRadius: 4 }}>
-                {interimText}â€¦
+                {interimText}...
               </div>
             </div>
           )}
@@ -654,12 +654,12 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
               placeholder={
-                guestExpired ? 'Sign up to continueâ€¦'
-                : agentState === 'listening' ? 'Listeningâ€¦'
-                : agentState === 'thinking' ? 'Nia is thinkingâ€¦'
-                : agentState === 'speaking' ? 'Nia is speakingâ€¦'
-                : speechSupported && voiceMode ? 'Or type hereâ€¦'
-                : 'Type your messageâ€¦'
+                guestExpired ? 'Sign up to continue...'
+                : agentState === 'listening' ? 'Listening...'
+                : agentState === 'thinking' ? 'Nia is thinking...'
+                : agentState === 'speaking' ? 'Nia is speaking...'
+                : speechSupported && voiceMode ? 'Or type here...'
+                : 'Type your message...'
               }
               disabled={guestExpired || agentState === 'listening' || agentState === 'thinking'}
               className="flex-1 px-4 py-2.5 rounded-xl text-sm text-white placeholder-gray-600 bg-gray-50 border border-gray-200 focus:outline-none focus:border-purple-500/40 transition-colors disabled:opacity-50"

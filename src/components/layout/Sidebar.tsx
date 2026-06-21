@@ -1,8 +1,8 @@
 ﻿import { NavLink, useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard, Plus, FolderOpen, Layers, Package,
-  Palette, Settings, ShieldCheck, LogOut, BarChart2, Zap, Sparkles,
-  Film, Music, Shield, Gift, X,
+  LayoutDashboard, Plus, FolderOpen, Layers,
+  Palette, Settings, ShieldCheck, LogOut, Zap,
+  Shield, Gift, X, Video,
 } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
 import Logo from '../ui/Logo'
@@ -14,14 +14,10 @@ interface SidebarProps {
 const navItems = [
   { to: '/dashboard',       icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/new-campaign',    icon: Plus,            label: 'New Campaign', highlight: true },
-  { to: '/concept-studio',  icon: Sparkles,        label: 'Concept Studio', badge: 'FREE' },
-  { to: '/projects',        icon: Film,            label: 'My Projects' },
-  { to: '/audio-studio',    icon: Music,           label: 'Audio Studio' },
-  { to: '/assets',          icon: Shield,          label: 'Asset Library' },
-  { to: '/analytics',       icon: BarChart2,       label: 'Analytics' },
   { to: '/campaigns',       icon: FolderOpen,      label: 'Campaigns' },
   { to: '/templates',       icon: Layers,          label: 'Templates' },
-  { to: '/package-request', icon: Package,         label: 'Package Requests' },
+  { to: '/assets',          icon: Shield,          label: 'Posters' },
+  { to: '/request-video',   icon: Video,           label: 'Request Video', badge: 'NEW' },
   { to: '/brand-kit',       icon: Palette,         label: 'Brand Kit' },
   { to: '/referral',        icon: Gift,            label: 'Refer & Earn', badge: 'KES 500' },
   null,

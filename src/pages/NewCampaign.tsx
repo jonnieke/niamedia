@@ -8,7 +8,7 @@ import { CampaignFormData } from '../types'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
-const industries = ['Real Estate', 'Hospitality', 'Education', 'Fintech', 'Restaurant', 'Travel', 'Retail', 'Health', 'Events', 'Professional Services', 'Other']
+const industries = ['Real Estate', 'Hospitality', 'Education', 'Fintech / SACCO', 'Restaurant', 'Travel', 'Retail', 'Health & Wellness', 'Events', 'Professional Services', 'Faith & Community', 'Other']
 const objectives = ['Get leads', 'Sell product', 'Promote offer', 'Increase bookings', 'Launch product', 'Grow social media', 'Drive WhatsApp enquiries']
 const tones = ['Professional', 'Friendly', 'Bold', 'Luxury', 'Youthful', 'Emotional', 'Direct sales']
 const platformOptions = ['Facebook', 'Instagram', 'TikTok', 'YouTube Shorts', 'WhatsApp', 'LinkedIn']
@@ -20,11 +20,11 @@ const empty: CampaignFormData = {
 }
 
 const GENERATING_STEPS = [
-  'Reading your briefâ€¦',
-  'Crafting your strategyâ€¦',
-  'Writing your video scriptâ€¦',
-  'Building social captionsâ€¦',
-  'Finalising your campaignâ€¦',
+  'Reading your brief...',
+  'Crafting your strategy...',
+  'Writing your video script...',
+  'Building social captions...',
+  'Finalising your campaign...',
 ]
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {

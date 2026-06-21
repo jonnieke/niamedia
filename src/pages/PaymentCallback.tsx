@@ -54,7 +54,7 @@ export default function PaymentCallback() {
               style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)' }}>
               <Loader2 size={32} className="text-purple-400 animate-spin" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Confirming your paymentâ€¦</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Confirming your payment...</h2>
             <p className="text-gray-500 text-sm">This usually takes a few seconds. Please don't close this tab.</p>
           </div>
         )}
@@ -118,7 +118,7 @@ export default function PaymentCallback() {
               style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)' }}>
               <AlertCircle size={36} className="text-amber-400" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Still Confirmingâ€¦</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Still Confirming...</h2>
             <p className="text-gray-500 text-sm mb-4">
               Payment confirmation is taking longer than usual. If you completed the payment, your order will be processed automatically.
             </p>

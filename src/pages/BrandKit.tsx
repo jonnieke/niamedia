@@ -322,7 +322,7 @@ export default function BrandKit() {
           </Card>
 
           <button type="submit" className="btn-primary w-full py-3 text-sm gap-2" disabled={saving}>
-            {saving ? <><Loader2 size={15} className="animate-spin" /> Savingâ€¦</> : <><Save size={15} />{saved ? 'Saved âœ“' : 'Save Brand Kit'}</>}
+            {saving ? <><Loader2 size={15} className="animate-spin" /> Saving...</> : <><Save size={15} />{saved ? 'Saved âœ“' : 'Save Brand Kit'}</>}
           </button>
         </form>
 

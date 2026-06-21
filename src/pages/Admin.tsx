@@ -73,6 +73,22 @@ interface CreditTxn {
   profiles?: { name: string; email: string }
 }
 
+type VideoRequestStatus = 'new' | 'contacted' | 'in-production' | 'delivered' | 'closed'
+
+interface VideoRequestRow {
+  id: string
+  user_id: string
+  business_name: string
+  title: string
+  industry: string
+  budget_range: string
+  delivery_speed: string
+  status: VideoRequestStatus
+  created_at: string
+  script: string
+  notes: string
+}
+
 async function notifyUser(userId: string, title: string, body: string, type: string, actionUrl?: string) {
   await supabase.from('notifications').insert({ user_id: userId, title, body, type, action_url: actionUrl ?? null })
 }
@@ -397,6 +413,7 @@ export default function Admin() {
   const [users, setUsers] = useState<Profile[]>([])
   const [leads, setLeads] = useState<Lead[]>([])
   const [creditTxns, setCreditTxns] = useState<CreditTxn[]>([])
+  const [videoRequests, setVideoRequests] = useState<VideoRequestRow[]>([])
   const [loading, setLoading] = useState(true)
   const [grantingCredit, setGrantingCredit] = useState<string | null>(null)
 
@@ -415,7 +432,14 @@ export default function Admin() {
       setCreditTxns((ct ?? []) as CreditTxn[])
       setLoading(false)
     })
+    supabase.from('video_requests').select('*').order('created_at', { ascending: false })
+      .then(({ data }) => { if (data) setVideoRequests(data as VideoRequestRow[]) })
   }, [])
+
+  const updateVideoRequestStatus = async (id: string, status: VideoRequestStatus) => {
+    await supabase.from('video_requests').update({ status }).eq('id', id)
+    setVideoRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r))
+  }
 
   const grantCredit = async (userId: string) => {
     setGrantingCredit(userId)
@@ -451,7 +475,7 @@ export default function Admin() {
   }, 0)
   const totalRevenue = audioRevenue + creditRevenue
 
-  const tabs = ['Overview', 'Leads', 'Audio Orders', 'Projects', 'Credits', 'Users']
+  const tabs = ['Overview', 'Leads', 'Audio Orders', 'Projects', 'Credits', 'Users', 'Video Requests']
 
   const stats = [
     { label: 'New Leads', value: newLeads, icon: Inbox, sub: `${leads.length} total`, color: 'text-amber-400' },
@@ -736,6 +760,51 @@ export default function Admin() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Video Requests */}
+          {tab === 6 && (
+            <div className="card-glow overflow-hidden">
+              {videoRequests.length === 0 ? (
+                <div className="py-16 text-center text-gray-600">
+                  <Film size={28} className="mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">No video requests yet</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  <div className="grid grid-cols-7 gap-3 px-5 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-200">
+                    <span className="col-span-2">Business</span>
+                    <span>Industry</span>
+                    <span>Budget</span>
+                    <span>Speed</span>
+                    <span>Status</span>
+                    <span>Date</span>
+                  </div>
+                  {videoRequests.map(r => (
+                    <div key={r.id} className="grid grid-cols-7 gap-3 px-5 py-3.5 items-center hover:bg-gray-50 transition-colors">
+                      <div className="col-span-2 min-w-0">
+                        <p className="text-sm font-semibold text-gray-800 truncate">{r.business_name}</p>
+                        <p className="text-xs text-gray-500 truncate">{r.title}</p>
+                      </div>
+                      <span className="text-xs text-gray-600">{r.industry || '—'}</span>
+                      <span className="text-xs text-gray-600">{r.budget_range || '—'}</span>
+                      <span className="text-xs text-gray-600 capitalize">{r.delivery_speed?.replace(/-/g, ' ') || '—'}</span>
+                      <select
+                        value={r.status}
+                        onChange={e => updateVideoRequestStatus(r.id, e.target.value as VideoRequestStatus)}
+                        className="text-xs rounded-lg border border-gray-200 px-2 py-1 bg-white text-gray-700 focus:outline-none focus:border-purple-400">
+                        {(['new', 'contacted', 'in-production', 'delivered', 'closed'] as VideoRequestStatus[]).map(s => (
+                          <option key={s} value={s}>{s.replace(/-/g, ' ')}</option>
+                        ))}
+                      </select>
+                      <span className="text-xs text-gray-500">
+                        {new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

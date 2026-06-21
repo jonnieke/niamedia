@@ -212,7 +212,7 @@ export default function Settings() {
               disabled={profileSaving || !name.trim()}
               className="btn-primary w-full py-3 text-sm gap-2 disabled:opacity-50">
               <Save size={15} />
-              {profileSaving ? 'Savingâ€¦' : profileSaved ? 'Saved âœ“' : 'Save Changes'}
+              {profileSaving ? 'Saving...' : profileSaved ? 'Saved âœ“' : 'Save Changes'}
             </button>
           </div>
         )}
@@ -356,7 +356,7 @@ export default function Settings() {
                 </div>
                 <div>
                   <label className="label">Confirm New Password</label>
-                  <input type="password" className="input" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  <input type="password" className="input" placeholder="••••••••"
                     value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
                 </div>
                 {pwError && (
@@ -373,7 +373,7 @@ export default function Settings() {
                   onClick={handlePasswordChange}
                   disabled={pwSaving || !newPassword || !confirmPassword}
                   className="btn-primary text-sm px-5 py-2.5 disabled:opacity-50">
-                  {pwSaving ? 'Updatingâ€¦' : 'Update Password'}
+                  {pwSaving ? 'Updating...' : 'Update Password'}
                 </button>
               </div>
             </Card>

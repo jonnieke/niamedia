@@ -18,6 +18,7 @@ const INDUSTRY_PROMPTS: Record<string, string> = {
   'Travel': 'stunning Kenya landscape photography, Masai Mara savanna at golden hour, Mount Kenya snow peak, vibrant African nature, wide open skies',
   'Retail': 'modern upscale retail store interior, beautifully arranged products on display, contemporary clean space, bright natural lighting, no people',
   'Professional Services': 'sleek modern office with glass walls, Nairobi CBD view, executive meeting room, clean professional workspace, no people',
+  'Faith & Community': 'modern faith and community event setting, elegant church or community hall interior, warm inviting lighting, peaceful welcoming atmosphere, stained glass light effects, East Africa context, no text, no logos, no faces, professional event poster background',
 }
 
 const STYLE_MODIFIERS: Record<string, string> = {

@@ -358,7 +358,7 @@ function Form() {
 
       <button type="submit" disabled={loading || !base.name || !base.business || !base.phone || !base.email}
         className="btn-primary w-full py-3.5 text-sm disabled:opacity-40 flex items-center justify-center gap-2">
-        {loading ? 'Submittingâ€¦' : <><ArrowRight size={15} /> Submit Request — Our Team Will Respond Within 24h</>}
+        {loading ? 'Submitting...' : <><ArrowRight size={15} /> Submit Request — Our Team Will Respond Within 24h</>}
       </button>
     </form>
   )
