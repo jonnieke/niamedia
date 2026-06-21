@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { Image } from 'https://deno.land/x/imagescript@1.3.0/mod.ts'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -19,46 +20,47 @@ const INDUSTRY_PROMPTS: Record<string, string> = {
   'Professional Services': 'sleek modern office with glass walls, Nairobi CBD view, executive meeting room, clean professional workspace, no people',
 }
 
-const STYLE_PROMPTS: Record<string, string> = {
-  bold: 'dramatic cinematic lighting, high contrast, deep shadows, intense atmosphere, commercial advertising photography',
-  minimal: 'soft pastel tones, minimalist clean composition, airy bright, plenty of negative space, editorial photography style',
-  vibrant: 'vibrant saturated jewel colors, energetic dynamic composition, warm rich tones, lush and inviting, lifestyle photography',
+const STYLE_MODIFIERS: Record<string, string> = {
+  bold: 'dramatic cinematic lighting, high contrast, deep shadows, intense atmosphere',
+  minimal: 'soft pastel tones, minimalist clean composition, airy bright, plenty of negative space',
+  vibrant: 'vibrant saturated jewel colors, energetic dynamic composition, warm rich tones, lush and inviting',
 }
 
-async function fetchImageAsBase64(url: string): Promise<string> {
-  const res = await fetch(url)
-  const buf = await res.arrayBuffer()
-  const bytes = new Uint8Array(buf)
-  let binary = ''
-  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i])
-  const b64 = btoa(binary)
-  const mime = res.headers.get('content-type') || 'image/jpeg'
-  return `data:${mime};base64,${b64}`
-}
-
-async function generateOne(apiKey: string, industry: string, style: string): Promise<string> {
-  const industryDesc = INDUSTRY_PROMPTS[industry] ?? `${industry} business in Kenya, professional commercial photography`
-  const styleDesc = STYLE_PROMPTS[style] ?? STYLE_PROMPTS.bold
-  const prompt = `Professional marketing poster background: ${industryDesc}, ${styleDesc}, no text overlay, no logos, no faces, Kenya East Africa, 4K commercial quality, suitable for business advertising`
-
-  const res = await fetch('https://fal.run/fal-ai/flux/schnell', {
+async function geminiImage(key: string, prompt: string): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${key}`
+  const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      prompt,
-      image_size: 'portrait_3_4',
-      num_inference_steps: 4,
-      num_images: 1,
-      enable_safety_checker: true,
-      sync_mode: true,
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { responseModalities: ['TEXT', 'IMAGE'] },
     }),
   })
-
-  if (!res.ok) throw new Error(`fal.ai ${res.status}: ${await res.text()}`)
+  if (!res.ok) throw new Error(`Gemini ${res.status}: ${await res.text()}`)
   const data = await res.json()
-  const imageUrl = data.images?.[0]?.url
-  if (!imageUrl) throw new Error('No image returned from fal.ai')
-  return fetchImageAsBase64(imageUrl)
+  const parts = data?.candidates?.[0]?.content?.parts ?? []
+  const imgPart = parts.find((p: Record<string, unknown>) => p.inlineData)
+  if (!imgPart) throw new Error('No image returned by Gemini')
+  return imgPart.inlineData.data as string
+}
+
+async function compressToJpeg(base64Png: string, width: number, quality: number): Promise<string> {
+  const pngBytes = Uint8Array.from(atob(base64Png), c => c.charCodeAt(0))
+  const img = await Image.decode(pngBytes)
+  img.resize(width, Image.RESIZE_AUTO)
+  const jpegBytes = await img.encodeJPEG(quality)
+  let binary = ''
+  for (let i = 0; i < jpegBytes.byteLength; i++) binary += String.fromCharCode(jpegBytes[i])
+  return `data:image/jpeg;base64,${btoa(binary)}`
+}
+
+async function generateOne(key: string, industry: string, style: string): Promise<string> {
+  const industryDesc = INDUSTRY_PROMPTS[industry] ?? `${industry} business in Kenya, professional commercial photography`
+  const styleDesc = STYLE_MODIFIERS[style] ?? STYLE_MODIFIERS.bold
+  const prompt = `Professional marketing poster background: ${industryDesc}, ${styleDesc}, no text overlay, no logos, no faces, Kenya East Africa, high quality commercial photography`
+  const rawBase64 = await geminiImage(key, prompt)
+  // Portrait 3:4 mood board — resize to 360px wide, JPEG q72 → ~30–60 KB
+  return compressToJpeg(rawBase64, 360, 72)
 }
 
 serve(async (req) => {
@@ -67,12 +69,12 @@ serve(async (req) => {
   try {
     const { industry, business_name, style = 'bold', unlock = false } = await req.json()
 
-    const FALAI_KEY = Deno.env.get('FALAI_API_KEY')
-    if (!FALAI_KEY) throw new Error('FALAI_API_KEY not configured')
+    const GEMINI_KEY = Deno.env.get('GEMINI_API_KEY')
+    if (!GEMINI_KEY) throw new Error('GEMINI_API_KEY not configured')
 
     // Preview mode — 1 image, no credit required
     if (!unlock) {
-      const imageData = await generateOne(FALAI_KEY, industry, 'bold')
+      const imageData = await generateOne(GEMINI_KEY, industry ?? business_name ?? 'Professional Services', 'bold')
       return new Response(JSON.stringify({ images: { bold: imageData } }), {
         headers: { ...cors, 'Content-Type': 'application/json' },
       })
@@ -90,20 +92,17 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
     if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: cors })
 
-    // Deduct 1 credit
     const { data: creditData, error: creditError } = await supabase.rpc('spend_credit', { uid: user.id })
     if (creditError || !creditData) {
       return new Response(JSON.stringify({ error: 'insufficient_credits' }), {
-        status: 402,
-        headers: { ...cors, 'Content-Type': 'application/json' },
+        status: 402, headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
 
-    // Generate all 3 styles in parallel
     const [bold, minimal, vibrant] = await Promise.all([
-      generateOne(FALAI_KEY, industry, 'bold'),
-      generateOne(FALAI_KEY, industry, 'minimal'),
-      generateOne(FALAI_KEY, industry, 'vibrant'),
+      generateOne(GEMINI_KEY, industry, 'bold'),
+      generateOne(GEMINI_KEY, industry, 'minimal'),
+      generateOne(GEMINI_KEY, industry, 'vibrant'),
     ])
 
     return new Response(JSON.stringify({ images: { bold, minimal, vibrant }, unlocked: true }), {
@@ -114,8 +113,7 @@ serve(async (req) => {
     const message = (err as Error).message ?? String(err)
     console.error('[generate-poster] fatal:', message)
     return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...cors, 'Content-Type': 'application/json' },
+      status: 500, headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 })
