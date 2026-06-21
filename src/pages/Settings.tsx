@@ -1,4 +1,4 @@
-﻿import { useState, useRef } from 'react'
+﻿import { useState, useRef, useEffect } from 'react'
 import { Save, Bell, Shield, User, CreditCard, Check, ExternalLink, Zap, Film, Music, AlertCircle, Camera, Loader2 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { useAuth } from '../lib/AuthContext'
@@ -55,6 +55,22 @@ export default function Settings() {
     projectReady: true, revisionDone: true, audioReady: true,
     campaigns: true, billing: true, product: false,
   })
+  const [emailMarketing, setEmailMarketing] = useState(true)
+  const [emailMarketingSaving, setEmailMarketingSaving] = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    supabase.from('profiles').select('email_marketing_opt_out').eq('id', user.id).single()
+      .then(({ data }) => { if (data) setEmailMarketing(!data.email_marketing_opt_out) })
+  }, [user])
+
+  const toggleEmailMarketing = async () => {
+    const next = !emailMarketing
+    setEmailMarketing(next)
+    setEmailMarketingSaving(true)
+    await supabase.from('profiles').update({ email_marketing_opt_out: !next }).eq('id', user!.id)
+    setEmailMarketingSaving(false)
+  }
 
   const toggleN = (k: keyof typeof notifs) => setNotifs(p => ({ ...p, [k]: !p[k] }))
 
@@ -340,6 +356,20 @@ export default function Settings() {
                   <Toggle on={notifs[key]} onToggle={() => toggleN(key)} />
                 </div>
               ))}
+
+              <div className="border-t border-gray-200 pt-5">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Email Marketing</p>
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">
+                      Tips & promotional emails
+                      {emailMarketingSaving && <span className="ml-2 text-[10px] text-gray-500 font-normal">Saving...</span>}
+                    </p>
+                    <p className="text-xs text-gray-500">Onboarding tips, usage nudges, and platform news. Turn off to opt out.</p>
+                  </div>
+                  <Toggle on={emailMarketing} onToggle={toggleEmailMarketing} />
+                </div>
+              </div>
             </div>
           </Card>
         )}

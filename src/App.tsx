@@ -1,4 +1,4 @@
-﻿import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+﻿import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './lib/AuthContext'
 import Home from './pages/Home'
 import Login from './pages/Login'
@@ -32,6 +32,11 @@ import Privacy from './pages/Privacy'
 import VideoRequest from './pages/VideoRequest'
 import MyVideoRequests from './pages/MyVideoRequests'
 
+function JoinRedirect() {
+  const location = useLocation()
+  return <Navigate to={`/register${location.search}`} replace />
+}
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth()
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
@@ -51,6 +56,7 @@ function AppRoutes() {
       <Route path="/templates" element={<Templates />} />
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/package-request" element={<PackageRequest />} />
+      <Route path="/join" element={<JoinRedirect />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/payment/callback" element={<PaymentCallback />} />

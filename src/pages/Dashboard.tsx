@@ -105,7 +105,7 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-3 shrink-0 flex-wrap justify-end">
           {credits !== null && (
-            <Link to="/new-campaign"
+            <Link to={credits > 0 ? "/new-campaign" : "/pricing"}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-colors"
               style={{ borderColor: credits > 0 ? '#c4b5fd' : '#fca5a5', background: credits > 0 ? '#ede9fe' : '#fef2f2', color: credits > 0 ? '#6d28d9' : '#dc2626' }}>
               <Zap size={12} />

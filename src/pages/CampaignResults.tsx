@@ -564,7 +564,7 @@ export default function CampaignResults() {
 
       {/* Post-save referral nudge */}
       {showReferralNudge && (
-        <div className="mt-8 p-5 rounded-2xl border border-purple-200 bg-purple-50 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div className="mt-8 p-5 rounded-2xl border border-purple-200 bg-purple-50 flex flex-col sm:flex-row items-start sm:items-center gap-4 relative">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#ede9fe' }}>
             <Sparkles size={18} className="text-purple-600" />
           </div>
@@ -583,6 +583,10 @@ export default function CampaignResults() {
             }}>
             {referralCopied ? <Check size={12} /> : <Share2 size={12} />}
             {referralCopied ? 'Link copied!' : 'Copy referral link'}
+          </button>
+          <button onClick={() => setShowReferralNudge(false)}
+            className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-purple-100 transition-colors">
+            <X size={12} />
           </button>
         </div>
       )}

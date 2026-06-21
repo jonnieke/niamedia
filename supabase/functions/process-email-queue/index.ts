@@ -186,6 +186,19 @@ Deno.serve(async (req) => {
     let subject = ''
     let html = ''
 
+    if (item.email_type === 'day2_nudge' || item.email_type === 'day5_social_proof') {
+      // Check email marketing opt-out
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('email_marketing_opt_out')
+        .eq('id', item.user_id)
+        .single()
+      if (profile?.email_marketing_opt_out) {
+        await supabase.from('email_queue').update({ status: 'skipped', sent_at: now }).eq('id', item.id)
+        continue
+      }
+    }
+
     if (item.email_type === 'day2_nudge') {
       // Skip if user already created a campaign — no need to nudge them
       const { count } = await supabase
