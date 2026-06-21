@@ -42,7 +42,14 @@ async function geminiImage(key: string, prompt: string): Promise<string> {
 async function compressToJpeg(base64Png: string, width: number, quality: number): Promise<string> {
   const pngBytes = Uint8Array.from(atob(base64Png), c => c.charCodeAt(0))
   const img = await Image.decode(pngBytes)
+  // Resize to target width, maintaining aspect ratio
   img.resize(width, Image.RESIZE_AUTO)
+  // Crop to exact 16:9 from center so cards fit perfectly
+  const targetH = Math.round(img.width * 9 / 16)
+  if (img.height > targetH) {
+    const offsetY = Math.floor((img.height - targetH) / 2)
+    img.crop(0, offsetY, img.width, targetH)
+  }
   const jpegBytes = await img.encodeJPEG(quality)
   let binary = ''
   for (let i = 0; i < jpegBytes.byteLength; i++) binary += String.fromCharCode(jpegBytes[i])

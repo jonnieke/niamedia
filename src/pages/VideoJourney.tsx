@@ -118,23 +118,22 @@ function StyleCardImage({ style, imageUrl, loading }: {
 }) {
   if (imageUrl) {
     return (
-      <div className="relative h-44 overflow-hidden bg-gray-900">
+      <div className="relative aspect-video overflow-hidden bg-gray-900">
         <img
           src={imageUrl}
           alt={style.name}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
         />
-        {/* Subtle bottom fade so the white text bar blends softly */}
-        <div className="absolute inset-x-0 bottom-0 h-12"
+        <div className="absolute inset-x-0 bottom-0 h-10"
           style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 100%)' }} />
-        <span className="absolute top-2.5 left-3 text-xl leading-none drop-shadow-lg">{style.emoji}</span>
+        <span className="absolute top-2.5 left-3 text-lg leading-none drop-shadow-lg">{style.emoji}</span>
       </div>
     )
   }
 
   if (loading) {
     return (
-      <div className="relative h-44 overflow-hidden" style={{ background: style.gradient }}>
+      <div className="relative aspect-video overflow-hidden" style={{ background: style.gradient }}>
         <div className="absolute inset-0 animate-pulse opacity-20"
           style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)' }} />
         <div className="absolute inset-0 flex items-center justify-center">
@@ -146,7 +145,7 @@ function StyleCardImage({ style, imageUrl, loading }: {
 
   // Fallback if generation failed
   return (
-    <div className="relative h-44 overflow-hidden flex items-center justify-center" style={{ background: style.gradient }}>
+    <div className="relative aspect-video overflow-hidden flex items-center justify-center" style={{ background: style.gradient }}>
       <span className="text-5xl opacity-25">{style.emoji}</span>
     </div>
   )
