@@ -47,7 +47,7 @@ export default function Dashboard() {
   const [showNia, setShowNia] = useState(false)
 
   const [stats, setStats] = useState({ campaigns: 0, audioOrders: 0, deliveredAssets: 0, activeProjects: 0 })
-  const [pipeline, setPipeline] = useState<{ id: string; title: string; type: string; status: string }[]>([])
+  const [pipeline, setPipeline] = useState<{ id: string; title: string; type: string; status: string; linkTo?: string }[]>([])
   const [notifs, setNotifs] = useState<{ id: string; title: string; body: string; type: string; read: boolean; action_url?: string; created_at: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [credits, setCredits] = useState<number | null>(null)
@@ -60,17 +60,27 @@ export default function Dashboard() {
       supabase.from('projects').select('id, title, type, status').eq('user_id', user.id).order('created_at', { ascending: false }).limit(4),
       supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
       supabase.from('profiles').select('credits').eq('id', user.id).single(),
-    ]).then(([{ count: campCount }, { data: audioData, count: audioCount }, { data: projData }, { data: notifData }, { data: creditData }]) => {
+      supabase.from('video_requests').select('id, title, business_name, status').eq('user_id', user.id).in('status', ['in-production', 'delivered']).order('created_at', { ascending: false }).limit(3),
+    ]).then(([{ count: campCount }, { data: audioData, count: audioCount }, { data: projData }, { data: notifData }, { data: creditData }, { data: vrData }]) => {
       const audioOrders = audioData ?? []
       const delivered = audioOrders.filter(a => a.status === 'delivered' || a.status === 'accepted').length
       const active = audioOrders.filter(a => !['delivered', 'accepted'].includes(a.status)).length
       setStats({ campaigns: campCount ?? 0, audioOrders: audioCount ?? 0, deliveredAssets: delivered, activeProjects: active })
-      setPipeline(projData ?? [])
+      const vidItems = (vrData ?? []).map((v: { id: string; title: string; business_name: string; status: string }) => ({
+        id: v.id, title: v.title || v.business_name, type: 'video request', status: v.status, linkTo: '/my-requests',
+      }))
+      const projItems = (projData ?? []).map((p: { id: string; title: string; type: string; status: string }) => ({ ...p, linkTo: `/projects/${p.id}/review` }))
+      setPipeline([...vidItems, ...projItems].slice(0, 6))
       setNotifs(notifData ?? [])
       if (creditData) setCredits(creditData.credits)
       setLoading(false)
     })
   }, [user])
+
+  const markRead = (id: string) => {
+    setNotifs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+    supabase.from('notifications').update({ read: true }).eq('id', id).then(() => {})
+  }
 
   const agencyEquivalent = stats.campaigns * 15000 + stats.audioOrders * 25000
   const niaPaid = stats.campaigns * 5000 + stats.audioOrders * 8000
@@ -232,7 +242,7 @@ export default function Dashboard() {
               ) : pipeline.map(p => {
                 const color = statusColors[p.status] || '#94a3b8'
                 return (
-                  <Link key={p.id} to={`/projects/${p.id}/review`}
+                  <Link key={p.id} to={p.linkTo ?? `/projects/${p.id}/review`}
                     className="flex items-center gap-3 px-5 py-3.5 hover:bg-gray-50 transition-colors">
                     <div className="w-1.5 h-8 rounded-full shrink-0" style={{ background: color }} />
                     <div className="flex-1 min-w-0">
@@ -275,6 +285,7 @@ export default function Dashboard() {
                 const color = notifColor[n.type] ?? '#7c3aed'
                 return (
                   <Link key={n.id} to={n.action_url || '/projects'}
+                    onClick={() => { if (!n.read) markRead(n.id) }}
                     className={`flex items-start gap-3 px-5 py-3.5 hover:bg-gray-50 transition-colors ${!n.read ? 'bg-purple-50/50' : ''}`}>
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
                       style={{ background: `${color}15`, border: `1px solid ${color}20` }}>

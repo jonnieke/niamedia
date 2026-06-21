@@ -319,7 +319,7 @@ export default function CampaignResults() {
 
   const copyReferralLink = () => {
     const code = `NIA-${user?.id.slice(0, 6).toUpperCase()}`
-    navigator.clipboard.writeText(`https://niamedia.co.ke/join?ref=${code}`)
+    navigator.clipboard.writeText(`https://niamedia.co.ke/register?ref=${code}`)
     setReferralCopied(true)
     setTimeout(() => setReferralCopied(false), 3000)
   }
@@ -489,6 +489,14 @@ export default function CampaignResults() {
             {saving ? <Loader2 size={12} className="animate-spin" /> : saved && !hasRefinements ? <Check size={12} className="text-emerald-400" /> : <Save size={12} />}
             {saving ? 'Saving…' : saved && !hasRefinements ? 'Saved' : hasRefinements ? 'Save Changes' : 'Save'}
           </button>
+          {savedId && (
+            <a href={`https://wa.me/?text=${encodeURIComponent(`Check out the campaign I generated on Nia Media: https://niamedia.co.ke/campaigns/${savedId}`)}`}
+              target="_blank" rel="noopener noreferrer"
+              className="btn-secondary text-xs gap-1.5 px-4 py-2"
+              style={{ color: '#16a34a', borderColor: '#bbf7d0' }}>
+              <Share2 size={12} /> Share
+            </a>
+          )}
           <button onClick={exportTxt} className="btn-primary text-xs gap-1.5 px-4 py-2">
             <Download size={12} /> Export TXT
           </button>

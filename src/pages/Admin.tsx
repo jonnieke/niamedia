@@ -555,6 +555,7 @@ export default function Admin() {
   const [videoRequests, setVideoRequests] = useState<VideoRequestRow[]>([])
   const [loading, setLoading] = useState(true)
   const [grantingCredit, setGrantingCredit] = useState<string | null>(null)
+  const [grantAmounts, setGrantAmounts] = useState<Record<string, number>>({})
 
   useEffect(() => {
     Promise.all([
@@ -580,16 +581,16 @@ export default function Admin() {
     setVideoRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r))
   }
 
-  const grantCredit = async (userId: string) => {
+  const grantCredit = async (userId: string, amount = 1) => {
     setGrantingCredit(userId)
     await supabase.rpc('add_credits', {
       p_user_id: userId,
-      p_amount: 1,
+      p_amount: amount,
       p_description: 'Admin grant',
       p_order_id: `admin_${Date.now()}`,
     })
-    await notifyUser(userId, 'Credit granted!', 'An admin has added 1 campaign credit to your account.', 'success', '/new-campaign')
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, credits: (u.credits ?? 0) + 1 } : u))
+    await notifyUser(userId, 'Credit granted!', `An admin has added ${amount} campaign credit${amount !== 1 ? 's' : ''} to your account.`, 'success', '/new-campaign')
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, credits: (u.credits ?? 0) + amount } : u))
     setGrantingCredit(null)
   }
 
@@ -971,17 +972,23 @@ export default function Admin() {
                     <Zap size={11} className="text-purple-400" />
                     <span className="text-xs font-semibold text-purple-300">{u.credits ?? 0}</span>
                   </div>
-                  {/* Grant credit */}
-                  <button
-                    onClick={() => grantCredit(u.id)}
-                    disabled={grantingCredit === u.id}
-                    title="Grant 1 free credit"
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:border-emerald-500/30 hover:text-emerald-400 text-xs transition-all disabled:opacity-40 shrink-0">
-                    {grantingCredit === u.id
-                      ? <Loader2 size={11} className="animate-spin" />
-                      : <Plus size={11} />}
-                    Credit
-                  </button>
+                  {/* Grant credits */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <input
+                      type="number" min="1" max="50"
+                      value={grantAmounts[u.id] ?? 1}
+                      onChange={e => setGrantAmounts(prev => ({ ...prev, [u.id]: Math.max(1, parseInt(e.target.value) || 1) }))}
+                      className="w-10 text-center text-xs rounded-md border border-gray-200 py-1 text-gray-700 bg-white"
+                    />
+                    <button
+                      onClick={() => grantCredit(u.id, grantAmounts[u.id] ?? 1)}
+                      disabled={grantingCredit === u.id}
+                      title="Grant credits"
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:border-emerald-500/30 hover:text-emerald-400 text-xs transition-all disabled:opacity-40">
+                      {grantingCredit === u.id ? <Loader2 size={11} className="animate-spin" /> : <Plus size={11} />}
+                      Grant
+                    </button>
+                  </div>
                   <span className={`text-xs px-2 py-0.5 rounded font-semibold shrink-0 ${u.role === 'admin' ? 'bg-purple-500/20 text-purple-300' : 'bg-gray-100 text-gray-500'}`}>
                     {u.role}
                   </span>

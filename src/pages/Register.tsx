@@ -1,6 +1,6 @@
 ﻿import { useState, FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Eye, EyeOff, ArrowRight, CheckCircle2, Mail, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, ArrowRight, CheckCircle2, Mail, Loader2, Gift } from 'lucide-react'
 import Logo from '../components/ui/Logo'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -148,6 +148,17 @@ export default function Register() {
           <h1 className="text-2xl font-bold text-gray-900">Create your account</h1>
           <p className="text-sm text-gray-500 mt-1">Start creating campaigns in minutes</p>
         </div>
+
+        {refCode && (
+          <div className="mb-5 flex items-center gap-3 px-4 py-3.5 rounded-2xl border"
+            style={{ borderColor: '#c4b5fd', background: 'linear-gradient(135deg, #f5f3ff, #ede9fe)' }}>
+            <Gift size={18} className="text-purple-600 shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-purple-900">You were invited!</p>
+              <p className="text-xs text-purple-600 mt-0.5">Create your account to get started free — your friend gets rewarded too.</p>
+            </div>
+          </div>
+        )}
 
         <div className="card-glow p-7">
           {error && (
