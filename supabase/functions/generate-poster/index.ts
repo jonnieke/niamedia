@@ -59,7 +59,7 @@ async function generateOne(key: string, ctx: {
   industry: string; style: string
   business_name?: string; product_name?: string; location?: string
   offer?: string; tone?: string; target_audience?: string; design_direction?: string
-}): Promise<string> {
+}, width = 360): Promise<string> {
   const industryDesc = INDUSTRY_PROMPTS[ctx.industry] ?? `${ctx.industry} business in Kenya, professional commercial photography`
   const styleDesc = STYLE_MODIFIERS[ctx.style] ?? STYLE_MODIFIERS.bold
   const extras: string[] = []
@@ -72,7 +72,7 @@ async function generateOne(key: string, ctx: {
   const contextClause = extras.length > 0 ? `, ${extras.join(', ')}` : ''
   const prompt = `Professional marketing poster background for ${ctx.business_name ?? 'a business'}: ${industryDesc}${contextClause}, ${styleDesc}, no text overlay, no logos, no human faces, Kenya East Africa, high quality commercial photography`
   const rawBase64 = await geminiImage(key, prompt)
-  return compressToJpeg(rawBase64, 360, 72)
+  return compressToJpeg(rawBase64, width, width >= 600 ? 82 : 72)
 }
 
 serve(async (req) => {
@@ -90,7 +90,7 @@ serve(async (req) => {
 
     const ctx = { industry: industry ?? business_name ?? 'Professional Services', business_name, product_name, location, offer, tone, target_audience, design_direction }
 
-    // Preview mode — 1 image, no credit required
+    // Preview mode — 1 image, no credit required (360px, q72)
     if (!unlock) {
       const imageData = await generateOne(GEMINI_KEY, { ...ctx, style: 'bold' })
       return new Response(JSON.stringify({ images: { bold: imageData } }), {
@@ -118,9 +118,9 @@ serve(async (req) => {
     }
 
     const [bold, minimal, vibrant] = await Promise.all([
-      generateOne(GEMINI_KEY, { ...ctx, style: 'bold' }),
-      generateOne(GEMINI_KEY, { ...ctx, style: 'minimal' }),
-      generateOne(GEMINI_KEY, { ...ctx, style: 'vibrant' }),
+      generateOne(GEMINI_KEY, { ...ctx, style: 'bold' }, 768),
+      generateOne(GEMINI_KEY, { ...ctx, style: 'minimal' }, 768),
+      generateOne(GEMINI_KEY, { ...ctx, style: 'vibrant' }, 768),
     ])
 
     return new Response(JSON.stringify({ images: { bold, minimal, vibrant }, unlocked: true }), {

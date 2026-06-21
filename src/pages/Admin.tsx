@@ -87,6 +87,13 @@ interface VideoRequestRow {
   created_at: string
   script: string
   notes: string
+  length?: string
+  format?: string
+  platform?: string
+  language?: string
+  music_style?: string
+  voiceover?: boolean
+  profiles?: { name: string; email: string }
 }
 
 async function notifyUser(userId: string, title: string, body: string, type: string, actionUrl?: string) {
@@ -101,10 +108,24 @@ const AUDIO_NOTIFS: Partial<Record<AudioStatus, { title: string; body: (t: strin
 }
 
 const PROJECT_NOTIFS: Partial<Record<ProjectStatus, { title: string; body: (t: string) => string; type: string }>> = {
-  'in-production':    { title: 'Production started! ðŸŽ¬',    body: t => `"${t}" is now in active production.`,                                              type: 'info' },
-  'ready-for-review': { title: 'Your project is ready! ðŸ‘€', body: t => `"${t}" is ready for your review. Open it to approve or request changes.`,          type: 'action' },
-  'accepted':         { title: 'Project approved âœ“',        body: t => `"${t}" has been accepted and added to your Asset Library.`,                        type: 'success' },
-  'delivered':        { title: 'Project delivered! ðŸŽ‰',      body: t => `"${t}" has been delivered. Check your Assets Library.`,                            type: 'success' },
+  'in-production':    { title: 'Production started',         body: t => `”${t}” is now in active production.`,                                                    type: 'info' },
+  'ready-for-review': { title: 'Your project is ready',      body: t => `”${t}” is ready for your review. Open it to approve or request changes.`,               type: 'action' },
+  'accepted':         { title: 'Project approved',           body: t => `”${t}” has been accepted and added to your Asset Library.`,                             type: 'success' },
+  'delivered':        { title: 'Project delivered',          body: t => `”${t}” has been delivered. Check your Assets Library.`,                                 type: 'success' },
+}
+
+const VIDEO_REQUEST_NOTIFS: Partial<Record<VideoRequestStatus, { title: string; body: (t: string) => string; type: string }>> = {
+  'contacted':      { title: 'Video brief reviewed',          body: t => `We have reviewed “${t}” and will confirm scope and pricing shortly.`,                  type: 'info' },
+  'in-production':  { title: 'Video production started',      body: t => `”${t}” is now in active production. We will notify you when it is ready.`,             type: 'info' },
+  'delivered':      { title: 'Your video is ready',           body: t => `”${t}” has been delivered. Check your email for the download link.`,                   type: 'success' },
+}
+
+const VIDEO_STATUS_COLORS: Record<VideoRequestStatus, { color: string; bg: string }> = {
+  new:              { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+  contacted:        { color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
+  'in-production':  { color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
+  delivered:        { color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
+  closed:           { color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' },
 }
 
 const STATUS_COLOR: Record<string, { color: string; bg: string }> = {
@@ -334,11 +355,11 @@ function LeadRow({ lead, onStatusChange }: {
           <div className="flex gap-2">
             <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-green-500/30 text-green-400 hover:bg-green-500/10 transition-all">
-              WhatsApp â†’
+              WhatsApp â†'
             </a>
             <a href={`mailto:${lead.email}`}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 hover:border-white/20 transition-all">
-              Email â†’
+              Email â†'
             </a>
           </div>
         </div>
@@ -406,6 +427,113 @@ function ProjectRow({ project, onStatusChange }: {
   )
 }
 
+function VideoRequestExpandedRow({ request, onStatusChange }: {
+  request: VideoRequestRow
+  onStatusChange: (id: string, status: VideoRequestStatus) => void
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const [updating, setUpdating] = useState(false)
+
+  const updateStatus = async (status: VideoRequestStatus) => {
+    setUpdating(true)
+    await supabase.from('video_requests').update({ status }).eq('id', request.id)
+    const notif = VIDEO_REQUEST_NOTIFS[status]
+    if (notif) await notifyUser(request.user_id, notif.title, notif.body(request.title), notif.type, '/request-video')
+    onStatusChange(request.id, status)
+    setUpdating(false)
+  }
+
+  const { color, bg } = VIDEO_STATUS_COLORS[request.status] ?? { color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' }
+
+  return (
+    <div className="border-b border-white/5 last:border-0">
+      <div className="flex items-center gap-4 px-5 py-3.5 cursor-pointer hover:bg-white/2 transition-colors"
+        onClick={() => setExpanded(!expanded)}>
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+          style={{ background: 'rgba(124,58,237,0.12)' }}>
+          <Film size={14} className="text-purple-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-800 truncate">{request.business_name}</p>
+          <p className="text-xs text-gray-500 truncate">{request.title} · {request.industry || '—'}</p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          {request.budget_range && <span className="text-xs text-gray-500 hidden sm:inline">{request.budget_range}</span>}
+          <span className="inline-flex items-center px-2 py-1 rounded-lg text-[11px] font-semibold"
+            style={{ color, background: bg }}>
+            {request.status.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+          </span>
+          <span className="text-xs text-gray-600">
+            {new Date(request.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+          </span>
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="px-5 pb-5 space-y-4">
+          {/* Client + specs */}
+          <div className="rounded-xl border border-gray-200 bg-white/2 p-4 grid sm:grid-cols-3 gap-3 text-xs">
+            {request.profiles?.email && (
+              <div className="sm:col-span-3 flex items-center gap-2 pb-2 border-b border-white/5">
+                <Mail size={11} className="text-gray-500 shrink-0" />
+                <a href={`mailto:${request.profiles.email}`} className="text-blue-400 hover:text-blue-300 transition-colors">
+                  {request.profiles.name} — {request.profiles.email}
+                </a>
+              </div>
+            )}
+            {[
+              { label: 'Length', value: request.length },
+              { label: 'Format', value: request.format },
+              { label: 'Platform', value: request.platform },
+              { label: 'Language', value: request.language },
+              { label: 'Music', value: request.music_style },
+              { label: 'Delivery', value: request.delivery_speed?.replace(/-/g, ' ') },
+              { label: 'Voice-Over', value: request.voiceover === true ? 'Yes' : request.voiceover === false ? 'No' : '—' },
+              { label: 'Budget', value: request.budget_range },
+            ].map(({ label, value }) => (
+              <div key={label}>
+                <p className="text-gray-500 mb-0.5">{label}</p>
+                <p className="text-gray-800 font-medium">{value || '—'}</p>
+              </div>
+            ))}
+          </div>
+
+          {request.script && (
+            <div>
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Script</p>
+              <div className="rounded-xl border border-gray-200 p-4 text-xs text-gray-700 leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto">
+                {request.script}
+              </div>
+            </div>
+          )}
+
+          {request.notes && (
+            <div>
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Notes</p>
+              <p className="text-xs text-gray-600 leading-relaxed">{request.notes}</p>
+            </div>
+          )}
+
+          <div className="flex items-center gap-3 flex-wrap">
+            <p className="text-xs text-gray-500">Update status:</p>
+            {(['new', 'contacted', 'in-production', 'delivered', 'closed'] as VideoRequestStatus[]).map(s => (
+              <button key={s} onClick={() => updateStatus(s)} disabled={updating || request.status === s}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all disabled:opacity-50 ${
+                  request.status === s
+                    ? 'border-purple-500/50 bg-purple-500/15 text-purple-300'
+                    : 'border-gray-200 text-gray-500 hover:border-purple-500/30 hover:text-purple-300'
+                }`}>
+                {s.replace(/-/g, ' ')}
+              </button>
+            ))}
+            {updating && <Loader2 size={14} className="text-purple-400 animate-spin" />}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Admin() {
   const [tab, setTab] = useState(0)
   const [audioOrders, setAudioOrders] = useState<AudioOrder[]>([])
@@ -432,7 +560,7 @@ export default function Admin() {
       setCreditTxns((ct ?? []) as CreditTxn[])
       setLoading(false)
     })
-    supabase.from('video_requests').select('*').order('created_at', { ascending: false })
+    supabase.from('video_requests').select('*, profiles!user_id(name, email)').order('created_at', { ascending: false })
       .then(({ data }) => { if (data) setVideoRequests(data as VideoRequestRow[]) })
   }, [])
 
@@ -466,7 +594,8 @@ export default function Admin() {
   const pendingAudio = audioOrders.filter(o => o.status === 'queued').length
   const pendingProjects = projects.filter(p => p.status === 'queued' || p.status === 'revision-requested').length
   const newLeads = leads.filter(l => l.status === 'new').length
-  const actionNeeded = pendingAudio + pendingProjects
+  const newVideoRequests = videoRequests.filter(r => r.status === 'new').length
+  const actionNeeded = pendingAudio + pendingProjects + newVideoRequests
 
   const audioRevenue = audioOrders.reduce((sum, o) => sum + (o.price_kes ?? 0), 0)
   const creditRevenue = creditTxns.filter(t => t.amount > 0).reduce((sum, t) => {
@@ -495,7 +624,7 @@ export default function Admin() {
         <p className="text-sm text-gray-500">Manage users, audio orders, and production projects.</p>
         <a href="/admin/voices"
           className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl text-xs font-semibold text-purple-300 border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 transition-all">
-          <Mic size={13} /> Voice Clone Studio â†’
+          <Mic size={13} /> Voice Clone Studio â†'
         </a>
       </div>
 
@@ -510,18 +639,25 @@ export default function Admin() {
                 — {pendingAudio > 0 ? `${pendingAudio} audio order${pendingAudio !== 1 ? 's' : ''} queued` : ''}
                 {pendingAudio > 0 && pendingProjects > 0 ? ', ' : ''}
                 {pendingProjects > 0 ? `${pendingProjects} project${pendingProjects !== 1 ? 's' : ''} pending` : ''}
+                {(pendingAudio > 0 || pendingProjects > 0) && newVideoRequests > 0 ? ', ' : ''}
+                {newVideoRequests > 0 ? `${newVideoRequests} video request${newVideoRequests !== 1 ? 's' : ''} new` : ''}
               </span>
             </p>
           </div>
           <div className="flex gap-2 shrink-0">
             {pendingAudio > 0 && (
               <button onClick={() => setTab(2)} className="text-xs px-3 py-1.5 rounded-lg border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition-all">
-                Audio Orders â†’
+                Audio Orders →
               </button>
             )}
             {pendingProjects > 0 && (
               <button onClick={() => setTab(3)} className="text-xs px-3 py-1.5 rounded-lg border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition-all">
-                Projects â†’
+                Projects →
+              </button>
+            )}
+            {newVideoRequests > 0 && (
+              <button onClick={() => setTab(6)} className="text-xs px-3 py-1.5 rounded-lg border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition-all">
+                Video Requests →
               </button>
             )}
           </div>
@@ -544,6 +680,9 @@ export default function Admin() {
             )}
             {t === 'Credits' && creditTxns.length > 0 && (
               <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400">{creditTxns.length}</span>
+            )}
+            {t === 'Video Requests' && newVideoRequests > 0 && (
+              <span className="w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center bg-purple-500 text-white">{newVideoRequests}</span>
             )}
           </button>
         ))}
@@ -765,46 +904,41 @@ export default function Admin() {
 
           {/* Video Requests */}
           {tab === 6 && (
-            <div className="card-glow overflow-hidden">
-              {videoRequests.length === 0 ? (
-                <div className="py-16 text-center text-gray-600">
-                  <Film size={28} className="mx-auto mb-2 opacity-30" />
-                  <p className="text-sm">No video requests yet</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-gray-100">
-                  <div className="grid grid-cols-7 gap-3 px-5 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-200">
-                    <span className="col-span-2">Business</span>
-                    <span>Industry</span>
-                    <span>Budget</span>
-                    <span>Speed</span>
-                    <span>Status</span>
-                    <span>Date</span>
-                  </div>
-                  {videoRequests.map(r => (
-                    <div key={r.id} className="grid grid-cols-7 gap-3 px-5 py-3.5 items-center hover:bg-gray-50 transition-colors">
-                      <div className="col-span-2 min-w-0">
-                        <p className="text-sm font-semibold text-gray-800 truncate">{r.business_name}</p>
-                        <p className="text-xs text-gray-500 truncate">{r.title}</p>
-                      </div>
-                      <span className="text-xs text-gray-600">{r.industry || '—'}</span>
-                      <span className="text-xs text-gray-600">{r.budget_range || '—'}</span>
-                      <span className="text-xs text-gray-600 capitalize">{r.delivery_speed?.replace(/-/g, ' ') || '—'}</span>
-                      <select
-                        value={r.status}
-                        onChange={e => updateVideoRequestStatus(r.id, e.target.value as VideoRequestStatus)}
-                        className="text-xs rounded-lg border border-gray-200 px-2 py-1 bg-white text-gray-700 focus:outline-none focus:border-purple-400">
-                        {(['new', 'contacted', 'in-production', 'delivered', 'closed'] as VideoRequestStatus[]).map(s => (
-                          <option key={s} value={s}>{s.replace(/-/g, ' ')}</option>
-                        ))}
-                      </select>
-                      <span className="text-xs text-gray-500">
-                        {new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                      </span>
+            <div>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+                {(['new', 'contacted', 'in-production', 'delivered', 'closed'] as VideoRequestStatus[]).map(s => {
+                  const count = videoRequests.filter(r => r.status === s).length
+                  const { color } = VIDEO_STATUS_COLORS[s]
+                  return (
+                    <div key={s} className="rounded-xl border border-gray-200 bg-white/2 p-3 text-center">
+                      <p className="text-xl font-bold" style={{ color }}>{count}</p>
+                      <p className="text-[10px] text-gray-500 mt-0.5">{s.replace(/-/g, ' ')}</p>
                     </div>
-                  ))}
+                  )
+                })}
+              </div>
+
+              {newVideoRequests > 0 && (
+                <div className="mb-4 p-3.5 rounded-xl border border-amber-500/25 bg-amber-500/8 flex items-center gap-3">
+                  <AlertCircle size={15} className="text-amber-400 shrink-0" />
+                  <p className="text-sm text-amber-300">{newVideoRequests} new video request{newVideoRequests !== 1 ? 's' : ''} waiting to be contacted.</p>
                 </div>
               )}
+
+              <div className="card-glow">
+                {videoRequests.length === 0 ? (
+                  <div className="py-16 text-center text-gray-600">
+                    <Film size={28} className="mx-auto mb-2 opacity-30" />
+                    <p className="text-sm">No video requests yet</p>
+                  </div>
+                ) : videoRequests.map(r => (
+                  <VideoRequestExpandedRow
+                    key={r.id}
+                    request={r}
+                    onStatusChange={(id, status) => setVideoRequests(prev => prev.map(x => x.id === id ? { ...x, status } : x))}
+                  />
+                ))}
+              </div>
             </div>
           )}
 

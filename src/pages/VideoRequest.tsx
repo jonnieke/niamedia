@@ -72,6 +72,20 @@ export default function VideoRequest() {
     })
     setSubmitting(false)
     if (dbErr) { setError('Failed to submit. Please try again.'); return }
+
+    // Fire-and-forget: confirmation email to user + admin SMS
+    supabase.functions.invoke('notify-video-request', {
+      body: {
+        user_email: user?.email,
+        user_name: user?.name ?? user?.email,
+        business_name: form.business_name,
+        title: form.campaign_title || form.business_name,
+        budget_range: form.budget_range,
+        delivery_speed: form.delivery_speed,
+        industry: form.industry,
+      },
+    }).catch(() => {/* non-blocking */})
+
     setDone(true)
   }
 

@@ -187,6 +187,15 @@ Deno.serve(async (req) => {
     let html = ''
 
     if (item.email_type === 'day2_nudge') {
+      // Skip if user already created a campaign — no need to nudge them
+      const { count } = await supabase
+        .from('campaigns')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', item.user_id)
+      if ((count ?? 0) > 0) {
+        await supabase.from('email_queue').update({ status: 'skipped', sent_at: now }).eq('id', item.id)
+        continue
+      }
       subject = `${item.recipient_name.split(' ')[0]}, your free campaign credit is still here`
       html = day2EmailHtml(item.recipient_name, APP_URL)
     } else if (item.email_type === 'day5_social_proof') {
