@@ -7,7 +7,7 @@ const cors = {
 
 const FROM_EMAIL = 'Nia Media <hello@niamedia.co.ke>'
 
-function confirmationHtml(name: string, business: string, title: string, budget: string, delivery: string, appUrl: string): string {
+function confirmationHtml(name: string, business: string, title: string, budget: string, delivery: string, appUrl: string, waPhone: string): string {
   const firstName = name.split(' ')[0]
   const deliveryLabel = delivery === '24h' ? '24-hour rush (+50%)' : delivery === '48h' ? '48-hour rush (+25%)' : '3–5 business days'
   return `<!DOCTYPE html>
@@ -113,7 +113,7 @@ function confirmationHtml(name: string, business: string, title: string, budget:
     <div class="footer">
       <p>
         © ${new Date().getFullYear()} Nia Media · Nairobi, Kenya<br>
-        <a href="https://wa.me/254700000000">WhatsApp us</a> · <a href="mailto:hello@niamedia.co.ke">hello@niamedia.co.ke</a>
+        <a href="https://wa.me/${waPhone}">WhatsApp us</a> · <a href="mailto:hello@niamedia.co.ke">hello@niamedia.co.ke</a>
       </p>
     </div>
   </div>
@@ -132,6 +132,7 @@ serve(async (req) => {
     const AT_KEY = Deno.env.get('AFRICAS_TALKING_API_KEY')
     const AT_USER = Deno.env.get('AFRICAS_TALKING_USERNAME') ?? 'sandbox'
     const ADMIN_PHONE = Deno.env.get('ADMIN_PHONE')
+    const ADMIN_WHATSAPP = Deno.env.get('ADMIN_WHATSAPP') ?? ADMIN_PHONE ?? '254700000000'
     const APP_URL = Deno.env.get('APP_URL') ?? 'https://niamedia.co.ke'
 
     const results: Record<string, unknown> = {}
@@ -145,7 +146,7 @@ serve(async (req) => {
           from: FROM_EMAIL,
           to: user_email,
           subject: `Video request received — ${title || business_name}`,
-          html: confirmationHtml(user_name ?? 'there', business_name ?? '', title ?? '', budget_range ?? '', delivery_speed ?? '', APP_URL),
+          html: confirmationHtml(user_name ?? 'there', business_name ?? '', title ?? '', budget_range ?? '', delivery_speed ?? '', APP_URL, ADMIN_WHATSAPP),
         }),
       })
       results.email = emailRes.ok ? 'sent' : `failed:${emailRes.status}`

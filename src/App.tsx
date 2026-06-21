@@ -30,6 +30,7 @@ import AdminVoices from './pages/AdminVoices'
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
 import VideoRequest from './pages/VideoRequest'
+import MyVideoRequests from './pages/MyVideoRequests'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth()
@@ -73,6 +74,7 @@ function AppRoutes() {
       <Route path="/referral" element={<ProtectedRoute><Referral /></ProtectedRoute>} />
       <Route path="/brand-kit" element={<ProtectedRoute><BrandKit /></ProtectedRoute>} />
       <Route path="/request-video" element={<ProtectedRoute><VideoRequest /></ProtectedRoute>} />
+      <Route path="/my-requests" element={<ProtectedRoute><MyVideoRequests /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
       <Route path="/admin/voices" element={<ProtectedRoute><AdminRoute><AdminVoices /></AdminRoute></ProtectedRoute>} />

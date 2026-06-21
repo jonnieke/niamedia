@@ -1,8 +1,8 @@
-﻿import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Plus, FolderOpen, Layers,
   Palette, Settings, ShieldCheck, LogOut, Zap,
-  Shield, Gift, X, Video,
+  Shield, Gift, X, Video, Film,
 } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
 import Logo from '../ui/Logo'
@@ -16,8 +16,9 @@ const navItems = [
   { to: '/new-campaign',    icon: Plus,            label: 'New Campaign', highlight: true },
   { to: '/campaigns',       icon: FolderOpen,      label: 'Campaigns' },
   { to: '/templates',       icon: Layers,          label: 'Templates' },
-  { to: '/assets',          icon: Shield,          label: 'Posters' },
+  { to: '/assets',          icon: Shield,          label: 'Assets' },
   { to: '/request-video',   icon: Video,           label: 'Request Video', badge: 'NEW' },
+  { to: '/my-requests',     icon: Film,            label: 'My Requests' },
   { to: '/brand-kit',       icon: Palette,         label: 'Brand Kit' },
   { to: '/referral',        icon: Gift,            label: 'Refer & Earn', badge: 'KES 500' },
   null,
@@ -131,4 +132,3 @@ export default function Sidebar({ onClose }: SidebarProps) {
     </aside>
   )
 }
-

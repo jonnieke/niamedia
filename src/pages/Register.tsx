@@ -1,5 +1,5 @@
 ﻿import { useState, FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Eye, EyeOff, ArrowRight, CheckCircle2, Mail, Loader2 } from 'lucide-react'
 import Logo from '../components/ui/Logo'
 import { useAuth } from '../lib/AuthContext'
@@ -47,6 +47,8 @@ function Divider() {
 export default function Register() {
   const { register } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const refCode = searchParams.get('ref')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -65,6 +67,27 @@ export default function Register() {
     }
   }
 
+  const captureReferral = async (userId: string, code: string) => {
+    try {
+      const codePrefix = code.replace('NIA-', '').toLowerCase()
+      const { data: referrer } = await supabase
+        .from('profiles')
+        .select('id')
+        .ilike('id', `${codePrefix}%`)
+        .limit(1)
+        .single()
+      if (referrer) {
+        await supabase.from('referrals').insert({
+          referrer_id: referrer.id,
+          referred_user_id: userId,
+          status: 'pending',
+        })
+      }
+    } catch {
+      // Non-fatal
+    }
+  }
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
@@ -73,6 +96,7 @@ export default function Register() {
     try {
       const { needsConfirmation: confirm, userId } = await register(name, email, password)
       if (userId) void triggerWelcomeEmail(userId)
+      if (userId && refCode) void captureReferral(userId, refCode)
       if (confirm) {
         setNeedsConfirmation(true)
       } else {
