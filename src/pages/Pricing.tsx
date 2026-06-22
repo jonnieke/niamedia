@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { CheckCircle2, Zap, Film, ChevronDown, ChevronUp } from 'lucide-react'
 import PublicHeader from '../components/layout/PublicHeader'
+import { useAuth } from '../lib/AuthContext'
+import { supabase } from '../lib/supabase'
 
 const CHECK = () => <CheckCircle2 size={13} className="text-purple-500 shrink-0 mt-0.5" />
 
@@ -16,10 +18,36 @@ const faqs = [
 
 export default function Pricing() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const { user } = useAuth()
+  const [credits, setCredits] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (!user) return
+    supabase.from("profiles").select("credits").eq("id", user.id).single()
+      .then(({ data }) => { if (data) setCredits(data.credits) })
+  }, [user])
 
   return (
     <div className="min-h-screen" style={{ background: '#f8fafc' }}>
       <PublicHeader />
+
+      {credits !== null && credits > 0 && (
+        <div className="max-w-5xl mx-auto px-4 pt-6">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-purple-200 bg-purple-50">
+            <div className="flex items-center gap-2 min-w-0">
+              <Zap size={14} className="text-purple-600 shrink-0" />
+              <p className="text-sm text-purple-800 font-medium">
+                You have <strong>{credits} credit{credits !== 1 ? "s" : ""}</strong> remaining — no need to buy more yet.
+              </p>
+            </div>
+            <Link to="/new-campaign"
+              className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
+              style={{ background: "linear-gradient(135deg, #7c3aed, #2563eb)" }}>
+              Use Credits
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Hero */}
       <section className="py-16 text-center px-4">

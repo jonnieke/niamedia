@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
-import { Copy, Check, Gift, Users, Zap, ArrowRight, Star, Share2 } from 'lucide-react'
+import { Copy, Check, Gift, Users, Zap, ArrowRight, Star, Share2, X, Loader2 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -24,6 +24,9 @@ export default function Referral() {
   const [copiedLink, setCopiedLink] = useState(false)
   const [referrals, setReferrals] = useState<Referral[]>([])
   const [loading, setLoading] = useState(true)
+  const [showHistory, setShowHistory] = useState(false)
+  const [history, setHistory] = useState<{ id: string; description: string; amount: number; created_at: string }[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
 
   const referralCode = user ? `NIA-${user.id.slice(0, 6).toUpperCase()}` : 'NIA-XXXXXX'
   const referralUrl = `https://niamedia.co.ke/register?ref=${referralCode}`
@@ -46,16 +49,34 @@ export default function Referral() {
   const nextTier = TIERS.find(t => t.refs > activeRefs) ?? TIERS[TIERS.length - 1]
   const refsToNext = Math.max(0, nextTier.refs - activeRefs)
 
-  const copyCode = () => {
-    navigator.clipboard.writeText(referralCode)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  const copyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(referralCode)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch { /* clipboard unavailable */ }
   }
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(referralUrl)
-    setCopiedLink(true)
-    setTimeout(() => setCopiedLink(false), 2000)
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(referralUrl)
+      setCopiedLink(true)
+      setTimeout(() => setCopiedLink(false), 2000)
+    } catch { /* clipboard unavailable */ }
+  }
+
+  const loadHistory = async () => {
+    if (!user) return
+    setShowHistory(true)
+    setHistoryLoading(true)
+    const { data } = await supabase
+      .from("credit_transactions")
+      .select("id, description, amount, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(30)
+    setHistory((data ?? []) as { id: string; description: string; amount: number; created_at: string }[])
+    setHistoryLoading(false)
   }
 
   return (
@@ -219,7 +240,7 @@ export default function Referral() {
 
           <div className="px-5 py-3.5 border-t border-gray-200 bg-white/1 flex items-center justify-between">
             <p className="text-xs text-gray-500">Total earned: <strong className="text-green-400">KES {totalCredit.toLocaleString()}</strong></p>
-            <button className="text-xs text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1">
+            <button onClick={loadHistory} className="text-xs text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1">
               View credit history <ArrowRight size={11} />
             </button>
           </div>
@@ -229,6 +250,44 @@ export default function Referral() {
           Credits apply to active subscribers only. Referrals must complete a paid plan within 30 days of signing up. Platform credit has no cash value.
         </p>
       </div>
+
+      {showHistory && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}>
+          <div className="w-full max-w-md rounded-2xl overflow-hidden shadow-xl"
+            style={{ background: "#ffffff", border: "1px solid #e5e7eb" }}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <p className="text-sm font-bold text-gray-900">Credit History</p>
+              <button onClick={() => setShowHistory(false)}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                <X size={14} />
+              </button>
+            </div>
+            <div className="max-h-80 overflow-y-auto divide-y divide-gray-50">
+              {historyLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 size={18} className="text-purple-500 animate-spin" />
+                </div>
+              ) : history.length === 0 ? (
+                <div className="py-12 text-center text-sm text-gray-500">No credit transactions yet.</div>
+              ) : history.map(tx => (
+                <div key={tx.id} className="flex items-center gap-3 px-5 py-3">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold ${tx.amount > 0 ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"}`}>
+                    {tx.amount > 0 ? "+" : ""}{tx.amount}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-800 truncate">{tx.description}</p>
+                    <p className="text-[11px] text-gray-400">{new Date(tx.created_at).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })}</p>
+                  </div>
+                  <span className={`text-xs font-bold shrink-0 ${tx.amount > 0 ? "text-green-600" : "text-red-500"}`}>
+                    {tx.amount > 0 ? "+" : ""}{tx.amount} credit{Math.abs(tx.amount) !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   )
 }
