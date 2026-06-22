@@ -135,9 +135,18 @@ const audioTemplates = [
 
 /* ── Reusable card components ── */
 
+// Map template industry labels to NewCampaign's exact <select> option values
+const INDUSTRY_MAP: Record<string, string> = {
+  'Fintech': 'Fintech / SACCO',
+  'Health': 'Health & Wellness',
+  'Services': 'Professional Services',
+}
+
 function CampaignCard({ t, search }: { t: typeof campaignTemplates[0]; search: string }) {
   if (search && !t.name.toLowerCase().includes(search.toLowerCase()) && !t.industry.toLowerCase().includes(search.toLowerCase())) return null
   const Icon = t.icon
+  const industryParam = INDUSTRY_MAP[t.industry] ?? t.industry
+  const toWithParams = `${t.to}?industry=${encodeURIComponent(industryParam)}`
   return (
     <div className="card-glow p-6 hover:border-purple-500/30 transition-all duration-300 flex flex-col group">
       <div className="flex items-start justify-between mb-4">
@@ -154,7 +163,7 @@ function CampaignCard({ t, search }: { t: typeof campaignTemplates[0]; search: s
           <span key={p} className="px-2 py-0.5 bg-gray-50 border border-gray-200 text-gray-500 text-[11px] font-medium rounded-lg">{p}</span>
         ))}
       </div>
-      <Link to={t.to} className="btn-outline text-xs w-full text-center gap-1.5">
+      <Link to={toWithParams} className="btn-outline text-xs w-full text-center gap-1.5">
         Use Template <ArrowRight size={12} />
       </Link>
     </div>

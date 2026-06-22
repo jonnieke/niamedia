@@ -155,6 +155,7 @@ export default function CampaignResults() {
   const [saved, setSaved] = useState(false)
   const [savedId, setSavedId] = useState<string | null>(id ?? null)
   const [regenerating, setRegenerating] = useState(false)
+  const [copiedAll, setCopiedAll] = useState(false)
   const [loadError, setLoadError] = useState('')
   // Per-section refinement overrides
   const [refinements, setRefinements] = useState<Record<string, string>>({})
@@ -271,10 +272,10 @@ export default function CampaignResults() {
     if (!error && data && !data.error) setContent(data)
   }
 
-  const exportTxt = () => {
+  const buildCampaignText = () => {
     const merged = getMergedContent()
-    if (!merged || !form) return
-    const parts = [
+    if (!merged || !form) return ''
+    return [
       `CAMPAIGN: ${form.product_name}`,
       `Business: ${form.business_name} | Industry: ${form.industry}`,
       `Generated: ${new Date().toLocaleDateString()}`,
@@ -308,13 +309,67 @@ export default function CampaignResults() {
       `Subheadline: ${merged.landingPage.subheadline}`,
       `Benefits:\n${merged.landingPage.benefits.map(b => `• ${b}`).join('\n')}`,
     ].join('\n')
-    const blob = new Blob([parts], { type: 'text/plain' })
+  }
+
+  const exportTxt = () => {
+    const text = buildCampaignText()
+    if (!text || !form) return
+    const blob = new Blob([text], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
     a.download = `${form.product_name.replace(/\s+/g, '_')}_campaign.txt`
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  const copyAll = async () => {
+    const text = buildCampaignText()
+    if (!text) return
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedAll(true)
+      setTimeout(() => setCopiedAll(false), 2000)
+    } catch { /* clipboard unavailable */ }
+  }
+
+  const exportPdf = () => {
+    const merged = getMergedContent()
+    if (!merged || !form) return
+    const esc = (s: string) => (s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const section = (title: string, rows: [string, string][]) => `
+      <h2>${esc(title)}</h2>
+      ${rows.map(([k, v]) => `<div class="row"><span class="k">${esc(k)}</span><p>${esc(v).replace(/\n/g, '<br>')}</p></div>`).join('')}`
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(form.product_name)} — Campaign</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a1a2e;max-width:760px;margin:0 auto;padding:40px;line-height:1.6}
+  .head{border-bottom:3px solid #7c3aed;padding-bottom:16px;margin-bottom:24px}
+  .head h1{margin:0 0 4px;font-size:24px}
+  .head p{margin:0;color:#666;font-size:13px}
+  h2{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#7c3aed;margin:28px 0 10px;border-bottom:1px solid #eee;padding-bottom:6px}
+  .row{margin-bottom:10px}
+  .k{font-weight:700;font-size:12px;color:#444;display:block}
+  .row p{margin:2px 0 0;font-size:14px}
+  ul{margin:4px 0 0;padding-left:20px}
+  @media print{body{padding:0}}
+</style></head><body>
+  <div class="head"><h1>${esc(form.product_name)}</h1><p>${esc(form.business_name)} · ${esc(form.industry)} · Generated ${new Date().toLocaleDateString()}</p></div>
+  ${section('Strategy', [['Angle', merged.strategy.angle], ['Pain Point', merged.strategy.painPoint], ['Key Message', merged.strategy.keyMessage], ['Call to Action', merged.strategy.cta]])}
+  ${section('Video Script', [['Hook', merged.videoScript.hook], ['Scene 1', merged.videoScript.scene1], ['Scene 2', merged.videoScript.scene2], ['Scene 3', merged.videoScript.scene3], ['CTA', merged.videoScript.callToAction], ['Visual Direction', merged.videoScript.visualDirection]])}
+  ${section('Poster Copy', [['Headline', merged.posterCopy.headline], ['Subheadline', merged.posterCopy.subheadline], ['Offer', merged.posterCopy.offerText], ['CTA', merged.posterCopy.cta]])}
+  ${section('Captions', [['Facebook', merged.captions.facebook], ['Instagram', merged.captions.instagram], ['TikTok', merged.captions.tiktok], ['LinkedIn', merged.captions.linkedin]])}
+  ${section('WhatsApp', [['Status', merged.whatsapp.status], ['Broadcast', merged.whatsapp.broadcast], ['Reply', merged.whatsapp.reply]])}
+  <h2>Landing Page</h2>
+  <div class="row"><span class="k">Headline</span><p>${esc(merged.landingPage.headline)}</p></div>
+  <div class="row"><span class="k">Subheadline</span><p>${esc(merged.landingPage.subheadline)}</p></div>
+  <div class="row"><span class="k">Benefits</span><ul>${merged.landingPage.benefits.map(b => `<li>${esc(b)}</li>`).join('')}</ul></div>
+  <script>window.onload=function(){window.print()}</script>
+</body></html>`
+    const w = window.open('', '_blank')
+    if (!w) return
+    w.document.write(html)
+    w.document.close()
   }
 
   const copyReferralLink = () => {
@@ -497,6 +552,13 @@ export default function CampaignResults() {
               <Share2 size={12} /> Share
             </a>
           )}
+          <button onClick={copyAll} className="btn-secondary text-xs gap-1.5 px-4 py-2">
+            {copiedAll ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+            {copiedAll ? 'Copied' : 'Copy All'}
+          </button>
+          <button onClick={exportPdf} className="btn-secondary text-xs gap-1.5 px-4 py-2">
+            <Download size={12} /> PDF
+          </button>
           <button onClick={exportTxt} className="btn-primary text-xs gap-1.5 px-4 py-2">
             <Download size={12} /> Export TXT
           </button>

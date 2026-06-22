@@ -231,7 +231,20 @@ export default function Projects() {
           <div className="text-center py-20 text-gray-500">
             <Package size={36} className="mx-auto mb-3 opacity-30" />
             {projects.length === 0
-              ? <><p className="font-medium text-gray-800 mb-1">No projects yet</p><p className="text-sm">Commission your first campaign or audio order to get started.</p></>
+              ? <>
+                  <p className="font-medium text-gray-800 mb-1">No projects yet</p>
+                  <p className="text-sm mb-5">Commission your first campaign or audio order to get started.</p>
+                  <div className="flex items-center justify-center gap-3 flex-wrap">
+                    <button onClick={() => navigate('/concept-studio')}
+                      className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
+                      style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
+                      Start a Video Concept
+                    </button>
+                    <button onClick={() => navigate('/audio-studio')} className="btn-secondary text-sm px-5 py-2.5">
+                      Order Audio
+                    </button>
+                  </div>
+                </>
               : <p>No projects in this status.</p>
             }
           </div>

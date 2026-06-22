@@ -1,5 +1,5 @@
 ﻿import { useState, useRef, useEffect } from 'react'
-import { Save, Bell, Shield, User, CreditCard, Check, ExternalLink, Zap, Film, Music, AlertCircle, Camera, Loader2 } from 'lucide-react'
+import { Save, Bell, Shield, User, CreditCard, Check, Zap, Film, Music, AlertCircle, Camera, Loader2 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { useAuth } from '../lib/AuthContext'
 import { supabase, uploadAvatar } from '../lib/supabase'
@@ -11,13 +11,6 @@ const PLANS = [
   { id: 'starter', label: 'Starter', price: 5000, period: 'one-time', features: ['Everything in Free', '1 video project', 'Campaign copy', 'Asset Library'], color: '#8b5cf6' },
   { id: 'growth', label: 'Growth', price: 30000, period: '/month', features: ['Everything in Starter', '4 video ad scripts/mo', '8 social ideas/mo', 'Priority support', 'Analytics'], color: '#3b82f6', popular: true },
   { id: 'business', label: 'Business', price: 60000, period: '/month', features: ['Everything in Growth', '12 video concepts/mo', 'Full strategy', 'Dedicated account manager', 'Rush delivery'], color: '#10b981' },
-]
-
-const BILLING_HISTORY = [
-  { id: 'inv-001', date: '2026-06-01', desc: 'Growth Pack — June 2026', amount: 30000, status: 'Paid' },
-  { id: 'inv-002', date: '2026-06-12', desc: 'Savanna Grill — Jingle 30s', amount: 5500, status: 'Paid' },
-  { id: 'inv-003', date: '2026-06-14', desc: 'Ruaka Heights — Video Commercial (Growth Film)', amount: 30000, status: 'Paid' },
-  { id: 'inv-004', date: '2026-05-01', desc: 'Growth Pack — May 2026', amount: 30000, status: 'Paid' },
 ]
 
 function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
@@ -58,10 +51,43 @@ export default function Settings() {
   const [emailMarketing, setEmailMarketing] = useState(true)
   const [emailMarketingSaving, setEmailMarketingSaving] = useState(false)
 
+  // Billing history — real transactions
+  const [billing, setBilling] = useState<{ id: string; date: string; desc: string; amount: number; status: string }[]>([])
+  const [billingLoading, setBillingLoading] = useState(true)
+
   useEffect(() => {
     if (!user) return
     supabase.from('profiles').select('email_marketing_opt_out').eq('id', user.id).single()
       .then(({ data }) => { if (data) setEmailMarketing(!data.email_marketing_opt_out) })
+  }, [user])
+
+  useEffect(() => {
+    if (!user) return
+    const CREDIT_KES: Record<number, number> = { 1: 500, 5: 2000, 12: 4000 }
+    Promise.all([
+      supabase.from('credit_transactions').select('id, amount, description, created_at, payment_status')
+        .eq('user_id', user.id).gt('amount', 0).order('created_at', { ascending: false }),
+      supabase.from('audio_orders').select('id, title, price_kes, payment_status, created_at')
+        .eq('user_id', user.id).order('created_at', { ascending: false }),
+    ]).then(([credits, audio]) => {
+      const creditRows = (credits.data ?? []).map(t => ({
+        id: t.id,
+        date: t.created_at,
+        desc: t.description || `${t.amount} campaign credit${t.amount !== 1 ? 's' : ''}`,
+        amount: CREDIT_KES[t.amount] ?? t.amount * 500,
+        status: t.payment_status === 'paid' ? 'Paid' : t.payment_status === 'failed' ? 'Failed' : 'Pending',
+      }))
+      const audioRows = (audio.data ?? []).map(o => ({
+        id: o.id,
+        date: o.created_at,
+        desc: o.title || 'Audio order',
+        amount: o.price_kes ?? 0,
+        status: o.payment_status === 'paid' ? 'Paid' : o.payment_status === 'failed' ? 'Failed' : 'Pending',
+      }))
+      const merged = [...creditRows, ...audioRows].sort((a, b) => +new Date(b.date) - +new Date(a.date))
+      setBilling(merged)
+      setBillingLoading(false)
+    })
   }, [user])
 
   const toggleEmailMarketing = async () => {
@@ -303,34 +329,53 @@ export default function Settings() {
                 </div>
               </Card>
               <Card title="This Month" icon={CreditCard}>
-                <p className="text-2xl font-extrabold text-white">KES 65,500</p>
-                <p className="text-xs text-gray-500 mt-1">Growth Pack + Jingle 30s + Growth Film</p>
+                {(() => {
+                  const now = new Date()
+                  const monthTotal = billing
+                    .filter(b => b.status === 'Paid' && new Date(b.date).getMonth() === now.getMonth() && new Date(b.date).getFullYear() === now.getFullYear())
+                    .reduce((s, b) => s + b.amount, 0)
+                  return (
+                    <>
+                      <p className="text-2xl font-extrabold text-white">KES {monthTotal.toLocaleString()}</p>
+                      <p className="text-xs text-gray-500 mt-1">Paid this calendar month</p>
+                    </>
+                  )
+                })()}
               </Card>
             </div>
 
             <div className="card-glow overflow-hidden">
               <div className="px-5 py-3.5 border-b border-gray-200 flex items-center justify-between">
                 <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wide">Invoice History</h3>
-                <span className="text-[10px] text-gray-600 italic">PesaPal integration coming soon</span>
               </div>
-              <div className="divide-y divide-gray-100">
-                {BILLING_HISTORY.map(inv => (
-                  <div key={inv.id} className="flex items-center gap-4 px-5 py-3.5">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-800 truncate">{inv.desc}</p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(inv.date).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })}
-                        {' Â· '}{inv.id}
-                      </p>
+              {billingLoading ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 size={18} className="text-purple-400 animate-spin" />
+                </div>
+              ) : billing.length === 0 ? (
+                <div className="py-12 text-center text-sm text-gray-500">
+                  No transactions yet. Purchases and orders will appear here.
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {billing.map(inv => (
+                    <div key={inv.id} className="flex items-center gap-4 px-5 py-3.5">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-800 truncate">{inv.desc}</p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(inv.date).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                      </div>
+                      <p className="text-sm font-bold text-gray-900 shrink-0">KES {inv.amount.toLocaleString()}</p>
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold shrink-0 ${
+                        inv.status === 'Paid' ? 'bg-green-500/15 text-green-400'
+                        : inv.status === 'Failed' ? 'bg-red-500/15 text-red-400'
+                        : 'bg-amber-500/15 text-amber-400'
+                      }`}>{inv.status}</span>
                     </div>
-                    <p className="text-sm font-bold text-gray-900 shrink-0">KES {inv.amount.toLocaleString()}</p>
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-green-500/15 text-green-400 shrink-0">{inv.status}</span>
-                    <button className="text-gray-500 hover:text-purple-400 transition-colors shrink-0" title="Download invoice">
-                      <ExternalLink size={13} />
-                    </button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

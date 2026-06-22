@@ -1,5 +1,5 @@
 ﻿import { useState, useRef } from 'react'
-import { Music, Mic, Radio, ChevronRight, Check, Lock, Play, Pause, Clock, Info, Volume2, Loader2, Sparkles, RefreshCw } from 'lucide-react'
+import { Music, Mic, Radio, ChevronRight, Check, Lock, Play, Pause, Clock, Info, Volume2, Loader2, Sparkles, RefreshCw, AlertCircle } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
@@ -562,6 +562,24 @@ export default function AudioStudio() {
                 )}
               </div>
             )}
+
+            {(() => {
+              const missing = [
+                !brief.business && 'Business name',
+                !brief.message && 'Key message',
+                !brief.mood && 'Mood / style',
+                !brief.voice && 'Voice',
+              ].filter(Boolean) as string[]
+              if (missing.length === 0) return null
+              return (
+                <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-amber-500/25 bg-amber-500/8">
+                  <AlertCircle size={14} className="text-amber-400 shrink-0" />
+                  <p className="text-xs text-amber-300">
+                    Add {missing.join(', ')} to continue.
+                  </p>
+                </div>
+              )
+            })()}
 
             <div className="flex gap-3">
               <button onClick={() => setStep(2)} className="btn-secondary px-6 py-2.5 text-sm">Back</button>
