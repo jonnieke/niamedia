@@ -14,9 +14,12 @@ const FONTS = [
   { id: 'oswald', label: 'Oswald', style: "'Oswald', sans-serif" },
 ]
 
+const INDUSTRIES = ['Real Estate', 'Hospitality', 'Education', 'Fintech / SACCO', 'Restaurant', 'Travel', 'Retail', 'Health & Wellness', 'Events', 'Professional Services', 'Faith & Community', 'Other']
+
 interface Kit {
   business_name: string
   tagline: string
+  industry: string
   primary_color: string
   secondary_color: string
   accent_color: string
@@ -35,7 +38,7 @@ interface Kit {
 }
 
 const EMPTY: Kit = {
-  business_name: '', tagline: '',
+  business_name: '', tagline: '', industry: '',
   primary_color: '#8b5cf6', secondary_color: '#3b82f6', accent_color: '#10b981',
   font: 'inter', phone: '', whatsapp: '', website: '',
   instagram: '', facebook: '', tiktok: '', youtube: '',
@@ -201,6 +204,14 @@ export default function BrandKit() {
                   <label className="label">Tagline / Slogan</label>
                   <input className="input" placeholder="e.g. Where Your Story Begins" value={kit.tagline} onChange={set('tagline')} />
                 </div>
+              </div>
+
+              <div>
+                <label className="label">Industry / Sector</label>
+                <select className="input" value={kit.industry} onChange={set('industry')}>
+                  <option value="">Select your industry</option>
+                  {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
+                </select>
               </div>
 
               <div>

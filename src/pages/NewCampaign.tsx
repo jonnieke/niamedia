@@ -48,12 +48,34 @@ export default function NewCampaign() {
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(0)
   const [error, setError] = useState('')
+  const [prefilled, setPrefilled] = useState(false)
 
   // Fetch credit balance
   useEffect(() => {
     if (!user) return
     supabase.from('profiles').select('credits').eq('id', user.id).single()
       .then(({ data }) => { if (data) setCredits(data.credits) })
+  }, [user])
+
+  // Pre-fill from saved Brand Kit (only fields still empty — URL params win)
+  useEffect(() => {
+    if (!user) return
+    supabase.from('brand_kits')
+      .select('business_name, industry, preferred_tone, target_customer')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }) => {
+        if (!data) return
+        const hasContent = data.business_name || data.industry || data.preferred_tone || data.target_customer
+        setForm(prev => ({
+          ...prev,
+          business_name: prev.business_name || data.business_name || '',
+          industry: prev.industry || data.industry || '',
+          tone: prev.tone || data.preferred_tone || '',
+          target_audience: prev.target_audience || data.target_customer || '',
+        }))
+        if (hasContent) setPrefilled(true)
+      })
   }, [user])
 
   // Pre-fill from Nia agent URL params
@@ -157,6 +179,13 @@ export default function NewCampaign() {
             Fill brief with Nia AI
           </button>
         </div>
+
+        {prefilled && (
+          <div className="mb-5 flex items-center gap-2.5 px-4 py-3 rounded-xl border border-purple-200 bg-purple-50">
+            <Zap size={14} className="text-purple-600 shrink-0" />
+            <p className="text-xs text-purple-800">Prefilled from your <a href="/brand-kit" className="font-semibold underline">Brand Kit</a> — edit anything below.</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <SectionCard title="Business Details">

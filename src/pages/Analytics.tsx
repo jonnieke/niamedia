@@ -28,7 +28,7 @@ function MiniBar({ value, max, color }: { value: number; max: number; color: str
 }
 
 function ReachChart({ data }: { data: number[] }) {
-  const max = Math.max(...data)
+  const max = Math.max(...data, 1)
   const h = 80
   return (
     <svg width="100%" height={h} viewBox={`0 0 ${data.length * 12} ${h}`} preserveAspectRatio="none" className="overflow-visible">
@@ -59,16 +59,27 @@ interface DBStats {
   recentCampaigns: { id: string; title: string; type: string; created_at: string }[]
 }
 
-const reachByDay = {
-  '7d': [1200, 2400, 1900, 3100, 2700, 4200, 3800],
-  '30d': [800, 1200, 1500, 2100, 1800, 2400, 3100, 2700, 3400, 2900, 3800, 4200, 3600, 4800, 4100, 5200, 4700, 5800, 5100, 6200, 5600, 6800, 6100, 7200, 6700, 7800, 7100, 8200, 7600, 8400],
-  '90d': Array.from({ length: 90 }, (_, i) => Math.round(800 + i * 85 + Math.sin(i / 5) * 600)),
+const PERIOD_DAYS: Record<Period, number> = { '7d': 7, '30d': 30, '90d': 90 }
+
+// Build a per-day campaign count series of length `days`, oldest first, newest last
+function buildDailySeries(dates: string[], days: number): number[] {
+  const series = new Array(days).fill(0)
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  for (const iso of dates) {
+    const d = new Date(iso)
+    d.setHours(0, 0, 0, 0)
+    const idx = Math.floor((todayStart.getTime() - d.getTime()) / 86400000)
+    if (idx >= 0 && idx < days) series[days - 1 - idx] += 1
+  }
+  return series
 }
 
 export default function Analytics() {
   const { user } = useAuth()
   const [period, setPeriod] = useState<Period>('30d')
   const [stats, setStats] = useState<DBStats | null>(null)
+  const [campaignDates, setCampaignDates] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -80,7 +91,9 @@ export default function Analytics() {
       supabase.from('campaigns').select('id, title, type, created_at', { count: 'exact' }).eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
       supabase.from('audio_orders').select('id', { count: 'exact' }).eq('user_id', user.id),
       supabase.from('projects').select('id, type, status', { count: 'exact' }).eq('user_id', user.id),
-    ]).then(([campaigns, audio, projects]) => {
+      supabase.from('campaigns').select('created_at').eq('user_id', user.id),
+    ]).then(([campaigns, audio, projects, allCampaigns]) => {
+      setCampaignDates((allCampaigns.data ?? []).map((c: { created_at: string }) => c.created_at))
       const projectRows = projects.data ?? []
       const accepted = projectRows.filter(p => p.status === 'accepted' || p.status === 'delivered').length
       setStats({
@@ -96,10 +109,12 @@ export default function Analytics() {
     })
   }, [user])
 
-  const data = reachByDay[period]
-  const totalReach = data.reduce((a, b) => a + b, 0)
-  const prevTotal = Math.round(totalReach * 0.82)
-  const pct = Math.round(((totalReach - prevTotal) / prevTotal) * 100)
+  const days = PERIOD_DAYS[period]
+  const data = buildDailySeries(campaignDates, days)
+  const totalThis = data.reduce((a, b) => a + b, 0)
+  // Compare against the equally-long window immediately before this one
+  const prevTotal = buildDailySeries(campaignDates, days * 2).slice(0, days).reduce((a, b) => a + b, 0)
+  const pct = prevTotal > 0 ? Math.round(((totalThis - prevTotal) / prevTotal) * 100) : null
 
   const acceptanceRate = stats && stats.totalProjects > 0
     ? Math.round((stats.acceptedProjects / stats.totalProjects) * 100)
@@ -165,12 +180,18 @@ export default function Analytics() {
         <div className="grid lg:grid-cols-3 gap-5 mb-5">
           <div className="lg:col-span-2 card-glow p-5">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-sm font-bold text-gray-900">Estimated Reach</h2>
-              <div className="flex items-center gap-1.5 text-xs text-green-400 font-semibold">
-                <TrendingUp size={12} /> +{pct}% vs previous period
-              </div>
+              <h2 className="text-sm font-bold text-gray-900">Campaign Activity</h2>
+              {pct !== null && (
+                <div className={`flex items-center gap-1.5 text-xs font-semibold ${pct >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  <TrendingUp size={12} /> {pct >= 0 ? '+' : ''}{pct}% vs previous period
+                </div>
+              )}
             </div>
-            <p className="text-[11px] text-gray-600 mb-3">Illustrative — connect social accounts to see live data</p>
+            <p className="text-[11px] text-gray-600 mb-3">
+              {totalThis > 0
+                ? `${totalThis} campaign${totalThis !== 1 ? 's' : ''} created in the last ${days} days`
+                : `No campaigns in the last ${days} days — generate one to see your activity here`}
+            </p>
             <ReachChart data={data.slice(-Math.min(data.length, 30))} />
             <div className="mt-2 flex justify-between text-[10px] text-gray-600">
               <span>{period === '7d' ? '7 days ago' : period === '30d' ? '30 days ago' : '90 days ago'}</span>

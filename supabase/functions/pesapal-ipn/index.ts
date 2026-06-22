@@ -4,6 +4,48 @@ const BASE_URL = Deno.env.get("PESAPAL_ENV") === "production"
   ? "https://pay.pesapal.com/v3"
   : "https://cybqa.pesapal.com/pesapalv3"
 
+const FROM_EMAIL = "Nia Media <hello@niamedia.co.ke>"
+const APP_URL = Deno.env.get("APP_URL") ?? "https://niamedia.co.ke"
+
+async function sendReferralRewardEmail(to: string, name: string): Promise<void> {
+  const RESEND_KEY = Deno.env.get("RESEND_API_KEY")
+  if (!RESEND_KEY) return
+  const firstName = (name || "there").split(" ")[0]
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;background:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a1a2e">
+  <div style="max-width:600px;margin:32px auto;padding:0 16px">
+    <div style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+      <div style="background:linear-gradient(135deg,#065f46,#047857);padding:36px 40px;text-align:center">
+        <div style="font-size:18px;font-weight:800;color:#6ee7b7;margin-bottom:12px">Nia Media</div>
+        <h1 style="font-size:24px;font-weight:800;color:#fff;line-height:1.3;margin:0">Your referral just paid off! 🎉</h1>
+      </div>
+      <div style="padding:36px 40px">
+        <p style="font-size:15px;color:#333;line-height:1.7;margin:0 0 16px">
+          Great news, ${firstName} — someone you referred just subscribed to Nia Media.
+        </p>
+        <p style="font-size:15px;color:#333;line-height:1.7;margin:0 0 24px">
+          <strong>1 free campaign credit</strong> has been added to your account. Keep sharing your link to earn more.
+        </p>
+        <div style="text-align:center;margin:28px 0">
+          <a href="${APP_URL}/referral" style="display:inline-block;padding:14px 36px;border-radius:12px;background:linear-gradient(135deg,#8b5cf6,#3b82f6);color:#fff;font-weight:700;font-size:15px;text-decoration:none">View My Referrals →</a>
+        </div>
+      </div>
+      <div style="text-align:center;padding:20px 40px;border-top:1px solid #f0f0f5">
+        <p style="font-size:12px;color:#999;line-height:1.7;margin:0">© ${new Date().getFullYear()} Nia Media · <a href="${APP_URL}/settings" style="color:#8b5cf6;text-decoration:none">Manage email preferences</a></p>
+      </div>
+    </div>
+  </div>
+</body></html>`
+  try {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: FROM_EMAIL, to, subject: "Your referral just paid off — 1 free credit added", html }),
+    })
+  } catch (_e) { /* non-fatal */ }
+}
+
 async function getToken(): Promise<string> {
   const res = await fetch(`${BASE_URL}/api/Auth/RequestToken`, {
     method: "POST",
@@ -113,6 +155,16 @@ Deno.serve(async (req) => {
                 type: "success",
                 action_url: "/referral",
               })
+
+              // Email the referrer (respect marketing opt-out)
+              const { data: referrer } = await supabase
+                .from("profiles")
+                .select("email, name, email_marketing_opt_out")
+                .eq("id", referral.referrer_id)
+                .single()
+              if (referrer?.email && !referrer.email_marketing_opt_out) {
+                await sendReferralRewardEmail(referrer.email, referrer.name ?? "")
+              }
             }
           }
         }

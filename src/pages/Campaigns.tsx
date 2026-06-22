@@ -2,7 +2,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import {
   Plus, Clock, Megaphone, Loader2, Search, Trash2,
-  Zap, ExternalLink, Filter,
+  Zap, ExternalLink, Filter, Copy,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
@@ -49,6 +49,7 @@ export default function Campaigns() {
   const [filterIndustry, setFilterIndustry] = useState('all')
   const [deleting, setDeleting] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [duplicating, setDuplicating] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -86,6 +87,24 @@ export default function Campaigns() {
     setCampaigns(prev => prev.filter(c => c.id !== id))
     setDeleting(null)
     setConfirmDelete(null)
+  }
+
+  const handleDuplicate = async (c: Campaign) => {
+    if (!user) return
+    setDuplicating(c.id)
+    const { data, error } = await supabase
+      .from('campaigns')
+      .insert({
+        user_id: user.id,
+        title: `${c.title} (Copy)`,
+        type: c.type,
+        content: c.content,
+        metadata: c.metadata,
+      })
+      .select('id')
+      .single()
+    setDuplicating(null)
+    if (!error && data) navigate(`/campaigns/${data.id}`)
   }
 
   return (
@@ -246,6 +265,13 @@ export default function Campaigns() {
                       {timeAgo(c.created_at)}
                     </span>
                     <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => handleDuplicate(c)}
+                        disabled={duplicating === c.id}
+                        title="Duplicate campaign"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-600 hover:text-purple-400 hover:bg-purple-500/10 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-100">
+                        {duplicating === c.id ? <Loader2 size={13} className="animate-spin" /> : <Copy size={13} />}
+                      </button>
                       <button
                         onClick={() => setConfirmDelete(c.id)}
                         className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100">

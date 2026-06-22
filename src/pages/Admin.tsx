@@ -3,7 +3,7 @@ import {
   Users, BarChart2, Package, TrendingUp, ShieldCheck,
   Film, Music, Upload, Eye, RefreshCw, CheckCircle, Clock,
   AlertCircle, Loader2, Radio, Mic, Phone, Mail, Inbox,
-  Zap, Plus, CreditCard,
+  Zap, Plus, CreditCard, Search,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
@@ -553,6 +553,8 @@ export default function Admin() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [creditTxns, setCreditTxns] = useState<CreditTxn[]>([])
   const [videoRequests, setVideoRequests] = useState<VideoRequestRow[]>([])
+  const [videoSearch, setVideoSearch] = useState('')
+  const [videoStatusFilter, setVideoStatusFilter] = useState<VideoRequestStatus | 'all'>('all')
   const [loading, setLoading] = useState(true)
   const [grantingCredit, setGrantingCredit] = useState<string | null>(null)
   const [grantAmounts, setGrantAmounts] = useState<Record<string, number>>({})
@@ -937,19 +939,67 @@ export default function Admin() {
                 </div>
               )}
 
-              <div className="card-glow">
-                {videoRequests.length === 0 ? (
-                  <div className="py-16 text-center text-gray-600">
-                    <Film size={28} className="mx-auto mb-2 opacity-30" />
-                    <p className="text-sm">No video requests yet</p>
+              {/* Search + status filter */}
+              {videoRequests.length > 0 && (
+                <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                  <div className="relative flex-1">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                    <input
+                      className="input pl-9 text-sm w-full"
+                      placeholder="Search by business, title, or client..."
+                      value={videoSearch}
+                      onChange={e => setVideoSearch(e.target.value)}
+                    />
                   </div>
-                ) : videoRequests.map(r => (
-                  <VideoRequestExpandedRow
-                    key={r.id}
-                    request={r}
-                    onStatusChange={(id, status) => setVideoRequests(prev => prev.map(x => x.id === id ? { ...x, status } : x))}
-                  />
-                ))}
+                  <div className="flex gap-1.5 flex-wrap">
+                    {(['all', 'new', 'contacted', 'in-production', 'delivered', 'closed'] as const).map(s => (
+                      <button key={s} onClick={() => setVideoStatusFilter(s)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all capitalize ${
+                          videoStatusFilter === s
+                            ? 'border-purple-500/50 bg-purple-500/20 text-purple-300'
+                            : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                        }`}>
+                        {s === 'all' ? 'All' : s.replace(/-/g, ' ')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="card-glow">
+                {(() => {
+                  const q = videoSearch.trim().toLowerCase()
+                  const filtered = videoRequests.filter(r => {
+                    const matchStatus = videoStatusFilter === 'all' || r.status === videoStatusFilter
+                    const matchSearch = !q ||
+                      r.business_name?.toLowerCase().includes(q) ||
+                      r.title?.toLowerCase().includes(q) ||
+                      r.profiles?.name?.toLowerCase().includes(q) ||
+                      r.profiles?.email?.toLowerCase().includes(q)
+                    return matchStatus && matchSearch
+                  })
+                  if (videoRequests.length === 0) return (
+                    <div className="py-16 text-center text-gray-600">
+                      <Film size={28} className="mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">No video requests yet</p>
+                    </div>
+                  )
+                  if (filtered.length === 0) return (
+                    <div className="py-16 text-center text-gray-600">
+                      <Search size={24} className="mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">No requests match your filters</p>
+                      <button onClick={() => { setVideoSearch(''); setVideoStatusFilter('all') }}
+                        className="text-xs text-purple-400 hover:text-purple-300 mt-1">Clear filters</button>
+                    </div>
+                  )
+                  return filtered.map(r => (
+                    <VideoRequestExpandedRow
+                      key={r.id}
+                      request={r}
+                      onStatusChange={(id, status) => setVideoRequests(prev => prev.map(x => x.id === id ? { ...x, status } : x))}
+                    />
+                  ))
+                })()}
               </div>
             </div>
           )}
