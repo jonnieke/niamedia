@@ -11,6 +11,7 @@ Deno.serve(async (req) => {
   // Reservation id for the credit held during generation. Committed on success,
   // refunded if anything fails, so a failed generation never costs the user a credit.
   let reservationId: string | null = null
+  let brandMemory = ""
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -37,6 +38,27 @@ Deno.serve(async (req) => {
           })
         }
         reservationId = txId as string
+
+        // Brand Memory — make every campaign on-brand using the saved Brand Kit.
+        const { data: kit } = await supabase
+          .from("brand_kits")
+          .select("tagline, selling_points, common_offers, customer_objections, competitors, words_to_use, words_to_avoid, common_questions, brand_memory")
+          .eq("user_id", user.id)
+          .single()
+        if (kit) {
+          const lines = [
+            kit.tagline && `Tagline: ${kit.tagline}`,
+            kit.selling_points && `Key selling points: ${kit.selling_points}`,
+            kit.common_offers && `Common offers: ${kit.common_offers}`,
+            kit.customer_objections && `Customer objections to overcome: ${kit.customer_objections}`,
+            kit.common_questions && `Common customer questions: ${kit.common_questions}`,
+            kit.competitors && `Competitors: ${kit.competitors}`,
+            kit.words_to_use && `Words to use: ${kit.words_to_use}`,
+            kit.words_to_avoid && `Words to AVOID: ${kit.words_to_avoid}`,
+            kit.brand_memory && `Always remember: ${kit.brand_memory}`,
+          ].filter(Boolean)
+          if (lines.length) brandMemory = `\n\nBRAND MEMORY (apply to ALL copy — stay on-brand, honour words-to-use/avoid, address objections):\n${lines.join("\n")}`
+        }
       }
     } else {
       // Unauthenticated demo — rate-limit to 5 per IP per day
@@ -88,7 +110,7 @@ Additional Notes: ${form.notes || "None"}${languageInstruction}${form.industry =
 
 WhatsApp is the #1 sales channel for Kenyan SMEs — make every WhatsApp message ready to send. If a WhatsApp number is provided, weave a "chat with us on WhatsApp" line into CTAs naturally.
 
-Also produce: a YouTube Shorts / Reel script (separate from the main video script — punchier, vertical, 30–45s), a practical 7-day content calendar (one concrete post per day across the chosen platforms), and three lead follow-up messages for prospects who enquired but haven't bought (first nudge, value reminder, final friendly close).
+Also produce: a YouTube Shorts / Reel script (separate from the main video script — punchier, vertical, 30–45s), a practical 7-day content calendar (one concrete post per day across the chosen platforms), and three lead follow-up messages for prospects who enquired but haven't bought (first nudge, value reminder, final friendly close).${brandMemory}
 
 Generate copy that a Kenyan small business owner would be proud to publish. Be specific, be compelling, avoid generic filler.`
 

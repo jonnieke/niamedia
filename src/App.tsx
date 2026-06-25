@@ -8,6 +8,7 @@ import NewCampaign from './pages/NewCampaign'
 import CampaignResults from './pages/CampaignResults'
 import Campaigns from './pages/Campaigns'
 import IdeasBank from './pages/IdeasBank'
+import Leads from './pages/Leads'
 import Templates from './pages/Templates'
 import Pricing from './pages/Pricing'
 import PackageRequest from './pages/PackageRequest'
@@ -70,6 +71,7 @@ function AppRoutes() {
       <Route path="/campaign-results" element={<ProtectedRoute><CampaignResults /></ProtectedRoute>} />
       <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
       <Route path="/ideas" element={<ProtectedRoute><IdeasBank /></ProtectedRoute>} />
+      <Route path="/leads" element={<ProtectedRoute><Leads /></ProtectedRoute>} />
       <Route path="/campaigns/:id" element={<ProtectedRoute><CampaignResults /></ProtectedRoute>} />
       <Route path="/concept-studio" element={<ProtectedRoute><ConceptStudio /></ProtectedRoute>} />
       <Route path="/video-journey" element={<ProtectedRoute><VideoJourney /></ProtectedRoute>} />

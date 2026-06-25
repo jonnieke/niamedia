@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Plus, FolderOpen, Layers,
   Palette, Settings, ShieldCheck, LogOut, Zap,
-  Shield, Gift, X, Video, Film, Lightbulb,
+  Shield, Gift, X, Video, Film, Lightbulb, Users,
 } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
 import Logo from '../ui/Logo'
@@ -16,6 +16,7 @@ const navItems = [
   { to: '/new-campaign',    icon: Plus,            label: 'New Campaign', highlight: true },
   { to: '/ideas',           icon: Lightbulb,       label: 'Ideas Bank', badge: 'NEW' },
   { to: '/campaigns',       icon: FolderOpen,      label: 'Campaigns' },
+  { to: '/leads',           icon: Users,           label: 'Leads' },
   { to: '/brand-kit',       icon: Palette,         label: 'Brand Kit' },
   { to: '/request-video',   icon: Video,           label: 'Requests' },
   { to: '/my-requests',     icon: Film,            label: 'My Requests' },

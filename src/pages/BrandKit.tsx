@@ -34,6 +34,15 @@ interface Kit {
   preferred_tone: string
   target_customer: string
   business_description: string
+  location: string
+  common_offers: string
+  customer_objections: string
+  competitors: string
+  words_to_use: string
+  words_to_avoid: string
+  common_questions: string
+  selling_points: string
+  brand_memory: string
   logo_url?: string
 }
 
@@ -43,6 +52,9 @@ const EMPTY: Kit = {
   font: 'inter', phone: '', whatsapp: '', website: '',
   instagram: '', facebook: '', tiktok: '', youtube: '',
   preferred_tone: '', target_customer: '', business_description: '',
+  location: '', common_offers: '', customer_objections: '', competitors: '',
+  words_to_use: '', words_to_avoid: '', common_questions: '', selling_points: '',
+  brand_memory: '',
 }
 
 function BrandPreview({ kit, logo }: { kit: Kit; logo: string | null }) {
@@ -319,15 +331,61 @@ export default function BrandKit() {
                   ))}
                 </div>
               </div>
-              <div>
-                <label className="label">Target Customer</label>
-                <input className="input" placeholder="e.g. Young professionals aged 25–40 in Nairobi" value={kit.target_customer} onChange={set('target_customer')} />
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="label">Target Customer</label>
+                  <input className="input" placeholder="e.g. Young professionals aged 25–40 in Nairobi" value={kit.target_customer} onChange={set('target_customer')} />
+                </div>
+                <div>
+                  <label className="label">Location</label>
+                  <input className="input" placeholder="e.g. Nairobi, Westlands" value={kit.location} onChange={set('location')} />
+                </div>
               </div>
               <div>
                 <label className="label">Business Description</label>
                 <textarea className="input resize-none" rows={3}
                   placeholder="What does your business do, and what makes it different?"
                   value={kit.business_description} onChange={set('business_description')} />
+              </div>
+            </div>
+          </Card>
+
+          <Card title="Brand Memory — what Nia should always remember">
+            <div className="space-y-4">
+              <p className="text-xs text-gray-500 -mt-2">The AI uses everything here in every campaign it writes for you. The more you add, the more on-brand your output.</p>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="label">Common offers</label>
+                  <textarea className="input resize-none" rows={2} placeholder="e.g. Free delivery over KES 2,000; weekend specials" value={kit.common_offers} onChange={set('common_offers')} />
+                </div>
+                <div>
+                  <label className="label">Key selling points</label>
+                  <textarea className="input resize-none" rows={2} placeholder="What makes you the best choice?" value={kit.selling_points} onChange={set('selling_points')} />
+                </div>
+                <div>
+                  <label className="label">Customer objections</label>
+                  <textarea className="input resize-none" rows={2} placeholder="e.g. 'Too expensive', 'Is it legit?'" value={kit.customer_objections} onChange={set('customer_objections')} />
+                </div>
+                <div>
+                  <label className="label">Common customer questions</label>
+                  <textarea className="input resize-none" rows={2} placeholder="What do people always ask before buying?" value={kit.common_questions} onChange={set('common_questions')} />
+                </div>
+                <div>
+                  <label className="label">Words to use</label>
+                  <input className="input" placeholder="e.g. affordable, trusted, fast" value={kit.words_to_use} onChange={set('words_to_use')} />
+                </div>
+                <div>
+                  <label className="label">Words to avoid</label>
+                  <input className="input" placeholder="e.g. cheap, discount, basic" value={kit.words_to_avoid} onChange={set('words_to_avoid')} />
+                </div>
+              </div>
+              <div>
+                <label className="label">Competitors</label>
+                <input className="input" placeholder="Who else is competing for your customers?" value={kit.competitors} onChange={set('competitors')} />
+              </div>
+              <div>
+                <label className="label">Anything else Nia should always remember</label>
+                <textarea className="input resize-none" rows={2} placeholder="Brand do's and don'ts, voice notes, important context…" value={kit.brand_memory} onChange={set('brand_memory')} />
               </div>
             </div>
           </Card>
