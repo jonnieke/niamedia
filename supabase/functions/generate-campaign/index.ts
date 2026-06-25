@@ -83,7 +83,12 @@ Offer: ${form.offer}
 Tone: ${form.tone}
 Platforms: ${(form.platforms as string[]).join(", ")}
 Call to Action: ${form.cta}
+WhatsApp Number: ${form.whatsapp_number || "Not provided"}
 Additional Notes: ${form.notes || "None"}${languageInstruction}${form.industry === 'Faith & Community' ? '\n\nFAITH & COMMUNITY INSTRUCTION: Create respectful, welcoming, non-exploitative copy suitable for churches, mosques, ministries, community groups, outreach programs, and faith-based events. Avoid exaggerated spiritual claims, manipulative fundraising language, or insensitive wording. Keep tone warm, clear, and community-centered.' : ''}
+
+WhatsApp is the #1 sales channel for Kenyan SMEs — make every WhatsApp message ready to send. If a WhatsApp number is provided, weave a "chat with us on WhatsApp" line into CTAs naturally.
+
+Also produce: a YouTube Shorts / Reel script (separate from the main video script — punchier, vertical, 30–45s), a practical 7-day content calendar (one concrete post per day across the chosen platforms), and three lead follow-up messages for prospects who enquired but haven't bought (first nudge, value reminder, final friendly close).
 
 Generate copy that a Kenyan small business owner would be proud to publish. Be specific, be compelling, avoid generic filler.`
 
@@ -96,7 +101,7 @@ Generate copy that a Kenyan small business owner would be proud to publish. Be s
           description: "Generate complete marketing campaign content structured by channel",
           input_schema: {
             type: "object" as const,
-            required: ["strategy", "videoScript", "posterCopy", "captions", "whatsapp", "landingPage"],
+            required: ["strategy", "videoScript", "posterCopy", "captions", "whatsapp", "landingPage", "youtubeShorts", "contentCalendar", "followUps"],
             properties: {
               strategy: {
                 type: "object" as const,
@@ -171,6 +176,39 @@ Generate copy that a Kenyan small business owner would be proud to publish. Be s
                     },
                     description: "4 FAQs",
                   },
+                },
+              },
+              youtubeShorts: {
+                type: "object" as const,
+                required: ["hook", "script", "caption"],
+                properties: {
+                  hook: { type: "string" as const, description: "First 2 seconds — a scroll-stopping line for a vertical short" },
+                  script: { type: "string" as const, description: "Full 30-45s vertical short script with on-screen text and spoken lines, punchier than the main video" },
+                  caption: { type: "string" as const, description: "YouTube Shorts caption with relevant hashtags" },
+                },
+              },
+              contentCalendar: {
+                type: "array" as const,
+                description: "Exactly 7 entries, one per day (Day 1 to Day 7), each a concrete post for the chosen platforms",
+                items: {
+                  type: "object" as const,
+                  required: ["day", "platform", "format", "idea", "caption"],
+                  properties: {
+                    day: { type: "string" as const, description: "e.g. 'Day 1'" },
+                    platform: { type: "string" as const, description: "The platform for this post" },
+                    format: { type: "string" as const, description: "e.g. Reel, Status, Carousel, Photo, Broadcast" },
+                    idea: { type: "string" as const, description: "Short description of the post concept" },
+                    caption: { type: "string" as const, description: "Ready-to-post caption / message for that day" },
+                  },
+                },
+              },
+              followUps: {
+                type: "object" as const,
+                required: ["firstFollowUp", "secondFollowUp", "finalFollowUp"],
+                properties: {
+                  firstFollowUp: { type: "string" as const, description: "First gentle nudge to a lead who enquired but didn't buy (WhatsApp-ready)" },
+                  secondFollowUp: { type: "string" as const, description: "Value reminder / overcome objection follow-up" },
+                  finalFollowUp: { type: "string" as const, description: "Final friendly close with light urgency" },
                 },
               },
             },

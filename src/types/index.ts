@@ -70,6 +70,24 @@ export interface GeneratedContent {
     cta: string
     faqs: Array<{ question: string; answer: string }>
   }
+  // Added 2026-06-25 — optional for back-compat with campaigns saved before this.
+  youtubeShorts?: {
+    hook: string
+    script: string
+    caption: string
+  }
+  contentCalendar?: Array<{
+    day: string
+    platform: string
+    format: string
+    idea: string
+    caption: string
+  }>
+  followUps?: {
+    firstFollowUp: string
+    secondFollowUp: string
+    finalFollowUp: string
+  }
 }
 
 export interface PackageRequest {
@@ -122,4 +140,5 @@ export interface CampaignFormData {
   platforms: string[]
   cta: string
   notes: string
+  whatsapp_number?: string
 }

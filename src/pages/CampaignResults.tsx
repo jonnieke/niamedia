@@ -139,7 +139,7 @@ function Block({ label, content, blockKey, briefContext, showWhatsAppShare, onRe
   )
 }
 
-const tabs = ['Strategy', 'Video Script', 'Poster Copy', 'Captions', 'WhatsApp', 'Landing Page', '🎨 Poster']
+const tabs = ['Strategy', 'Video Script', 'Poster Copy', 'Captions', '7-Day Calendar', 'WhatsApp', 'Follow-Ups', 'Landing Page', '🎨 Poster']
 
 /* ─── Main page ──────────────────────────────────────────────── */
 export default function CampaignResults() {
@@ -232,6 +232,20 @@ export default function CampaignResults() {
         painPoint: refinements['strategy.painPoint'] ?? content.strategy.painPoint,
         cta: refinements['strategy.cta'] ?? content.strategy.cta,
       },
+      ...(content.youtubeShorts && {
+        youtubeShorts: {
+          hook: refinements['youtubeShorts.hook'] ?? content.youtubeShorts.hook,
+          script: refinements['youtubeShorts.script'] ?? content.youtubeShorts.script,
+          caption: refinements['youtubeShorts.caption'] ?? content.youtubeShorts.caption,
+        },
+      }),
+      ...(content.followUps && {
+        followUps: {
+          firstFollowUp: refinements['followUps.firstFollowUp'] ?? content.followUps.firstFollowUp,
+          secondFollowUp: refinements['followUps.secondFollowUp'] ?? content.followUps.secondFollowUp,
+          finalFollowUp: refinements['followUps.finalFollowUp'] ?? content.followUps.finalFollowUp,
+        },
+      }),
     }
   }
 
@@ -304,6 +318,22 @@ export default function CampaignResults() {
       `Status: ${merged.whatsapp.status}`,
       `Broadcast:\n${merged.whatsapp.broadcast}`,
       `Reply:\n${merged.whatsapp.reply}`,
+      ...(merged.youtubeShorts ? [
+        '', '--- YOUTUBE SHORTS ---',
+        `Hook: ${merged.youtubeShorts.hook}`,
+        `Script:\n${merged.youtubeShorts.script}`,
+        `Caption: ${merged.youtubeShorts.caption}`,
+      ] : []),
+      ...(merged.contentCalendar?.length ? [
+        '', '--- 7-DAY CONTENT CALENDAR ---',
+        ...merged.contentCalendar.map(d => `${d.day} (${d.platform} · ${d.format}): ${d.idea}\n${d.caption}`),
+      ] : []),
+      ...(merged.followUps ? [
+        '', '--- LEAD FOLLOW-UPS ---',
+        `1st: ${merged.followUps.firstFollowUp}`,
+        `2nd: ${merged.followUps.secondFollowUp}`,
+        `Final: ${merged.followUps.finalFollowUp}`,
+      ] : []),
       '', '--- LANDING PAGE ---',
       `Headline: ${merged.landingPage.headline}`,
       `Subheadline: ${merged.landingPage.subheadline}`,
@@ -360,6 +390,9 @@ export default function CampaignResults() {
   ${section('Poster Copy', [['Headline', merged.posterCopy.headline], ['Subheadline', merged.posterCopy.subheadline], ['Offer', merged.posterCopy.offerText], ['CTA', merged.posterCopy.cta]])}
   ${section('Captions', [['Facebook', merged.captions.facebook], ['Instagram', merged.captions.instagram], ['TikTok', merged.captions.tiktok], ['LinkedIn', merged.captions.linkedin]])}
   ${section('WhatsApp', [['Status', merged.whatsapp.status], ['Broadcast', merged.whatsapp.broadcast], ['Reply', merged.whatsapp.reply]])}
+  ${merged.youtubeShorts ? section('YouTube Shorts', [['Hook', merged.youtubeShorts.hook], ['Script', merged.youtubeShorts.script], ['Caption', merged.youtubeShorts.caption]]) : ''}
+  ${merged.followUps ? section('Lead Follow-Ups', [['1st Follow-up', merged.followUps.firstFollowUp], ['2nd Follow-up', merged.followUps.secondFollowUp], ['Final Follow-up', merged.followUps.finalFollowUp]]) : ''}
+  ${merged.contentCalendar?.length ? section('7-Day Content Calendar', merged.contentCalendar.map(d => [`${d.day} · ${d.platform} · ${d.format}`, `${d.idea}\n${d.caption}`] as [string, string])) : ''}
   <h2>Landing Page</h2>
   <div class="row"><span class="k">Headline</span><p>${esc(merged.landingPage.headline)}</p></div>
   <div class="row"><span class="k">Subheadline</span><p>${esc(merged.landingPage.subheadline)}</p></div>
@@ -448,6 +481,17 @@ export default function CampaignResults() {
       <Block label="Scene 3" {...blockProps('videoScript.scene3', content.videoScript.scene3)} />
       <Block label="Call to Action" {...blockProps('videoScript.callToAction', content.videoScript.callToAction)} />
       <Block label="Visual Direction" {...blockProps('videoScript.visualDirection', content.videoScript.visualDirection)} />
+      {content.youtubeShorts && (
+        <>
+          <div className="pt-2 flex items-center gap-2">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">YouTube Shorts / Reel</span>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
+          <Block label="Shorts Hook" {...blockProps('youtubeShorts.hook', content.youtubeShorts.hook)} />
+          <Block label="Shorts Script" {...blockProps('youtubeShorts.script', content.youtubeShorts.script)} />
+          <Block label="Shorts Caption" {...blockProps('youtubeShorts.caption', content.youtubeShorts.caption)} />
+        </>
+      )}
     </div>,
 
     /* Poster */
@@ -467,15 +511,89 @@ export default function CampaignResults() {
       <Block label="LinkedIn" {...blockProps('captions.linkedin', content.captions.linkedin)} />
     </div>,
 
+    /* 7-Day Content Calendar */
+    <div key="cal" className="space-y-3">
+      {content.contentCalendar && content.contentCalendar.length > 0 ? (
+        <>
+          <div className="p-4 rounded-xl border border-purple-100 bg-purple-50 text-xs text-gray-600 flex items-center gap-2">
+            <Zap size={13} className="text-purple-600 shrink-0" />
+            A ready-to-run week of posts. Copy each day's caption straight to the platform.
+          </div>
+          {content.contentCalendar.map((d, i) => (
+            <div key={i} className="rounded-xl border border-gray-200 overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-200" style={{ background: '#f9fafb' }}>
+                <span className="text-xs font-bold text-purple-700">{d.day}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-600 font-semibold">{d.platform}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 font-semibold">{d.format}</span>
+                <div className="ml-auto"><CopyButton text={d.caption} /></div>
+              </div>
+              <div className="p-4">
+                <p className="text-xs text-gray-500 mb-1.5 font-medium">{d.idea}</p>
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{d.caption}</p>
+              </div>
+            </div>
+          ))}
+        </>
+      ) : (
+        <div className="text-center py-12 text-sm text-gray-500">
+          <p className="mb-3">No 7-day calendar on this campaign yet.</p>
+          <button onClick={handleRegenerate} disabled={regenerating} className="btn-secondary text-xs gap-1.5">
+            {regenerating ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />} Regenerate to add it
+          </button>
+        </div>
+      )}
+    </div>,
+
     /* WhatsApp — with direct share */
     <div key="w" className="space-y-4">
       <div className="p-4 rounded-xl border border-green-200 bg-green-50 text-xs text-gray-600 flex items-center gap-2">
         <MessageSquare size={13} className="text-green-600 shrink-0" />
         Each message has an <span className="text-green-700 font-semibold">Open in WhatsApp</span> button — tap it to send directly from your phone.
       </div>
+      {form.whatsapp_number && (() => {
+        const digits = form.whatsapp_number.replace(/\D/g, '').replace(/^0/, '254')
+        const link = `https://wa.me/${digits}`
+        return (
+          <div className="flex items-center justify-between gap-3 p-4 rounded-xl border border-gray-200">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Your click-to-chat link</p>
+              <p className="text-sm text-gray-700 truncate">{link}</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <CopyButton text={link} />
+              <a href={link} target="_blank" rel="noopener noreferrer"
+                className="btn-ghost text-xs px-2.5 py-1.5 gap-1.5 text-green-600 hover:text-green-700">
+                <MessageSquare size={12} /> Open
+              </a>
+            </div>
+          </div>
+        )
+      })()}
       <Block label="WhatsApp Status" {...blockProps('whatsapp.status', content.whatsapp.status, { showWhatsAppShare: true })} />
       <Block label="Broadcast Message" {...blockProps('whatsapp.broadcast', content.whatsapp.broadcast, { showWhatsAppShare: true })} />
       <Block label="Reply / Follow-up" {...blockProps('whatsapp.reply', content.whatsapp.reply, { showWhatsAppShare: true })} />
+    </div>,
+
+    /* Lead Follow-Ups */
+    <div key="fu" className="space-y-4">
+      {content.followUps ? (
+        <>
+          <div className="p-4 rounded-xl border border-green-200 bg-green-50 text-xs text-gray-600 flex items-center gap-2">
+            <MessageSquare size={13} className="text-green-600 shrink-0" />
+            Send these to leads who enquired but haven't bought. Tap <span className="text-green-700 font-semibold">Open in WhatsApp</span> to send.
+          </div>
+          <Block label="1st Follow-up (gentle nudge)" {...blockProps('followUps.firstFollowUp', content.followUps.firstFollowUp, { showWhatsAppShare: true })} />
+          <Block label="2nd Follow-up (value reminder)" {...blockProps('followUps.secondFollowUp', content.followUps.secondFollowUp, { showWhatsAppShare: true })} />
+          <Block label="Final Follow-up (friendly close)" {...blockProps('followUps.finalFollowUp', content.followUps.finalFollowUp, { showWhatsAppShare: true })} />
+        </>
+      ) : (
+        <div className="text-center py-12 text-sm text-gray-500">
+          <p className="mb-3">No lead follow-up messages on this campaign yet.</p>
+          <button onClick={handleRegenerate} disabled={regenerating} className="btn-secondary text-xs gap-1.5">
+            {regenerating ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />} Regenerate to add them
+          </button>
+        </div>
+      )}
     </div>,
 
     /* Landing Page */

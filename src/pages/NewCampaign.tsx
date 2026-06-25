@@ -17,6 +17,7 @@ const ctaOptions = ['Call now', 'WhatsApp us', 'Book now', 'Apply today', 'Visit
 const empty: CampaignFormData = {
   business_name: '', industry: '', product_name: '', objective: '',
   target_audience: '', location: '', offer: '', tone: '', platforms: [], cta: '', notes: '',
+  whatsapp_number: '',
 }
 
 const GENERATING_STEPS = [
@@ -241,6 +242,11 @@ export default function NewCampaign() {
                     <button key={c} type="button" onClick={() => setForm(prev => ({ ...prev, cta: c }))} className={chipClass(form.cta === c)}>{c}</button>
                   ))}
                 </div>
+              </div>
+              <div>
+                <label className="label">WhatsApp number <span className="text-gray-600 normal-case font-normal">(optional)</span></label>
+                <input className="input" placeholder="e.g. 0712 345 678" value={form.whatsapp_number ?? ''} onChange={set('whatsapp_number')} />
+                <p className="text-[11px] text-gray-500 mt-1.5">We'll weave a click-to-chat line into your WhatsApp copy and CTAs.</p>
               </div>
               <div>
                 <label className="label">Extra notes <span className="text-gray-600 normal-case font-normal">(optional)</span></label>
