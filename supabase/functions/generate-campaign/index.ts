@@ -90,8 +90,14 @@ Deno.serve(async (req) => {
 
     const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") })
 
-    const languageInstruction = form.language === "sw"
-      ? "\n\nLANGUAGE: Generate ALL copy in Kiswahili. Use natural, conversational Swahili that feels authentic to Kenyan business communication — not a translation, but copy that a native Swahili speaker would write. Where English brand names or terms are standard, keep them."
+    const LANG_INSTRUCTIONS: Record<string, string> = {
+      sw: "LANGUAGE: Generate ALL copy in Kiswahili. Use natural, conversational Swahili that feels authentic to Kenyan business communication — not a translation, but copy that a native Swahili speaker would write. Where English brand names or terms are standard, keep them.",
+      sheng: "LANGUAGE: Generate copy in light Sheng — the urban Kenyan mix of Swahili and English — but keep it professional and widely understood, not heavy slang. It should feel young, current, and street-smart while staying clear to any Nairobi customer. Avoid words that exclude older or upcountry audiences.",
+      mixed: "LANGUAGE: Generate copy in a natural mix of English and Kiswahili (code-switching), the way many Kenyan businesses actually speak to customers on WhatsApp and social media. Blend the two fluidly within sentences where it feels authentic.",
+      conversational: "LANGUAGE: Generate copy in Kenyan conversational English — warm, direct, everyday spoken English as used in Nairobi business, not formal or corporate. Light local flavour is welcome; keep it clear and relatable.",
+    }
+    const languageInstruction = LANG_INSTRUCTIONS[form.language as string]
+      ? `\n\n${LANG_INSTRUCTIONS[form.language as string]}`
       : ""
 
     const prompt = `You are an expert marketing copywriter specialising in Kenyan small businesses. Generate a complete campaign for the following brief. Write in a voice that feels genuine and locally resonant — use the tone specified, avoid corporate jargon, and make each platform's copy feel native to that platform.

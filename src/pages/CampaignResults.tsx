@@ -27,6 +27,8 @@ function CopyButton({ text }: { text: string }) {
 }
 
 /* ─── Block — with per-section tweak + optional WhatsApp share ─ */
+interface QuickAction { id: string; label: string; fb: string }
+
 interface BlockProps {
   label: string
   content: string
@@ -34,29 +36,43 @@ interface BlockProps {
   briefContext: string
   showWhatsAppShare?: boolean
   onRefine: (key: string, newContent: string) => void
+  extraActions?: QuickAction[]
 }
 
-function Block({ label, content, blockKey, briefContext, showWhatsAppShare, onRefine }: BlockProps) {
+// One-click refine actions available on every section.
+const STANDARD_ACTIONS: QuickAction[] = [
+  { id: 'short', label: 'Shorter', fb: 'Make this noticeably shorter and punchier without losing the key point.' },
+  { id: 'emotional', label: 'More emotional', fb: 'Make this more emotional and story-driven so it connects on a human level.' },
+  { id: 'direct', label: 'More direct', fb: 'Make this more direct and sales-focused with a clear, confident call to action.' },
+  { id: 'sw', label: 'Kiswahili', fb: 'Translate this into natural, conversational Kenyan Kiswahili — not a literal translation.' },
+  { id: 'sheng', label: 'Sheng-light', fb: 'Rewrite this in light, professional Sheng that feels current but stays clear to any Kenyan customer.' },
+]
+
+function Block({ label, content, blockKey, briefContext, showWhatsAppShare, onRefine, extraActions }: BlockProps) {
   const [tweaking, setTweaking] = useState(false)
   const [feedback, setFeedback] = useState('')
   const [loading, setLoading] = useState(false)
+  const [actionBusy, setActionBusy] = useState<string | null>(null)
   const [waCopied, setWaCopied] = useState(false)
 
-  const handleTweak = async () => {
-    if (!feedback.trim() || loading) return
-    setLoading(true)
+  const runRefine = async (instruction: string, quickId?: string) => {
+    if (!instruction.trim() || loading || actionBusy) return
+    if (quickId) setActionBusy(quickId); else setLoading(true)
     try {
       const { data, error } = await supabase.functions.invoke('refine-section', {
-        body: { label, currentContent: content, feedback, briefContext },
+        body: { label, currentContent: content, feedback: instruction, briefContext },
       })
       if (!error && data?.refined) {
         onRefine(blockKey, data.refined)
-        setFeedback('')
-        setTweaking(false)
+        if (!quickId) { setFeedback(''); setTweaking(false) }
       }
     } catch { /* silent */ }
+    setActionBusy(null)
     setLoading(false)
   }
+
+  const handleTweak = () => runRefine(feedback)
+  const actions = [...STANDARD_ACTIONS, ...(extraActions ?? [])]
 
   const shareWhatsApp = () => {
     const url = `https://wa.me/?text=${encodeURIComponent(content)}`
@@ -104,14 +120,25 @@ function Block({ label, content, blockKey, briefContext, showWhatsAppShare, onRe
         <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{content}</p>
       </div>
 
+      {/* One-click refine actions */}
+      <div className="px-4 pb-3 -mt-1 flex flex-wrap gap-1.5 items-center">
+        {actions.map(a => (
+          <button key={a.id} onClick={() => runRefine(a.fb, a.id)} disabled={loading || !!actionBusy}
+            className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-gray-200 text-gray-500 hover:text-purple-700 hover:border-purple-300 disabled:opacity-50 transition-all">
+            {actionBusy === a.id && <Loader2 size={9} className="animate-spin" />}
+            {a.label}
+          </button>
+        ))}
+      </div>
+
       {/* Tweak panel */}
       {tweaking && (
         <div className="px-4 pb-4 pt-3 border-t border-gray-200" style={{ background: '#f5f3ff' }}>
-          <p className="text-[10px] text-gray-500 mb-2 font-semibold uppercase tracking-widest">How should it change?</p>
+          <p className="text-[10px] text-gray-500 mb-2 font-semibold uppercase tracking-widest">Custom tweak — describe the change</p>
           <div className="flex gap-2">
             <input
               className="input flex-1 text-sm"
-              placeholder="e.g. make it shorter, add urgency, in Kiswahili, more direct…"
+              placeholder="e.g. add urgency, mention free delivery, ask a question…"
               value={feedback}
               onChange={e => setFeedback(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleTweak()}
@@ -124,14 +151,6 @@ function Block({ label, content, blockKey, briefContext, showWhatsAppShare, onRe
                 : <Sparkles size={12} />}
               {loading ? '' : 'Refine'}
             </button>
-          </div>
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {['Shorter', 'More urgent', 'In Kiswahili', 'More conversational', 'Add a question'].map(s => (
-              <button key={s} onClick={() => setFeedback(s)}
-                className="text-[10px] px-2 py-1 rounded-lg border border-gray-200 text-gray-500 hover:text-gray-600 hover:border-purple-500/30 transition-all">
-                {s}
-              </button>
-            ))}
           </div>
         </div>
       )}
@@ -480,7 +499,12 @@ export default function CampaignResults() {
       <Block label="Scene 2" {...blockProps('videoScript.scene2', content.videoScript.scene2)} />
       <Block label="Scene 3" {...blockProps('videoScript.scene3', content.videoScript.scene3)} />
       <Block label="Call to Action" {...blockProps('videoScript.callToAction', content.videoScript.callToAction)} />
-      <Block label="Visual Direction" {...blockProps('videoScript.visualDirection', content.videoScript.visualDirection)} />
+      <Block label="Visual Direction" {...blockProps('videoScript.visualDirection', content.videoScript.visualDirection, {
+        extraActions: [
+          { id: 'shotlist', label: 'Add shot list', fb: 'Rewrite this as a numbered shot list — for each shot give framing, action, and approximate duration so a videographer can follow it.' },
+          { id: 'vo', label: 'Add VO direction', fb: 'Add voiceover direction: describe the narrator tone, pace, and which words to emphasise.' },
+        ],
+      })} />
       {content.youtubeShorts && (
         <>
           <div className="pt-2 flex items-center gap-2">

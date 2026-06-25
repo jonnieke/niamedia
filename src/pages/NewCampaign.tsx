@@ -42,7 +42,7 @@ export default function NewCampaign() {
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
   const [form, setForm] = useState<CampaignFormData>(empty)
-  const [language, setLanguage] = useState<'en' | 'sw'>('en')
+  const [language, setLanguage] = useState<'en' | 'sw' | 'sheng' | 'mixed' | 'conversational'>('en')
   const [showNia, setShowNia] = useState(false)
   const [showBuyCredits, setShowBuyCredits] = useState(false)
   const [credits, setCredits] = useState<number | null>(null)
@@ -258,20 +258,31 @@ export default function NewCampaign() {
           {/* Language toggle */}
           <div className="card-glow p-5">
             <label className="label mb-3 flex items-center gap-1.5"><Languages size={13} /> Output language</label>
-            <div className="flex gap-2">
-              {(['en', 'sw'] as const).map(lang => (
-                <button key={lang} type="button" onClick={() => setLanguage(lang)}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-all ${
-                    language === lang
-                      ? 'border-purple-500/60 bg-purple-500/15 text-white'
+            <div className="flex flex-wrap gap-2">
+              {([
+                { id: 'en', label: 'English' },
+                { id: 'sw', label: 'Kiswahili' },
+                { id: 'conversational', label: 'Kenyan English' },
+                { id: 'sheng', label: 'Sheng-light' },
+                { id: 'mixed', label: 'Mixed EN/SW' },
+              ] as const).map(({ id, label }) => (
+                <button key={id} type="button" onClick={() => setLanguage(id)}
+                  className={`px-3.5 py-2 rounded-xl text-sm font-semibold border transition-all ${
+                    language === id
+                      ? 'border-purple-500/60 bg-purple-500/15 text-purple-700'
                       : 'border-gray-200 text-gray-500 hover:border-white/20 hover:text-gray-600'
                   }`}>
-                  {lang === 'en' ? 'English' : 'Kiswahili'}
+                  {label}
                 </button>
               ))}
             </div>
-            {language === 'sw' && (
-              <p className="text-xs text-gray-500 mt-2">All campaign copy will be generated in Kiswahili — captions, WhatsApp messages, scripts, and poster copy.</p>
+            {language !== 'en' && (
+              <p className="text-xs text-gray-500 mt-2">
+                {language === 'sw' && 'All copy in natural Kiswahili.'}
+                {language === 'conversational' && 'Warm, everyday Kenyan English — not corporate.'}
+                {language === 'sheng' && 'Light, professional Sheng — current but clear to everyone.'}
+                {language === 'mixed' && 'Natural English/Kiswahili code-switching, the way Kenyans actually chat.'}
+              </p>
             )}
           </div>
 
