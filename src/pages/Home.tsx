@@ -399,19 +399,19 @@ export default function Home() {
             <div className="relative z-10">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-7"
                 style={{ background: 'rgba(124,58,237,0.18)', border: '1px solid rgba(167,139,250,0.35)' }}>
-                <Sparkles size={13} style={{ color: '#a78bfa' }} />
-                <span className="text-xs font-bold tracking-widest" style={{ color: '#c4b5fd' }}>AI-POWERED · BUILT FOR KENYA</span>
+                <MessageSquare size={13} style={{ color: '#a78bfa' }} />
+                <span className="text-xs font-bold tracking-widest" style={{ color: '#c4b5fd' }}>WHATSAPP-FIRST · BUILT FOR KENYA</span>
               </div>
 
               <h1 className="font-extrabold leading-[1.05] tracking-tight mb-6" style={{ fontSize: 'clamp(40px, 6vw, 64px)', color: '#ffffff' }}>
-                Create campaign-ready ads<br />
+                Ready-to-post ads for your business,<br />
                 <span style={{ background: 'linear-gradient(90deg, #c4b5fd 0%, #7dd3fc 50%, #6ee7b7 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                  without writing prompts.
+                  in minutes.
                 </span>
               </h1>
 
               <p className="text-lg leading-relaxed mb-8 max-w-lg" style={{ color: 'rgba(255,255,255,0.62)' }}>
-                Nia Media turns your product, service, event, or offer into social media captions, WhatsApp copy, poster copy, video scripts, and downloadable posters — built for growing African businesses.
+                Nia Media helps African SMEs generate WhatsApp messages, social captions, poster copy, video scripts, and sales follow-ups — with optional human creative production when you need polished assets.
               </p>
 
               <div className="flex flex-wrap gap-3 mb-10">
@@ -420,12 +420,12 @@ export default function Home() {
                   style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 4px 24px rgba(124,58,237,0.45)' }}
                   onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 8px 32px rgba(124,58,237,0.6)')}
                   onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 4px 24px rgba(124,58,237,0.45)')}>
-                  <Zap size={15} /> Generate Free Preview
+                  <Zap size={15} /> Generate Free Campaign
                 </button>
                 <Link to="/register"
                   className="flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold transition-all"
                   style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.88)' }}>
-                  Create Account <ArrowRight size={15} />
+                  <Sparkles size={15} /> Talk to Nia Creative
                 </Link>
               </div>
 
@@ -733,8 +733,29 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── BUILT BY CREATIVES ───────────────────────────────── */}
+      <section className="py-16 px-6" style={{ background: '#ffffff' }}>
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-5"
+            style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #c4b5fd' }}>
+            Creative authority
+          </div>
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Not a generic AI wrapper.</h2>
+          <p className="text-gray-500 leading-relaxed max-w-2xl mx-auto mb-8">
+            Nia Media is built by creative professionals with real experience in storytelling, film & TV, sound, editing, creative direction, and campaign production. The AI does the speed — our craft shapes what good looks like.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+            {['Storytelling', 'Film & TV', 'Sound & Audio', 'Creative Direction', 'Campaign Production'].map(d => (
+              <div key={d} className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <CheckCircle2 size={14} className="text-purple-500" /> {d}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── VIDEO UPSELL ─────────────────────────────────────── */}
-      <section className="py-12 px-6" style={{ background: '#ffffff' }}>
+      <section className="py-12 px-6" style={{ background: '#f1f5f9' }}>
         <div className="mt-0 max-w-2xl mx-auto text-center bg-white rounded-2xl border border-gray-200 p-8">
           <Film size={24} className="text-purple-600 mx-auto mb-3" />
           <h3 className="text-lg font-bold text-gray-900 mb-2">Need the final video too?</h3>
@@ -780,24 +801,24 @@ export default function Home() {
               style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #c4b5fd' }}>
               Pricing
             </div>
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-3">Flexible packages for every stage.</h2>
-            <p className="text-gray-500">Pay per project or monthly. No lock-in. Cancel whenever you need.</p>
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-3">Start free. Pay as you grow.</h2>
+            <p className="text-gray-500">Buy a single campaign, subscribe monthly, or let our team run it for you.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            {/* Starter */}
+            {/* Pay as you go */}
             <div className="bg-white rounded-2xl border border-gray-200 p-7">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Starter Pack</p>
-              <p className="font-extrabold text-gray-900 mb-0.5" style={{ fontSize: 32 }}>KES 5,000</p>
-              <p className="text-xs text-gray-400 mb-6">One-time project</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Pay As You Go</p>
+              <p className="font-extrabold text-gray-900 mb-0.5" style={{ fontSize: 32 }}>KES 500</p>
+              <p className="text-xs text-gray-400 mb-6">Per campaign credit · 5 for 2,000</p>
               <div className="space-y-2.5 mb-8">
-                {['1 video ad script', '2 poster copy concepts', '3 captions', '1 WhatsApp sales message', 'Campaign direction'].map(f => (
+                {['WhatsApp broadcast + status', 'Social captions (all platforms)', 'Poster copy + video script', '7-day content calendar', 'Lead follow-up messages'].map(f => (
                   <div key={f} className="flex items-center gap-2.5">
                     <CheckCircle2 size={13} className="text-gray-400 shrink-0" />
                     <span className="text-sm text-gray-600">{f}</span>
                   </div>
                 ))}
               </div>
-              <Link to="/register" className="btn-secondary w-full text-center text-sm py-3">Get Started Free</Link>
+              <button onClick={() => scrollTo('demo')} className="btn-secondary w-full text-center text-sm py-3">Generate Free Campaign</button>
             </div>
 
             {/* Growth — highlighted */}
@@ -808,27 +829,27 @@ export default function Home() {
                 <span className="px-3 py-1 rounded-full text-xs font-bold text-white"
                   style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>Most Popular</span>
               </div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-4 mt-2" style={{ color: '#a78bfa' }}>Growth Pack</p>
-              <p className="font-extrabold text-white mb-0.5" style={{ fontSize: 32 }}>KES 30,000</p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-4 mt-2" style={{ color: '#a78bfa' }}>Growth Monthly</p>
+              <p className="font-extrabold text-white mb-0.5" style={{ fontSize: 32 }}>KES 2,500</p>
               <p className="text-xs mb-6" style={{ color: 'rgba(255,255,255,0.4)' }}>Per month · cancel anytime</p>
               <div className="space-y-2.5 mb-8">
-                {['8 social media post ideas', '4 video ad scripts', 'Captions for all platforms', 'WhatsApp campaign copy', 'Monthly content direction'].map(f => (
+                {['15 campaigns / month', '3 brand kits', 'Ideas Bank + Nia Assistant', '7-day calendars + follow-ups', 'Priority generation'].map(f => (
                   <div key={f} className="flex items-center gap-2.5">
                     <CheckCircle2 size={13} style={{ color: '#a78bfa' }} className="shrink-0" />
                     <span className="text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>{f}</span>
                   </div>
                 ))}
               </div>
-              <Link to="/package-request" className="btn-primary w-full text-center text-sm py-3">Choose Growth Pack</Link>
+              <Link to="/register" className="btn-primary w-full text-center text-sm py-3">Start Growth</Link>
             </div>
 
-            {/* Business */}
+            {/* Done-for-you */}
             <div className="bg-white rounded-2xl border border-gray-200 p-7">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Business Pack</p>
-              <p className="font-extrabold text-gray-900 mb-0.5" style={{ fontSize: 32 }}>KES 60,000</p>
-              <p className="text-xs text-gray-400 mb-6">Per month · cancel anytime</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Done-For-You</p>
+              <p className="font-extrabold text-gray-900 mb-0.5" style={{ fontSize: 32 }}>From KES 5,000</p>
+              <p className="text-xs text-gray-400 mb-6">One-off or monthly managed</p>
               <div className="space-y-2.5 mb-8">
-                {['12 video ad concepts', '20 social media content ideas', 'Full campaign strategy', 'Landing page copy', 'Monthly creative review'].map(f => (
+                {['Human-reviewed campaign kit', 'Poster + short-video production', 'Monthly managed packages', 'Competitor tracking & reports', 'Creative direction by our team'].map(f => (
                   <div key={f} className="flex items-center gap-2.5">
                     <CheckCircle2 size={13} className="text-gray-400 shrink-0" />
                     <span className="text-sm text-gray-600">{f}</span>
@@ -837,6 +858,11 @@ export default function Home() {
               </div>
               <Link to="/package-request" className="btn-secondary w-full text-center text-sm py-3">Talk to Us</Link>
             </div>
+          </div>
+          <div className="text-center mt-6">
+            <Link to="/pricing" className="text-sm font-semibold text-purple-700 hover:underline inline-flex items-center gap-1">
+              See full pricing — credits, monthly & managed <ArrowRight size={13} />
+            </Link>
           </div>
           <div className="mt-6 flex items-center justify-center gap-5 text-xs text-gray-400 flex-wrap">
             <span className="flex items-center gap-1.5"><Shield size={11} className="text-emerald-500" /> Secure checkout</span>

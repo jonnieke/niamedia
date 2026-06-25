@@ -73,8 +73,8 @@ export default function Pricing() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
             { label: 'Free Preview', price: 'KES 0', period: '', features: ['1 demo campaign (homepage)', 'See AI output before signing up', 'No credit card required'], cta: 'Try Free Demo', href: '/#demo', highlight: false },
-            { label: '1 Campaign + Poster', price: 'KES 500', period: 'one-time', features: ['1 full campaign generation', 'Captions, script, WhatsApp copy', 'Poster copy + design direction', 'Download all assets'], cta: 'Buy 1 Credit', href: '/register', highlight: false },
-            { label: 'Starter Monthly', price: 'KES 999', period: '/month', features: ['5 campaign generations/month', 'All platforms included', 'Brand Kit storage', 'Email support'], cta: 'Start Starter', href: '/register', highlight: false },
+            { label: 'Campaign Credits', price: 'KES 500', period: '/ credit', features: ['Full campaign kit per credit', 'WhatsApp broadcast + status', '7-day calendar + follow-ups', '5 credits KES 2,000 · 12 for 4,000'], cta: 'Buy Credits', href: '/register', highlight: false },
+            { label: 'Starter Monthly', price: 'KES 999', period: '/month', features: ['5 campaigns/month', '1 brand kit', 'WhatsApp + social content', 'Basic exports'], cta: 'Start Starter', href: '/register', highlight: false },
           ].map(p => (
             <div key={p.label} className="bg-white rounded-2xl border border-gray-200 p-6 flex flex-col">
               <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">{p.label}</p>
@@ -91,8 +91,8 @@ export default function Pricing() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           {[
-            { label: 'Growth Monthly', price: 'KES 2,500', period: '/month', features: ['15 campaigns/month', 'Priority generation queue', 'Analytics dashboard', 'Brand Kit (3 brands)', 'Chat support'], popular: true },
-            { label: 'Business Monthly', price: 'KES 5,000', period: '/month', features: ['Unlimited campaigns', 'Multi-user access (up to 3)', 'White-label poster export', 'Dedicated account manager', 'API access'], popular: false },
+            { label: 'Growth Monthly', price: 'KES 2,500', period: '/month', features: ['15 campaigns/month', 'Ideas Bank + Nia Assistant', '7-day calendars + follow-ups', 'Brand Kit (3 brands)', 'Priority generation'], popular: true },
+            { label: 'Business Monthly', price: 'KES 5,000', period: '/month', features: ['40 campaigns/month', '5 brand kits', 'Team access (up to 3 users)', 'Poster export + priority support', 'Extra campaigns KES 150 each'], popular: false },
           ].map(p => (
             <div key={p.label} className={`bg-white rounded-2xl border p-6 flex flex-col ${p.popular ? 'border-purple-300 ring-1 ring-purple-200' : 'border-gray-200'}`}>
               {p.popular && <span className="inline-flex self-start px-2.5 py-1 rounded-full text-[10px] font-bold tracking-widest mb-3" style={{ background: 'rgba(124,58,237,0.08)', color: '#7c3aed' }}>MOST POPULAR</span>}
@@ -123,10 +123,10 @@ export default function Pricing() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Done-for-You Starter', price: 'KES 5,000', period: 'one-time', features: ['1 full campaign kit', 'Human-reviewed copy', '2 poster concepts', 'WhatsApp message pack'] },
-            { label: 'Managed Growth', price: 'KES 15,000', period: '/month', features: ['4 campaigns/month', 'Creative direction', 'Platform scheduling advice', 'Monthly review call'] },
-            { label: 'Managed Business', price: 'KES 30,000', period: '/month', features: ['8 campaigns/month', 'Dedicated campaign manager', 'Competitor tracking', 'Monthly strategy report'] },
-            { label: 'Premium Managed', price: 'KES 60,000', period: '/month', features: ['Unlimited campaigns', 'Full creative team access', 'Video script production', 'Priority turnaround'] },
+            { label: 'Done-for-You Starter', price: 'KES 5,000', period: 'one-time', features: ['1 full campaign kit', '2 poster concepts', 'WhatsApp message pack', 'Human review'] },
+            { label: 'Managed Growth', price: 'KES 15,000', period: '/month', features: ['4 campaigns/month', '4 posters', '4 short video scripts', 'Monthly planning call'] },
+            { label: 'Managed Business', price: 'KES 30,000', period: '/month', features: ['8 campaigns/month', '8 posters', '2 short videos or reels', 'Competitor tracking + monthly report'] },
+            { label: 'Premium Managed', price: 'KES 60,000', period: '/month', features: ['Full campaign support', 'Video/audio creative direction', 'Priority production', 'Monthly strategy report'] },
           ].map(p => (
             <div key={p.label} className="bg-white rounded-2xl border border-gray-200 p-5 flex flex-col">
               <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1">{p.label}</p>
@@ -176,6 +176,32 @@ export default function Pricing() {
           <span><strong className="text-gray-700">Standard delivery</strong> — 3 to 5 business days, included</span>
           <span><strong className="text-orange-600">48-hour rush</strong> — +25% on video price</span>
           <span><strong className="text-red-600">24-hour rush</strong> — +50% on video price</span>
+        </div>
+      </section>
+
+      {/* Production add-ons */}
+      <section className="max-w-5xl mx-auto px-4 mb-16">
+        <div className="flex items-center gap-2 mb-6">
+          <div className="p-2 rounded-xl" style={{ background: 'rgba(217,119,6,0.08)' }}>
+            <Zap size={16} className="text-amber-600" />
+          </div>
+          <div>
+            <h2 className="text-lg font-extrabold text-gray-900">Add-ons after you generate</h2>
+            <p className="text-xs text-gray-500">Turn any campaign into finished assets — add these on demand.</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: 'Turn into a poster', price: 'from KES 300' },
+            { label: 'Human polish / rewrite', price: 'KES 500' },
+            { label: 'Campaign setup support', price: 'from KES 2,000' },
+            { label: 'Turn into a short video', price: 'from KES 3,500' },
+          ].map(a => (
+            <div key={a.label} className="bg-white rounded-xl border border-gray-200 p-4">
+              <p className="text-sm font-semibold text-gray-900 leading-tight mb-1">{a.label}</p>
+              <p className="text-xs font-bold text-amber-600">{a.price}</p>
+            </div>
+          ))}
         </div>
       </section>
 
