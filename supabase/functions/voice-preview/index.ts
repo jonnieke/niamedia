@@ -1,8 +1,4 @@
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://niamedia.co.ke",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-}
-
+import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
 // Map Nia Media voice IDs → ElevenLabs voice IDs
 // Override any by setting ELEVENLABS_VOICE_{ID} secrets in Supabase Dashboard
 const DEFAULT_VOICE_MAP: Record<string, string> = {
@@ -44,6 +40,7 @@ const DEFAULT_VOICE_SETTINGS = { stability: 0.5, similarity_boost: 0.75 }
 const DEFAULT_PREVIEW_TEXT = "This is Nia Media — Africa's creative platform. Bringing your brand to life."
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req)
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders })
   }

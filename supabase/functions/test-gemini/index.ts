@@ -1,11 +1,8 @@
+import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
-const cors = {
-  'Access-Control-Allow-Origin': 'https://niamedia.co.ke',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
 serve(async (req) => {
+  const cors = corsHeadersFor(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   const key = Deno.env.get('GEMINI_API_KEY')

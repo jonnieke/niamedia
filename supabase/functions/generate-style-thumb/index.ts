@@ -1,10 +1,6 @@
+import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { Image } from 'https://deno.land/x/imagescript@1.3.0/mod.ts'
-
-const cors = {
-  'Access-Control-Allow-Origin': 'https://niamedia.co.ke',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
 
 const STYLE_PROMPTS: Record<string, string> = {
   cinematic:
@@ -57,6 +53,7 @@ async function compressToJpeg(base64Png: string, width: number, quality: number)
 }
 
 serve(async (req) => {
+  const cors = corsHeadersFor(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   try {

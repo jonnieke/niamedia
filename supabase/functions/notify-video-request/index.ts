@@ -1,9 +1,5 @@
+import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-
-const cors = {
-  'Access-Control-Allow-Origin': 'https://niamedia.co.ke',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
 
 const FROM_EMAIL = 'Nia Media <hello@niamedia.co.ke>'
 
@@ -123,6 +119,7 @@ function confirmationHtml(name: string, business: string, title: string, budget:
 }
 
 serve(async (req) => {
+  const cors = corsHeadersFor(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   try {

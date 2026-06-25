@@ -1,11 +1,7 @@
+import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { Image } from 'https://deno.land/x/imagescript@1.3.0/mod.ts'
-
-const cors = {
-  'Access-Control-Allow-Origin': 'https://niamedia.co.ke',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
 
 const INDUSTRY_PROMPTS: Record<string, string> = {
   'Real Estate': 'luxury modern apartment interior, Nairobi skyline view through large windows, professional real estate photography, golden hour warm lighting, no people',
@@ -76,6 +72,7 @@ async function generateOne(key: string, ctx: {
 }
 
 serve(async (req) => {
+  const cors = corsHeadersFor(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   try {

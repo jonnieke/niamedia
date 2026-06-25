@@ -227,7 +227,7 @@ export default function BrandKit() {
                   )}
                   <div className="text-left">
                     <p className="text-sm font-semibold text-gray-800">{logoPreview ? 'Logo uploaded' : 'Upload your logo'}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">PNG or SVG recommended Â· Max 2MB</p>
+                    <p className="text-xs text-gray-500 mt-0.5">PNG or SVG recommended · Max 2MB</p>
                     {logoPreview && (
                       <button type="button" onClick={e => { e.stopPropagation(); setLogoPreview(null); setLogoFile(null); setKit(k => ({ ...k, logo_url: undefined })) }}
                         className="text-xs text-red-400 mt-1">Remove</button>
@@ -333,7 +333,7 @@ export default function BrandKit() {
           </Card>
 
           <button type="submit" className="btn-primary w-full py-3 text-sm gap-2" disabled={saving}>
-            {saving ? <><Loader2 size={15} className="animate-spin" /> Saving...</> : <><Save size={15} />{saved ? 'Saved âœ“' : 'Save Brand Kit'}</>}
+            {saving ? <><Loader2 size={15} className="animate-spin" /> Saving...</> : <><Save size={15} />{saved ? 'Saved ✓' : 'Save Brand Kit'}</>}
           </button>
         </form>
 

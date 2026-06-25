@@ -32,14 +32,14 @@ const COLOR_PALETTES = [
 ]
 
 const MOODS = [
-  { id: 'cinematic',    label: 'Cinematic',    emoji: 'ðŸŽ¬', desc: 'Epic, dramatic, large scale. Award-show energy.' },
-  { id: 'warm',         label: 'Warm & Human', emoji: 'ðŸŒ¿', desc: 'Real people, real emotion, trust-building.' },
-  { id: 'bold',         label: 'Bold & Direct',emoji: 'âš¡', desc: 'No-nonsense. Statement-making. Attention-grabbing.' },
-  { id: 'luxury',       label: 'Luxury',       emoji: 'âœ¨', desc: 'Aspirational, refined, quiet confidence.' },
-  { id: 'playful',      label: 'Playful',      emoji: 'ðŸŽ‰', desc: 'Fun, youthful, high energy. Shareability first.' },
-  { id: 'documentary',  label: 'Documentary',  emoji: 'ðŸ“½ï¸', desc: 'Raw, real, story-first. Authentic footage.' },
-  { id: 'corporate',    label: 'Corporate',    emoji: 'ðŸ¢', desc: 'Professional, structured, data-confident.' },
-  { id: 'emotional',    label: 'Emotional',    emoji: 'ðŸ’›', desc: 'Touches the heart. Stays in memory.' },
+  { id: 'cinematic',    label: 'Cinematic',    emoji: '🎬', desc: 'Epic, dramatic, large scale. Award-show energy.' },
+  { id: 'warm',         label: 'Warm & Human', emoji: '🌿', desc: 'Real people, real emotion, trust-building.' },
+  { id: 'bold',         label: 'Bold & Direct',emoji: '⚡', desc: 'No-nonsense. Statement-making. Attention-grabbing.' },
+  { id: 'luxury',       label: 'Luxury',       emoji: '✨', desc: 'Aspirational, refined, quiet confidence.' },
+  { id: 'playful',      label: 'Playful',      emoji: '🎉', desc: 'Fun, youthful, high energy. Shareability first.' },
+  { id: 'documentary',  label: 'Documentary',  emoji: '📽️', desc: 'Raw, real, story-first. Authentic footage.' },
+  { id: 'corporate',    label: 'Corporate',    emoji: '🏢', desc: 'Professional, structured, data-confident.' },
+  { id: 'emotional',    label: 'Emotional',    emoji: '💛', desc: 'Touches the heart. Stays in memory.' },
 ]
 
 const AGE_GROUPS = ['13–17', '18–24', '25–34', '35–44', '45–54', '55+']
@@ -53,20 +53,20 @@ const VOICE_TONES     = ['Authoritative & Confident', 'Warm & Friendly', 'Energe
 const MUSIC_GENRES    = ['Afro-soul / Acoustic', 'Afro-beat / Afro-fusion', 'Orchestral / Cinematic', 'Electronic / Modern', 'Jazz / Lo-fi', 'Gospel / Inspirational', 'No music (silence or ASMR)']
 
 const VISUAL_STYLES = [
-  { id: 'cinematic',   label: 'Cinematic Live Action', emoji: 'ðŸŽ¥', desc: 'Real actors, locations, professional filming. High-end commercial look.' },
-  { id: '3d',          label: '3D Animation',           emoji: 'ðŸ§Š', desc: 'Fully rendered 3D world. Characters, products, environments.' },
-  { id: '2d',          label: '2D Illustration',         emoji: 'âœï¸', desc: 'Hand-drawn or vector animated. Expressive and brand-flexible.' },
-  { id: 'realistic',   label: 'Realistic Avatar-Led',   emoji: 'ðŸ§‘', desc: 'Photo-realistic AI avatars. Human delivery, no casting needed.' },
-  { id: 'documentary', label: 'Documentary Style',       emoji: 'ðŸ“¹', desc: 'Raw, handheld. Authentic interviews and real environments.' },
-  { id: 'mixed',       label: 'Mixed Media',            emoji: 'ðŸŽ¨', desc: 'Live action + motion graphics + animation combined.' },
+  { id: 'cinematic',   label: 'Cinematic Live Action', emoji: '🎥', desc: 'Real actors, locations, professional filming. High-end commercial look.' },
+  { id: '3d',          label: '3D Animation',           emoji: '🧊', desc: 'Fully rendered 3D world. Characters, products, environments.' },
+  { id: '2d',          label: '2D Illustration',         emoji: '✏️', desc: 'Hand-drawn or vector animated. Expressive and brand-flexible.' },
+  { id: 'realistic',   label: 'Realistic Avatar-Led',   emoji: '🧑', desc: 'Photo-realistic AI avatars. Human delivery, no casting needed.' },
+  { id: 'documentary', label: 'Documentary Style',       emoji: '📹', desc: 'Raw, handheld. Authentic interviews and real environments.' },
+  { id: 'mixed',       label: 'Mixed Media',            emoji: '🎨', desc: 'Live action + motion graphics + animation combined.' },
 ]
 
 const AVATAR_STYLES = [
-  { id: 'none',        label: 'No Avatar',           emoji: 'ðŸš«', desc: 'Voiceover only — no on-screen presenter.' },
-  { id: 'realistic',   label: 'Realistic Human',     emoji: 'ðŸ‘¤', desc: 'Photo-real AI-generated presenter. Looks like a real person.' },
-  { id: 'illustrated', label: 'Illustrated Character',emoji: 'ðŸŽ¨', desc: 'Branded illustrated character. Custom to your brand.' },
-  { id: '3d',          label: '3D Character',        emoji: 'ðŸ§Š', desc: 'Full 3D animated character. Cinematic and modern.' },
-  { id: 'abstract',    label: 'Abstract / Logo Anim',emoji: 'ðŸ’«', desc: 'No human form — animated brand identity or abstract shapes.' },
+  { id: 'none',        label: 'No Avatar',           emoji: '🚫', desc: 'Voiceover only — no on-screen presenter.' },
+  { id: 'realistic',   label: 'Realistic Human',     emoji: '👤', desc: 'Photo-real AI-generated presenter. Looks like a real person.' },
+  { id: 'illustrated', label: 'Illustrated Character',emoji: '🎨', desc: 'Branded illustrated character. Custom to your brand.' },
+  { id: '3d',          label: '3D Character',        emoji: '🧊', desc: 'Full 3D animated character. Cinematic and modern.' },
+  { id: 'abstract',    label: 'Abstract / Logo Anim',emoji: '💫', desc: 'No human form — animated brand identity or abstract shapes.' },
 ]
 
 // ─── State shape ──────────────────────────────────────────────────
@@ -300,7 +300,7 @@ function Step7({ state, conceptTitle }: { state: PreProductionState; conceptTitl
     { label: 'Locations', value: state.locations.join(', ') || '—' },
     { label: 'Interests', value: state.interests.join(', ') || '—' },
     { label: 'Income', value: state.income || '—' },
-    { label: 'Narrator', value: [VOICE_GENDERS.find(g => g.id === state.voiceGender)?.label, state.voiceAccent, state.voiceTone].filter(Boolean).join(' Â· ') || '—' },
+    { label: 'Narrator', value: [VOICE_GENDERS.find(g => g.id === state.voiceGender)?.label, state.voiceAccent, state.voiceTone].filter(Boolean).join(' · ') || '—' },
     { label: 'Music', value: state.musicGenre || '—' },
     { label: 'Visual Style', value: visualStyle?.label || '—' },
     { label: 'Avatar Style', value: avatarStyle?.label || '—' },

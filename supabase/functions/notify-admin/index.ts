@@ -1,9 +1,5 @@
+import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://niamedia.co.ke',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
 
 interface NotifyPayload {
   type: 'new_order' | 'new_lead'
@@ -19,6 +15,7 @@ interface NotifyPayload {
 }
 
 serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   const apiKey = Deno.env.get('AFRICAS_TALKING_API_KEY')

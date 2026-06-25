@@ -1,9 +1,5 @@
+import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
 import Anthropic from "npm:@anthropic-ai/sdk"
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://niamedia.co.ke",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-}
 
 const SCENE_COUNTS: Record<string, number> = {
   "commercial-15": 3,
@@ -30,6 +26,7 @@ const DURATIONS: Record<string, string> = {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req)
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders })
   }

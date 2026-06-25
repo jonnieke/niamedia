@@ -102,9 +102,9 @@ async function notifyUser(userId: string, title: string, body: string, type: str
 
 const AUDIO_NOTIFS: Partial<Record<AudioStatus, { title: string; body: (t: string) => string; type: string }>> = {
   'in-production':    { title: 'Production started!',       body: t => `We've started working on "${t}". Expect delivery within the agreed timeline.`,      type: 'info' },
-  'ready-for-review': { title: 'Your audio is ready! ðŸ‘‚',   body: t => `"${t}" is ready for your review. Listen and approve or request changes.`,           type: 'action' },
-  'accepted':         { title: 'Audio approved âœ“',          body: t => `"${t}" has been accepted and is in your Asset Library.`,                            type: 'success' },
-  'delivered':        { title: 'Audio delivered! ðŸŽ‰',        body: t => `"${t}" has been delivered. Download it from your Assets Library.`,                  type: 'success' },
+  'ready-for-review': { title: 'Your audio is ready! 👂',   body: t => `"${t}" is ready for your review. Listen and approve or request changes.`,           type: 'action' },
+  'accepted':         { title: 'Audio approved ✓',          body: t => `"${t}" has been accepted and is in your Asset Library.`,                            type: 'success' },
+  'delivered':        { title: 'Audio delivered! 🎉',        body: t => `"${t}" has been delivered. Download it from your Assets Library.`,                  type: 'success' },
 }
 
 const PROJECT_NOTIFS: Partial<Record<ProjectStatus, { title: string; body: (t: string) => string; type: string }>> = {
@@ -186,8 +186,8 @@ function AudioOrderRow({ order, onStatusChange }: {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-gray-800 truncate">{order.title}</p>
           <p className="text-xs text-gray-500">
-            {order.profiles?.name ?? '—'} Â· {order.package}
-            {order.rush && <span className="ml-2 text-amber-400 font-semibold">âš¡ Rush</span>}
+            {order.profiles?.name ?? '—'} · {order.package}
+            {order.rush && <span className="ml-2 text-amber-400 font-semibold">⚡ Rush</span>}
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
@@ -301,7 +301,7 @@ function LeadRow({ lead, onStatusChange }: {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-gray-800">{lead.name} — {lead.business}</p>
-          <p className="text-xs text-gray-500 capitalize">{lead.service.replace('-', ' ')} Â· {lead.industry}</p>
+          <p className="text-xs text-gray-500 capitalize">{lead.service.replace('-', ' ')} · {lead.industry}</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold capitalize"
@@ -355,11 +355,11 @@ function LeadRow({ lead, onStatusChange }: {
           <div className="flex gap-2">
             <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-green-500/30 text-green-400 hover:bg-green-500/10 transition-all">
-              WhatsApp â†'
+              WhatsApp →
             </a>
             <a href={`mailto:${lead.email}`}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 hover:border-white/20 transition-all">
-              Email â†'
+              Email →
             </a>
           </div>
         </div>
@@ -395,7 +395,7 @@ function ProjectRow({ project, onStatusChange }: {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-gray-800 truncate">{project.title}</p>
-          <p className="text-xs text-gray-500">{project.profiles?.name ?? '—'} Â· {project.package}</p>
+          <p className="text-xs text-gray-500">{project.profiles?.name ?? '—'} · {project.package}</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <StatusBadge status={project.status} />
@@ -638,7 +638,7 @@ export default function Admin() {
         <p className="text-sm text-gray-500">Manage users, audio orders, and production projects.</p>
         <a href="/admin/voices"
           className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl text-xs font-semibold text-purple-300 border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 transition-all">
-          <Mic size={13} /> Voice Clone Studio â†'
+          <Mic size={13} /> Voice Clone Studio →
         </a>
       </div>
 

@@ -256,7 +256,7 @@ export default function Analytics() {
               <div className="flex flex-col items-center justify-center py-10 text-center px-5">
                 <BarChart2 size={28} className="text-gray-700 mb-2" />
                 <p className="text-sm text-gray-500">No campaigns yet</p>
-                <Link to="/new-campaign" className="text-xs text-purple-400 hover:underline mt-1">Generate your first â†’</Link>
+                <Link to="/new-campaign" className="text-xs text-purple-400 hover:underline mt-1">Generate your first →</Link>
               </div>
             ) : (
               <div className="divide-y divide-white/4">

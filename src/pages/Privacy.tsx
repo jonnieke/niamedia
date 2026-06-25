@@ -96,7 +96,7 @@ export default function Privacy() {
 
         <div className="mt-12 pt-8 border-t border-gray-200 flex gap-6 text-xs text-gray-600">
           <Link to="/terms" className="hover:text-gray-500 transition-colors">Terms of Service</Link>
-          <Link to="/" className="hover:text-gray-500 transition-colors">â† Back to Home</Link>
+          <Link to="/" className="hover:text-gray-500 transition-colors">← Back to Home</Link>
         </div>
       </div>
     </div>

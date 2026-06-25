@@ -1,8 +1,8 @@
 ﻿import { useState, FormEvent, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ChevronDown, Zap, MessageSquare, Languages } from 'lucide-react'
+import { ChevronDown, Zap, Sparkles, Languages } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
-import NiaAgent from '../components/NiaAgent'
+import CreativeAssistant from '../components/CreativeAssistant'
 import BuyCreditsModal from '../components/BuyCreditsModal'
 import { CampaignFormData } from '../types'
 import { supabase } from '../lib/supabase'
@@ -87,6 +87,9 @@ export default function NewCampaign() {
     if (searchParams.get('target_audience')) fields.target_audience = searchParams.get('target_audience')!
     if (searchParams.get('objective')) fields.objective = searchParams.get('objective')!
     if (searchParams.get('tone')) fields.tone = searchParams.get('tone')!
+    if (searchParams.get('offer')) fields.offer = searchParams.get('offer')!
+    if (searchParams.get('location')) fields.location = searchParams.get('location')!
+    if (searchParams.get('notes')) fields.notes = searchParams.get('notes')!
     if (Object.keys(fields).length > 0) setForm(prev => ({ ...prev, ...fields }))
   }, [searchParams])
 
@@ -128,12 +131,12 @@ export default function NewCampaign() {
         clearInterval(stepInterval)
         return
       }
-      if (data?.error) throw new Error(data.error)
+      if (data?.error) throw new Error(data.friendly || data.error)
 
       navigate('/campaign-results', { state: { form, content: data } })
     } catch (err: unknown) {
       clearInterval(stepInterval)
-      setError(err instanceof Error ? err.message : 'Generation failed — please try again.')
+      setError(err instanceof Error ? err.message : "We couldn't generate your campaign just now. No credit was used — please try again.")
       setLoading(false)
     }
   }
@@ -164,7 +167,7 @@ export default function NewCampaign() {
 
   return (
     <DashboardLayout>
-      {showNia && <NiaAgent onClose={() => setShowNia(false)} />}
+      {showNia && <CreativeAssistant onClose={() => setShowNia(false)} />}
       {showBuyCredits && <BuyCreditsModal onClose={() => setShowBuyCredits(false)} />}
       <div className="max-w-2xl">
         <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
@@ -173,10 +176,10 @@ export default function NewCampaign() {
             <p className="text-sm text-gray-500 mt-1">Fill in your brief and we'll generate a complete campaign.</p>
           </div>
           <button type="button" onClick={() => setShowNia(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-800 shrink-0 transition-all hover:opacity-90"
-            style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(59,130,246,0.2))', border: '1px solid rgba(139,92,246,0.35)' }}>
-            <MessageSquare size={14} className="text-purple-400" />
-            Fill brief with Nia AI
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-purple-700 shrink-0 transition-all hover:bg-purple-50"
+            style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
+            <Sparkles size={14} className="text-purple-600" />
+            Brainstorm with Nia
           </button>
         </div>
 
@@ -289,7 +292,7 @@ export default function NewCampaign() {
                   {GENERATING_STEPS[step]}
                 </span>
               ) : (
-                <><Zap size={15} /> Generate Campaign {credits !== null && <span className="opacity-60 text-xs ml-1">Â· {credits} credit{credits !== 1 ? 's' : ''} remaining</span>}</>
+                <><Zap size={15} /> Generate Campaign {credits !== null && <span className="opacity-60 text-xs ml-1">· {credits} credit{credits !== 1 ? 's' : ''} remaining</span>}</>
               )}
             </button>
           )}

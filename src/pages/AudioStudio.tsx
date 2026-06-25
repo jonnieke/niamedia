@@ -30,7 +30,7 @@ const PACKAGES: Record<AudioType, AudioPackage[]> = {
     { id: 'rs15', label: 'Radio Spot 15s', price: 3500, duration: '15 seconds', description: 'Quick-fire station ID or promo' },
     { id: 'rs30', label: 'Radio Spot 30s', price: 5500, duration: '30 seconds', description: 'Full produced spot with SFX, VO, music bed', popular: true },
     { id: 'rs60', label: 'Radio Spot 60s', price: 8000, duration: '60 seconds', description: 'Premium broadcast-ready radio commercial' },
-    { id: 'rs-pkg', label: 'Radio Package', price: 14000, duration: '3 Ã— 30s spots', description: '3 variations for A/B campaign rotation' },
+    { id: 'rs-pkg', label: 'Radio Package', price: 14000, duration: '3 × 30s spots', description: '3 variations for A/B campaign rotation' },
   ],
 }
 
@@ -47,7 +47,7 @@ interface Voice {
 const VOICE_GROUPS: { label: string; emoji: string; voices: Voice[] }[] = [
   {
     label: 'Kids',
-    emoji: 'ðŸ§’',
+    emoji: '🧒',
     voices: [
       { id: 'af-child-f', label: 'Girl — Bright & Clear', accent: 'AF', gender: 'F', ageGroup: 'Kids', ageTag: '6–12' },
       { id: 'af-child-m', label: 'Boy — Playful', accent: 'AF', gender: 'M', ageGroup: 'Kids', ageTag: '6–12' },
@@ -55,7 +55,7 @@ const VOICE_GROUPS: { label: string; emoji: string; voices: Voice[] }[] = [
   },
   {
     label: 'Teens',
-    emoji: 'ðŸŽ¤',
+    emoji: '🎤',
     voices: [
       { id: 'af-teen-f', label: 'Teen Girl — Energetic', accent: 'AF', gender: 'F', ageGroup: 'Teens', ageTag: '13–19' },
       { id: 'af-teen-m', label: 'Teen Boy — Confident', accent: 'AF', gender: 'M', ageGroup: 'Teens', ageTag: '13–19' },
@@ -63,7 +63,7 @@ const VOICE_GROUPS: { label: string; emoji: string; voices: Voice[] }[] = [
   },
   {
     label: 'Young Adults',
-    emoji: 'ðŸ‘¤',
+    emoji: '👤',
     voices: [
       { id: 'km-f', label: 'Kenyan English — Female', accent: 'KE', gender: 'F', ageGroup: 'Young Adult', ageTag: '20–35' },
       { id: 'km-m', label: 'Kenyan English — Male', accent: 'KE', gender: 'M', ageGroup: 'Young Adult', ageTag: '20–35' },
@@ -75,7 +75,7 @@ const VOICE_GROUPS: { label: string; emoji: string; voices: Voice[] }[] = [
   },
   {
     label: 'Mature',
-    emoji: 'ðŸ§‘',
+    emoji: '🧑',
     voices: [
       { id: 'af-mature-f', label: 'Mature — Female', accent: 'AF', gender: 'F', ageGroup: 'Mature', ageTag: '35–55' },
       { id: 'af-mature-m', label: 'Mature — Male', accent: 'AF', gender: 'M', ageGroup: 'Mature', ageTag: '35–55' },
@@ -83,7 +83,7 @@ const VOICE_GROUPS: { label: string; emoji: string; voices: Voice[] }[] = [
   },
   {
     label: 'Elder',
-    emoji: 'ðŸ‘´',
+    emoji: '👴',
     voices: [
       { id: 'af-elder-f', label: 'Elder — Female', accent: 'AF', gender: 'F', ageGroup: 'Elder', ageTag: '55+' },
       { id: 'af-elder-m', label: 'Elder — Male', accent: 'AF', gender: 'M', ageGroup: 'Elder', ageTag: '55+' },
@@ -389,7 +389,7 @@ export default function AudioStudio() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <label className="block text-xs font-semibold text-gray-500">Voice Style *</label>
-                <span className="text-[10px] text-gray-600">Click â–¶ to preview</span>
+                <span className="text-[10px] text-gray-600">Click ▶ to preview</span>
               </div>
               <div className="space-y-4">
                 {VOICE_GROUPS.map(group => (
@@ -410,7 +410,7 @@ export default function AudioStudio() {
                             }`}>
                             <div className="flex-1 min-w-0">
                               <p className={`text-xs font-semibold truncate ${selected ? 'text-white' : 'text-gray-600'}`}>{v.label}</p>
-                              <p className="text-[10px] text-gray-600">{v.gender === 'F' ? 'Female' : 'Male'} Â· Age {v.ageTag}</p>
+                              <p className="text-[10px] text-gray-600">{v.gender === 'F' ? 'Female' : 'Male'} · Age {v.ageTag}</p>
                             </div>
                             <button
                               type="button"

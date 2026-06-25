@@ -1,41 +1,42 @@
 import Anthropic from "npm:@anthropic-ai/sdk"
 import { createClient } from "npm:@supabase/supabase-js@2"
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://niamedia.co.ke",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-}
+import { corsHeaders } from "../_shared/cors.ts"
 
 Deno.serve(async (req) => {
+  const cors = corsHeaders(req)
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders })
+    return new Response("ok", { headers: cors })
   }
+
+  // Reservation id for the credit held during generation. Committed on success,
+  // refunded if anything fails, so a failed generation never costs the user a credit.
+  let reservationId: string | null = null
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  )
 
   try {
     const form = await req.json()
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    )
 
     const authHeader = req.headers.get("Authorization") ?? ""
     const token = authHeader.replace("Bearer ", "")
 
     if (token) {
-      // Authenticated user — spend a credit
+      // Authenticated user — reserve a credit (committed only after a successful generation)
       const { data: { user } } = await supabase.auth.getUser(token)
       if (user) {
-        const { data: spent } = await supabase.rpc("spend_credit", {
+        const { data: txId } = await supabase.rpc("reserve_credit", {
           p_user_id: user.id,
           p_description: `Campaign: ${form.product_name ?? "untitled"}`,
         })
-        if (!spent) {
+        if (!txId) {
           return new Response(JSON.stringify({ error: "insufficient_credits" }), {
             status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: { ...cors, "Content-Type": "application/json" },
           })
         }
+        reservationId = txId as string
       }
     } else {
       // Unauthenticated demo — rate-limit to 5 per IP per day
@@ -55,7 +56,7 @@ Deno.serve(async (req) => {
       if (count >= 5) {
         return new Response(
           JSON.stringify({ error: "demo_limit_reached", message: "You've used today's free demo limit. Sign up for full access." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          { status: 429, headers: { ...cors, "Content-Type": "application/json" } },
         )
       }
 
@@ -185,14 +186,23 @@ Generate copy that a Kenyan small business owner would be proud to publish. Be s
       throw new Error("Claude did not return structured content")
     }
 
+    // Generation succeeded — commit the reserved credit.
+    if (reservationId) {
+      await supabase.rpc("commit_credit", { p_tx_id: reservationId })
+    }
+
     return new Response(JSON.stringify(toolUse.input), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json" },
     })
   } catch (err: unknown) {
+    // Generation failed — refund the reserved credit so the user is not charged.
+    if (reservationId) {
+      try { await supabase.rpc("refund_credit", { p_tx_id: reservationId }) } catch { /* best effort */ }
+    }
     const message = err instanceof Error ? err.message : "Unknown error"
-    return new Response(JSON.stringify({ error: message }), {
+    return new Response(JSON.stringify({ error: message, friendly: "We couldn't generate your campaign just now. No credit was used — please try again." }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json" },
     })
   }
 })

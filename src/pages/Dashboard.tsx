@@ -4,10 +4,11 @@ import {
   Plus, MessageSquare, Film, ArrowRight,
   BarChart2, Zap, FileText, TrendingUp,
   Eye, CheckCircle, Music, Package, Shield, Info,
-  AlertCircle, Loader2, Sparkles, Clock, Bot,
+  AlertCircle, Loader2, Sparkles, Clock,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import NiaAgent from '../components/NiaAgent'
+import CreativeAssistant from '../components/CreativeAssistant'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
@@ -45,6 +46,7 @@ function greeting(name: string) {
 export default function Dashboard() {
   const { user } = useAuth()
   const [showNia, setShowNia] = useState(false)
+  const [showAssistant, setShowAssistant] = useState(false)
 
   const [stats, setStats] = useState({ campaigns: 0, audioOrders: 0, deliveredAssets: 0, activeProjects: 0 })
   const [pipeline, setPipeline] = useState<{ id: string; title: string; type: string; status: string; linkTo?: string }[]>([])
@@ -92,6 +94,7 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       {showNia && <NiaAgent onClose={() => setShowNia(false)} />}
+      {showAssistant && <CreativeAssistant onClose={() => setShowAssistant(false)} />}
 
       {/* ── Greeting header ─────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-7">
@@ -112,10 +115,10 @@ export default function Dashboard() {
               {credits} credit{credits !== 1 ? 's' : ''} remaining
             </Link>
           )}
-          <button onClick={() => setShowNia(true)}
+          <button onClick={() => setShowAssistant(true)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
             style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 4px 14px rgba(124,58,237,0.35)' }}>
-            <Bot size={15} /> Chat with Nia
+            <Sparkles size={15} /> Ask Nia Creative
           </button>
           <Link to="/new-campaign" className="btn-primary text-sm px-4 py-2.5 gap-2">
             <Plus size={15} /> New Campaign

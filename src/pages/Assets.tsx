@@ -98,7 +98,7 @@ function AssetCard({ asset, onPreview }: { asset: Asset; onPreview: () => void }
 
         <div className="mt-3 flex items-center gap-1.5 text-[10px] text-green-500">
           <Shield size={10} />
-          Full rights transferred Â· AI-generated
+          Full rights transferred · AI-generated
         </div>
       </div>
     </div>
@@ -119,7 +119,7 @@ function PreviewModal({ asset, onClose }: { asset: Asset; onClose: () => void })
             <p className="text-sm font-bold text-gray-900">{asset.title}</p>
             <p className="text-xs text-gray-500">{asset.package}</p>
           </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors text-lg leading-none">Ã—</button>
+          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors text-lg leading-none">×</button>
         </div>
 
         {isVideo && asset.deliverable_url ? (

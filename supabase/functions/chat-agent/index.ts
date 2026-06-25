@@ -1,9 +1,5 @@
+import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
 import Anthropic from "npm:@anthropic-ai/sdk"
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://niamedia.co.ke",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-}
 
 const NIA_SYSTEM_PROMPT = `You are Nia, a sharp and warm AI marketing advisor built into Nia Media — East Africa's AI-powered creative production platform based in Nairobi, Kenya.
 
@@ -121,6 +117,7 @@ interface RequestBody {
 }
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = corsHeadersFor(req)
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders })
   }

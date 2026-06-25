@@ -677,7 +677,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
           {/* Bottom hint */}
           <p className="text-center text-[10px] text-gray-700 mt-2">
             {isGuest && !guestStarted
-              ? 'Free 30-second preview Â· No sign up required'
+              ? 'Free 30-second preview · No sign up required'
               : isGuest && !guestExpired
               ? `${guestTimeLeft}s of free conversation remaining`
               : !isGuest

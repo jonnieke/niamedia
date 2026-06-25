@@ -187,7 +187,7 @@ export default function AdminVoices() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Voice Clone Studio</h1>
-              <p className="text-xs text-gray-500">Upload African voice samples â†’ clone â†’ deploy to Audio Studio</p>
+              <p className="text-xs text-gray-500">Upload African voice samples → clone → deploy to Audio Studio</p>
             </div>
           </div>
           <div className="mt-4 p-4 rounded-xl border border-blue-500/20 bg-blue-500/8 text-xs text-blue-300 space-y-1">
@@ -220,7 +220,7 @@ export default function AdminVoices() {
                       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
                         <div>
                           <p className="text-sm font-semibold text-gray-800">{profile.label}</p>
-                          <p className="text-[10px] text-gray-600">{profile.gender === 'F' ? 'Female' : 'Male'} Â· {group}</p>
+                          <p className="text-[10px] text-gray-600">{profile.gender === 'F' ? 'Female' : 'Male'} · {group}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           {/* Preview button */}

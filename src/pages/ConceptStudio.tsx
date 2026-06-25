@@ -524,7 +524,7 @@ export default function ConceptStudio() {
                   </div>
                   <div className="text-right shrink-0 ml-4">
                     <p className="text-sm font-bold text-gray-900">{pkg.price}</p>
-                    <p className="text-[10px] text-purple-400 group-hover:underline">Select â†’</p>
+                    <p className="text-[10px] text-purple-400 group-hover:underline">Select →</p>
                   </div>
                 </Link>
               ))}

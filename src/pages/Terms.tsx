@@ -78,7 +78,7 @@ export default function Terms() {
 
         <div className="mt-12 pt-8 border-t border-gray-200 flex gap-6 text-xs text-gray-600">
           <Link to="/privacy" className="hover:text-gray-500 transition-colors">Privacy Policy</Link>
-          <Link to="/" className="hover:text-gray-500 transition-colors">â† Back to Home</Link>
+          <Link to="/" className="hover:text-gray-500 transition-colors">← Back to Home</Link>
         </div>
       </div>
     </div>

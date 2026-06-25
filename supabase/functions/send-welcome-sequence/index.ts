@@ -1,3 +1,4 @@
+import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
@@ -5,11 +6,6 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 const FROM_EMAIL = 'Nia Media <hello@niamedia.co.ke>'
 const APP_URL = Deno.env.get('APP_URL') ?? 'https://niamedia.co.ke'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://niamedia.co.ke',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
 
 async function sendEmail(to: string, subject: string, html: string) {
   const res = await fetch('https://api.resend.com/emails', {
@@ -273,6 +269,7 @@ function day5EmailHtml(name: string, appUrl: string): string {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {

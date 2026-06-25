@@ -226,7 +226,7 @@ export default function Settings() {
                 <div>
                   <p className="text-sm font-semibold text-gray-800">{name}</p>
                   <p className="text-xs text-gray-500">{user?.email}</p>
-                  <p className="text-[10px] text-gray-600 mt-0.5">Click photo to change Â· PNG/JPG/WebP Â· max 2 MB</p>
+                  <p className="text-[10px] text-gray-600 mt-0.5">Click photo to change · PNG/JPG/WebP · max 2 MB</p>
                   <span className="inline-block mt-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-500/20 text-purple-300">
                     {user?.role === 'admin' ? 'Admin' : 'Growth Plan'}
                   </span>
@@ -254,7 +254,7 @@ export default function Settings() {
               disabled={profileSaving || !name.trim()}
               className="btn-primary w-full py-3 text-sm gap-2 disabled:opacity-50">
               <Save size={15} />
-              {profileSaving ? 'Saving...' : profileSaved ? 'Saved âœ“' : 'Save Changes'}
+              {profileSaving ? 'Saving...' : profileSaved ? 'Saved ✓' : 'Save Changes'}
             </button>
           </div>
         )}
@@ -462,7 +462,7 @@ export default function Settings() {
                   <div key={s.device} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 bg-white/2">
                     <div>
                       <p className="text-xs font-semibold text-gray-800">{s.device}</p>
-                      <p className="text-[11px] text-gray-500">{s.location} Â· {s.time}</p>
+                      <p className="text-[11px] text-gray-500">{s.location} · {s.time}</p>
                     </div>
                     {s.current
                       ? <span className="text-[10px] font-bold text-green-400 px-2 py-0.5 rounded-md bg-green-500/15">Active</span>

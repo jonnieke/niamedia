@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Plus, FolderOpen, Layers,
   Palette, Settings, ShieldCheck, LogOut, Zap,
-  Shield, Gift, X, Video, Film,
+  Shield, Gift, X, Video, Film, Lightbulb,
 } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
 import Logo from '../ui/Logo'
@@ -14,12 +14,13 @@ interface SidebarProps {
 const navItems = [
   { to: '/dashboard',       icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/new-campaign',    icon: Plus,            label: 'New Campaign', highlight: true },
+  { to: '/ideas',           icon: Lightbulb,       label: 'Ideas Bank', badge: 'NEW' },
   { to: '/campaigns',       icon: FolderOpen,      label: 'Campaigns' },
+  { to: '/brand-kit',       icon: Palette,         label: 'Brand Kit' },
+  { to: '/request-video',   icon: Video,           label: 'Requests' },
+  { to: '/my-requests',     icon: Film,            label: 'My Requests' },
   { to: '/templates',       icon: Layers,          label: 'Templates' },
   { to: '/assets',          icon: Shield,          label: 'Assets' },
-  { to: '/request-video',   icon: Video,           label: 'Request Video', badge: 'NEW' },
-  { to: '/my-requests',     icon: Film,            label: 'My Requests' },
-  { to: '/brand-kit',       icon: Palette,         label: 'Brand Kit' },
   { to: '/referral',        icon: Gift,            label: 'Refer & Earn', badge: 'KES 500' },
   null,
   { to: '/settings',        icon: Settings,        label: 'Settings' },

@@ -1,9 +1,6 @@
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://niamedia.co.ke",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-}
-
+import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req)
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
 
   const apiKey = Deno.env.get("ANTHROPIC_API_KEY")

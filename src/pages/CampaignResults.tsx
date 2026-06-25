@@ -10,7 +10,7 @@ import { CampaignFormData, GeneratedContent } from '../types'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
-/* â"€â"€â"€ Copy button â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */
+/* ─── Copy button ────────────────────────────────────────────── */
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
   const copy = async () => {
@@ -26,7 +26,7 @@ function CopyButton({ text }: { text: string }) {
   )
 }
 
-/* â"€â"€â"€ Block — with per-section tweak + optional WhatsApp share â"€ */
+/* ─── Block — with per-section tweak + optional WhatsApp share ─ */
 interface BlockProps {
   label: string
   content: string
@@ -141,7 +141,7 @@ function Block({ label, content, blockKey, briefContext, showWhatsAppShare, onRe
 
 const tabs = ['Strategy', 'Video Script', 'Poster Copy', 'Captions', 'WhatsApp', 'Landing Page', '🎨 Poster']
 
-/* â"€â"€â"€ Main page â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */
+/* ─── Main page ──────────────────────────────────────────────── */
 export default function CampaignResults() {
   const navigate = useNavigate()
   const location = useLocation()

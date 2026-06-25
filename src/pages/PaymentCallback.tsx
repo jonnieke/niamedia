@@ -79,7 +79,7 @@ export default function PaymentCallback() {
               </Link>
               <Link to="/audio-studio"
                 className="text-sm text-gray-500 hover:text-white transition-colors">
-                Order another audio â†’
+                Order another audio →
               </Link>
             </div>
           </div>
@@ -99,7 +99,7 @@ export default function PaymentCallback() {
               <Link to="/audio-studio"
                 className="text-sm font-semibold"
                 style={{ color: '#8b5cf6' }}>
-                â† Back to Audio Studio
+                ← Back to Audio Studio
               </Link>
               {import.meta.env.VITE_WHATSAPP_NUMBER && (
                 <a href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER}?text=Hi, I had a payment issue for my audio order.`}
@@ -129,11 +129,11 @@ export default function PaymentCallback() {
             <div className="flex flex-col gap-3">
               <Link to="/projects"
                 style={{ color: '#8b5cf6', fontSize: '0.875rem', fontWeight: 600 }}>
-                Check My Projects â†’
+                Check My Projects →
               </Link>
               <Link to="/audio-studio"
                 className="text-sm text-gray-500 hover:text-gray-600 transition-colors">
-                â† Back to Audio Studio
+                ← Back to Audio Studio
               </Link>
             </div>
           </div>

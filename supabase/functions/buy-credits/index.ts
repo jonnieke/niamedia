@@ -1,9 +1,5 @@
+import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
 import { createClient } from "npm:@supabase/supabase-js@2"
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://niamedia.co.ke",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-}
 
 const PACKAGES: Record<string, { credits: number; amountKes: number; label: string }> = {
   "1":  { credits: 1,  amountKes: 500,  label: "1 Campaign Credit" },
@@ -43,6 +39,7 @@ async function getOrRegisterIpn(token: string): Promise<string> {
 }
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = corsHeadersFor(req)
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
 
   try {

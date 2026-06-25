@@ -1,9 +1,5 @@
+import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
 import { createClient } from "npm:@supabase/supabase-js@2"
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://niamedia.co.ke",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-}
 
 const BASE_URL = Deno.env.get("PESAPAL_ENV") === "production"
   ? "https://pay.pesapal.com/v3"
@@ -43,6 +39,7 @@ async function getOrRegisterIpn(token: string): Promise<string> {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req)
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
 
   const key = Deno.env.get("PESAPAL_CONSUMER_KEY")
