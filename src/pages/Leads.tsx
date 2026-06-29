@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
   Plus, Loader2, X, Check, Trash2, Phone, MessageSquare,
   Users, TrendingUp, Target, DollarSign,
@@ -45,12 +46,14 @@ const KES = (n: number) => `KES ${n.toLocaleString()}`
 
 export default function Leads() {
   const { user } = useAuth()
+  const location = useLocation()
+  const preset = (location.state ?? {}) as { campaign_id?: string; campaign_title?: string }
   const [leads, setLeads] = useState<Lead[]>([])
   const [campaigns, setCampaigns] = useState<{ id: string; title: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('all')
-  const [showForm, setShowForm] = useState(false)
-  const [draft, setDraft] = useState(EMPTY)
+  const [showForm, setShowForm] = useState(!!preset.campaign_id)
+  const [draft, setDraft] = useState(() => ({ ...EMPTY, campaign_id: preset.campaign_id ?? '' }))
   const [saving, setSaving] = useState(false)
 
   const load = () => {
@@ -65,6 +68,10 @@ export default function Leads() {
     })
   }
   useEffect(load, [user])
+
+  useEffect(() => {
+    if (preset.campaign_id) setShowForm(true)
+  }, [preset.campaign_id])
 
   const setStatus = async (lead: Lead, status: string) => {
     setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status } : l))
@@ -265,3 +272,5 @@ export default function Leads() {
     </DashboardLayout>
   )
 }
+
+

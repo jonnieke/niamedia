@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Film, Clock, CheckCircle2, XCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Film, Clock, CheckCircle2, XCircle, ChevronDown, ChevronUp, Plus, Sparkles } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
@@ -23,14 +23,14 @@ interface VideoRequest {
 }
 
 const STATUS_CONFIG: Record<VideoRequestStatus, { label: string; color: string; bg: string; Icon: React.ElementType }> = {
-  'new':           { label: 'Submitted',     color: '#2563eb', bg: '#eff6ff', Icon: Clock },
+  new: { label: 'Submitted', color: '#2563eb', bg: '#eff6ff', Icon: Clock },
   'in-production': { label: 'In Production', color: '#d97706', bg: '#fffbeb', Icon: Film },
-  'delivered':     { label: 'Delivered',     color: '#059669', bg: '#ecfdf5', Icon: CheckCircle2 },
-  'cancelled':     { label: 'Cancelled',     color: '#dc2626', bg: '#fef2f2', Icon: XCircle },
+  delivered: { label: 'Delivered', color: '#059669', bg: '#ecfdf5', Icon: CheckCircle2 },
+  cancelled: { label: 'Cancelled', color: '#dc2626', bg: '#fef2f2', Icon: XCircle },
 }
 
 const DELIVERY_LABELS: Record<string, string> = {
-  'standard': '3-5 business days',
+  standard: '3-5 business days',
   '48h': '48-hour rush',
   '24h': '24-hour rush',
 }
@@ -38,11 +38,10 @@ const DELIVERY_LABELS: Record<string, string> = {
 const TIMELINE_STEPS: VideoRequestStatus[] = ['new', 'in-production', 'delivered']
 
 function StatusBadge({ status }: { status: VideoRequestStatus }) {
-  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG['new']
+  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.new
   const { Icon } = cfg
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold"
-      style={{ color: cfg.color, background: cfg.bg }}>
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold" style={{ color: cfg.color, background: cfg.bg }}>
       <Icon size={11} />
       {cfg.label}
     </span>
@@ -52,16 +51,12 @@ function StatusBadge({ status }: { status: VideoRequestStatus }) {
 function RequestRow({ req }: { req: VideoRequest }) {
   const [expanded, setExpanded] = useState(false)
   const date = new Date(req.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })
-
   const stepIndex = TIMELINE_STEPS.indexOf(req.status)
   const isCancelled = req.status === 'cancelled'
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-      <button
-        className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-gray-50 transition-colors"
-        onClick={() => setExpanded(e => !e)}
-      >
+      <button className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-gray-50 transition-colors" onClick={() => setExpanded(e => !e)}>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="text-sm font-semibold text-gray-900">{req.title || req.business_name}</span>
@@ -69,19 +64,17 @@ function RequestRow({ req }: { req: VideoRequest }) {
           </div>
           <p className="text-xs text-gray-400">{req.business_name} &middot; {req.industry} &middot; {date}</p>
         </div>
-        {expanded
-          ? <ChevronUp size={15} className="text-gray-400 shrink-0" />
-          : <ChevronDown size={15} className="text-gray-400 shrink-0" />}
+        {expanded ? <ChevronUp size={15} className="text-gray-400 shrink-0" /> : <ChevronDown size={15} className="text-gray-400 shrink-0" />}
       </button>
 
       {expanded && (
         <div className="px-5 pb-5 border-t border-gray-100 pt-4 space-y-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: 'Budget',   value: req.budget_range || 'TBC' },
+              { label: 'Budget', value: req.budget_range || 'TBC' },
               { label: 'Delivery', value: DELIVERY_LABELS[req.delivery_speed] || req.delivery_speed },
-              { label: 'Length',   value: req.length || '-' },
-              { label: 'Format',   value: req.format || '-' },
+              { label: 'Length', value: req.length || '-' },
+              { label: 'Format', value: req.format || '-' },
             ].map(({ label, value }) => (
               <div key={label} className="bg-gray-50 rounded-xl px-3 py-2.5">
                 <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{label}</p>
@@ -111,19 +104,13 @@ function RequestRow({ req }: { req: VideoRequest }) {
                   return (
                     <div key={step} className="flex items-center flex-1">
                       <div className="flex flex-col items-center" style={{ minWidth: 56 }}>
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition-all"
-                          style={{
-                            borderColor: isDone ? cfg.color : '#e5e7eb',
-                            background: isDone ? cfg.bg : '#f9fafb',
-                            color: isDone ? cfg.color : '#9ca3af',
-                          }}>
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition-all" style={{ borderColor: isDone ? cfg.color : '#e5e7eb', background: isDone ? cfg.bg : '#f9fafb', color: isDone ? cfg.color : '#9ca3af' }}>
                           {i + 1}
                         </div>
                         <p className="text-[10px] text-gray-500 mt-1 text-center leading-tight">{cfg.label}</p>
                       </div>
                       {i < TIMELINE_STEPS.length - 1 && (
-                        <div className="h-0.5 flex-1 mb-4 mx-1"
-                          style={{ background: stepIndex > i ? '#bbf7d0' : '#e5e7eb' }} />
+                        <div className="h-0.5 flex-1 mb-4 mx-1" style={{ background: stepIndex > i ? '#bbf7d0' : '#e5e7eb' }} />
                       )}
                     </div>
                   )
@@ -156,22 +143,45 @@ export default function MyVideoRequests() {
       })
   }, [user?.id])
 
+  const total = requests.length
+  const open = requests.filter(r => !['delivered', 'cancelled'].includes(r.status)).length
+  const delivered = requests.filter(r => r.status === 'delivered').length
+
   return (
     <DashboardLayout>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Film size={18} className="text-purple-600" />
-            <h1 className="text-2xl font-bold text-gray-900">My Video Requests</h1>
+      <div className="mb-6">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <span className="section-tag mb-2 inline-block">Requests</span>
+            <div className="flex items-center gap-2 mb-1">
+              <Film size={18} className="text-purple-600" />
+              <h1 className="text-2xl font-bold text-gray-900">Request Hub</h1>
+            </div>
+            <p className="text-sm text-gray-500">Create new video work and track what is already in motion.</p>
           </div>
-          <p className="text-sm text-gray-500">Track the status of your video production requests.</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button onClick={() => navigate('/request-video')} className="px-4 py-2 rounded-xl text-sm font-semibold text-white inline-flex items-center gap-2" style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
+              <Plus size={14} /> New Request
+            </button>
+            <button onClick={() => navigate('/new-campaign')} className="px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 inline-flex items-center gap-2">
+              <Sparkles size={14} /> Start Campaign
+            </button>
+          </div>
         </div>
-        <button
-          onClick={() => navigate('/request-video')}
-          className="px-4 py-2 rounded-xl text-sm font-semibold text-white"
-          style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
-          + New Request
-        </button>
+      </div>
+
+      <div className="grid sm:grid-cols-3 gap-3 mb-6">
+        {[
+          { label: 'Total requests', value: total, note: 'All statuses' },
+          { label: 'Open requests', value: open, note: 'In progress' },
+          { label: 'Delivered', value: delivered, note: 'Completed work' },
+        ].map(card => (
+          <div key={card.label} className="rounded-2xl border border-gray-200 bg-white p-4">
+            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">{card.label}</p>
+            <p className="text-2xl font-extrabold text-gray-900 mt-2">{loading ? '...' : card.value}</p>
+            <p className="text-xs text-gray-400 mt-1">{card.note}</p>
+          </div>
+        ))}
       </div>
 
       {loading ? (
@@ -190,16 +200,12 @@ export default function MyVideoRequests() {
         </div>
       ) : requests.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-            style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.1), rgba(37,99,235,0.1))' }}>
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.1), rgba(37,99,235,0.1))' }}>
             <Film size={28} className="text-purple-500" />
           </div>
-          <h3 className="text-base font-semibold text-gray-900 mb-1">No video requests yet</h3>
-          <p className="text-sm text-gray-400 mb-6 max-w-xs">Submit your first video production request and track its progress here.</p>
-          <button
-            onClick={() => navigate('/request-video')}
-            className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
-            style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
+          <h3 className="text-base font-semibold text-gray-900 mb-1">No requests yet</h3>
+          <p className="text-sm text-gray-400 mb-6 max-w-xs">Start a video request and track everything from this hub.</p>
+          <button onClick={() => navigate('/request-video')} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
             Request a Video
           </button>
         </div>

@@ -56,7 +56,7 @@ export default function BuyCreditsModal({ onClose }: Props) {
             </div>
             <div>
               <p className="text-sm font-bold text-gray-900">Buy Campaign Credits</p>
-              <p className="text-xs text-gray-500">Each credit = one full campaign across 6 formats + unlimited tweaks</p>
+              <p className="text-xs text-gray-500">Each credit = one full campaign across 6 formats with practical refinements</p>
             </div>
           </div>
           <button onClick={onClose}
@@ -115,9 +115,9 @@ export default function BuyCreditsModal({ onClose }: Props) {
 
           <div className="pt-2 space-y-2">
             {[
-              'Video scripts, captions, WhatsApp, poster copy + landing page per campaign',
-              'Unlimited AI tweaks on every section after generation',
-              'Credits never expire',
+              'Video scripts, captions, WhatsApp, poster copy, and landing page per campaign',
+              'Refine every section after generation',
+              'Credits stay available until you use them',
             ].map(f => (
               <div key={f} className="flex items-start gap-2 text-xs text-gray-500">
                 <Check size={12} className="text-emerald-500 shrink-0 mt-0.5" />
@@ -134,3 +134,4 @@ export default function BuyCreditsModal({ onClose }: Props) {
     </div>
   )
 }
+

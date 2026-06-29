@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { Suspense, lazy, useState, useEffect } from 'react'
 import PublicHeader from '../components/layout/PublicHeader'
 import Logo from '../components/ui/Logo'
-import { NiaAgentButton } from '../components/NiaAgent'
 import {
   ArrowRight, TrendingUp, Target, Zap,
   Film, MessageSquare, Building2, Hotel,
@@ -13,16 +12,18 @@ import {
 } from 'lucide-react'
 
 /* ─── Live AI Demo ─────────────────────────────────────────────── */
+const NiaAgent = lazy(() => import('../components/NiaAgent'))
+
 const DEMO_INDUSTRIES = [
   'Real Estate', 'Hospitality', 'Education', 'Fintech / SACCO',
   'Restaurant', 'Travel', 'Retail', 'Health & Wellness', 'Events', 'Professional Services', 'Faith & Community',
 ]
 const DEMO_STEPS = [
-  'Reading your brief…',
-  'Researching your market…',
-  'Crafting your strategy…',
-  'Writing your campaign copy…',
-  'Polishing your assets…',
+  'Reading your brief...',
+  'Researching your market...',
+  'Crafting your strategy...',
+  'Writing your campaign copy...',
+  'Polishing your assets...',
 ]
 const DEMO_TABS = [
   { id: 'instagram', label: 'Instagram' },
@@ -274,19 +275,31 @@ const PREVIEW_OUTPUTS = [
     industry: 'Real Estate',
     color: '#7c3aed',
     tabs: ['Instagram', 'WhatsApp', 'Video Script'],
-    copy: `🏠 Homes that sell lifestyles, not just walls.\n\nHeri Heights — 2BR from KES 6.5M. Walk to everything that matters in Westlands. Schools, malls, the pulse of the city.\n\nWhy rent forever when ownership is this close? 📲 DM for a private viewing this weekend.`,
+    copy: `Homes that sell lifestyles, not just walls.
+
+Heri Heights - 2BR from KES 6.5M. Walk to everything that matters in Westlands. Schools, malls, and the pulse of the city.
+
+Why rent forever when ownership is this close? DM for a private viewing this weekend.`,
   },
   {
     industry: 'Fintech / SACCO',
     color: '#2563eb',
     tabs: ['Instagram', 'WhatsApp', 'Video Script'],
-    copy: `💸 Your money should work as hard as you do.\n\nWith Mama Pima SACCO, save KES 5,000/month and access up to 3X your deposits in emergency loans — no collateral needed.\n\nOver 4,000 members already growing. Join us. 👉 Click the link to apply.`,
+    copy: `Your money should work as hard as you do.
+
+With Mama Pima SACCO, save KES 5,000 per month and access up to 3X your deposits in emergency loans - no collateral needed.
+
+Over 4,000 members are already growing with us. Click the link to apply.`,
   },
   {
     industry: 'Restaurant',
     color: '#dc2626',
     tabs: ['Instagram', 'WhatsApp', 'Video Script'],
-    copy: `🍽️ Lunch just got a serious upgrade.\n\nEvery Thursday, our Chef's Special changes. This week: Swahili Coastal Biryani with freshly caught samaki — KES 650 only.\n\nReserve your table before noon or miss out. 📍 Karen, Nairobi. Call 0700 000 000.`,
+    copy: `Lunch just got a serious upgrade.
+
+Every Thursday, our Chef's Special changes. This week: Swahili Coastal Biryani with freshly caught samaki - KES 650 only.
+
+Reserve your table before noon or miss out. Karen, Nairobi. Call 0700 000 000.`,
   },
 ]
 
@@ -380,6 +393,7 @@ const industries = [
 
 /* ─── Main ─────────────────────────────────────────────────────── */
 export default function Home() {
+  const [showAssistant, setShowAssistant] = useState(false)
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
   return (
@@ -422,11 +436,11 @@ export default function Home() {
                   onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 4px 24px rgba(124,58,237,0.45)')}>
                   <Zap size={15} /> Generate Free Campaign
                 </button>
-                <Link to="/register"
+                <a href="https://wa.me/254790000000?text=Create%20my%20first%20campaign" target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold transition-all"
-                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.88)' }}>
-                  <Sparkles size={15} /> Talk to Nia Creative
-                </Link>
+                  style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.35)', color: '#22c55e' }}>
+                  <MessageSquare size={15} /> Start on WhatsApp
+                </a>
               </div>
 
               {/* Trust strips */}
@@ -509,7 +523,7 @@ export default function Home() {
                 Your AI creative director — always on.
               </h2>
               <p className="text-base leading-relaxed mb-8" style={{ color: 'rgba(255,255,255,0.55)', maxWidth: 440 }}>
-                Tell Nia about your business. She'll ask the right questions, pitch campaign angles, and hand you ready-to-run copy — without you writing a brief.
+                Tell Nia about your business. She'll ask the right questions, pitch campaign angles, and hand you ready-to-run copy — without you having to write a brief.
               </p>
               <div className="flex flex-col gap-3 mb-8">
                 {[
@@ -523,11 +537,12 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              <Link to="/register"
+              <button
+                onClick={() => setShowAssistant(true)}
                 className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold text-white"
                 style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
-                <MessageSquare size={15} /> Talk to Nia — It's Free
-              </Link>
+                <MessageSquare size={15} /> Talk to Nia
+              </button>
             </div>
 
             {/* Right — chat mockup */}
@@ -928,7 +943,21 @@ export default function Home() {
         </div>
       </footer>
 
-      <NiaAgentButton />
+      {showAssistant && (
+        <Suspense fallback={
+          <div className="fixed inset-0 z-[70] bg-black/40 flex items-center justify-center p-4">
+            <div className="rounded-2xl bg-white px-5 py-4 text-sm font-medium text-gray-700 shadow-xl">
+              Loading assistant...
+            </div>
+          </div>
+        }>
+          <NiaAgent onClose={() => setShowAssistant(false)} />
+        </Suspense>
+      )}
     </div>
   )
 }
+
+
+
+

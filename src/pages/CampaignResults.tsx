@@ -2,9 +2,10 @@
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
 import {
   Copy, Save, RefreshCw, Download, Check, Zap, Loader2,
-  Wand2, MessageSquare, Share2, Sparkles, ImageIcon, X, Film,
+  Wand2, MessageSquare, Share2, Sparkles, ImageIcon, X, Film, Users,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
+import CreativeAssistant, { CreativeAssistantButton } from '../components/CreativeAssistant'
 import PosterCanvas from '../components/PosterCanvas'
 import { CampaignFormData, GeneratedContent } from '../types'
 import { supabase } from '../lib/supabase'
@@ -161,6 +162,19 @@ function Block({ label, content, blockKey, briefContext, showWhatsAppShare, onRe
 const tabs = ['Strategy', 'Video Script', 'Poster Copy', 'Captions', '7-Day Calendar', 'WhatsApp', 'Follow-Ups', 'Landing Page', '🎨 Poster']
 
 /* ─── Main page ──────────────────────────────────────────────── */
+const UpgradeOverlay = () => (
+  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/40 to-white/60 rounded-xl flex items-center justify-center backdrop-blur-sm">
+    <div className="bg-white rounded-xl shadow-lg p-6 max-w-sm text-center">
+      <Zap size={24} className="mx-auto mb-3 text-amber-500" />
+      <h3 className="font-bold text-gray-900 mb-2">Upgrade to unlock</h3>
+      <p className="text-sm text-gray-600 mb-4">This feature is only available on paid plans. Get full access to all campaign features.</p>
+      <a href="/pricing" className="btn-primary text-sm px-6 py-2 gap-1.5 inline-flex">
+        <Zap size={13} /> See plans
+      </a>
+    </div>
+  </div>
+)
+
 export default function CampaignResults() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -181,6 +195,7 @@ export default function CampaignResults() {
   // Post-save referral nudge
   const [referralCopied, setReferralCopied] = useState(false)
   const [showReferralNudge, setShowReferralNudge] = useState(false)
+  const [showNia, setShowNia] = useState(false)
   // Poster nudge
   const [posterNudgeDismissed, setPosterNudgeDismissed] = useState(
     () => localStorage.getItem('poster_nudge_dismissed') === '1'
@@ -536,7 +551,8 @@ export default function CampaignResults() {
     </div>,
 
     /* 7-Day Content Calendar */
-    <div key="cal" className="space-y-3">
+    <div key="cal" className="relative space-y-3">
+      {(content as any)?._freeTier && <UpgradeOverlay />}
       {content.contentCalendar && content.contentCalendar.length > 0 ? (
         <>
           <div className="p-4 rounded-xl border border-purple-100 bg-purple-50 text-xs text-gray-600 flex items-center gap-2">
@@ -599,7 +615,8 @@ export default function CampaignResults() {
     </div>,
 
     /* Lead Follow-Ups */
-    <div key="fu" className="space-y-4">
+    <div key="fu" className="relative space-y-4">
+      {(content as any)?._freeTier && <UpgradeOverlay />}
       {content.followUps ? (
         <>
           <div className="p-4 rounded-xl border border-green-200 bg-green-50 text-xs text-gray-600 flex items-center gap-2">
@@ -660,6 +677,7 @@ export default function CampaignResults() {
 
   return (
     <DashboardLayout>
+      {showNia && <CreativeAssistant onClose={() => setShowNia(false)} />}
       {/* Header */}
       <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
         <div>
@@ -676,6 +694,7 @@ export default function CampaignResults() {
           <p className="text-sm text-gray-500">{form.business_name} · {form.industry}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <CreativeAssistantButton onClick={() => setShowNia(true)} label="Open Nia" />
           <button onClick={handleRegenerate} disabled={regenerating}
             className="btn-secondary text-xs gap-1.5 disabled:opacity-50">
             {regenerating ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
@@ -697,6 +716,9 @@ export default function CampaignResults() {
           <button onClick={copyAll} className="btn-secondary text-xs gap-1.5 px-4 py-2">
             {copiedAll ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
             {copiedAll ? 'Copied' : 'Copy All'}
+          </button>
+          <button onClick={() => navigate('/leads', { state: { campaign_id: savedId, campaign_title: form.product_name } })} className="btn-secondary text-xs gap-1.5 px-4 py-2">
+            <Users size={12} /> Track Lead
           </button>
           <button onClick={exportPdf} className="btn-secondary text-xs gap-1.5 px-4 py-2">
             <Download size={12} /> PDF

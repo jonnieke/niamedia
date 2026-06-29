@@ -55,7 +55,7 @@ export default function Pricing() {
           Simple, transparent pricing
         </h1>
         <p className="text-gray-500 max-w-xl mx-auto text-sm md:text-base">
-          Generate campaign assets yourself, or let Nia Media's team handle it. Custom videos available on request.
+          Buy campaign credits, subscribe monthly, or upgrade into managed creative support. No risky unlimited plans.
         </p>
       </section>
 
@@ -66,7 +66,7 @@ export default function Pricing() {
             <Zap size={16} className="text-purple-600" />
           </div>
           <div>
-            <h2 className="text-lg font-extrabold text-gray-900">DIY Platform</h2>
+            <h2 className="text-lg font-extrabold text-gray-900">Campaign Studio Plans</h2>
             <p className="text-xs text-gray-500">Generate campaigns, posters, scripts, and WhatsApp copy yourself — instantly.</p>
           </div>
         </div>
@@ -223,3 +223,5 @@ export default function Pricing() {
     </div>
   )
 }
+
+

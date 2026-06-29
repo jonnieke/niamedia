@@ -9,6 +9,7 @@ import { useAuth } from '../lib/AuthContext'
 
 export interface CampaignIdea {
   idea_title: string
+  industry?: string
   campaign_angle: string
   target_audience: string
   offer: string
@@ -26,13 +27,14 @@ interface ChatMessage {
 }
 
 const QUICK_ACTIONS = [
-  'Generate 10 campaign ideas',
+  'Generate 10 ideas',
   'Make it more premium',
   'Make it more emotional',
   'Make it more direct',
-  'Create a WhatsApp version',
-  'Create a poster concept',
-  'Create a 30-sec video script',
+  'Create WhatsApp version',
+  'Create poster concept',
+  'Create video script',
+  'Turn this into a campaign brief',
   'What should I post for the next 7 days?',
 ]
 
@@ -40,13 +42,13 @@ const STARTERS = [
   'I run a small restaurant in Kitengela. What campaign can I run this weekend?',
   'Give me 10 ideas for a real estate campaign targeting diaspora buyers.',
   'How do I announce a discount without sounding cheap?',
-  'I have a weak idea — help me sharpen it.',
+  'I have a weak idea and need help sharpening it.',
 ]
 
-// Map a structured idea to NewCampaign URL params.
 function ideaToParams(idea: CampaignIdea): string {
   const p = new URLSearchParams()
   if (idea.idea_title) p.set('product_name', idea.idea_title)
+  if (idea.industry) p.set('industry', idea.industry)
   if (idea.target_audience) p.set('target_audience', idea.target_audience)
   if (idea.offer) p.set('offer', idea.offer)
   if (idea.campaign_angle) p.set('notes', idea.campaign_angle)
@@ -65,16 +67,24 @@ function IdeaCard({ idea, onSaved }: { idea: CampaignIdea; onSaved: () => void }
     const { error } = await supabase.from('ideas').insert({
       user_id: user.id,
       title: idea.idea_title || 'Untitled idea',
+      industry: idea.industry || '',
       angle: idea.campaign_angle || '',
       target_audience: idea.target_audience || '',
       offer: idea.offer || '',
       platforms: idea.platforms || [],
-      notes: [idea.poster_concept && `Poster: ${idea.poster_concept}`, idea.video_concept && `Video: ${idea.video_concept}`, idea.whatsapp_message && `WhatsApp: ${idea.whatsapp_message}`].filter(Boolean).join('\n'),
+      notes: [
+        idea.poster_concept && `Poster: ${idea.poster_concept}`,
+        idea.video_concept && `Video: ${idea.video_concept}`,
+        idea.whatsapp_message && `WhatsApp: ${idea.whatsapp_message}`,
+      ].filter(Boolean).join('\n'),
       source: 'Assistant',
       status: 'Draft',
     })
     setSaving(false)
-    if (!error) { setSaved(true); onSaved() }
+    if (!error) {
+      setSaved(true)
+      onSaved()
+    }
   }
 
   return (
@@ -84,6 +94,7 @@ function IdeaCard({ idea, onSaved }: { idea: CampaignIdea; onSaved: () => void }
         <p className="text-sm font-bold text-purple-900 leading-tight">{idea.idea_title}</p>
       </div>
       <div className="p-3.5 space-y-2 text-xs text-gray-700">
+        {idea.industry && <p><span className="font-semibold text-gray-900">Industry:</span> {idea.industry}</p>}
         <p><span className="font-semibold text-gray-900">Angle:</span> {idea.campaign_angle}</p>
         <p><span className="font-semibold text-gray-900">Audience:</span> {idea.target_audience}</p>
         <p><span className="font-semibold text-gray-900">Offer:</span> {idea.offer}</p>
@@ -104,15 +115,28 @@ function IdeaCard({ idea, onSaved }: { idea: CampaignIdea; onSaved: () => void }
         )}
       </div>
       <div className="px-3.5 pb-3.5 flex flex-wrap gap-2">
-        <button onClick={save} disabled={saving || saved}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-purple-300 text-purple-700 bg-white hover:bg-purple-50 disabled:opacity-60 transition-colors">
-          {saved ? <Check size={12} /> : saving ? <Loader2 size={12} className="animate-spin" /> : <Bookmark size={12} />}
-          {saved ? 'Saved' : 'Save to Ideas Bank'}
-        </button>
-        <button onClick={() => navigate(`/new-campaign?${ideaToParams(idea)}`)}
+        {user && (
+          <button
+            onClick={save}
+            disabled={saving || saved}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-purple-300 text-purple-700 bg-white hover:bg-purple-50 disabled:opacity-60 transition-colors"
+          >
+            {saved ? <Check size={12} /> : saving ? <Loader2 size={12} className="animate-spin" /> : <Bookmark size={12} />}
+            {saved ? 'Saved' : 'Save idea'}
+          </button>
+        )}
+        <button
+          onClick={() => navigate(`/new-campaign?${ideaToParams(idea)}`)}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
-          style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
+          style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}
+        >
           <Wand2 size={12} /> Use as brief <ArrowRight size={12} />
+        </button>
+        <button
+          onClick={() => navigate(`/new-campaign?${ideaToParams(idea)}`)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 bg-white hover:bg-gray-50"
+        >
+          Generate campaign
         </button>
       </div>
     </div>
@@ -128,11 +152,10 @@ export default function CreativeAssistant({ onClose }: { onClose: () => void }) 
   const threadId = useRef<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Load brand context once for sharper, on-brand suggestions.
   useEffect(() => {
     if (!user) return
     supabase.from('brand_kits')
-      .select('business_name, industry, preferred_tone, target_customer, business_description')
+      .select('business_name, industry, preferred_tone, target_customer, business_description, location')
       .eq('user_id', user.id).single()
       .then(({ data }) => {
         if (!data) return
@@ -141,6 +164,7 @@ export default function CreativeAssistant({ onClose }: { onClose: () => void }) 
           data.industry && `Industry: ${data.industry}`,
           data.target_customer && `Target customer: ${data.target_customer}`,
           data.preferred_tone && `Preferred tone: ${data.preferred_tone}`,
+          data.location && `Location: ${data.location}`,
           data.business_description && `About: ${data.business_description}`,
         ].filter(Boolean)
         if (parts.length) setBrandContext(parts.join('\n'))
@@ -186,7 +210,7 @@ export default function CreativeAssistant({ onClose }: { onClose: () => void }) 
       setMessages(m => [...m, { role: 'assistant', content: reply, idea }])
       void persist('assistant', reply, idea)
     } catch (err) {
-      setMessages(m => [...m, { role: 'assistant', content: err instanceof Error ? err.message : "Nia couldn't respond — please try again." }])
+      setMessages(m => [...m, { role: 'assistant', content: err instanceof Error ? err.message : "Nia couldn't respond just now. Please try again." }])
     }
     setLoading(false)
   }
@@ -195,16 +219,14 @@ export default function CreativeAssistant({ onClose }: { onClose: () => void }) 
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-md h-full bg-white shadow-2xl flex flex-col animate-[slideIn_0.2s_ease]">
-        {/* Header */}
         <div className="flex items-center justify-between px-5 h-16 border-b border-gray-200 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
               <Sparkles size={16} className="text-white" />
             </div>
             <div>
               <p className="text-sm font-bold text-gray-900 leading-tight">Nia Creative Assistant</p>
-              <p className="text-[11px] text-gray-500 leading-tight">Your campaign strategist</p>
+              <p className="text-[11px] text-gray-500 leading-tight">Your idea partner and campaign strategist</p>
             </div>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100">
@@ -212,20 +234,22 @@ export default function CreativeAssistant({ onClose }: { onClose: () => void }) 
           </button>
         </div>
 
-        {/* Messages */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
           {messages.length === 0 && (
             <div className="space-y-4">
               <div className="rounded-xl bg-purple-50 border border-purple-100 p-4">
                 <p className="text-sm text-gray-700 leading-relaxed">
-                  Hey 👋 I'm Nia. Tell me about your business and what you're trying to sell — I'll sharpen the idea and hand you a campaign you can run today. WhatsApp-first, built for the Kenyan market.
+                  I help you move from rough idea to a campaign you can actually run: angles, WhatsApp copy, poster concepts, video scripts, and sharper offers for Kenyan SMEs.
                 </p>
               </div>
               <div className="space-y-2">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Try asking</p>
                 {STARTERS.map(s => (
-                  <button key={s} onClick={() => send(s)}
-                    className="block w-full text-left text-xs text-gray-600 px-3 py-2.5 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50/50 transition-colors">
+                  <button
+                    key={s}
+                    onClick={() => send(s)}
+                    className="block w-full text-left text-xs text-gray-600 px-3 py-2.5 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50/50 transition-colors"
+                  >
                     {s}
                   </button>
                 ))}
@@ -235,10 +259,12 @@ export default function CreativeAssistant({ onClose }: { onClose: () => void }) 
 
           {messages.map((m, i) => (
             <div key={i} className={m.role === 'user' ? 'flex justify-end' : ''}>
-              <div className={m.role === 'user'
-                ? 'max-w-[85%] px-3.5 py-2.5 rounded-2xl rounded-br-md text-sm text-white'
-                : 'max-w-full text-sm text-gray-800'}
-                style={m.role === 'user' ? { background: 'linear-gradient(135deg, #7c3aed, #2563eb)' } : undefined}>
+              <div
+                className={m.role === 'user'
+                  ? 'max-w-[85%] px-3.5 py-2.5 rounded-2xl rounded-br-md text-sm text-white'
+                  : 'max-w-full text-sm text-gray-800'}
+                style={m.role === 'user' ? { background: 'linear-gradient(135deg, #7c3aed, #2563eb)' } : undefined}
+              >
                 {m.role === 'assistant'
                   ? <p className="whitespace-pre-line leading-relaxed">{m.content}</p>
                   : m.content}
@@ -249,37 +275,42 @@ export default function CreativeAssistant({ onClose }: { onClose: () => void }) 
 
           {loading && (
             <div className="flex items-center gap-2 text-gray-400 text-sm">
-              <Loader2 size={14} className="animate-spin" /> Nia is thinking…
+              <Loader2 size={14} className="animate-spin" /> Nia is thinking...
             </div>
           )}
         </div>
 
-        {/* Quick actions */}
         {messages.length > 0 && (
           <div className="px-4 pt-2 pb-1 flex gap-1.5 overflow-x-auto shrink-0">
             {QUICK_ACTIONS.map(q => (
-              <button key={q} onClick={() => send(q)} disabled={loading}
-                className="shrink-0 px-2.5 py-1.5 rounded-lg text-[11px] font-medium border border-gray-200 text-gray-600 hover:border-purple-300 hover:text-purple-700 disabled:opacity-50 whitespace-nowrap transition-colors">
+              <button
+                key={q}
+                onClick={() => send(q)}
+                disabled={loading}
+                className="shrink-0 px-2.5 py-1.5 rounded-lg text-[11px] font-medium border border-gray-200 text-gray-600 hover:border-purple-300 hover:text-purple-700 disabled:opacity-50 whitespace-nowrap transition-colors"
+              >
                 {q}
               </button>
             ))}
           </div>
         )}
 
-        {/* Input */}
         <div className="p-3 border-t border-gray-200 shrink-0">
           <div className="flex items-end gap-2">
             <textarea
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input) } }}
-              placeholder="Describe your business or idea…"
+              placeholder="Describe your business, offer, or idea..."
               rows={1}
               className="flex-1 resize-none input text-sm py-2.5 max-h-28"
             />
-            <button onClick={() => send(input)} disabled={!input.trim() || loading}
+            <button
+              onClick={() => send(input)}
+              disabled={!input.trim() || loading}
               className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 disabled:opacity-40"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}
+            >
               {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
             </button>
           </div>
@@ -292,8 +323,10 @@ export default function CreativeAssistant({ onClose }: { onClose: () => void }) 
 
 export function CreativeAssistantButton({ onClick, label = 'Nia Creative Assistant' }: { onClick: () => void; label?: string }) {
   return (
-    <button onClick={onClick}
-      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border border-purple-200 text-purple-700 bg-white hover:bg-purple-50 transition-colors">
+    <button
+      onClick={onClick}
+      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border border-purple-200 text-purple-700 bg-white hover:bg-purple-50 transition-colors"
+    >
       <Sparkles size={15} /> {label}
     </button>
   )

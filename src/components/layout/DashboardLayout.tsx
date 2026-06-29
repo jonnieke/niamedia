@@ -5,6 +5,7 @@ import Sidebar from './Sidebar'
 import { useAuth } from '../../lib/AuthContext'
 import { supabase } from '../../lib/supabase'
 import BuyCreditsModal from '../BuyCreditsModal'
+import { NiaAgentButton } from '../NiaAgent'
 
 interface DBNotification {
   id: string
@@ -283,6 +284,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
           </main>
         </div>
+
+        <NiaAgentButton />
 
         {/* WhatsApp float */}
         {import.meta.env.VITE_WHATSAPP_NUMBER && (

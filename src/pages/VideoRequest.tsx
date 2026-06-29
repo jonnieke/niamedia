@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Send, Upload, Loader2, CheckCircle2, Film, Clock } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
+import CreativeAssistant, { CreativeAssistantButton } from '../components/CreativeAssistant'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
@@ -23,6 +24,7 @@ export default function VideoRequest() {
   const location = useLocation()
   const { user } = useAuth()
   const state = (location.state ?? {}) as LocationState
+  const [showNia, setShowNia] = useState(false)
 
   const [form, setForm] = useState({
     campaign_title: state.form?.product_name ?? '',
@@ -99,7 +101,7 @@ export default function VideoRequest() {
         <p className="text-gray-500 text-sm leading-relaxed mb-8">
           Your video request has been received. Nia Media will review the script and contact you with confirmation within 24 hours.
         </p>
-        <button onClick={() => navigate('/my-requests')}
+        <button onClick={() => navigate('/requests')}
           className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white"
           style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
           Track My Requests
@@ -113,13 +115,19 @@ export default function VideoRequest() {
 
   return (
     <DashboardLayout>
+      {showNia && <CreativeAssistant onClose={() => setShowNia(false)} />}
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-1">
-          <Film size={18} className="text-purple-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Request Video Production</h1>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Film size={18} className="text-purple-600" />
+              <h1 className="text-2xl font-bold text-gray-900">Request Video Production</h1>
+            </div>
+            <p className="text-sm text-gray-500">Fill in the details below and Nia Media will produce your video. We'll confirm scope, timeline, and payment before starting.</p>
+          </div>
+          <CreativeAssistantButton onClick={() => setShowNia(true)} label="Open Nia" />
         </div>
-        <p className="text-sm text-gray-500">Fill in the details below and Nia Media will produce your video. We'll confirm scope, timeline, and payment before starting.</p>
       </div>
 
       {/* Pricing guide */}

@@ -1,6 +1,7 @@
 ﻿import { useState, FormEvent, useRef, useEffect } from 'react'
 import { Save, Upload, Globe, Instagram, Youtube, Facebook, Twitter, CheckCircle, Palette, Loader2 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
+import CreativeAssistant, { CreativeAssistantButton } from '../components/CreativeAssistant'
 import { supabase, uploadLogo } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
@@ -125,6 +126,7 @@ export default function BrandKit() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [showNia, setShowNia] = useState(false)
   const logoRef = useRef<HTMLInputElement>(null)
 
   // Load brand kit from Supabase on mount
@@ -197,10 +199,16 @@ export default function BrandKit() {
 
   return (
     <DashboardLayout>
+      {showNia && <CreativeAssistant onClose={() => setShowNia(false)} />}
       <div className="mb-6">
-        <span className="section-tag mb-2 inline-block">Brand Kit</span>
-        <h1 className="text-2xl font-bold text-gray-900">Your Brand Identity</h1>
-        <p className="text-sm text-gray-500 mt-1">Used to personalise every campaign, script, and audio brief.</p>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <span className="section-tag mb-2 inline-block">Brand Kit</span>
+            <h1 className="text-2xl font-bold text-gray-900">Your Brand Identity</h1>
+            <p className="text-sm text-gray-500 mt-1">Used to personalise every campaign, script, and production brief.</p>
+          </div>
+          <CreativeAssistantButton onClick={() => setShowNia(true)} label="Open Nia" />
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">

@@ -136,9 +136,13 @@ Industry: ${userContext.industry || "unknown"}
 Note: The user is already signed in. Greet them by referencing their business if it's known.`
     }
 
+    if (voiceEnabled) {
+      system += `\n\nVOICE MODE ACTIVE:\nKeep replies short and spoken-friendly. Use at most 1-2 short sentences unless the user asks for more. Ask only one question at a time. Prioritize quick clarification, then continue the conversation.`
+    }
+
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 550,
+      max_tokens: voiceEnabled ? 240 : 550,
       system,
       messages: messages.map(m => ({ role: m.role, content: m.content })),
     })

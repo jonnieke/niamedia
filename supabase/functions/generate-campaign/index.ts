@@ -8,10 +8,10 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: cors })
   }
 
-  // Reservation id for the credit held during generation. Committed on success,
-  // refunded if anything fails, so a failed generation never costs the user a credit.
   let reservationId: string | null = null
   let brandMemory = ""
+  let isFreeTier = false
+  let userId: string | null = null
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -24,13 +24,47 @@ Deno.serve(async (req) => {
     const token = authHeader.replace("Bearer ", "")
 
     if (token) {
-      // Authenticated user — reserve a credit (committed only after a successful generation)
       const { data: { user } } = await supabase.auth.getUser(token)
       if (user) {
-        const { data: txId } = await supabase.rpc("reserve_credit", {
-          p_user_id: user.id,
-          p_description: `Campaign: ${form.product_name ?? "untitled"}`,
-        })
+        userId = user.id
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("is_free_tier, free_campaigns_used, free_campaigns_reset_at")
+          .eq("id", user.id)
+          .single()
+
+        isFreeTier = profile?.is_free_tier ?? true
+        if (isFreeTier) {
+          const resetDate = new Date(profile?.free_campaigns_reset_at || new Date())
+          const now = new Date()
+          const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+          const used = resetDate < monthAgo ? 0 : (profile?.free_campaigns_used ?? 0)
+
+          if (used >= 1) {
+            return new Response(
+              JSON.stringify({
+                error: "free_tier_limit",
+                friendly:
+                  "You've used your free campaign this month! Upgrade to unlimited: 5 campaigns for KES 2,000, or monthly plans from KES 2,500.",
+              }),
+              { status: 402, headers: { ...cors, "Content-Type": "application/json" } }
+            )
+          }
+        } else {
+          const { data: txId } = await supabase.rpc("reserve_credit", {
+            p_user_id: user.id,
+            p_description: `Campaign: ${form.product_name ?? "untitled"}`,
+          })
+
+          if (!txId) {
+            return new Response(JSON.stringify({ error: "insufficient_credits" }), {
+              status: 402,
+              headers: { ...cors, "Content-Type": "application/json" },
+            })
+          }
+          reservationId = txId as string
+        }
+
         if (!txId) {
           return new Response(JSON.stringify({ error: "insufficient_credits" }), {
             status: 402,
@@ -39,33 +73,37 @@ Deno.serve(async (req) => {
         }
         reservationId = txId as string
 
-        // Brand Memory — make every campaign on-brand using the saved Brand Kit.
-        const { data: kit } = await supabase
-          .from("brand_kits")
-          .select("tagline, selling_points, common_offers, customer_objections, competitors, words_to_use, words_to_avoid, common_questions, brand_memory")
-          .eq("user_id", user.id)
-          .single()
-        if (kit) {
-          const lines = [
-            kit.tagline && `Tagline: ${kit.tagline}`,
-            kit.selling_points && `Key selling points: ${kit.selling_points}`,
-            kit.common_offers && `Common offers: ${kit.common_offers}`,
-            kit.customer_objections && `Customer objections to overcome: ${kit.customer_objections}`,
-            kit.common_questions && `Common customer questions: ${kit.common_questions}`,
-            kit.competitors && `Competitors: ${kit.competitors}`,
-            kit.words_to_use && `Words to use: ${kit.words_to_use}`,
-            kit.words_to_avoid && `Words to AVOID: ${kit.words_to_avoid}`,
-            kit.brand_memory && `Always remember: ${kit.brand_memory}`,
-          ].filter(Boolean)
-          if (lines.length) brandMemory = `\n\nBRAND MEMORY (apply to ALL copy — stay on-brand, honour words-to-use/avoid, address objections):\n${lines.join("\n")}`
+        if (!isFreeTier) {
+          const { data: kit } = await supabase
+            .from("brand_kits")
+            .select("tagline, selling_points, common_offers, customer_objections, competitors, words_to_use, words_to_avoid, common_questions, brand_memory")
+            .eq("user_id", user.id)
+            .single()
+
+          if (kit) {
+            const lines = [
+              kit.tagline && `Tagline: ${kit.tagline}`,
+              kit.selling_points && `Key selling points: ${kit.selling_points}`,
+              kit.common_offers && `Common offers: ${kit.common_offers}`,
+              kit.customer_objections && `Customer objections to overcome: ${kit.customer_objections}`,
+              kit.common_questions && `Common customer questions: ${kit.common_questions}`,
+              kit.competitors && `Competitors: ${kit.competitors}`,
+              kit.words_to_use && `Words to use: ${kit.words_to_use}`,
+              kit.words_to_avoid && `Words to avoid: ${kit.words_to_avoid}`,
+              kit.brand_memory && `Always remember: ${kit.brand_memory}`,
+            ].filter(Boolean)
+
+            if (lines.length) {
+              brandMemory = `\n\nBRAND MEMORY (apply to all copy - stay on-brand, honor words-to-use and words-to-avoid, and address objections):\n${lines.join("\n")}`
+            }
+          }
         }
       }
     } else {
-      // Unauthenticated demo — rate-limit to 5 per IP per day
       const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim()
         ?? req.headers.get("cf-connecting-ip")
         ?? "unknown"
-      const dayKey = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+      const dayKey = new Date().toISOString().slice(0, 10)
       const rateLimitKey = `demo_rate:${ip}:${dayKey}`
 
       const { data: existing } = await supabase
@@ -91,19 +129,29 @@ Deno.serve(async (req) => {
     const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") })
 
     const LANG_INSTRUCTIONS: Record<string, string> = {
-      sw: "LANGUAGE: Generate ALL copy in Kiswahili. Use natural, conversational Swahili that feels authentic to Kenyan business communication — not a translation, but copy that a native Swahili speaker would write. Where English brand names or terms are standard, keep them.",
-      sheng: "LANGUAGE: Generate copy in light Sheng — the urban Kenyan mix of Swahili and English — but keep it professional and widely understood, not heavy slang. It should feel young, current, and street-smart while staying clear to any Nairobi customer. Avoid words that exclude older or upcountry audiences.",
-      mixed: "LANGUAGE: Generate copy in a natural mix of English and Kiswahili (code-switching), the way many Kenyan businesses actually speak to customers on WhatsApp and social media. Blend the two fluidly within sentences where it feels authentic.",
-      conversational: "LANGUAGE: Generate copy in Kenyan conversational English — warm, direct, everyday spoken English as used in Nairobi business, not formal or corporate. Light local flavour is welcome; keep it clear and relatable.",
+      sw: "LANGUAGE: Generate all copy in Kiswahili. Use natural, conversational Swahili that feels authentic to Kenyan business communication, not a literal translation.",
+      sheng: "LANGUAGE: Generate copy in light Sheng, the urban Kenyan mix of Swahili and English, but keep it professional and widely understood.",
+      mixed: "LANGUAGE: Generate copy in a natural mix of English and Kiswahili, the way many Kenyan businesses actually speak to customers on WhatsApp and social media.",
+      conversational: "LANGUAGE: Generate copy in Kenyan conversational English - warm, direct, everyday spoken English as used in Nairobi business, not formal or corporate.",
     }
     const languageInstruction = LANG_INSTRUCTIONS[form.language as string]
       ? `\n\n${LANG_INSTRUCTIONS[form.language as string]}`
       : ""
 
-    const prompt = `You are an expert marketing copywriter specialising in Kenyan small businesses. Generate a complete campaign for the following brief. Write in a voice that feels genuine and locally resonant — use the tone specified, avoid corporate jargon, and make each platform's copy feel native to that platform.
+    const REGULATED_INSTRUCTIONS: Record<string, string> = {
+      "Health & Wellness": "HEALTH INSTRUCTION: Use careful, compliant wording. Do not promise cures, guaranteed outcomes, medical certainty, or misleading before-and-after claims. Keep claims modest, practical, and trustworthy.",
+      "Fintech / SACCO": "FINANCE INSTRUCTION: Use careful, compliant wording. Do not imply guaranteed returns, instant approval certainty, or risk-free financial outcomes. Be clear, responsible, and specific about the offer without exaggeration.",
+      Education: "EDUCATION INSTRUCTION: Use careful, compliant wording. Do not guarantee admissions, exam success, scholarships, or life outcomes. Keep the message encouraging, clear, and parent-student friendly.",
+      "Faith & Community": "FAITH AND COMMUNITY INSTRUCTION: Create respectful, welcoming, non-exploitative copy suitable for churches, mosques, ministries, community groups, outreach programs, and faith-based events. Avoid exaggerated spiritual claims, manipulative fundraising language, or insensitive wording.",
+    }
+    const regulatedInstruction = REGULATED_INSTRUCTIONS[form.industry as string]
+      ? `\n\n${REGULATED_INSTRUCTIONS[form.industry as string]}`
+      : ""
+
+    const prompt = `You are an expert marketing copywriter specialising in Kenyan small businesses. Generate a complete campaign for the following brief. Write in a voice that feels genuine and locally resonant, use the tone specified, avoid corporate jargon, and make each platform's copy feel native to that platform.
 
 Business: ${form.business_name} (${form.industry})
-Product/Service: ${form.product_name}
+Product or Service: ${form.product_name}
 Objective: ${form.objective}
 Target Audience: ${form.target_audience}
 Location: ${form.location}
@@ -112,13 +160,13 @@ Tone: ${form.tone}
 Platforms: ${(form.platforms as string[]).join(", ")}
 Call to Action: ${form.cta}
 WhatsApp Number: ${form.whatsapp_number || "Not provided"}
-Additional Notes: ${form.notes || "None"}${languageInstruction}${form.industry === 'Faith & Community' ? '\n\nFAITH & COMMUNITY INSTRUCTION: Create respectful, welcoming, non-exploitative copy suitable for churches, mosques, ministries, community groups, outreach programs, and faith-based events. Avoid exaggerated spiritual claims, manipulative fundraising language, or insensitive wording. Keep tone warm, clear, and community-centered.' : ''}
+Additional Notes: ${form.notes || "None"}${languageInstruction}${regulatedInstruction}
 
-WhatsApp is the #1 sales channel for Kenyan SMEs — make every WhatsApp message ready to send. If a WhatsApp number is provided, weave a "chat with us on WhatsApp" line into CTAs naturally.
+WhatsApp is the number one sales channel for Kenyan SMEs, so make every WhatsApp message ready to send. If a WhatsApp number is provided, weave a "chat with us on WhatsApp" line into CTAs naturally.
 
-Also produce: a YouTube Shorts / Reel script (separate from the main video script — punchier, vertical, 30–45s), a practical 7-day content calendar (one concrete post per day across the chosen platforms), and three lead follow-up messages for prospects who enquired but haven't bought (first nudge, value reminder, final friendly close).${brandMemory}
+Also produce: a YouTube Shorts or Reel script that is punchier and vertical, a practical 7-day content calendar with one concrete post per day across the chosen platforms, and three lead follow-up messages for prospects who enquired but have not bought yet.${brandMemory}
 
-Generate copy that a Kenyan small business owner would be proud to publish. Be specific, be compelling, avoid generic filler.`
+Generate copy that a Kenyan small business owner would be proud to publish. Be specific, commercially useful, locally aware, and avoid generic filler.`
 
     const response = await client.messages.create({
       model: "claude-sonnet-4-6",
@@ -135,10 +183,10 @@ Generate copy that a Kenyan small business owner would be proud to publish. Be s
                 type: "object" as const,
                 required: ["angle", "painPoint", "keyMessage", "platforms", "cta"],
                 properties: {
-                  angle: { type: "string" as const, description: "The core campaign angle / positioning" },
+                  angle: { type: "string" as const, description: "The core campaign angle or positioning" },
                   painPoint: { type: "string" as const, description: "The key pain point this campaign addresses" },
                   keyMessage: { type: "string" as const, description: "The single most important message" },
-                  platforms: { type: "array" as const, items: { type: "string" as const }, description: "Recommended platforms (use the ones from the brief)" },
+                  platforms: { type: "array" as const, items: { type: "string" as const }, description: "Recommended platforms from the brief" },
                   cta: { type: "string" as const, description: "Primary call to action phrase" },
                 },
               },
@@ -146,12 +194,12 @@ Generate copy that a Kenyan small business owner would be proud to publish. Be s
                 type: "object" as const,
                 required: ["hook", "scene1", "scene2", "scene3", "callToAction", "visualDirection"],
                 properties: {
-                  hook: { type: "string" as const, description: "Opening hook — first 3 seconds, must grab attention" },
-                  scene1: { type: "string" as const, description: "Scene 1 narration / on-screen action (problem or relatability)" },
-                  scene2: { type: "string" as const, description: "Scene 2 narration / on-screen action (solution / product)" },
-                  scene3: { type: "string" as const, description: "Scene 3 narration / on-screen action (social proof / outcome)" },
+                  hook: { type: "string" as const, description: "Opening hook - the first 3 seconds" },
+                  scene1: { type: "string" as const, description: "Scene 1 narration or on-screen action" },
+                  scene2: { type: "string" as const, description: "Scene 2 narration or on-screen action" },
+                  scene3: { type: "string" as const, description: "Scene 3 narration or on-screen action" },
                   callToAction: { type: "string" as const, description: "Final CTA with contact details" },
-                  visualDirection: { type: "string" as const, description: "Brief direction on visual style, colours, and mood" },
+                  visualDirection: { type: "string" as const, description: "Brief direction on visual style, colors, and mood" },
                 },
               },
               posterCopy: {
@@ -170,18 +218,18 @@ Generate copy that a Kenyan small business owner would be proud to publish. Be s
                 required: ["facebook", "instagram", "tiktok", "linkedin"],
                 properties: {
                   facebook: { type: "string" as const, description: "Full Facebook post caption with hashtags" },
-                  instagram: { type: "string" as const, description: "Instagram caption — punchy, with line breaks and hashtags" },
-                  tiktok: { type: "string" as const, description: "TikTok caption — casual, short, trending style" },
-                  linkedin: { type: "string" as const, description: "LinkedIn post — professional, story-driven" },
+                  instagram: { type: "string" as const, description: "Instagram caption with line breaks and hashtags" },
+                  tiktok: { type: "string" as const, description: "TikTok caption - casual and short" },
+                  linkedin: { type: "string" as const, description: "LinkedIn post - professional and story-driven" },
                 },
               },
               whatsapp: {
                 type: "object" as const,
                 required: ["status", "broadcast", "reply"],
                 properties: {
-                  status: { type: "string" as const, description: "Short WhatsApp Status text (max 5 lines)" },
+                  status: { type: "string" as const, description: "Short WhatsApp Status text" },
                   broadcast: { type: "string" as const, description: "Broadcast message to existing contacts" },
-                  reply: { type: "string" as const, description: "Auto-reply / follow-up message template" },
+                  reply: { type: "string" as const, description: "Auto-reply or follow-up message template" },
                 },
               },
               landingPage: {
@@ -210,23 +258,23 @@ Generate copy that a Kenyan small business owner would be proud to publish. Be s
                 type: "object" as const,
                 required: ["hook", "script", "caption"],
                 properties: {
-                  hook: { type: "string" as const, description: "First 2 seconds — a scroll-stopping line for a vertical short" },
-                  script: { type: "string" as const, description: "Full 30-45s vertical short script with on-screen text and spoken lines, punchier than the main video" },
-                  caption: { type: "string" as const, description: "YouTube Shorts caption with relevant hashtags" },
+                  hook: { type: "string" as const, description: "First 2 seconds for a vertical short" },
+                  script: { type: "string" as const, description: "Full 30-45s vertical short script" },
+                  caption: { type: "string" as const, description: "YouTube Shorts caption with hashtags" },
                 },
               },
               contentCalendar: {
                 type: "array" as const,
-                description: "Exactly 7 entries, one per day (Day 1 to Day 7), each a concrete post for the chosen platforms",
+                description: "Exactly 7 entries, one per day",
                 items: {
                   type: "object" as const,
                   required: ["day", "platform", "format", "idea", "caption"],
                   properties: {
-                    day: { type: "string" as const, description: "e.g. 'Day 1'" },
-                    platform: { type: "string" as const, description: "The platform for this post" },
-                    format: { type: "string" as const, description: "e.g. Reel, Status, Carousel, Photo, Broadcast" },
-                    idea: { type: "string" as const, description: "Short description of the post concept" },
-                    caption: { type: "string" as const, description: "Ready-to-post caption / message for that day" },
+                    day: { type: "string" as const },
+                    platform: { type: "string" as const },
+                    format: { type: "string" as const },
+                    idea: { type: "string" as const },
+                    caption: { type: "string" as const },
                   },
                 },
               },
@@ -234,9 +282,9 @@ Generate copy that a Kenyan small business owner would be proud to publish. Be s
                 type: "object" as const,
                 required: ["firstFollowUp", "secondFollowUp", "finalFollowUp"],
                 properties: {
-                  firstFollowUp: { type: "string" as const, description: "First gentle nudge to a lead who enquired but didn't buy (WhatsApp-ready)" },
-                  secondFollowUp: { type: "string" as const, description: "Value reminder / overcome objection follow-up" },
-                  finalFollowUp: { type: "string" as const, description: "Final friendly close with light urgency" },
+                  firstFollowUp: { type: "string" as const },
+                  secondFollowUp: { type: "string" as const },
+                  finalFollowUp: { type: "string" as const },
                 },
               },
             },
@@ -252,21 +300,40 @@ Generate copy that a Kenyan small business owner would be proud to publish. Be s
       throw new Error("Claude did not return structured content")
     }
 
-    // Generation succeeded — commit the reserved credit.
     if (reservationId) {
       await supabase.rpc("commit_credit", { p_tx_id: reservationId })
     }
 
-    return new Response(JSON.stringify(toolUse.input), {
+    let output = toolUse.input as Record<string, unknown>
+
+    if (isFreeTier && userId) {
+      // Filter free tier output: remove shorts, calendar, follow-ups; mark poster as watermarked
+      const { youtubeShorts, contentCalendar, followUps, ...freeTierOutput } = output
+      output = {
+        ...freeTierOutput,
+        _freeTier: true,
+        _posterWatermarked: true,
+      }
+      // Update free campaign count
+      const now = new Date()
+      await supabase
+        .from("profiles")
+        .update({
+          free_campaigns_used: 1,
+          free_campaigns_reset_at: now.toISOString(),
+        })
+        .eq("id", userId)
+    }
+
+    return new Response(JSON.stringify(output), {
       headers: { ...cors, "Content-Type": "application/json" },
     })
   } catch (err: unknown) {
-    // Generation failed — refund the reserved credit so the user is not charged.
     if (reservationId) {
       try { await supabase.rpc("refund_credit", { p_tx_id: reservationId }) } catch { /* best effort */ }
     }
     const message = err instanceof Error ? err.message : "Unknown error"
-    return new Response(JSON.stringify({ error: message, friendly: "We couldn't generate your campaign just now. No credit was used — please try again." }), {
+    return new Response(JSON.stringify({ error: message, friendly: "We couldn't generate your campaign just now. No credit was used - please try again." }), {
       status: 500,
       headers: { ...cors, "Content-Type": "application/json" },
     })

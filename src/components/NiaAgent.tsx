@@ -1,10 +1,11 @@
-﻿import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, Mic, MicOff, Volume2, VolumeX, Send, ArrowRight, Loader2, Sparkles, MessageSquare } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
+import { GoogleGenAI, Modality } from '@google/genai'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
-/* ─── Types ─────────────────────────────────────────────────── */
+/* --- Types --------------------------------------------------- */
 interface Message {
   id: string
   role: 'user' | 'assistant'
@@ -27,9 +28,9 @@ interface SuggestedAction {
 type AgentState = 'idle' | 'listening' | 'thinking' | 'speaking'
 
 const GUEST_LIMIT = 30
-const OPENING_LINE = "Hey! I'm Nia, your AI marketing advisor. Tell me — what kind of business are you running?"
+const OPENING_LINE = "Hey! I'm Nia, your AI marketing advisor. Tell me � what kind of business are you running?"
 
-/* ─── Waveform animation (CSS injected once) ─────────────────── */
+/* --- Waveform animation (CSS injected once) ------------------- */
 const WAVE_STYLE = `
 @keyframes niaBeat {
   0%, 100% { transform: scaleY(0.15); }
@@ -49,7 +50,7 @@ const WAVE_STYLE = `
 }
 `
 
-/* ─── Sub-components ─────────────────────────────────────────── */
+/* --- Sub-components ------------------------------------------- */
 function Waveform({ active }: { active: boolean }) {
   const bars = [0.4, 0.7, 1, 0.8, 0.6, 0.9, 0.5, 0.75, 0.45, 0.85, 0.6, 0.7, 0.4]
   return (
@@ -144,7 +145,7 @@ function Avatar({ state }: { state: AgentState }) {
   )
 }
 
-/* ─── Main component ─────────────────────────────────────────── */
+/* --- Main component ------------------------------------------- */
 interface NiaAgentProps {
   onClose: () => void
 }
@@ -173,6 +174,18 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const listeningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pendingFinalTranscriptRef = useRef('')
+  const latestMessagesRef = useRef<Message[]>(messages)
+  const voiceModeRef = useRef(voiceMode)
+  const speechSupportedRef = useRef(speechSupported)
+  const guestExpiredRef = useRef(guestExpired)
+  const liveSessionRef = useRef<any>(null)
+  const liveConnectingRef = useRef(false)
+  const liveConnectPromiseRef = useRef<Promise<boolean> | null>(null)
+  const liveDraftIdRef = useRef<string | null>(null)
+  const liveDraftTextRef = useRef('')
+  const liveFinalizedRef = useRef(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Inject CSS once
@@ -229,6 +242,22 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, interimText, agentState])
 
+  useEffect(() => {
+    latestMessagesRef.current = messages
+  }, [messages])
+
+  useEffect(() => {
+    voiceModeRef.current = voiceMode
+  }, [voiceMode])
+
+  useEffect(() => {
+    speechSupportedRef.current = speechSupported
+  }, [speechSupported])
+
+  useEffect(() => {
+    guestExpiredRef.current = guestExpired
+  }, [guestExpired])
+
   // Guest countdown
   useEffect(() => {
     if (!isGuest || !guestStarted || guestExpired) return
@@ -250,13 +279,16 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
     return () => {
       recognitionRef.current?.abort()
       audioRef.current?.pause()
+      closeGeminiLive()
       if (timerRef.current) clearInterval(timerRef.current)
+      if (listeningTimerRef.current) clearTimeout(listeningTimerRef.current)
     }
   }, [])
 
-  /* ── Audio playback ── */
+  /* -- Audio playback -- */
   const playAudio = useCallback(async (base64: string) => {
     setAgentState('speaking')
+    if (listeningTimerRef.current) clearTimeout(listeningTimerRef.current)
     try {
       const binary = atob(base64)
       const bytes = new Uint8Array(binary.length)
@@ -272,6 +304,17 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
       audio.onended = () => {
         setAgentState('idle')
         URL.revokeObjectURL(url)
+        if (listeningTimerRef.current) clearTimeout(listeningTimerRef.current)
+        if (voiceModeRef.current && speechSupportedRef.current && !guestExpiredRef.current) {
+          listeningTimerRef.current = setTimeout(() => {
+            try {
+              recognitionRef.current?.start()
+              setAgentState('listening')
+            } catch {
+              setAgentState('idle')
+            }
+          }, 450)
+        }
       }
       audio.onerror = () => {
         setAgentState('idle')
@@ -283,10 +326,229 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
     }
   }, [])
 
-  /* ── Send message to agent ── */
+  const persistConversation = useCallback((updatedMessages: Message[]) => {
+    if (!user) return
+    supabase.from('conversation_sessions').upsert(
+      { user_id: user.id, messages: updatedMessages, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' }
+    ).then(() => {/* silent */})
+  }, [user])
+
+  const speakReply = useCallback(async (reply: string) => {
+    if (!voiceMode || !speechSupported) {
+      setAgentState('idle')
+      return
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY as string
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-preview`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ voiceId: 'sw-f', text: reply }),
+      })
+      const data = await res.json() as { audio?: string; error?: string }
+      if (data.audio) {
+        await playAudio(data.audio)
+        return
+      }
+    } catch {
+      // Fall back to text-only idle state.
+    }
+
+    setAgentState('idle')
+  }, [playAudio, speechSupported, voiceMode])
+
+  const finalizeGeminiReply = useCallback(async (rawReply: string) => {
+    if (liveFinalizedRef.current) return
+    liveFinalizedRef.current = true
+
+    const actionMatch = rawReply.match(/\[NIA_ACTION:(.+?)\]/)
+    let suggestedAction: unknown = null
+    if (actionMatch) {
+      try { suggestedAction = JSON.parse(actionMatch[1]) } catch { /* ignore */ }
+    }
+    const reply = rawReply.replace(/\[NIA_ACTION:.+?\]/, '').trim()
+
+    const assistantMsg: Message = {
+      id: liveDraftIdRef.current ?? String(Date.now() + 1),
+      role: 'assistant',
+      content: reply,
+    }
+
+    setMessages(prev => {
+      const draftId = liveDraftIdRef.current
+      const next = draftId
+        ? prev.map(m => m.id === draftId ? assistantMsg : m)
+        : [...prev, assistantMsg]
+      if (draftId && !prev.some(m => m.id === draftId)) next.push(assistantMsg)
+      return next
+    })
+
+    if (suggestedAction) setSuggestedAction(suggestedAction as SuggestedAction)
+
+    const snapshot = [...latestMessagesRef.current]
+    const draftId = liveDraftIdRef.current
+    const hasDraft = draftId ? snapshot.some(m => m.id === draftId) : false
+    const nextMessages = hasDraft
+      ? snapshot.map(m => m.id === draftId ? assistantMsg : m)
+      : [...snapshot, assistantMsg]
+    persistConversation(nextMessages)
+
+    liveDraftIdRef.current = null
+    liveDraftTextRef.current = ''
+
+    if (reply) {
+      await speakReply(reply)
+    } else {
+      setAgentState('idle')
+    }
+  }, [persistConversation, speakReply])
+
+  const closeGeminiLive = useCallback(() => {
+    try {
+      liveSessionRef.current?.close?.()
+    } catch {
+      // ignore
+    }
+    liveSessionRef.current = null
+    liveConnectingRef.current = false
+    liveConnectPromiseRef.current = null
+    liveDraftIdRef.current = null
+    liveDraftTextRef.current = ''
+    liveFinalizedRef.current = false
+  }, [])
+
+  const ensureGeminiLive = useCallback(async () => {
+    if (liveSessionRef.current) return true
+    if (liveConnectingRef.current && liveConnectPromiseRef.current) {
+      return liveConnectPromiseRef.current
+    }
+
+    liveConnectingRef.current = true
+    liveFinalizedRef.current = false
+    liveDraftIdRef.current = null
+    liveDraftTextRef.current = ''
+
+    const connectPromise = (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY as string
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gemini-live-token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ userContext: brandContext ?? undefined }),
+        })
+
+        const tokenData = await res.json() as { token?: string; model?: string; error?: string }
+        if (!res.ok || !tokenData.token) {
+          throw new Error(tokenData.error || 'Gemini Live token failed')
+        }
+
+        const ai = new GoogleGenAI({ apiKey: tokenData.token, httpOptions: { apiVersion: 'v1alpha' } })
+        const liveSession = await ai.live.connect({
+          model: tokenData.model ?? 'gemini-live-2.5-flash-preview',
+          config: {
+            responseModalities: [Modality.TEXT],
+          },
+          callbacks: {
+            onopen: () => {
+              setAgentState('idle')
+            },
+            onmessage: (event) => {
+              const serverContent = event.serverContent
+              if (!serverContent) return
+
+              if (serverContent.interrupted) {
+                setAgentState('thinking')
+                return
+              }
+
+              const chunk = (serverContent.modelTurn?.parts ?? [])
+                .map(part => part.text ?? '')
+                .join('')
+
+              if (chunk) {
+                liveDraftTextRef.current += chunk
+                setAgentState('thinking')
+                const draftId = liveDraftIdRef.current ?? `gemini-${Date.now()}`
+                liveDraftIdRef.current = draftId
+                setMessages(prev => {
+                  const nextDraft = { id: draftId, role: 'assistant' as const, content: liveDraftTextRef.current }
+                  const idx = prev.findIndex(m => m.id === draftId)
+                  if (idx >= 0) {
+                    const next = [...prev]
+                    next[idx] = nextDraft
+                    return next
+                  }
+                  return [...prev, nextDraft]
+                })
+              }
+
+              if ((serverContent.turnComplete || serverContent.generationComplete || serverContent.waitingForInput) && liveDraftTextRef.current.trim()) {
+                void finalizeGeminiReply(liveDraftTextRef.current)
+              }
+            },
+            onerror: () => {
+              closeGeminiLive()
+            },
+            onclose: () => {
+              closeGeminiLive()
+            },
+          },
+        })
+
+        liveSessionRef.current = liveSession
+        return true
+      } catch {
+        closeGeminiLive()
+        return false
+      } finally {
+        liveConnectingRef.current = false
+      }
+    })()
+
+    liveConnectPromiseRef.current = connectPromise
+    return connectPromise
+  }, [brandContext, closeGeminiLive, finalizeGeminiReply])
+
+  const sendGeminiLiveMessage = useCallback(async (text: string) => {
+    const trimmed = text.trim()
+    if (!trimmed) return false
+
+    const ready = await ensureGeminiLive()
+    if (!ready || !liveSessionRef.current) return false
+
+    liveFinalizedRef.current = false
+    liveDraftIdRef.current = `gemini-${Date.now()}`
+    liveDraftTextRef.current = ''
+    setAgentState('thinking')
+
+    try {
+      liveSessionRef.current.sendClientContent({ turns: trimmed, turnComplete: true })
+      return true
+    } catch {
+      closeGeminiLive()
+      return false
+    }
+  }, [closeGeminiLive, ensureGeminiLive])
+  /* -- Send message to agent -- */
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim()
     if (!trimmed || agentState === 'thinking' || agentState === 'speaking' || guestExpired) return
+
+    if (listeningTimerRef.current) clearTimeout(listeningTimerRef.current)
+    pendingFinalTranscriptRef.current = ''
+    recognitionRef.current?.stop()
 
     const userMsg: Message = { id: String(Date.now()), role: 'user', content: trimmed }
     setMessages(prev => [...prev, userMsg])
@@ -296,8 +558,13 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
 
     if (isGuest && !guestStarted) setGuestStarted(true)
 
+    if (voiceMode && speechSupported) {
+      const sent = await sendGeminiLiveMessage(trimmed)
+      if (sent) return
+    }
+
     try {
-      const history = [...messages, userMsg].map(m => ({ role: m.role, content: m.content }))
+      const history = [...latestMessagesRef.current, userMsg].map(m => ({ role: m.role, content: m.content }))
       const { data: { session } } = await supabase.auth.getSession()
       const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY as string
 
@@ -345,16 +612,29 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
     }
   }, [messages, agentState, guestExpired, isGuest, guestStarted, voiceMode, speechSupported, brandContext, playAudio])
 
-  /* ── Voice recognition ── */
+  /* -- Voice recognition -- */
+  const scheduleFinalSend = useCallback((finalText: string) => {
+    pendingFinalTranscriptRef.current = finalText
+    if (listeningTimerRef.current) clearTimeout(listeningTimerRef.current)
+    listeningTimerRef.current = setTimeout(() => {
+      const readyText = pendingFinalTranscriptRef.current.trim()
+      pendingFinalTranscriptRef.current = ''
+      if (readyText) void sendMessage(readyText)
+    }, 650)
+  }, [sendMessage])
+
   const startListening = useCallback(() => {
-    if (agentState !== 'idle' || guestExpired) return
+    if (guestExpired) return
+    if (agentState === 'thinking') return
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (!SR) return
 
+    if (listeningTimerRef.current) clearTimeout(listeningTimerRef.current)
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const recognition: any = new SR()
-    recognition.continuous = false
+    recognition.continuous = true
     recognition.interimResults = true
     recognition.lang = 'en-US'
 
@@ -368,33 +648,43 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
         else interim += result[0].transcript
       }
       setInterimText(interim || final)
-      if (final) {
-        setInterimText('')
-        sendMessage(final.trim())
+      if (final.trim()) {
+        scheduleFinalSend(final.trim())
       }
     }
 
     recognition.onend = () => {
+      if (pendingFinalTranscriptRef.current.trim()) {
+        scheduleFinalSend(pendingFinalTranscriptRef.current)
+      }
       setAgentState(prev => prev === 'listening' ? 'idle' : prev)
     }
 
     recognition.onerror = () => {
       setAgentState('idle')
       setInterimText('')
+      pendingFinalTranscriptRef.current = ''
     }
 
     recognitionRef.current = recognition
     recognition.start()
     setAgentState('listening')
-  }, [agentState, guestExpired, sendMessage])
+  }, [agentState, guestExpired, scheduleFinalSend])
 
   const stopListening = useCallback(() => {
     recognitionRef.current?.stop()
     setAgentState('idle')
     setInterimText('')
+    pendingFinalTranscriptRef.current = ''
+    if (listeningTimerRef.current) clearTimeout(listeningTimerRef.current)
   }, [])
 
   const handleMicClick = () => {
+    if (agentState === 'speaking') {
+      stopSpeaking()
+      startListening()
+      return
+    }
     if (agentState === 'listening') stopListening()
     else startListening()
   }
@@ -406,9 +696,19 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
   const stopSpeaking = () => {
     audioRef.current?.pause()
     setAgentState('idle')
+    if (listeningTimerRef.current) clearTimeout(listeningTimerRef.current)
+    if (voiceMode && speechSupported && !guestExpired) {
+      listeningTimerRef.current = setTimeout(() => {
+        try {
+          recognitionRef.current?.start()
+          setAgentState('listening')
+        } catch {
+          setAgentState('idle')
+        }
+      }, 250)
+    }
   }
 
-  /* ── Build campaign URL from suggested action ── */
   const buildCampaignUrl = (action: SuggestedAction) => {
     const params = new URLSearchParams({
       business_name: action.brief.business || '',
@@ -606,7 +906,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
               <div className="p-5 text-center">
                 <p className="text-sm font-bold text-gray-900 mb-1">Your 30-second preview is up</p>
                 <p className="text-xs text-gray-500 mb-4">
-                  Sign up free to continue chatting with Nia — no credit card, no commitment.
+                  Sign up free to continue chatting with Nia � no credit card, no commitment.
                   Your conversation so far is saved.
                 </p>
                 <Link to="/register" onClick={onClose}
@@ -629,7 +929,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
             <div className="flex justify-center mb-3">
               <button
                 onClick={handleMicClick}
-                disabled={agentState === 'thinking' || agentState === 'speaking'}
+                disabled={agentState === 'thinking'}
                 className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all disabled:opacity-40"
                 style={{
                   background: agentState === 'listening'
@@ -677,7 +977,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
           {/* Bottom hint */}
           <p className="text-center text-[10px] text-gray-700 mt-2">
             {isGuest && !guestStarted
-              ? 'Free 30-second preview · No sign up required'
+              ? 'Free 30-second preview � No sign up required'
               : isGuest && !guestExpired
               ? `${guestTimeLeft}s of free conversation remaining`
               : !isGuest
@@ -690,7 +990,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
   )
 }
 
-/* ─── Floating trigger button (export separately for use in pages) ── */
+/* --- Floating trigger button (export separately for use in pages) -- */
 export function NiaAgentButton() {
   const [open, setOpen] = useState(false)
   return (
@@ -703,16 +1003,18 @@ export function NiaAgentButton() {
           background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)',
           boxShadow: '0 0 32px rgba(139,92,246,0.45), 0 8px 24px rgba(0,0,0,0.4)',
         }}
-        aria-label="Chat with Nia AI"
+        aria-label="Talk to Nia"
       >
         <div className="relative">
           <MessageSquare size={17} />
           <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400"
             style={{ animation: 'niaBeat 2s ease-in-out infinite' }} />
         </div>
-        Chat with Nia
+        Talk to Nia
       </button>
     </>
   )
 }
+
+
 

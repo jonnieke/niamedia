@@ -5,11 +5,11 @@ const SYSTEM_PROMPT = `You are Nia Creative Assistant, a Kenyan creative directo
 
 You help with: campaign ideas, offer sharpening, audience targeting, WhatsApp copy, poster concepts, video scripts, 7-day content calendars, brand positioning, lead follow-up, creative direction, and production briefs.
 
-TONE: Warm, sharp, practical, locally aware. Not corporate, minimal jargon, confident but helpful. Write like a Nairobi creative director talking to a business owner — direct and useful. Keep replies tight; use short paragraphs or compact lists. WhatsApp is the #1 sales channel for Kenyan SMEs, so make WhatsApp angles prominent.
+TONE: Warm, sharp, practical, locally aware. Not corporate, minimal jargon, confident but helpful. Write like a Nairobi creative director talking to a business owner: direct and useful. Keep replies tight; use short paragraphs or compact lists. WhatsApp is the #1 sales channel for Kenyan SMEs, so make WhatsApp angles prominent.
 
 LANGUAGE: Match the user. Support English, Kiswahili, Kenyan conversational English, light-Sheng (professional), and mixed English/Kiswahili. Never use fake claims, exaggerated guarantees, or manipulative language. For health, finance, education, and faith/community, keep wording careful and compliant.
 
-STRUCTURED OUTPUT: When you propose a concrete campaign idea (not when merely asking a question or chatting), ALSO call the propose_campaign_idea tool with a sharp, ready-to-use idea. Always still write a short conversational reply in your normal text. If the user is only exploring or you need more info, just reply in text without the tool.`
+STRUCTURED OUTPUT: When you propose a concrete campaign idea, also call the propose_campaign_idea tool with a sharp, ready-to-use idea that can be turned into a campaign brief. Include the business industry when you can infer it. If the user is only exploring or you need more info, just reply in text without the tool.`
 
 Deno.serve(async (req) => {
   const cors = corsHeadersFor(req)
@@ -46,12 +46,13 @@ Deno.serve(async (req) => {
             required: ["idea_title", "campaign_angle", "target_audience", "offer", "platforms"],
             properties: {
               idea_title: { type: "string" as const, description: "Short, punchy name for the idea" },
-              campaign_angle: { type: "string" as const, description: "The core sales angle / hook in 1-2 sentences" },
+              industry: { type: "string" as const, description: "Business industry or sector if known" },
+              campaign_angle: { type: "string" as const, description: "The core sales angle or hook in 1-2 sentences" },
               target_audience: { type: "string" as const, description: "Who this targets, specific to Kenya where possible" },
               offer: { type: "string" as const, description: "The concrete offer or value proposition" },
-              platforms: { type: "array" as const, items: { type: "string" as const }, description: "Recommended platforms (WhatsApp, Instagram, Facebook, TikTok, etc.)" },
-              whatsapp_message: { type: "string" as const, description: "A ready-to-send WhatsApp broadcast/status message" },
-              poster_concept: { type: "string" as const, description: "One-line poster concept / headline direction" },
+              platforms: { type: "array" as const, items: { type: "string" as const }, description: "Recommended platforms such as WhatsApp, Instagram, Facebook, TikTok, YouTube Shorts" },
+              whatsapp_message: { type: "string" as const, description: "A ready-to-send WhatsApp broadcast or status message" },
+              poster_concept: { type: "string" as const, description: "One-line poster concept or headline direction" },
               video_concept: { type: "string" as const, description: "One-line short-video concept" },
               next_actions: { type: "array" as const, items: { type: "string" as const }, description: "2-4 suggested next steps" },
             },
@@ -67,14 +68,14 @@ Deno.serve(async (req) => {
       if (block.type === "text") reply += block.text
       else if (block.type === "tool_use" && block.name === "propose_campaign_idea") idea = block.input as Record<string, unknown>
     }
-    if (!reply && idea) reply = "Here's an idea you can run with 👇"
+    if (!reply && idea) reply = "Here is a campaign idea you can build on below."
 
     return new Response(JSON.stringify({ reply, idea }), {
       headers: { ...cors, "Content-Type": "application/json" },
     })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error"
-    return new Response(JSON.stringify({ error: message, friendly: "Nia couldn't respond just now — please try again." }), {
+    return new Response(JSON.stringify({ error: message, friendly: "Nia couldn't respond just now. Please try again." }), {
       status: 500, headers: { ...cors, "Content-Type": "application/json" },
     })
   }
