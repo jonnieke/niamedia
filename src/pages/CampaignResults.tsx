@@ -1,14 +1,15 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
 import {
   Copy, Save, RefreshCw, Download, Check, Zap, Loader2,
   Wand2, MessageSquare, Share2, Sparkles, ImageIcon, X, Film, Users,
+  Eye, MousePointerClick, TrendingUp, Link as LinkIcon,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import CreativeAssistant, { CreativeAssistantButton } from '../components/CreativeAssistant'
 import PosterCanvas from '../components/PosterCanvas'
 import { CampaignFormData, GeneratedContent } from '../types'
-import { supabase } from '../lib/supabase'
+import { supabase, createShareableLink } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
 /* ─── Copy button ────────────────────────────────────────────── */
@@ -192,6 +193,11 @@ export default function CampaignResults() {
   const [loadError, setLoadError] = useState('')
   // Per-section refinement overrides
   const [refinements, setRefinements] = useState<Record<string, string>>({})
+  // Share analytics
+  const [shareStats, setShareStats] = useState<{ views: number; clicks: number; shares: number } | null>(null)
+  const [sharing, setSharing] = useState(false)
+  const [shareLink, setShareLink] = useState<string | null>(null)
+  const [shareLinkCopied, setShareLinkCopied] = useState(false)
   // Post-save referral nudge
   const [referralCopied, setReferralCopied] = useState(false)
   const [showReferralNudge, setShowReferralNudge] = useState(false)
@@ -206,6 +212,19 @@ export default function CampaignResults() {
   }
   const POSTER_TAB = tabs.indexOf('🎨 Poster')
 
+  const fetchShareStats = useCallback(async (campaignId: string) => {
+    const { data } = await supabase
+      .from('campaign_shares')
+      .select('views, clicks')
+      .eq('campaign_id', campaignId)
+    if (!data) return
+    setShareStats({
+      views: data.reduce((s, r) => s + (r.views ?? 0), 0),
+      clicks: data.reduce((s, r) => s + (r.clicks ?? 0), 0),
+      shares: data.length,
+    })
+  }, [])
+
   useEffect(() => {
     if (id) {
       supabase.from('campaigns').select('*').eq('id', id).single().then(({ data, error }) => {
@@ -214,6 +233,7 @@ export default function CampaignResults() {
         try { setContent(JSON.parse(data.content ?? '')) } catch { setLoadError('Could not parse campaign content.') }
         setSaved(true)
         setSavedId(id)
+        fetchShareStats(id)
       })
       return
     }
@@ -221,7 +241,7 @@ export default function CampaignResults() {
     if (!state?.form || !state?.content) { navigate('/new-campaign'); return }
     setForm(state.form)
     setContent(state.content)
-  }, [id, location.state, navigate])
+  }, [id, location.state, navigate, fetchShareStats])
 
   // Merge refinements into content for saving
   const getMergedContent = (): GeneratedContent | null => {
@@ -308,6 +328,25 @@ export default function CampaignResults() {
     setSaving(false)
     setSaved(true)
     setShowReferralNudge(true)
+    if (savedId) fetchShareStats(savedId)
+  }
+
+  const handleShare = async (platform: 'whatsapp' | 'instagram' | 'facebook' | 'other' = 'whatsapp') => {
+    if (!savedId) { await handleSave(); return }
+    setSharing(true)
+    const url = await createShareableLink(savedId, platform)
+    setSharing(false)
+    if (!url || !form) return
+    setShareLink(url)
+    if (platform === 'whatsapp') {
+      const msg = `${form.product_name} by ${form.business_name}\n\n${url}`
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener')
+    } else {
+      navigator.clipboard.writeText(url)
+      setShareLinkCopied(true)
+      setTimeout(() => setShareLinkCopied(false), 2500)
+    }
+    if (savedId) setTimeout(() => fetchShareStats(savedId), 800)
   }
 
   const handleRegenerate = async () => {
@@ -706,12 +745,19 @@ export default function CampaignResults() {
             {saving ? 'Saving…' : saved && !hasRefinements ? 'Saved' : hasRefinements ? 'Save Changes' : 'Save'}
           </button>
           {savedId && (
-            <a href={`https://wa.me/?text=${encodeURIComponent(`Check out the campaign I generated on Nia Media: https://niamedia.co.ke/campaigns/${savedId}`)}`}
-              target="_blank" rel="noopener noreferrer"
-              className="btn-secondary text-xs gap-1.5 px-4 py-2"
-              style={{ color: '#16a34a', borderColor: '#bbf7d0' }}>
-              <Share2 size={12} /> Share
-            </a>
+            <div className="flex items-center gap-1">
+              <button onClick={() => handleShare('whatsapp')} disabled={sharing}
+                className="btn-secondary text-xs gap-1.5 px-3 py-2"
+                style={{ color: '#16a34a', borderColor: '#bbf7d0' }}>
+                {sharing ? <Loader2 size={12} className="animate-spin" /> : <MessageSquare size={12} />}
+                WhatsApp
+              </button>
+              <button onClick={() => handleShare('other')} disabled={sharing}
+                className="btn-secondary text-xs gap-1.5 px-3 py-2">
+                {shareLinkCopied ? <Check size={12} className="text-emerald-400" /> : <LinkIcon size={12} />}
+                {shareLinkCopied ? 'Copied!' : 'Copy link'}
+              </button>
+            </div>
           )}
           <button onClick={copyAll} className="btn-secondary text-xs gap-1.5 px-4 py-2">
             {copiedAll ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
@@ -728,6 +774,28 @@ export default function CampaignResults() {
           </button>
         </div>
       </div>
+
+      {/* Analytics strip — shown once campaign is saved and has shares */}
+      {savedId && shareStats !== null && (
+        <div className="mb-5 grid grid-cols-3 gap-3">
+          {[
+            { icon: Eye, label: 'Views', value: shareStats.views, color: '#7c3aed' },
+            { icon: MousePointerClick, label: 'Link Clicks', value: shareStats.clicks, color: '#2563eb' },
+            { icon: TrendingUp, label: 'Times Shared', value: shareStats.shares, color: '#059669' },
+          ].map(({ icon: Icon, label, value, color }) => (
+            <div key={label} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 bg-white">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                style={{ background: `${color}15` }}>
+                <Icon size={15} style={{ color }} />
+              </div>
+              <div>
+                <p className="text-lg font-extrabold text-gray-900 leading-none">{value}</p>
+                <p className="text-[10px] text-gray-400 font-medium mt-0.5">{label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Tweak hint — first time only */}
       {!saved && (

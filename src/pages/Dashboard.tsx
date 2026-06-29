@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   ArrowRight, BarChart2, BookOpen, CheckCircle2, FolderOpen,
   Lightbulb, Loader2, Palette, Plus, Sparkles, Video, Zap,
+  Eye, MousePointerClick, TrendingUp,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import CreativeAssistant from '../components/CreativeAssistant'
@@ -43,6 +44,14 @@ interface RequestSummary {
   active: number
 }
 
+interface CampaignPerf {
+  id: string
+  title: string
+  views: number
+  clicks: number
+  shares: number
+}
+
 function greeting(name: string) {
   const h = new Date().getHours()
   const salutation = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
@@ -66,6 +75,7 @@ export default function Dashboard() {
   const [recentIdeas, setRecentIdeas] = useState<RecentIdea[]>([])
   const [leadSummary, setLeadSummary] = useState<LeadSummary>({ total: 0, new: 0, interested: 0, converted: 0, pipelineValue: 0, wonValue: 0, conversionRate: 0 })
   const [requestSummary, setRequestSummary] = useState<RequestSummary>({ total: 0, active: 0 })
+  const [topCampaigns, setTopCampaigns] = useState<CampaignPerf[]>([])
 
   useEffect(() => {
     if (!user) return
@@ -75,12 +85,30 @@ export default function Dashboard() {
       supabase.from('brand_kits').select('user_id').eq('user_id', user.id).maybeSingle(),
       supabase.from('campaigns').select('id, title, type, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
       supabase.from('ideas').select('id, title, industry, status, favorite').eq('user_id', user.id).order('favorite', { ascending: false }).order('created_at', { ascending: false }).limit(5),
-      supabase.from('leads').select('status').eq('user_id', user.id),
+      supabase.from('leads').select('status, estimated_value').eq('user_id', user.id),
       supabase.from('video_requests').select('status').eq('user_id', user.id),
-    ]).then(([profileRes, brandKitRes, campaignsRes, ideasRes, leadsRes, requestsRes]) => {
+      supabase.from('campaign_shares').select('campaign_id, views, clicks').eq('user_id', user.id),
+    ]).then(([profileRes, brandKitRes, campaignsRes, ideasRes, leadsRes, requestsRes, sharesRes]) => {
       setCredits(profileRes.data?.credits ?? null)
       setHasBrandKit(Boolean(brandKitRes.data))
-      setRecentCampaigns((campaignsRes.data ?? []) as RecentCampaign[])
+      const campaigns = (campaignsRes.data ?? []) as RecentCampaign[]
+      setRecentCampaigns(campaigns)
+
+      // Aggregate share stats per campaign
+      const shareRows = sharesRes.data ?? []
+      if (shareRows.length > 0) {
+        const statsMap = new Map<string, { views: number; clicks: number; shares: number }>()
+        for (const row of shareRows) {
+          const prev = statsMap.get(row.campaign_id) ?? { views: 0, clicks: 0, shares: 0 }
+          statsMap.set(row.campaign_id, { views: prev.views + (row.views ?? 0), clicks: prev.clicks + (row.clicks ?? 0), shares: prev.shares + 1 })
+        }
+        const perf: CampaignPerf[] = campaigns
+          .filter(c => statsMap.has(c.id))
+          .map(c => ({ id: c.id, title: c.title, ...statsMap.get(c.id)! }))
+          .sort((a, b) => b.views - a.views)
+          .slice(0, 3)
+        setTopCampaigns(perf)
+      }
       setRecentIdeas((ideasRes.data ?? []) as RecentIdea[])
 
       const leads = (leadsRes.data ?? []) as LeadRecord[]
@@ -327,6 +355,40 @@ export default function Dashboard() {
               </div>
               <Link to="/leads" className="btn-secondary w-full text-sm py-2.5">Open Lead Tracker</Link>
             </div>
+
+            {topCampaigns.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-200 p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <TrendingUp size={16} className="text-purple-600" />
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">Campaign performance</p>
+                    <p className="text-xs text-gray-500">Views and clicks from your shared links.</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {topCampaigns.map(c => (
+                    <Link key={c.id} to={`/campaigns/${c.id}`}
+                      className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-800 truncate">{c.title}</p>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="flex items-center gap-1 text-[11px] text-gray-500">
+                            <Eye size={10} /> {c.views}
+                          </span>
+                          <span className="flex items-center gap-1 text-[11px] text-gray-500">
+                            <MousePointerClick size={10} /> {c.clicks}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="w-14 h-1.5 rounded-full bg-gray-100 overflow-hidden shrink-0">
+                        <div className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#7c3aed,#2563eb)', width: `${Math.min(100, (c.views / (topCampaigns[0].views || 1)) * 100)}%` }} />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+                <Link to="/campaigns" className="btn-secondary w-full text-xs py-2 mt-3">View all campaigns</Link>
+              </div>
+            )}
 
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
               <div className="flex items-center gap-2 mb-4">
