@@ -3,7 +3,7 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom'
 import {
   Copy, Save, RefreshCw, Download, Check, Zap, Loader2,
   Wand2, MessageSquare, Share2, Sparkles, ImageIcon, X, Film, Users,
-  Eye, MousePointerClick, TrendingUp, Link as LinkIcon, Shuffle, Package,
+  Eye, MousePointerClick, TrendingUp, Link as LinkIcon, Shuffle, Package, ClipboardCheck,
 } from 'lucide-react'
 import JSZip from 'jszip'
 import DashboardLayout from '../components/layout/DashboardLayout'
@@ -203,6 +203,10 @@ export default function CampaignResults() {
   const [referralCopied, setReferralCopied] = useState(false)
   const [showReferralNudge, setShowReferralNudge] = useState(false)
   const [showNia, setShowNia] = useState(false)
+  // Review link
+  const [reviewLink, setReviewLink] = useState<string | null>(null)
+  const [reviewLinkCopied, setReviewLinkCopied] = useState(false)
+  const [creatingReview, setCreatingReview] = useState(false)
   // Remix
   const [showRemix, setShowRemix] = useState(false)
   const [remixTone, setRemixTone] = useState('')
@@ -354,6 +358,30 @@ export default function CampaignResults() {
       setTimeout(() => setShareLinkCopied(false), 2500)
     }
     if (savedId) setTimeout(() => fetchShareStats(savedId), 800)
+  }
+
+  const createReviewLink = async () => {
+    if (!savedId || !user) return
+    if (reviewLink) {
+      navigator.clipboard.writeText(reviewLink)
+      setReviewLinkCopied(true)
+      setTimeout(() => setReviewLinkCopied(false), 2500)
+      return
+    }
+    setCreatingReview(true)
+    const { data, error } = await supabase
+      .from('campaign_reviews')
+      .insert({ campaign_id: savedId, user_id: user.id })
+      .select('review_token')
+      .single()
+    setCreatingReview(false)
+    if (!error && data?.review_token) {
+      const link = `${window.location.origin}/review/${data.review_token}`
+      setReviewLink(link)
+      navigator.clipboard.writeText(link)
+      setReviewLinkCopied(true)
+      setTimeout(() => setReviewLinkCopied(false), 2500)
+    }
   }
 
   const handleRemix = async () => {
@@ -847,6 +875,13 @@ export default function CampaignResults() {
           <button onClick={downloadKit} className="btn-secondary text-xs gap-1.5">
             <Package size={12} /> Download Kit
           </button>
+          {savedId && (
+            <button onClick={createReviewLink} disabled={creatingReview}
+              className={`btn-secondary text-xs gap-1.5 disabled:opacity-50 ${reviewLinkCopied ? 'text-emerald-600' : ''}`}>
+              {creatingReview ? <Loader2 size={12} className="animate-spin" /> : reviewLinkCopied ? <Check size={12} /> : <ClipboardCheck size={12} />}
+              {reviewLinkCopied ? 'Link copied!' : 'Share for Review'}
+            </button>
+          )}
           {savedId && (
             <button onClick={() => { setRemixTone(form?.tone ?? ''); setRemixOffer(form?.offer ?? ''); setRemixAudience(form?.target_audience ?? ''); setShowRemix(true) }}
               className="btn-secondary text-xs gap-1.5">

@@ -37,6 +37,7 @@ const Privacy = lazy(() => import('./pages/Privacy'))
 const VideoRequest = lazy(() => import('./pages/VideoRequest'))
 const Requests = lazy(() => import('./pages/MyVideoRequests'))
 const ShareTracker = lazy(() => import('./pages/ShareTracker'))
+const ReviewPage = lazy(() => import('./pages/ReviewPage'))
 
 function RouteLoader() {
   return (
@@ -80,6 +81,7 @@ function AppRoutes() {
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/track/:token" element={<ShareTracker />} />
+        <Route path="/review/:token" element={<ReviewPage />} />
 
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

@@ -77,6 +77,7 @@ export default function Dashboard() {
   const [leadSummary, setLeadSummary] = useState<LeadSummary>({ total: 0, new: 0, interested: 0, converted: 0, pipelineValue: 0, wonValue: 0, conversionRate: 0 })
   const [requestSummary, setRequestSummary] = useState<RequestSummary>({ total: 0, active: 0 })
   const [topCampaigns, setTopCampaigns] = useState<CampaignPerf[]>([])
+  const [smartTip, setSmartTip] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -84,31 +85,51 @@ export default function Dashboard() {
     Promise.all([
       supabase.from('profiles').select('credits').eq('id', user.id).single(),
       supabase.from('brand_kits').select('user_id').eq('user_id', user.id).maybeSingle(),
-      supabase.from('campaigns').select('id, title, type, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
+      supabase.from('campaigns').select('id, title, type, created_at, metadata').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20),
       supabase.from('ideas').select('id, title, industry, status, favorite').eq('user_id', user.id).order('favorite', { ascending: false }).order('created_at', { ascending: false }).limit(5),
-      supabase.from('leads').select('status, estimated_value').eq('user_id', user.id),
+      supabase.from('leads').select('status, estimated_value, campaign_id').eq('user_id', user.id),
       supabase.from('video_requests').select('status').eq('user_id', user.id),
       supabase.from('campaign_shares').select('campaign_id, views, clicks').eq('user_id', user.id),
     ]).then(([profileRes, brandKitRes, campaignsRes, ideasRes, leadsRes, requestsRes, sharesRes]) => {
       setCredits(profileRes.data?.credits ?? null)
       setHasBrandKit(Boolean(brandKitRes.data))
-      const campaigns = (campaignsRes.data ?? []) as RecentCampaign[]
-      setRecentCampaigns(campaigns)
+      const campaigns = (campaignsRes.data ?? []) as (RecentCampaign & { metadata?: Record<string, unknown> })[]
+      setRecentCampaigns(campaigns.slice(0, 5))
 
-      // Aggregate share stats per campaign
+      // Aggregate share stats + leads per campaign
       const shareRows = sharesRes.data ?? []
-      if (shareRows.length > 0) {
+      const leadsRaw = leadsRes.data ?? []
+      const leadsByCampaign = new Map<string, number>()
+      for (const l of leadsRaw) {
+        if (l.campaign_id) leadsByCampaign.set(l.campaign_id, (leadsByCampaign.get(l.campaign_id) ?? 0) + 1)
+      }
+
+      if (shareRows.length > 0 || leadsByCampaign.size > 0) {
         const statsMap = new Map<string, { views: number; clicks: number; shares: number }>()
         for (const row of shareRows) {
           const prev = statsMap.get(row.campaign_id) ?? { views: 0, clicks: 0, shares: 0 }
           statsMap.set(row.campaign_id, { views: prev.views + (row.views ?? 0), clicks: prev.clicks + (row.clicks ?? 0), shares: prev.shares + 1 })
         }
         const perf: CampaignPerf[] = campaigns
-          .filter(c => statsMap.has(c.id))
-          .map(c => ({ id: c.id, title: c.title, ...statsMap.get(c.id)! }))
-          .sort((a, b) => b.views - a.views)
+          .filter(c => statsMap.has(c.id) || leadsByCampaign.has(c.id))
+          .map(c => ({ id: c.id, title: c.title, ...(statsMap.get(c.id) ?? { views: 0, clicks: 0, shares: 0 }) }))
+          .sort((a, b) => (b.views + b.clicks * 2) - (a.views + a.clicks * 2))
           .slice(0, 3)
         setTopCampaigns(perf)
+
+        // Smart tip: find which tone/industry drives most leads
+        const toneLeads = new Map<string, number>()
+        for (const c of campaigns) {
+          const tone = (c.metadata?.tone as string) || ''
+          if (tone) toneLeads.set(tone, (toneLeads.get(tone) ?? 0) + (leadsByCampaign.get(c.id) ?? 0))
+        }
+        const topTone = [...toneLeads.entries()].sort((a, b) => b[1] - a[1])[0]
+        const topPerf = perf[0]
+        if (topTone && topTone[1] > 0) {
+          setSmartTip(`Your *${topTone[0]}* tone campaigns are generating the most leads. Consider using it on your next campaign.`)
+        } else if (topPerf && topPerf.views > 5) {
+          setSmartTip(`"${topPerf.title}" is your top-performing campaign with ${topPerf.views} views. Share it again to get more leads.`)
+        }
       }
       setRecentIdeas((ideasRes.data ?? []) as RecentIdea[])
 
@@ -392,6 +413,22 @@ export default function Dashboard() {
                   ))}
                 </div>
                 <Link to="/campaigns" className="btn-secondary w-full text-xs py-2 mt-3">View all campaigns</Link>
+              </div>
+            )}
+
+            {/* Smart tip */}
+            {smartTip && (
+              <div className="rounded-2xl border px-4 py-4 flex items-start gap-3"
+                style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.06),rgba(37,99,235,0.04))', borderColor: 'rgba(124,58,237,0.15)' }}>
+                <TrendingUp size={15} className="text-purple-500 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-bold text-purple-700 mb-0.5">What's working</p>
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    {smartTip.split('*').map((part, i) =>
+                      i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+                    )}
+                  </p>
+                </div>
               </div>
             )}
 
