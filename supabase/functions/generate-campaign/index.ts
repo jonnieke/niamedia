@@ -29,28 +29,15 @@ Deno.serve(async (req) => {
         userId = user.id
         const { data: profile } = await supabase
           .from("profiles")
-          .select("is_free_tier, free_campaigns_used, free_campaigns_reset_at")
+          .select("is_free_tier, free_campaigns_used, free_campaigns_reset_at, credits")
           .eq("id", user.id)
           .single()
 
-        isFreeTier = profile?.is_free_tier ?? true
-        if (isFreeTier) {
-          const resetDate = new Date(profile?.free_campaigns_reset_at || new Date())
-          const now = new Date()
-          const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
-          const used = resetDate < monthAgo ? 0 : (profile?.free_campaigns_used ?? 0)
+        const userCredits = (profile?.credits ?? 0) as number
+        isFreeTier = userCredits === 0 && (profile?.is_free_tier ?? true)
 
-          if (used >= 1) {
-            return new Response(
-              JSON.stringify({
-                error: "free_tier_limit",
-                friendly:
-                  "You've used your free campaign this month! Upgrade to unlimited: 5 campaigns for KES 2,000, or monthly plans from KES 2,500.",
-              }),
-              { status: 402, headers: { ...cors, "Content-Type": "application/json" } }
-            )
-          }
-        } else {
+        if (userCredits > 0) {
+          // Paid user with credits — reserve 1 credit
           const { data: txId } = await supabase.rpc("reserve_credit", {
             p_user_id: user.id,
             p_description: `Campaign: ${form.product_name ?? "untitled"}`,
@@ -63,6 +50,23 @@ Deno.serve(async (req) => {
             })
           }
           reservationId = txId as string
+        } else {
+          // No credits — enforce free tier limit (1/month)
+          const resetDate = new Date(profile?.free_campaigns_reset_at || new Date())
+          const now = new Date()
+          const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+          const used = resetDate < monthAgo ? 0 : (profile?.free_campaigns_used ?? 0)
+
+          if (used >= 1) {
+            return new Response(
+              JSON.stringify({
+                error: "free_tier_limit",
+                friendly:
+                  "You've used your free campaign this month! Upgrade to unlock more: 5 campaigns for KES 2,000, or monthly plans from KES 2,500.",
+              }),
+              { status: 402, headers: { ...cors, "Content-Type": "application/json" } }
+            )
+          }
         }
 
         if (!isFreeTier) {
