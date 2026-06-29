@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import CreativeAssistant from '../components/CreativeAssistant'
+import OnboardingWizard from '../components/OnboardingWizard'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
@@ -134,6 +135,9 @@ export default function Dashboard() {
   }, [user])
 
   const isNewUser = !loading && recentCampaigns.length === 0 && recentIdeas.length === 0 && !hasBrandKit
+  const [showOnboarding, setShowOnboarding] = useState(
+    () => localStorage.getItem('onboarding_dismissed') !== '1'
+  )
 
   const nextAction = !hasBrandKit
     ? { label: 'Add Brand Kit', desc: 'Teach Nia how your business should sound before you generate.', to: '/brand-kit' }
@@ -148,6 +152,7 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       {showAssistant && <CreativeAssistant onClose={() => setShowAssistant(false)} />}
+      {isNewUser && showOnboarding && <OnboardingWizard onDismiss={() => setShowOnboarding(false)} />}
 
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-start justify-between gap-4 flex-wrap mb-6">

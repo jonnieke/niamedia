@@ -1,10 +1,12 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import {
   LayoutDashboard, Plus, FolderOpen, Palette, Settings,
   ShieldCheck, LogOut, Zap, X, Video, Lightbulb,
   CreditCard, Users, Gift,
 } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
+import { supabase } from '../../lib/supabase'
 import Logo from '../ui/Logo'
 
 interface SidebarProps {
@@ -28,6 +30,29 @@ const navItems = [
 export default function Sidebar({ onClose }: SidebarProps) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const [newLeadsCount, setNewLeadsCount] = useState(0)
+
+  useEffect(() => {
+    if (!user) return
+    const fetchCount = () => {
+      supabase.from('leads').select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id).eq('status', 'New')
+        .then(({ count }) => setNewLeadsCount(count ?? 0))
+    }
+    fetchCount()
+    // Realtime: increment badge when a new lead arrives
+    const channel = supabase.channel(`leads-badge-${user.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'leads', filter: `user_id=eq.${user.id}` },
+        () => setNewLeadsCount(n => n + 1))
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [user])
+
+  // Clear badge when visiting /leads
+  useEffect(() => {
+    if (location.pathname === '/leads') setNewLeadsCount(0)
+  }, [location.pathname])
 
   return (
     <aside className="h-screen w-60 flex flex-col" style={{ background: '#ffffff', borderRight: '1px solid #e5e7eb' }}>
@@ -76,6 +101,12 @@ export default function Sidebar({ onClose }: SidebarProps) {
             >
               <Icon size={16} />
               <span className="flex-1">{label}</span>
+              {label === 'Leads' && newLeadsCount > 0 && (
+                <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white min-w-[18px] text-center"
+                  style={{ background: '#7c3aed' }}>
+                  {newLeadsCount > 99 ? '99+' : newLeadsCount}
+                </span>
+              )}
             </NavLink>
           )
         })}
