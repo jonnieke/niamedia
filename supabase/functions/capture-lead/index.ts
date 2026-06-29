@@ -100,16 +100,39 @@ Deno.serve(async (req) => {
     })
   }
 
-  // Fire-and-forget WhatsApp alert to the business owner
+  // Fire-and-forget: WhatsApp alert + follow-up drip (run in parallel)
   const { data: brandKit } = await supabase
     .from("brand_kits")
-    .select("whatsapp")
+    .select("whatsapp, preferred_tone")
     .eq("user_id", campaign.user_id)
     .maybeSingle()
+
+  const { data: campaignRow } = await supabase
+    .from("campaigns")
+    .select("content, metadata")
+    .eq("id", campaign.id)
+    .maybeSingle()
+
+  const campaignContent = campaignRow?.content ? (() => { try { return JSON.parse(campaignRow.content) } catch { return null } })() : null
+  const meta = campaignRow?.metadata as Record<string, unknown> | null
 
   if (brandKit?.whatsapp) {
     sendWhatsAppAlert(brandKit.whatsapp, name?.trim() ?? "", phone.trim(), campaign.title ?? "campaign")
   }
+
+  supabase.functions.invoke("schedule-follow-ups", {
+    body: {
+      leadId: (await supabase.from("leads").select("id").eq("campaign_id", campaign.id).eq("phone", phone.trim()).maybeSingle()).data?.id,
+      campaignId: campaign.id,
+      userId: campaign.user_id,
+      leadName: name?.trim() ?? "",
+      leadPhone: phone.trim(),
+      campaignTitle: campaign.title ?? "campaign",
+      campaignContent,
+      businessName: (meta?.business_name as string) ?? "",
+      tone: (meta?.tone as string) ?? brandKit?.preferred_tone ?? "Friendly",
+    },
+  }).catch(() => { /* best-effort */ })
 
   return new Response(JSON.stringify({ success: true }), {
     headers: { ...cors, "Content-Type": "application/json" },

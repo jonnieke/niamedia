@@ -3,8 +3,9 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom'
 import {
   Copy, Save, RefreshCw, Download, Check, Zap, Loader2,
   Wand2, MessageSquare, Share2, Sparkles, ImageIcon, X, Film, Users,
-  Eye, MousePointerClick, TrendingUp, Link as LinkIcon, Shuffle,
+  Eye, MousePointerClick, TrendingUp, Link as LinkIcon, Shuffle, Package,
 } from 'lucide-react'
+import JSZip from 'jszip'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import CreativeAssistant, { CreativeAssistantButton } from '../components/CreativeAssistant'
 import PosterCanvas from '../components/PosterCanvas'
@@ -373,6 +374,89 @@ export default function CampaignResults() {
       setSaved(false)
       setShowRemix(false)
     }
+  }
+
+  const downloadKit = async () => {
+    const merged = getMergedContent()
+    if (!merged || !form) return
+    const zip = new JSZip()
+    const slug = (form.business_name || 'campaign').toLowerCase().replace(/[^a-z0-9]+/g, '-')
+
+    // WhatsApp
+    zip.file('whatsapp.txt', [
+      `=== WHATSAPP STATUS ===\n${merged.whatsapp.status}`,
+      `\n\n=== BROADCAST MESSAGE ===\n${merged.whatsapp.broadcast}`,
+      `\n\n=== REPLY TEMPLATE ===\n${merged.whatsapp.reply}`,
+    ].join(''))
+
+    // Captions
+    zip.file('captions.txt', [
+      `=== FACEBOOK ===\n${merged.captions.facebook}`,
+      `\n\n=== INSTAGRAM ===\n${merged.captions.instagram}`,
+      `\n\n=== TIKTOK ===\n${merged.captions.tiktok}`,
+      `\n\n=== LINKEDIN ===\n${merged.captions.linkedin}`,
+    ].join(''))
+
+    // Video script
+    zip.file('video_script.txt', [
+      `HOOK: ${merged.videoScript.hook}`,
+      `\nSCENE 1: ${merged.videoScript.scene1}`,
+      `\nSCENE 2: ${merged.videoScript.scene2}`,
+      `\nSCENE 3: ${merged.videoScript.scene3}`,
+      `\nCALL TO ACTION: ${merged.videoScript.callToAction}`,
+      `\nVISUAL DIRECTION: ${merged.videoScript.visualDirection}`,
+      ...(merged.youtubeShorts ? [
+        `\n\n=== YOUTUBE SHORTS / REEL ===`,
+        `\nHOOK: ${merged.youtubeShorts.hook}`,
+        `\nSCRIPT: ${merged.youtubeShorts.script}`,
+        `\nCAPTION: ${merged.youtubeShorts.caption}`,
+      ] : []),
+    ].join(''))
+
+    // Poster copy
+    zip.file('poster_copy.txt', [
+      `HEADLINE: ${merged.posterCopy.headline}`,
+      `\nSUBHEADLINE: ${merged.posterCopy.subheadline}`,
+      `\nOFFER: ${merged.posterCopy.offerText}`,
+      `\nCTA: ${merged.posterCopy.cta}`,
+      `\nDESIGN DIRECTION: ${merged.posterCopy.designDirection}`,
+    ].join(''))
+
+    // Content calendar as CSV
+    if (merged.contentCalendar?.length) {
+      const header = 'Day,Platform,Format,Idea,Caption\n'
+      const rows = merged.contentCalendar.map(r =>
+        [r.day, r.platform, r.format, `"${r.idea.replace(/"/g, '""')}"`, `"${r.caption.replace(/"/g, '""')}"`].join(',')
+      ).join('\n')
+      zip.file('content_calendar.csv', header + rows)
+    }
+
+    // Follow-ups
+    if (merged.followUps) {
+      zip.file('follow_up_messages.txt', [
+        `=== FOLLOW-UP 1 ===\n${merged.followUps.firstFollowUp}`,
+        `\n\n=== FOLLOW-UP 2 ===\n${merged.followUps.secondFollowUp}`,
+        `\n\n=== FOLLOW-UP 3 (FINAL) ===\n${merged.followUps.finalFollowUp}`,
+      ].join(''))
+    }
+
+    // Strategy brief
+    zip.file('strategy.txt', [
+      `CAMPAIGN: ${form.product_name} — ${form.business_name}`,
+      `\nGENERATED: ${new Date().toLocaleDateString('en-KE')}`,
+      `\n\nANGLE: ${merged.strategy.angle}`,
+      `\nPAIN POINT: ${merged.strategy.painPoint}`,
+      `\nKEY MESSAGE: ${merged.strategy.keyMessage}`,
+      `\nCTA: ${merged.strategy.cta}`,
+    ].join(''))
+
+    const blob = await zip.generateAsync({ type: 'blob' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${slug}-campaign-kit.zip`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   const handleRegenerate = async () => {
@@ -760,6 +844,9 @@ export default function CampaignResults() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <CreativeAssistantButton onClick={() => setShowNia(true)} label="Open Nia" />
+          <button onClick={downloadKit} className="btn-secondary text-xs gap-1.5">
+            <Package size={12} /> Download Kit
+          </button>
           {savedId && (
             <button onClick={() => { setRemixTone(form?.tone ?? ''); setRemixOffer(form?.offer ?? ''); setRemixAudience(form?.target_audience ?? ''); setShowRemix(true) }}
               className="btn-secondary text-xs gap-1.5">
