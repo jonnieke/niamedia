@@ -614,6 +614,7 @@ export default function Admin() {
   const [leadsStatusFilter, setLeadsStatusFilter] = useState<string | 'all'>('all')
   const [creditTxns, setCreditTxns] = useState<CreditTxn[]>([])
   const [videoRequests, setVideoRequests] = useState<VideoRequestRow[]>([])
+  const [adminCampaigns, setAdminCampaigns] = useState<{ id: string; type: string; created_at: string }[]>([])
   const [videoSearch, setVideoSearch] = useState('')
   const [videoStatusFilter, setVideoStatusFilter] = useState<VideoRequestStatus | 'all'>('all')
   const [loading, setLoading] = useState(true)
@@ -628,13 +629,15 @@ export default function Admin() {
       supabase.from('package_requests').select('*').order('created_at', { ascending: false }),
       supabase.from('leads').select('*, profiles(name, email)').order('created_at', { ascending: false }),
       supabase.from('credit_transactions').select('*, profiles(name, email)').eq('payment_status', 'paid').order('created_at', { ascending: false }).limit(100),
-    ]).then(([{ data: ao }, { data: pr }, { data: us }, { data: lr }, { data: cl }, { data: ct }]) => {
+      supabase.from('campaigns').select('id, type, created_at').order('created_at', { ascending: false }).limit(1000),
+    ]).then(([{ data: ao }, { data: pr }, { data: us }, { data: lr }, { data: cl }, { data: ct }, { data: cmp }]) => {
       setAudioOrders((ao ?? []) as AudioOrder[])
       setProjects((pr ?? []) as Project[])
       setUsers((us ?? []) as Profile[])
       setLeads((lr ?? []) as Lead[])
       setCampaignLeads((cl ?? []) as CampaignLead[])
       setCreditTxns((ct ?? []) as CreditTxn[])
+      setAdminCampaigns((cmp ?? []) as { id: string; type: string; created_at: string }[])
       setLoading(false)
     })
     supabase.from('video_requests').select('*, profiles!user_id(name, email)').order('created_at', { ascending: false })
@@ -681,7 +684,7 @@ export default function Admin() {
   }, 0)
   const totalRevenue = audioRevenue + creditRevenue
 
-  const tabs = ['Overview', 'Leads', 'Audio Orders', 'Projects', 'Credits', 'Users', 'Video Requests']
+  const tabs = ['Overview', 'Leads', 'Audio Orders', 'Projects', 'Credits', 'Users', 'Video Requests', 'Analytics']
 
   const stats = [
     { label: 'New Leads', value: newLeads, icon: Inbox, sub: `${leads.length} total`, color: 'text-amber-400' },
@@ -1123,6 +1126,137 @@ export default function Admin() {
               </div>
             </div>
           )}
+
+          {/* Analytics */}
+          {tab === 7 && (() => {
+            const now = new Date()
+            const weekMs = 7 * 24 * 60 * 60 * 1000
+            const weeks = Array.from({ length: 8 }, (_, i) => {
+              const end = new Date(now.getTime() - i * weekMs)
+              const start = new Date(end.getTime() - weekMs)
+              const label = `W${8 - i}`
+              return { label, start, end }
+            }).reverse()
+
+            const bucket = (rows: { created_at: string }[]) =>
+              weeks.map(w => rows.filter(r => {
+                const d = new Date(r.created_at)
+                return d >= w.start && d < w.end
+              }).length)
+
+            const signupBuckets = bucket(users)
+            const campaignBuckets = bucket(adminCampaigns)
+            const creditBuckets = bucket(creditTxns)
+
+            const maxSignup = Math.max(...signupBuckets, 1)
+            const maxCampaign = Math.max(...campaignBuckets, 1)
+            const maxCredit = Math.max(...creditBuckets, 1)
+
+            const totalCredits = creditTxns.reduce((s, t) => s + (t.amount > 0 ? t.amount : 0), 0)
+            const estRevenue = creditTxns.reduce((sum, t) => {
+              const pkg: Record<number, number> = { 1: 500, 5: 2000, 12: 4000 }
+              return sum + (pkg[t.amount] ?? t.amount * 500)
+            }, 0)
+
+            const industryCounts = adminCampaigns.reduce<Record<string, number>>((acc, c) => {
+              const k = c.type || 'Other'
+              acc[k] = (acc[k] ?? 0) + 1
+              return acc
+            }, {})
+            const topIndustries = Object.entries(industryCounts)
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 6)
+            const maxInd = topIndustries[0]?.[1] ?? 1
+
+            function MiniChart({ buckets, max, color }: { buckets: number[]; max: number; color: string }) {
+              return (
+                <div className="flex items-end gap-1.5 h-16 mt-3">
+                  {buckets.map((v, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                      <div className="w-full rounded-t-sm transition-all"
+                        style={{ height: `${Math.max(4, (v / max) * 56)}px`, background: color, opacity: v === 0 ? 0.18 : 0.85 }} />
+                      <span className="text-[9px] text-gray-400">{weeks[i].label}</span>
+                    </div>
+                  ))}
+                </div>
+              )
+            }
+
+            return (
+              <div className="space-y-6">
+                {/* KPI cards */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[
+                    { label: 'Total Users', value: users.length, sub: `+${signupBuckets[7]} this week`, color: '#8b5cf6' },
+                    { label: 'Campaigns Generated', value: adminCampaigns.length, sub: `+${campaignBuckets[7]} this week`, color: '#3b82f6' },
+                    { label: 'Credits Sold', value: totalCredits, sub: `${creditTxns.length} transactions`, color: '#10b981' },
+                    { label: 'Est. Credit Revenue', value: `KES ${(estRevenue / 1000).toFixed(1)}K`, sub: 'Credits only', color: '#f59e0b' },
+                  ].map(({ label, value, sub, color }) => (
+                    <div key={label} className="card-glow p-5">
+                      <p className="text-xs font-semibold text-gray-500 mb-1">{label}</p>
+                      <p className="text-2xl font-extrabold text-gray-900">{value}</p>
+                      <p className="text-xs mt-1" style={{ color }}>{sub}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Weekly charts */}
+                <div className="grid sm:grid-cols-3 gap-4">
+                  <div className="card-glow p-5">
+                    <p className="text-xs font-semibold text-gray-500">New Signups / Week</p>
+                    <MiniChart buckets={signupBuckets} max={maxSignup} color="#8b5cf6" />
+                  </div>
+                  <div className="card-glow p-5">
+                    <p className="text-xs font-semibold text-gray-500">Campaigns / Week</p>
+                    <MiniChart buckets={campaignBuckets} max={maxCampaign} color="#3b82f6" />
+                  </div>
+                  <div className="card-glow p-5">
+                    <p className="text-xs font-semibold text-gray-500">Credits Sold / Week</p>
+                    <MiniChart buckets={creditBuckets} max={maxCredit} color="#10b981" />
+                  </div>
+                </div>
+
+                {/* Top industries */}
+                {topIndustries.length > 0 && (
+                  <div className="card-glow p-5">
+                    <p className="text-xs font-semibold text-gray-500 mb-4">Top Industries by Campaign Volume</p>
+                    <div className="space-y-3">
+                      {topIndustries.map(([ind, count]) => (
+                        <div key={ind} className="flex items-center gap-3">
+                          <span className="text-xs text-gray-600 w-36 shrink-0 truncate">{ind}</span>
+                          <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+                            <div className="h-full rounded-full"
+                              style={{ width: `${(count / maxInd) * 100}%`, background: 'linear-gradient(90deg, #7c3aed, #2563eb)' }} />
+                          </div>
+                          <span className="text-xs font-semibold text-gray-700 w-6 text-right">{count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Activation rate */}
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="card-glow p-5">
+                    <p className="text-xs font-semibold text-gray-500 mb-3">Campaign Activation Rate</p>
+                    <p className="text-2xl font-extrabold text-gray-900">
+                      {users.length > 0 ? Math.round((adminCampaigns.length / users.length) * 10) / 10 : 0}
+                      <span className="text-sm font-normal text-gray-500 ml-1">campaigns/user</span>
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">{adminCampaigns.length} total campaigns · {users.length} users</p>
+                  </div>
+                  <div className="card-glow p-5">
+                    <p className="text-xs font-semibold text-gray-500 mb-3">Paying User Rate</p>
+                    <p className="text-2xl font-extrabold text-gray-900">
+                      {users.length > 0 ? Math.round((creditTxns.length / users.length) * 100) : 0}
+                      <span className="text-sm font-normal text-gray-500 ml-1">%</span>
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">{creditTxns.length} purchases · {users.length} users</p>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Users */}
           {tab === 5 && (
