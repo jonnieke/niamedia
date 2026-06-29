@@ -17,7 +17,7 @@ const ctaOptions = ['Call now', 'WhatsApp us', 'Book now', 'Apply today', 'Visit
 const empty: CampaignFormData = {
   business_name: '', industry: '', product_name: '', objective: '',
   target_audience: '', location: '', offer: '', tone: '', platforms: [], cta: '', notes: '',
-  whatsapp_number: '',
+  whatsapp_number: '', business_url: '',
 }
 
 const GENERATING_STEPS = [
@@ -247,6 +247,11 @@ export default function NewCampaign() {
                 <label className="label">WhatsApp number <span className="text-gray-600 normal-case font-normal">(optional)</span></label>
                 <input className="input" placeholder="e.g. 0712 345 678" value={form.whatsapp_number ?? ''} onChange={set('whatsapp_number')} />
                 <p className="text-[11px] text-gray-500 mt-1.5">We'll weave a click-to-chat line into your WhatsApp copy and CTAs.</p>
+              </div>
+              <div>
+                <label className="label">Business website <span className="text-gray-600 normal-case font-normal">(optional)</span></label>
+                <input className="input" type="url" placeholder="https://yourbusiness.co.ke" value={form.business_url ?? ''} onChange={set('business_url')} />
+                <p className="text-[11px] text-gray-500 mt-1.5">We'll research your site to write more specific, credible copy — not generic filler.</p>
               </div>
               <div>
                 <label className="label">Extra notes <span className="text-gray-600 normal-case font-normal">(optional)</span></label>

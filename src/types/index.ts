@@ -141,4 +141,5 @@ export interface CampaignFormData {
   cta: string
   notes: string
   whatsapp_number?: string
+  business_url?: string
 }

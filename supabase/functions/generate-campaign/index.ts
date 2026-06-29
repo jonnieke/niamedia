@@ -122,6 +122,32 @@ Deno.serve(async (req) => {
       )
     }
 
+    /* ── Optional: research the business URL ── */
+    let researchContext = ""
+    if (form.business_url && typeof form.business_url === "string" && (form.business_url as string).startsWith("http")) {
+      try {
+        const resRes = await supabase.functions.invoke("research-url", {
+          body: { url: form.business_url },
+        })
+        if (resRes.data?.success && resRes.data?.profile) {
+          const p = resRes.data.profile as Record<string, unknown>
+          const lines: string[] = []
+          if (p.businessDescription) lines.push(`About: ${p.businessDescription}`)
+          if (Array.isArray(p.productsServices) && p.productsServices.length) lines.push(`Products/Services: ${(p.productsServices as string[]).join(", ")}`)
+          if (Array.isArray(p.uniqueSellingPoints) && p.uniqueSellingPoints.length) lines.push(`What sets them apart: ${(p.uniqueSellingPoints as string[]).join(", ")}`)
+          if (p.targetAudience) lines.push(`Their customer: ${p.targetAudience}`)
+          if (p.pricePoints) lines.push(`Pricing: ${p.pricePoints}`)
+          if (p.socialProof) lines.push(`Proof/credentials: ${p.socialProof}`)
+          if (p.keyOffers) lines.push(`Current offers: ${p.keyOffers}`)
+          if (lines.length > 0) {
+            researchContext = `\n\nVERIFIED BUSINESS INTELLIGENCE (researched from ${form.business_url}):\n${lines.join("\n")}\n\nDIRECTIVE: Weave specific details from this research into your copy. Name actual products. Use real prices. Echo genuine social proof. Specificity from verified research is what makes copy trustworthy.`
+          }
+        }
+      } catch {
+        // research is best-effort — never block generation
+      }
+    }
+
     const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") })
 
     const LANG_INSTRUCTIONS: Record<string, string> = {
@@ -144,25 +170,48 @@ Deno.serve(async (req) => {
       ? `\n\n${REGULATED_INSTRUCTIONS[form.industry as string]}`
       : ""
 
-    const prompt = `You are an expert marketing copywriter specialising in Kenyan small businesses. Generate a complete campaign for the following brief. Write in a voice that feels genuine and locally resonant, use the tone specified, avoid corporate jargon, and make each platform's copy feel native to that platform.
+    const platforms = ((form.platforms as string[]) ?? []).join(", ") || "WhatsApp, Instagram, Facebook"
 
+    const prompt = `You are a senior marketing strategist and creative director with 15 years running campaigns for East African businesses. You have an obsession with specificity — you know that vague copy kills conversions, and that the most powerful marketing copy sounds like it was written by someone who knows the business intimately.
+
+Your task: produce a complete, production-ready campaign kit for this brief. Every word must earn its place. No filler, no generic claims, no copy that could apply to any other business.
+
+━━━ BUSINESS BRIEF ━━━
 Business: ${form.business_name} (${form.industry})
-Product or Service: ${form.product_name}
-Objective: ${form.objective}
+Product / Service: ${form.product_name}
+Campaign Objective: ${form.objective}
 Target Audience: ${form.target_audience}
 Location: ${form.location}
-Offer: ${form.offer}
-Tone: ${form.tone}
-Platforms: ${((form.platforms as string[]) ?? []).join(", ") || "WhatsApp, Instagram, Facebook"}
-Call to Action: ${form.cta}
+The Offer: ${form.offer}
+Tone & Voice: ${form.tone}
+Platforms: ${platforms}
+Primary CTA: ${form.cta}
 WhatsApp Number: ${form.whatsapp_number || "Not provided"}
-Additional Notes: ${form.notes || "None"}${languageInstruction}${regulatedInstruction}
+Additional Context: ${form.notes || "None"}${researchContext}${brandMemory}${languageInstruction}${regulatedInstruction}
 
-WhatsApp is the number one sales channel for Kenyan SMEs, so make every WhatsApp message ready to send. If a WhatsApp number is provided, weave a "chat with us on WhatsApp" line into CTAs naturally.
+━━━ KENYA MARKET INTELLIGENCE ━━━
+Apply throughout every output:
+• WhatsApp is the #1 sales channel — every campaign must have a WhatsApp broadcast ready to copy-paste RIGHT NOW, with emoji, a clear offer, and a specific CTA
+• M-Pesa is the default payment — reference it naturally where it fits ("Pay via M-Pesa", "Lipa na M-Pesa")
+• Nairobi audiences are ad-blind — only specifics cut through. "Quality service" = ignored. "Delivered to Westlands in 2 hours" = clicked
+• Saturday morning 8–10am and Sunday evening are peak WhatsApp broadcast times in Kenya
+• Instagram Reels outperform static posts 3:1 for under-35 Kenyan audiences
+• Facebook Groups still dominate engagement for 35+ Kenyan consumers and B2B
+• TikTok is the fastest-growing platform for Gen-Z and young professional audiences in Nairobi
+• Price anchoring works extremely well in Kenya — always show value vs cost
+• Social proof from real Kenyans (testimonials, client logos, known brands) converts better than any claim
 
-Also produce: a YouTube Shorts or Reel script that is punchier and vertical, a practical 7-day content calendar with one concrete post per day across the chosen platforms, and three lead follow-up messages for prospects who enquired but have not bought yet.${brandMemory}
+━━━ QUALITY STANDARDS — NON-NEGOTIABLE ━━━
+1. ZERO generic phrases: Never write "quality products", "excellent service", "affordable prices", "best in the market", "your one-stop shop", or any phrase that could appear in any other campaign
+2. WhatsApp broadcast: Must be complete, emoji-appropriate, offer-clear, and CTA-specific — ready to send to 200 contacts with zero editing
+3. Platform-native writing: Instagram caption ≠ Facebook post ≠ WhatsApp message. Each must feel like it was written by someone who lives on that platform
+4. Content calendar: 7 genuinely different creative angles — behind-the-scenes, customer story, educational tip, UGC-style post, limited offer, product close-up, social proof. NOT 7 variations of the same product pitch
+5. Follow-up messages: Warm and personal, like a friend texting — not a sales robot. Each must reference where the lead came from and create a natural reason to respond
+6. Video hook: Must stop the scroll in 2 seconds. If it could appear on any other business's video, it is not good enough. Rewrite until it is specific to THIS business
+7. Landing page benefits: Each benefit must address a real customer fear, desire, or objection — not a product feature
+8. Poster headline: Punchy, specific, memorable — works as a standalone statement on a poster with no other context
 
-Generate copy that a Kenyan small business owner would be proud to publish. Be specific, commercially useful, locally aware, and avoid generic filler.`
+Now generate the complete campaign. Make ${form.business_name} proud.`
 
     const response = await client.messages.create({
       model: "claude-sonnet-4-6",
