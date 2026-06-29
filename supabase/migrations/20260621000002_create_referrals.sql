@@ -11,7 +11,7 @@ create table if not exists public.referrals (
 );
 
 -- Referrer can see their own outbound referrals
+alter table public.referrals enable row level security;
+drop policy if exists "Referrer sees own rows" on public.referrals;
 create policy "Referrer sees own rows" on public.referrals
   for select using (referrer_id = auth.uid());
-
-alter table public.referrals enable row level security;

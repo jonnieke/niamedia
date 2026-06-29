@@ -65,14 +65,6 @@ Deno.serve(async (req) => {
           reservationId = txId as string
         }
 
-        if (!txId) {
-          return new Response(JSON.stringify({ error: "insufficient_credits" }), {
-            status: 402,
-            headers: { ...cors, "Content-Type": "application/json" },
-          })
-        }
-        reservationId = txId as string
-
         if (!isFreeTier) {
           const { data: kit } = await supabase
             .from("brand_kits")
@@ -157,7 +149,7 @@ Target Audience: ${form.target_audience}
 Location: ${form.location}
 Offer: ${form.offer}
 Tone: ${form.tone}
-Platforms: ${(form.platforms as string[]).join(", ")}
+Platforms: ${((form.platforms as string[]) ?? []).join(", ") || "WhatsApp, Instagram, Facebook"}
 Call to Action: ${form.cta}
 WhatsApp Number: ${form.whatsapp_number || "Not provided"}
 Additional Notes: ${form.notes || "None"}${languageInstruction}${regulatedInstruction}
