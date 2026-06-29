@@ -36,6 +36,8 @@ const Terms = lazy(() => import('./pages/Terms'))
 const Privacy = lazy(() => import('./pages/Privacy'))
 const VideoRequest = lazy(() => import('./pages/VideoRequest'))
 const Requests = lazy(() => import('./pages/MyVideoRequests'))
+const ShareTracker = lazy(() => import('./pages/ShareTracker'))
+
 function RouteLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#f8fafc' }}>
@@ -77,6 +79,7 @@ function AppRoutes() {
         <Route path="/payment/callback" element={<PaymentCallback />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/track/:token" element={<ShareTracker />} />
 
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

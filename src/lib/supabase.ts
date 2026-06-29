@@ -35,3 +35,29 @@ export async function uploadLogo(userId: string, file: File): Promise<string | n
   const { data } = supabase.storage.from('brand-assets').getPublicUrl(path)
   return data.publicUrl
 }
+
+/** Create a shareable campaign link with tracking */
+export async function createShareableLink(campaignId: string, platform: 'whatsapp' | 'instagram' | 'facebook' | 'email' | 'other' = 'whatsapp'): Promise<string | null> {
+  const user = (await supabase.auth.getSession()).data.session?.user
+  if (!user) return null
+
+  const { data, error } = await supabase
+    .from('campaign_shares')
+    .insert({
+      campaign_id: campaignId,
+      user_id: user.id,
+      platform,
+      share_token: crypto.randomUUID(),
+    })
+    .select('share_token')
+    .single()
+
+  if (error || !data) {
+    console.error('Failed to create shareable link:', error)
+    return null
+  }
+
+  // Return a tracking URL that will log views/clicks
+  const trackingUrl = `${window.location.origin}/track/${data.share_token}`
+  return trackingUrl
+}
