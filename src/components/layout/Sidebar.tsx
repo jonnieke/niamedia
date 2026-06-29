@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Plus, FolderOpen, Palette, Settings,
   ShieldCheck, LogOut, Zap, X, Video, Lightbulb,
-  CreditCard,
+  CreditCard, Users, Gift,
 } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
 import Logo from '../ui/Logo'
@@ -18,6 +18,8 @@ const navItems = [
   { to: '/campaigns', icon: FolderOpen, label: 'Campaigns' },
   { to: '/brand-kit', icon: Palette, label: 'Brand Kit' },
   { to: '/requests', icon: Video, label: 'Requests' },
+  { to: '/leads', icon: Users, label: 'Leads' },
+  { to: '/referral', icon: Gift, label: 'Refer & Earn' },
   { to: '/pricing', icon: CreditCard, label: 'Pricing' },
   null,
   { to: '/settings', icon: Settings, label: 'Settings' },

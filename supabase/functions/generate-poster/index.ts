@@ -107,7 +107,10 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
     if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: cors })
 
-    const { data: creditData, error: creditError } = await supabase.rpc('spend_credit', { uid: user.id })
+    const { data: creditData, error: creditError } = await supabase.rpc('spend_credit', {
+      p_user_id: user.id,
+      p_description: `Poster unlock: ${business_name ?? 'campaign'}`,
+    })
     if (creditError || !creditData) {
       return new Response(JSON.stringify({ error: 'insufficient_credits' }), {
         status: 402, headers: { ...cors, 'Content-Type': 'application/json' },
