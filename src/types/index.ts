@@ -142,4 +142,5 @@ export interface CampaignFormData {
   notes: string
   whatsapp_number?: string
   business_url?: string
+  document_paths?: string[]
 }

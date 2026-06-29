@@ -1,6 +1,6 @@
 ﻿import { useState, FormEvent, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ChevronDown, Zap, Sparkles, Languages } from 'lucide-react'
+import { ChevronDown, Zap, Sparkles, Languages, Paperclip, X, Loader2 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import CreativeAssistant from '../components/CreativeAssistant'
 import BuyCreditsModal from '../components/BuyCreditsModal'
@@ -50,6 +50,8 @@ export default function NewCampaign() {
   const [step, setStep] = useState(0)
   const [error, setError] = useState('')
   const [prefilled, setPrefilled] = useState(false)
+  const [uploadedDocs, setUploadedDocs] = useState<{ name: string; path: string }[]>([])
+  const [uploading, setUploading] = useState(false)
 
   // Fetch credit balance
   useEffect(() => {
@@ -101,6 +103,32 @@ export default function NewCampaign() {
   const togglePlatform = (p: string) =>
     setForm(prev => ({ ...prev, platforms: prev.platforms.includes(p) ? prev.platforms.filter(x => x !== p) : [...prev.platforms, p] }))
 
+  const handleDocUpload = async (files: FileList | null) => {
+    if (!files || !user) return
+    const allowed = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain', 'text/csv', 'text/html', 'application/msword']
+    const maxSize = 10 * 1024 * 1024 // 10 MB
+
+    setUploading(true)
+    const newDocs: { name: string; path: string }[] = []
+
+    for (const file of Array.from(files)) {
+      if (!allowed.includes(file.type) && !file.name.match(/\.(pdf|docx?|txt|csv|html?)$/i)) continue
+      if (file.size > maxSize) continue
+      const path = `${user.id}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
+      const { error } = await supabase.storage.from('campaign-docs').upload(path, file)
+      if (!error) newDocs.push({ name: file.name, path })
+    }
+
+    setUploadedDocs(prev => [...prev, ...newDocs])
+    setUploading(false)
+  }
+
+  const removeDoc = async (path: string) => {
+    await supabase.storage.from('campaign-docs').remove([path])
+    setUploadedDocs(prev => prev.filter(d => d.path !== path))
+  }
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
 
@@ -121,7 +149,7 @@ export default function NewCampaign() {
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke('generate-campaign', {
-        body: { ...form, language },
+        body: { ...form, language, document_paths: uploadedDocs.map(d => d.path) },
       })
       clearInterval(stepInterval)
 
@@ -252,6 +280,26 @@ export default function NewCampaign() {
                 <label className="label">Business website <span className="text-gray-600 normal-case font-normal">(optional)</span></label>
                 <input className="input" type="url" placeholder="https://yourbusiness.co.ke" value={form.business_url ?? ''} onChange={set('business_url')} />
                 <p className="text-[11px] text-gray-500 mt-1.5">We'll research your site to write more specific, credible copy — not generic filler.</p>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="label">Company documents <span className="text-gray-600 normal-case font-normal">(optional)</span></label>
+                <label className={`flex items-center gap-2 cursor-pointer border border-dashed border-white/10 rounded-lg px-4 py-3 text-sm text-gray-400 hover:border-purple-500/50 hover:text-gray-300 transition-colors ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                  {uploading ? <Loader2 size={14} className="animate-spin" /> : <Paperclip size={14} />}
+                  {uploading ? 'Uploading…' : 'Attach PDFs, Word docs, or text files'}
+                  <input type="file" className="hidden" multiple accept=".pdf,.doc,.docx,.txt,.csv,.html" onChange={e => handleDocUpload(e.target.files)} disabled={uploading} />
+                </label>
+                {uploadedDocs.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {uploadedDocs.map(doc => (
+                      <li key={doc.path} className="flex items-center gap-2 text-[11px] text-gray-400 bg-white/5 rounded px-2 py-1">
+                        <Paperclip size={11} className="text-purple-400 shrink-0" />
+                        <span className="truncate flex-1">{doc.name}</span>
+                        <button type="button" onClick={() => removeDoc(doc.path)} className="text-gray-600 hover:text-red-400 transition-colors"><X size={11} /></button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="text-[11px] text-gray-500 mt-1.5">Brochures, price lists, case studies — we'll read them to write copy that reflects your real business.</p>
               </div>
               <div>
                 <label className="label">Extra notes <span className="text-gray-600 normal-case font-normal">(optional)</span></label>

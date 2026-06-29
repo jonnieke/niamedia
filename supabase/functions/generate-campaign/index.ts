@@ -122,30 +122,58 @@ Deno.serve(async (req) => {
       )
     }
 
-    /* ── Optional: research the business URL ── */
-    let researchContext = ""
+    /* ── Optional: research the business URL + parse uploaded documents (parallel) ── */
+    const profileLines: string[] = []
+    const sourceTags: string[] = []
+
+    function extractProfileLines(p: Record<string, unknown>) {
+      const lines: string[] = []
+      if (p.businessDescription) lines.push(`About: ${p.businessDescription}`)
+      if (Array.isArray(p.productsServices) && p.productsServices.length) lines.push(`Products/Services: ${(p.productsServices as string[]).join(", ")}`)
+      if (Array.isArray(p.uniqueSellingPoints) && p.uniqueSellingPoints.length) lines.push(`What sets them apart: ${(p.uniqueSellingPoints as string[]).join(", ")}`)
+      if (p.targetAudience) lines.push(`Their customer: ${p.targetAudience}`)
+      if (p.pricePoints) lines.push(`Pricing: ${p.pricePoints}`)
+      if (p.socialProof) lines.push(`Proof/credentials: ${p.socialProof}`)
+      if (p.keyOffers) lines.push(`Current offers: ${p.keyOffers}`)
+      return lines
+    }
+
+    const researchTasks: Promise<void>[] = []
+
+    // URL research
     if (form.business_url && typeof form.business_url === "string" && (form.business_url as string).startsWith("http")) {
-      try {
-        const resRes = await supabase.functions.invoke("research-url", {
-          body: { url: form.business_url },
-        })
-        if (resRes.data?.success && resRes.data?.profile) {
-          const p = resRes.data.profile as Record<string, unknown>
-          const lines: string[] = []
-          if (p.businessDescription) lines.push(`About: ${p.businessDescription}`)
-          if (Array.isArray(p.productsServices) && p.productsServices.length) lines.push(`Products/Services: ${(p.productsServices as string[]).join(", ")}`)
-          if (Array.isArray(p.uniqueSellingPoints) && p.uniqueSellingPoints.length) lines.push(`What sets them apart: ${(p.uniqueSellingPoints as string[]).join(", ")}`)
-          if (p.targetAudience) lines.push(`Their customer: ${p.targetAudience}`)
-          if (p.pricePoints) lines.push(`Pricing: ${p.pricePoints}`)
-          if (p.socialProof) lines.push(`Proof/credentials: ${p.socialProof}`)
-          if (p.keyOffers) lines.push(`Current offers: ${p.keyOffers}`)
-          if (lines.length > 0) {
-            researchContext = `\n\nVERIFIED BUSINESS INTELLIGENCE (researched from ${form.business_url}):\n${lines.join("\n")}\n\nDIRECTIVE: Weave specific details from this research into your copy. Name actual products. Use real prices. Echo genuine social proof. Specificity from verified research is what makes copy trustworthy.`
+      researchTasks.push((async () => {
+        try {
+          const resRes = await supabase.functions.invoke("research-url", { body: { url: form.business_url } })
+          if (resRes.data?.success && resRes.data?.profile) {
+            const lines = extractProfileLines(resRes.data.profile as Record<string, unknown>)
+            if (lines.length) { profileLines.push(...lines); sourceTags.push(`website: ${form.business_url}`) }
           }
-        }
-      } catch {
-        // research is best-effort — never block generation
-      }
+        } catch { /* best-effort */ }
+      })())
+    }
+
+    // Document parsing (parallel — one call per file)
+    const docPaths = Array.isArray(form.document_paths) ? (form.document_paths as string[]) : []
+    for (const storagePath of docPaths) {
+      researchTasks.push((async () => {
+        try {
+          const docRes = await supabase.functions.invoke("parse-document", {
+            body: { storage_path: storagePath },
+          })
+          if (docRes.data?.success && docRes.data?.profile) {
+            const lines = extractProfileLines(docRes.data.profile as Record<string, unknown>)
+            if (lines.length) { profileLines.push(...lines); sourceTags.push(`document: ${docRes.data.fileName ?? storagePath}`) }
+          }
+        } catch { /* best-effort */ }
+      })())
+    }
+
+    await Promise.allSettled(researchTasks)
+
+    let researchContext = ""
+    if (profileLines.length > 0) {
+      researchContext = `\n\nVERIFIED BUSINESS INTELLIGENCE (sourced from: ${sourceTags.join(", ")}):\n${profileLines.join("\n")}\n\nDIRECTIVE: Weave specific details from this research into your copy. Name actual products. Use real prices. Echo genuine social proof. Specificity from verified research is what makes copy trustworthy.`
     }
 
     const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") })
