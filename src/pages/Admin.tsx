@@ -3,7 +3,7 @@ import {
   Users, BarChart2, Package, TrendingUp, ShieldCheck,
   Film, Music, Upload, Eye, RefreshCw, CheckCircle, Clock,
   AlertCircle, Loader2, Radio, Mic, Phone, Mail, Inbox,
-  Zap, Plus, CreditCard, Search,
+  Zap, Plus, CreditCard, Search, MessageSquare,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
@@ -52,6 +52,21 @@ interface Lead {
   budget: string
   status: string
   created_at: string
+}
+
+interface CampaignLead {
+  id: string
+  user_id: string
+  name: string
+  phone: string
+  source: string
+  interest_level: string
+  status: string
+  notes: string
+  estimated_value: number
+  follow_up_date: string | null
+  created_at: string
+  profiles?: { name: string; email: string }
 }
 
 interface Profile {
@@ -545,12 +560,58 @@ function VideoRequestExpandedRow({ request, onStatusChange }: {
   )
 }
 
+function CampaignLeadRow({ lead }: { lead: CampaignLead }) {
+  const LEAD_STATUS_COLORS: Record<string, { color: string; bg: string }> = {
+    New: { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+    Contacted: { color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
+    Interested: { color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)' },
+    Converted: { color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
+    Lost: { color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+  }
+  const { color, bg } = LEAD_STATUS_COLORS[lead.status] ?? { color: '#94a3b8', bg: 'rgba(148,163,184,0.12)' }
+  const SOURCE_ICONS: Record<string, typeof Users> = {
+    WhatsApp: MessageSquare, Instagram: Users, Facebook: Users, Call: Phone,
+  }
+  const Icon = SOURCE_ICONS[lead.source] ?? Users
+
+  return (
+    <div className="border-b border-gray-100 last:border-0">
+      <div className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50 transition-colors">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-gray-500">
+          <Icon size={14} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-900">{lead.name}</p>
+          <p className="text-xs text-gray-500">
+            {lead.profiles?.name || lead.user_id || '—'} · {lead.source} · {lead.interest_level}
+          </p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          {lead.estimated_value > 0 && (
+            <span className="text-xs font-semibold text-emerald-600">KES {lead.estimated_value.toLocaleString()}</span>
+          )}
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold"
+            style={{ color, background: bg }}>
+            {lead.status}
+          </span>
+          <span className="text-xs text-gray-500 whitespace-nowrap">
+            {new Date(lead.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Admin() {
   const [tab, setTab] = useState(0)
   const [audioOrders, setAudioOrders] = useState<AudioOrder[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [users, setUsers] = useState<Profile[]>([])
   const [leads, setLeads] = useState<Lead[]>([])
+  const [campaignLeads, setCampaignLeads] = useState<CampaignLead[]>([])
+  const [leadsSourceFilter, setLeadsSourceFilter] = useState<string | 'all'>('all')
+  const [leadsStatusFilter, setLeadsStatusFilter] = useState<string | 'all'>('all')
   const [creditTxns, setCreditTxns] = useState<CreditTxn[]>([])
   const [videoRequests, setVideoRequests] = useState<VideoRequestRow[]>([])
   const [videoSearch, setVideoSearch] = useState('')
@@ -565,12 +626,14 @@ export default function Admin() {
       supabase.from('projects').select('*, profiles(name, email)').order('created_at', { ascending: false }),
       supabase.from('profiles').select('*').order('created_at', { ascending: false }),
       supabase.from('package_requests').select('*').order('created_at', { ascending: false }),
+      supabase.from('leads').select('*, profiles(name, email)').order('created_at', { ascending: false }),
       supabase.from('credit_transactions').select('*, profiles(name, email)').eq('payment_status', 'paid').order('created_at', { ascending: false }).limit(100),
-    ]).then(([{ data: ao }, { data: pr }, { data: us }, { data: lr }, { data: ct }]) => {
+    ]).then(([{ data: ao }, { data: pr }, { data: us }, { data: lr }, { data: cl }, { data: ct }]) => {
       setAudioOrders((ao ?? []) as AudioOrder[])
       setProjects((pr ?? []) as Project[])
       setUsers((us ?? []) as Profile[])
       setLeads((lr ?? []) as Lead[])
+      setCampaignLeads((cl ?? []) as CampaignLead[])
       setCreditTxns((ct ?? []) as CreditTxn[])
       setLoading(false)
     })
@@ -778,36 +841,93 @@ export default function Admin() {
 
           {/* Leads */}
           {tab === 1 && (
-            <div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-                {(['new', 'contacted', 'in-progress', 'closed'] as const).map(s => {
-                  const count = leads.filter(l => l.status === s).length
-                  const { color, bg } = LEAD_STATUS_COLORS[s]
-                  return (
-                    <div key={s} className="rounded-xl border border-gray-200 bg-white/2 p-3 text-center">
-                      <p className="text-xl font-bold" style={{ color }}>{count}</p>
-                      <p className="text-[10px] text-gray-500 mt-0.5 capitalize">{s}</p>
+            <div className="space-y-6">
+              {/* Campaign Leads */}
+              <div>
+                <h2 className="text-sm font-bold text-gray-900 mb-4">Campaign Leads — User Pipeline</h2>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+                  {(['New', 'Contacted', 'Interested', 'Converted', 'Lost'] as const).map(s => {
+                    const count = campaignLeads.filter(l => l.status === s).length
+                    const colors: Record<string, { color: string; bg: string }> = {
+                      New: { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+                      Contacted: { color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
+                      Interested: { color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)' },
+                      Converted: { color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
+                      Lost: { color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+                    }
+                    const { color, bg } = colors[s]
+                    return (
+                      <div key={s} className="rounded-xl border border-gray-200 bg-white p-3 text-center">
+                        <p className="text-xl font-bold text-gray-900">{count}</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">{s}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Filters */}
+                <div className="flex gap-2 mb-4 flex-wrap">
+                  <div className="flex gap-1">
+                    <button onClick={() => setLeadsSourceFilter('all')} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${leadsSourceFilter === 'all' ? 'border-purple-500/50 bg-purple-500/10 text-purple-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>All sources</button>
+                    {['WhatsApp', 'Instagram', 'Facebook', 'Call'].map(s => (
+                      <button key={s} onClick={() => setLeadsSourceFilter(s)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${leadsSourceFilter === s ? 'border-purple-500/50 bg-purple-500/10 text-purple-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>{s}</button>
+                    ))}
+                  </div>
+                  <div className="flex gap-1">
+                    <button onClick={() => setLeadsStatusFilter('all')} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${leadsStatusFilter === 'all' ? 'border-purple-500/50 bg-purple-500/10 text-purple-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>All statuses</button>
+                    {['New', 'Contacted', 'Interested'].map(s => (
+                      <button key={s} onClick={() => setLeadsStatusFilter(s)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${leadsStatusFilter === s ? 'border-purple-500/50 bg-purple-500/10 text-purple-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>{s}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+                  {campaignLeads.filter(l => (leadsSourceFilter === 'all' || l.source === leadsSourceFilter) && (leadsStatusFilter === 'all' || l.status === leadsStatusFilter)).length === 0 ? (
+                    <div className="py-12 text-center text-gray-500">
+                      <Users size={24} className="mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">No campaign leads yet</p>
                     </div>
-                  )
-                })}
+                  ) : (
+                    campaignLeads.filter(l => (leadsSourceFilter === 'all' || l.source === leadsSourceFilter) && (leadsStatusFilter === 'all' || l.status === leadsStatusFilter)).map(l => (
+                      <CampaignLeadRow key={l.id} lead={l} />
+                    ))
+                  )}
+                </div>
               </div>
 
-              {newLeads > 0 && (
-                <div className="mb-4 p-3.5 rounded-xl border border-amber-500/25 bg-amber-500/8 flex items-center gap-3">
-                  <AlertCircle size={15} className="text-amber-400 shrink-0" />
-                  <p className="text-sm text-amber-300">{newLeads} new lead(s) waiting to be contacted.</p>
+              {/* Package Requests (Service Leads) */}
+              <div>
+                <h2 className="text-sm font-bold text-gray-900 mb-4">Service Requests — Creative Production Leads</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                  {(['new', 'contacted', 'in-progress', 'closed'] as const).map(s => {
+                    const count = leads.filter(l => l.status === s).length
+                    const { color, bg } = LEAD_STATUS_COLORS[s]
+                    return (
+                      <div key={s} className="rounded-xl border border-gray-200 bg-white/2 p-3 text-center">
+                        <p className="text-xl font-bold" style={{ color }}>{count}</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5 capitalize">{s}</p>
+                      </div>
+                    )
+                  })}
                 </div>
-              )}
 
-              <div className="card-glow">
-                {leads.length === 0 ? (
-                  <div className="py-16 text-center text-gray-600">
-                    <Inbox size={28} className="mx-auto mb-2 opacity-30" />
-                    <p className="text-sm">No package requests yet</p>
+                {newLeads > 0 && (
+                  <div className="mb-4 p-3.5 rounded-xl border border-amber-500/25 bg-amber-500/8 flex items-center gap-3">
+                    <AlertCircle size={15} className="text-amber-400 shrink-0" />
+                    <p className="text-sm text-amber-300">{newLeads} new service request(s) waiting to be contacted.</p>
                   </div>
-                ) : leads.map(l => (
-                  <LeadRow key={l.id} lead={l} onStatusChange={handleLeadStatusChange} />
-                ))}
+                )}
+
+                <div className="card-glow">
+                  {leads.length === 0 ? (
+                    <div className="py-16 text-center text-gray-600">
+                      <Inbox size={28} className="mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">No service requests yet</p>
+                    </div>
+                  ) : leads.map(l => (
+                    <LeadRow key={l.id} lead={l} onStatusChange={handleLeadStatusChange} />
+                  ))}
+                </div>
               </div>
             </div>
           )}
