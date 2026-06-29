@@ -29,6 +29,13 @@ interface LeadSummary {
   new: number
   interested: number
   converted: number
+  pipelineValue: number
+  wonValue: number
+  conversionRate: number
+}
+interface LeadRecord {
+  status: string
+  estimated_value: number
 }
 
 interface RequestSummary {
@@ -57,7 +64,7 @@ export default function Dashboard() {
   const [hasBrandKit, setHasBrandKit] = useState(false)
   const [recentCampaigns, setRecentCampaigns] = useState<RecentCampaign[]>([])
   const [recentIdeas, setRecentIdeas] = useState<RecentIdea[]>([])
-  const [leadSummary, setLeadSummary] = useState<LeadSummary>({ total: 0, new: 0, interested: 0, converted: 0 })
+  const [leadSummary, setLeadSummary] = useState<LeadSummary>({ total: 0, new: 0, interested: 0, converted: 0, pipelineValue: 0, wonValue: 0, conversionRate: 0 })
   const [requestSummary, setRequestSummary] = useState<RequestSummary>({ total: 0, active: 0 })
 
   useEffect(() => {
@@ -76,12 +83,17 @@ export default function Dashboard() {
       setRecentCampaigns((campaignsRes.data ?? []) as RecentCampaign[])
       setRecentIdeas((ideasRes.data ?? []) as RecentIdea[])
 
-      const leads = leadsRes.data ?? []
+      const leads = (leadsRes.data ?? []) as LeadRecord[]
+      const converted = leads.filter(l => l.status === 'Converted')
+      const pipelineLeads = leads.filter(l => !['Lost', 'Converted'].includes(l.status))
       setLeadSummary({
         total: leads.length,
         new: leads.filter(l => l.status === 'New').length,
         interested: leads.filter(l => l.status === 'Interested').length,
-        converted: leads.filter(l => l.status === 'Converted').length,
+        converted: converted.length,
+        pipelineValue: pipelineLeads.reduce((s, l) => s + (l.estimated_value || 0), 0),
+        wonValue: converted.reduce((s, l) => s + (l.estimated_value || 0), 0),
+        conversionRate: leads.length ? Math.round((converted.length / leads.length) * 100) : 0,
       })
 
       const requests = requestsRes.data ?? []
@@ -296,20 +308,20 @@ export default function Dashboard() {
               <div className="flex items-center gap-2 mb-4">
                 <BarChart2 size={16} className="text-emerald-600" />
                 <div>
-                  <p className="text-sm font-bold text-gray-900">Leads summary</p>
+                  <p className="text-sm font-bold text-gray-900">Leads & pipeline</p>
                   <p className="text-xs text-gray-500">Track business outcomes, not just content output.</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {[
-                  { label: 'New', value: leadSummary.new },
-                  { label: 'Interested', value: leadSummary.interested },
-                  { label: 'Converted', value: leadSummary.converted },
-                  { label: 'Total', value: leadSummary.total },
+                  { label: 'Total leads', value: String(leadSummary.total) },
+                  { label: 'Conversion %', value: `${leadSummary.conversionRate}%` },
+                  { label: 'Open pipeline', value: loading ? '...' : `KES ${(leadSummary.pipelineValue / 1000).toFixed(0)}K` },
+                  { label: 'Revenue won', value: loading ? '...' : `KES ${(leadSummary.wonValue / 1000).toFixed(0)}K` },
                 ].map(item => (
                   <div key={item.label} className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
                     <p className="text-[11px] font-semibold text-gray-500">{item.label}</p>
-                    <p className="text-xl font-extrabold text-gray-900">{loading ? '...' : item.value}</p>
+                    <p className="text-lg font-extrabold text-gray-900">{item.value}</p>
                   </div>
                 ))}
               </div>
