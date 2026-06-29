@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, FormEvent } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
-import { CheckCircle, Loader2, ChevronDown, ChevronUp, Sparkles, Phone, ArrowRight } from 'lucide-react'
+import { CheckCircle, Loader2, ChevronDown, ChevronUp, Sparkles, Phone, ArrowRight, Send } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 interface LandingPage {
@@ -28,6 +28,11 @@ export default function ShareTracker() {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [leadName, setLeadName] = useState('')
+  const [leadPhone, setLeadPhone] = useState('')
+  const [leadEmail, setLeadEmail] = useState('')
+  const [leadLoading, setLeadLoading] = useState(false)
+  const [leadDone, setLeadDone] = useState(false)
 
   useEffect(() => {
     if (!token) { setNotFound(true); setLoading(false); return }
@@ -54,6 +59,17 @@ export default function ShareTracker() {
   }
 
   if (notFound || !campaign) return <Navigate to="/" replace />
+
+  const submitLead = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!leadPhone.trim() || leadLoading || leadDone) return
+    setLeadLoading(true)
+    await supabase.functions.invoke('capture-lead', {
+      body: { token, name: leadName, phone: leadPhone, email: leadEmail },
+    })
+    setLeadDone(true)
+    setLeadLoading(false)
+  }
 
   const lp = campaign.landingPage
   const initial = campaign.businessName.charAt(0).toUpperCase()
@@ -147,6 +163,59 @@ export default function ShareTracker() {
             )}
           </section>
         )}
+
+        {/* Lead capture form */}
+        <section className="mb-12 rounded-3xl overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
+          <div className="px-6 py-8">
+            {leadDone ? (
+              <div className="text-center py-4">
+                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle size={24} className="text-white" />
+                </div>
+                <p className="text-white font-bold text-lg mb-1">You're on the list!</p>
+                <p className="text-white/70 text-sm">{campaign.businessName} will be in touch shortly.</p>
+              </div>
+            ) : (
+              <>
+                <h2 className="text-xl font-bold text-white mb-1">Get in touch</h2>
+                <p className="text-white/70 text-sm mb-6">Leave your details and {campaign.businessName} will contact you directly.</p>
+                <form onSubmit={submitLead} className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Your name (optional)"
+                    value={leadName}
+                    onChange={e => setLeadName(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-white/15 border border-white/20 text-white placeholder-white/50 text-sm focus:outline-none focus:border-white/50 transition-colors"
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Phone number *"
+                    value={leadPhone}
+                    onChange={e => setLeadPhone(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 rounded-xl bg-white/15 border border-white/20 text-white placeholder-white/50 text-sm focus:outline-none focus:border-white/50 transition-colors"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email address (optional)"
+                    value={leadEmail}
+                    onChange={e => setLeadEmail(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-white/15 border border-white/20 text-white placeholder-white/50 text-sm focus:outline-none focus:border-white/50 transition-colors"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!leadPhone.trim() || leadLoading}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white text-purple-700 font-bold text-sm disabled:opacity-60 hover:bg-white/90 transition-colors"
+                  >
+                    {leadLoading ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+                    {leadLoading ? 'Sending…' : 'Send my details'}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </section>
 
         {/* FAQs */}
         {lp?.faqs && lp.faqs.length > 0 && (

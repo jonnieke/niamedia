@@ -3,7 +3,7 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom'
 import {
   Copy, Save, RefreshCw, Download, Check, Zap, Loader2,
   Wand2, MessageSquare, Share2, Sparkles, ImageIcon, X, Film, Users,
-  Eye, MousePointerClick, TrendingUp, Link as LinkIcon,
+  Eye, MousePointerClick, TrendingUp, Link as LinkIcon, Shuffle,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import CreativeAssistant, { CreativeAssistantButton } from '../components/CreativeAssistant'
@@ -202,6 +202,12 @@ export default function CampaignResults() {
   const [referralCopied, setReferralCopied] = useState(false)
   const [showReferralNudge, setShowReferralNudge] = useState(false)
   const [showNia, setShowNia] = useState(false)
+  // Remix
+  const [showRemix, setShowRemix] = useState(false)
+  const [remixTone, setRemixTone] = useState('')
+  const [remixOffer, setRemixOffer] = useState('')
+  const [remixAudience, setRemixAudience] = useState('')
+  const [remixing, setRemixing] = useState(false)
   // Poster nudge
   const [posterNudgeDismissed, setPosterNudgeDismissed] = useState(
     () => localStorage.getItem('poster_nudge_dismissed') === '1'
@@ -347,6 +353,26 @@ export default function CampaignResults() {
       setTimeout(() => setShareLinkCopied(false), 2500)
     }
     if (savedId) setTimeout(() => fetchShareStats(savedId), 800)
+  }
+
+  const handleRemix = async () => {
+    if (!savedId || !content) return
+    setRemixing(true)
+    const { data, error } = await supabase.functions.invoke('remix-campaign', {
+      body: {
+        campaignId: savedId,
+        currentContent: content,
+        newTone: remixTone || undefined,
+        newOffer: remixOffer || undefined,
+        newAudience: remixAudience || undefined,
+      },
+    })
+    setRemixing(false)
+    if (!error && data?.success && data.remixed) {
+      setContent(prev => prev ? { ...prev, ...data.remixed } : prev)
+      setSaved(false)
+      setShowRemix(false)
+    }
   }
 
   const handleRegenerate = async () => {
@@ -734,6 +760,12 @@ export default function CampaignResults() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <CreativeAssistantButton onClick={() => setShowNia(true)} label="Open Nia" />
+          {savedId && (
+            <button onClick={() => { setRemixTone(form?.tone ?? ''); setRemixOffer(form?.offer ?? ''); setRemixAudience(form?.target_audience ?? ''); setShowRemix(true) }}
+              className="btn-secondary text-xs gap-1.5">
+              <Shuffle size={12} /> Remix
+            </button>
+          )}
           <button onClick={handleRegenerate} disabled={regenerating}
             className="btn-secondary text-xs gap-1.5 disabled:opacity-50">
             {regenerating ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
@@ -855,6 +887,57 @@ export default function CampaignResults() {
       </div>
 
       {tabContent[activeTab]}
+
+      {/* Post-save referral nudge */}
+      {/* Remix modal */}
+      {showRemix && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
+          <div className="w-full max-w-md rounded-2xl bg-[#0e0c1a] border border-white/10 shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <Shuffle size={16} className="text-purple-400" />
+                <span className="font-bold text-white text-sm">Remix this campaign</span>
+              </div>
+              <button onClick={() => setShowRemix(false)} className="text-gray-500 hover:text-white transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <p className="text-xs text-gray-400">Change one or more parameters — we'll regenerate your copy in the new direction. Free, no credit charge.</p>
+              <div>
+                <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest block mb-1.5">Tone</label>
+                <select value={remixTone} onChange={e => setRemixTone(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors">
+                  <option value="">Keep current ({form?.tone})</option>
+                  {['Professional', 'Friendly', 'Bold', 'Luxury', 'Youthful', 'Emotional', 'Direct sales'].map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest block mb-1.5">Offer / Hook</label>
+                <input type="text" placeholder={form?.offer ?? 'e.g. 20% off this weekend only'}
+                  value={remixOffer} onChange={e => setRemixOffer(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors" />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest block mb-1.5">Target Audience</label>
+                <input type="text" placeholder={form?.target_audience ?? 'e.g. Nairobi mums aged 25-40'}
+                  value={remixAudience} onChange={e => setRemixAudience(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors" />
+              </div>
+            </div>
+            <div className="px-6 pb-5 flex gap-2">
+              <button onClick={() => setShowRemix(false)} className="btn-secondary flex-1 text-sm">Cancel</button>
+              <button onClick={handleRemix} disabled={remixing || (!remixTone && !remixOffer && !remixAudience)}
+                className="btn-primary flex-1 text-sm gap-2 disabled:opacity-50">
+                {remixing ? <Loader2 size={13} className="animate-spin" /> : <Shuffle size={13} />}
+                {remixing ? 'Remixing…' : 'Remix copy'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Post-save referral nudge */}
       {showReferralNudge && (
