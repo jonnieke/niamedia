@@ -3,7 +3,7 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom'
 import {
   Copy, Save, RefreshCw, Download, Check, Zap, Loader2,
   Wand2, MessageSquare, Share2, Sparkles, ImageIcon, X, Film, Users,
-  Eye, MousePointerClick, TrendingUp, Link as LinkIcon, Shuffle, Package, ClipboardCheck,
+  Eye, MousePointerClick, TrendingUp, Link as LinkIcon, Shuffle, Package, ClipboardCheck, BookMarked,
 } from 'lucide-react'
 import JSZip from 'jszip'
 import DashboardLayout from '../components/layout/DashboardLayout'
@@ -213,6 +213,12 @@ export default function CampaignResults() {
   const [remixOffer, setRemixOffer] = useState('')
   const [remixAudience, setRemixAudience] = useState('')
   const [remixing, setRemixing] = useState(false)
+  // Save as template
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false)
+  const [templateTitle, setTemplateTitle] = useState('')
+  const [savingTemplate, setSavingTemplate] = useState(false)
+  const [templateSaved, setTemplateSaved] = useState(false)
+
   // Poster nudge
   const [posterNudgeDismissed, setPosterNudgeDismissed] = useState(
     () => localStorage.getItem('poster_nudge_dismissed') === '1'
@@ -616,6 +622,25 @@ export default function CampaignResults() {
     w.document.close()
   }
 
+  const handleSaveAsTemplate = async () => {
+    if (!user || !form) return
+    setSavingTemplate(true)
+    const title = templateTitle.trim() || form.product_name
+    await supabase.from('campaign_templates').insert({
+      user_id: user.id,
+      title,
+      industry: form.industry ?? '',
+      objective: form.objective ?? '',
+      tone: form.tone ?? 'Professional',
+      description: `Saved from campaign: ${form.product_name}`,
+      content: form,
+      is_public: false,
+    })
+    setSavingTemplate(false)
+    setTemplateSaved(true)
+    setTimeout(() => { setShowSaveTemplate(false); setTemplateSaved(false); setTemplateTitle('') }, 1500)
+  }
+
   const copyReferralLink = () => {
     const code = `NIA-${user?.id.slice(0, 6).toUpperCase()}`
     navigator.clipboard.writeText(`https://niamedia.co.ke/register?ref=${code}`)
@@ -888,6 +913,10 @@ export default function CampaignResults() {
               <Shuffle size={12} /> Remix
             </button>
           )}
+          <button onClick={() => { setTemplateTitle(form?.product_name ?? ''); setShowSaveTemplate(true) }}
+            className="btn-secondary text-xs gap-1.5">
+            <BookMarked size={12} /> Save as Template
+          </button>
           <button onClick={handleRegenerate} disabled={regenerating}
             className="btn-secondary text-xs gap-1.5 disabled:opacity-50">
             {regenerating ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
@@ -1057,6 +1086,53 @@ export default function CampaignResults() {
                 {remixing ? 'Remixing…' : 'Remix copy'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Save as Template modal */}
+      {showSaveTemplate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowSaveTemplate(false)} />
+          <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
+            {templateSaved ? (
+              <div className="text-center py-4">
+                <Check size={28} className="mx-auto mb-2 text-emerald-500" />
+                <p className="font-semibold text-gray-900">Template saved!</p>
+                <p className="text-xs text-gray-500 mt-1">Find it in your Templates library.</p>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="font-bold text-gray-900">Save as Template</h2>
+                    <p className="text-xs text-gray-500 mt-0.5">Reuse this campaign structure anytime.</p>
+                  </div>
+                  <button onClick={() => setShowSaveTemplate(false)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="label">Template name</label>
+                    <input className="input" value={templateTitle}
+                      onChange={e => setTemplateTitle(e.target.value)}
+                      placeholder={form?.product_name ?? 'Template name'} />
+                  </div>
+                  <div className="text-xs text-gray-500 bg-gray-50 rounded-xl p-3 space-y-1">
+                    <p><span className="font-semibold">Industry:</span> {form?.industry}</p>
+                    <p><span className="font-semibold">Tone:</span> {form?.tone}</p>
+                    <p><span className="font-semibold">Visible to:</span> Only you (private)</p>
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-5">
+                  <button onClick={() => setShowSaveTemplate(false)} className="btn-secondary text-sm px-4 py-2 flex-1">Cancel</button>
+                  <button onClick={handleSaveAsTemplate} disabled={savingTemplate}
+                    className="btn-primary text-sm px-4 py-2 gap-1.5 flex-1 disabled:opacity-50">
+                    {savingTemplate ? <Loader2 size={13} className="animate-spin" /> : <BookMarked size={13} />}
+                    Save Template
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

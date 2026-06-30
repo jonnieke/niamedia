@@ -42,6 +42,7 @@ const Billing = lazy(() => import('./pages/Billing'))
 const Calendar = lazy(() => import('./pages/Calendar'))
 const Team = lazy(() => import('./pages/Team'))
 const AcceptInvite = lazy(() => import('./pages/AcceptInvite'))
+const ReportView = lazy(() => import('./pages/ReportView'))
 
 function RouteLoader() {
   return (
@@ -87,6 +88,7 @@ function AppRoutes() {
         <Route path="/track/:token" element={<ShareTracker />} />
         <Route path="/review/:token" element={<ReviewPage />} />
         <Route path="/accept-invite/:token" element={<AcceptInvite />} />
+        <Route path="/report/:token" element={<ReportView />} />
 
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

@@ -51,14 +51,25 @@ export default function Settings() {
   const [emailMarketing, setEmailMarketing] = useState(true)
   const [emailMarketingSaving, setEmailMarketingSaving] = useState(false)
 
+  // Weekly reports
+  const [weeklyReportEnabled, setWeeklyReportEnabled] = useState(false)
+  const [weeklyReportPhone, setWeeklyReportPhone] = useState('')
+  const [reportSaving, setReportSaving] = useState(false)
+
   // Billing history — real transactions
   const [billing, setBilling] = useState<{ id: string; date: string; desc: string; amount: number; status: string }[]>([])
   const [billingLoading, setBillingLoading] = useState(true)
 
   useEffect(() => {
     if (!user) return
-    supabase.from('profiles').select('email_marketing_opt_out').eq('id', user.id).single()
-      .then(({ data }) => { if (data) setEmailMarketing(!data.email_marketing_opt_out) })
+    supabase.from('profiles').select('email_marketing_opt_out, weekly_report_enabled, weekly_report_phone').eq('id', user.id).single()
+      .then(({ data }) => {
+        if (data) {
+          setEmailMarketing(!data.email_marketing_opt_out)
+          setWeeklyReportEnabled(data.weekly_report_enabled ?? false)
+          setWeeklyReportPhone(data.weekly_report_phone ?? '')
+        }
+      })
   }, [user])
 
   useEffect(() => {
@@ -99,6 +110,19 @@ export default function Settings() {
   }
 
   const toggleN = (k: keyof typeof notifs) => setNotifs(p => ({ ...p, [k]: !p[k] }))
+
+  const saveWeeklyReport = async (enabled: boolean, phone: string) => {
+    if (!user) return
+    setReportSaving(true)
+    await supabase.from('profiles').update({ weekly_report_enabled: enabled, weekly_report_phone: phone || null }).eq('id', user.id)
+    setReportSaving(false)
+  }
+
+  const toggleWeeklyReport = async () => {
+    const next = !weeklyReportEnabled
+    setWeeklyReportEnabled(next)
+    await saveWeeklyReport(next, weeklyReportPhone)
+  }
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'profile', label: 'Profile' },
@@ -401,6 +425,37 @@ export default function Settings() {
                   <Toggle on={notifs[key]} onToggle={() => toggleN(key)} />
                 </div>
               ))}
+
+              <div className="border-t border-gray-200 pt-5">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Weekly Performance Report</p>
+                <div className="flex items-center justify-between gap-4 mb-3">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">
+                      Monday morning report
+                      {reportSaving && <span className="ml-2 text-[10px] text-gray-500 font-normal">Saving...</span>}
+                    </p>
+                    <p className="text-xs text-gray-500">AI-generated summary of your leads, conversions, and pipeline — sent to WhatsApp every Monday at 7 AM.</p>
+                  </div>
+                  <Toggle on={weeklyReportEnabled} onToggle={toggleWeeklyReport} />
+                </div>
+                {weeklyReportEnabled && (
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      className="input text-sm flex-1"
+                      placeholder="WhatsApp number e.g. 07XX XXX XXX"
+                      value={weeklyReportPhone}
+                      onChange={e => setWeeklyReportPhone(e.target.value)}
+                    />
+                    <button
+                      onClick={() => saveWeeklyReport(weeklyReportEnabled, weeklyReportPhone)}
+                      disabled={reportSaving}
+                      className="btn-secondary text-xs px-4 py-2 gap-1.5 disabled:opacity-50">
+                      {reportSaving ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />}
+                      Save
+                    </button>
+                  </div>
+                )}
+              </div>
 
               <div className="border-t border-gray-200 pt-5">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Email Marketing</p>
