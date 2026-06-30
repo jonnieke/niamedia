@@ -38,6 +38,7 @@ const VideoRequest = lazy(() => import('./pages/VideoRequest'))
 const Requests = lazy(() => import('./pages/MyVideoRequests'))
 const ShareTracker = lazy(() => import('./pages/ShareTracker'))
 const ReviewPage = lazy(() => import('./pages/ReviewPage'))
+const Billing = lazy(() => import('./pages/Billing'))
 
 function RouteLoader() {
   return (
@@ -104,6 +105,7 @@ function AppRoutes() {
         <Route path="/request-video" element={<ProtectedRoute><VideoRequest /></ProtectedRoute>} />
         <Route path="/requests" element={<ProtectedRoute><Requests /></ProtectedRoute>} />
         <Route path="/my-requests" element={<Navigate to="/requests" replace />} />
+        <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
         <Route path="/admin/voices" element={<ProtectedRoute><AdminRoute><AdminVoices /></AdminRoute></ProtectedRoute>} />

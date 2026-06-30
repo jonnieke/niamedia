@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import {
   LayoutDashboard, Plus, FolderOpen, Palette, Settings,
   ShieldCheck, LogOut, Zap, X, Video, Lightbulb,
-  CreditCard, Users, Gift,
+  Receipt, Users, Gift,
 } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -22,7 +22,7 @@ const navItems = [
   { to: '/requests', icon: Video, label: 'Requests' },
   { to: '/leads', icon: Users, label: 'Leads' },
   { to: '/referral', icon: Gift, label: 'Refer & Earn' },
-  { to: '/pricing', icon: CreditCard, label: 'Pricing' },
+  { to: '/billing', icon: Receipt, label: 'Billing' },
   null,
   { to: '/settings', icon: Settings, label: 'Settings' },
 ]
@@ -32,6 +32,18 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const [newLeadsCount, setNewLeadsCount] = useState(0)
+  const [planLabel, setPlanLabel] = useState('Free Plan')
+
+  useEffect(() => {
+    if (!user) return
+    supabase.from('profiles').select('subscription_plan').eq('id', user.id).single()
+      .then(({ data }) => {
+        if (data?.subscription_plan) {
+          const labels: Record<string, string> = { free: 'Free Plan', pro: 'Pro Plan', agency: 'Agency Plan' }
+          setPlanLabel(labels[data.subscription_plan] ?? 'Free Plan')
+        }
+      })
+  }, [user])
 
   useEffect(() => {
     if (!user) return
@@ -142,7 +154,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold text-gray-900 truncate">{user?.name}</p>
-            <p className="text-xs text-gray-500 truncate">{user?.role === 'admin' ? 'Pro Plan' : 'SME Workspace'}</p>
+            <p className="text-xs text-gray-500 truncate">{user?.role === 'admin' ? 'Admin' : planLabel}</p>
           </div>
         </div>
         <button
