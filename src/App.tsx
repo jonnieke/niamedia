@@ -43,6 +43,9 @@ const Calendar = lazy(() => import('./pages/Calendar'))
 const Team = lazy(() => import('./pages/Team'))
 const AcceptInvite = lazy(() => import('./pages/AcceptInvite'))
 const ReportView = lazy(() => import('./pages/ReportView'))
+const WhatsAppInbox = lazy(() => import('./pages/WhatsAppInbox'))
+const Portals = lazy(() => import('./pages/Portals'))
+const PortalView = lazy(() => import('./pages/PortalView'))
 
 function RouteLoader() {
   return (
@@ -89,6 +92,7 @@ function AppRoutes() {
         <Route path="/review/:token" element={<ReviewPage />} />
         <Route path="/accept-invite/:token" element={<AcceptInvite />} />
         <Route path="/report/:token" element={<ReportView />} />
+        <Route path="/portal/:token" element={<PortalView />} />
 
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -114,6 +118,8 @@ function AppRoutes() {
         <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
         <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
         <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
+        <Route path="/inbox" element={<ProtectedRoute><WhatsAppInbox /></ProtectedRoute>} />
+        <Route path="/portals" element={<ProtectedRoute><Portals /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
         <Route path="/admin/voices" element={<ProtectedRoute><AdminRoute><AdminVoices /></AdminRoute></ProtectedRoute>} />

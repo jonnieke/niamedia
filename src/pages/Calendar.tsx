@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Loader2, Sparkles, ChevronLeft, ChevronRight, X, Check, MessageSquare, Image, Lightbulb, Instagram } from 'lucide-react'
+import { Loader2, Sparkles, ChevronLeft, ChevronRight, X, Check, MessageSquare, Image, Lightbulb, Instagram, Send, Facebook } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
@@ -10,6 +10,13 @@ interface CalItem {
   content_type: string
   content: string
   status: string
+}
+
+interface SocialConn {
+  id: string
+  platform: string
+  page_name: string | null
+  page_id: string
 }
 
 const TYPE_META: Record<string, { label: string; color: string; bg: string; Icon: typeof MessageSquare }> = {
@@ -29,16 +36,130 @@ function toDateKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+/* ── Schedule & Publish modal ────────────────────────────────── */
+function ScheduleModal({ item, connections, onClose, onScheduled }: {
+  item: CalItem
+  connections: SocialConn[]
+  onClose: () => void
+  onScheduled: () => void
+}) {
+  const { user } = useAuth()
+  const [connId, setConnId] = useState(connections[0]?.id ?? '')
+  const [scheduleTime, setScheduleTime] = useState(() => {
+    const d = new Date(`${item.scheduled_date}T09:00:00`)
+    return d.toISOString().slice(0, 16)
+  })
+  const [scheduling, setScheduling] = useState(false)
+  const [done, setDone] = useState(false)
+
+  const schedule = async () => {
+    if (!user || !connId) return
+    setScheduling(true)
+    const conn = connections.find(c => c.id === connId)
+    await supabase.from('scheduled_posts').insert({
+      user_id: user.id,
+      calendar_item_id: item.id,
+      connection_id: connId,
+      platform: conn?.platform ?? 'facebook',
+      page_id: conn?.page_id,
+      content: item.content,
+      scheduled_at: new Date(scheduleTime).toISOString(),
+    })
+    // Update calendar item to "scheduled"
+    await supabase.from('content_calendar').update({ status: 'scheduled' }).eq('id', item.id)
+    setScheduling(false)
+    setDone(true)
+    setTimeout(() => { onScheduled(); onClose() }, 1200)
+  }
+
+  const publishNow = async () => {
+    if (!user || !connId) return
+    setScheduling(true)
+    const conn = connections.find(c => c.id === connId)
+    const { data: post } = await supabase.from('scheduled_posts').insert({
+      user_id: user.id,
+      calendar_item_id: item.id,
+      connection_id: connId,
+      platform: conn?.platform ?? 'facebook',
+      page_id: conn?.page_id,
+      content: item.content,
+      scheduled_at: new Date().toISOString(),
+    }).select('id').single()
+
+    if (post?.id) {
+      await supabase.functions.invoke('publish-post', { body: { postId: post.id } })
+    }
+    setScheduling(false)
+    setDone(true)
+    setTimeout(() => { onScheduled(); onClose() }, 1200)
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
+        {done ? (
+          <div className="text-center py-4">
+            <Check size={28} className="mx-auto mb-2 text-emerald-500" />
+            <p className="font-semibold text-gray-900">Post scheduled!</p>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-bold text-gray-900">Schedule & Publish</h2>
+              <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="label">Publish to</label>
+                <select className="input" value={connId} onChange={e => setConnId(e.target.value)}>
+                  {connections.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.platform === 'facebook' ? '📘' : '📸'} {c.page_name ?? c.page_id}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="label">Schedule for</label>
+                <input type="datetime-local" className="input" value={scheduleTime}
+                  onChange={e => setScheduleTime(e.target.value)} />
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-600 line-clamp-3">
+                {item.content.slice(0, 200)}{item.content.length > 200 ? '…' : ''}
+              </div>
+            </div>
+            <div className="flex gap-2 mt-5">
+              <button onClick={publishNow} disabled={!connId || scheduling}
+                className="btn-secondary text-sm px-3 py-2 gap-1.5 flex-1 disabled:opacity-50">
+                {scheduling ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+                Publish Now
+              </button>
+              <button onClick={schedule} disabled={!connId || scheduling}
+                className="btn-primary text-sm px-3 py-2 gap-1.5 flex-1 disabled:opacity-50">
+                {scheduling ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+                Schedule
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function Calendar() {
   const { user } = useAuth()
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
-  const [month, setMonth] = useState(now.getMonth() + 1) // 1-based
+  const [month, setMonth] = useState(now.getMonth() + 1)
   const [items, setItems] = useState<CalItem[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [selected, setSelected] = useState<{ date: string; items: CalItem[] } | null>(null)
   const [genError, setGenError] = useState('')
+  const [connections, setConnections] = useState<SocialConn[]>([])
+  const [scheduleItem, setScheduleItem] = useState<CalItem | null>(null)
 
   const monthLabel = new Date(year, month - 1, 1).toLocaleString('en-KE', { month: 'long', year: 'numeric' })
 
@@ -48,44 +169,38 @@ export default function Calendar() {
     const monthStart = `${year}-${String(month).padStart(2, '0')}-01`
     const daysInMonth = new Date(year, month, 0).getDate()
     const monthEnd = `${year}-${String(month).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`
-    const { data } = await supabase.from('content_calendar')
-      .select('*')
-      .eq('user_id', user.id)
-      .gte('scheduled_date', monthStart)
-      .lte('scheduled_date', monthEnd)
-      .order('scheduled_date')
-    setItems((data ?? []) as CalItem[])
+    const [calRes, connRes] = await Promise.all([
+      supabase.from('content_calendar').select('*').eq('user_id', user.id)
+        .gte('scheduled_date', monthStart).lte('scheduled_date', monthEnd).order('scheduled_date'),
+      supabase.from('social_connections').select('id, platform, page_name, page_id').eq('user_id', user.id),
+    ])
+    setItems((calRes.data ?? []) as CalItem[])
+    setConnections((connRes.data ?? []) as SocialConn[])
     setLoading(false)
   }
 
   useEffect(() => { load() }, [user, year, month])
 
   const navigate = (dir: -1 | 1) => {
-    let m = month + dir
-    let y = year
+    let m = month + dir, y = year
     if (m < 1) { m = 12; y-- }
     if (m > 12) { m = 1; y++ }
-    setMonth(m)
-    setYear(y)
-    setSelected(null)
+    setMonth(m); setYear(y); setSelected(null)
   }
 
   const generate = async () => {
-    setGenerating(true)
-    setGenError('')
+    setGenerating(true); setGenError('')
     try {
       const { error } = await supabase.functions.invoke('generate-calendar', { body: { year, month } })
       if (error) throw new Error(error.message)
       await load()
     } catch (e) {
       setGenError(e instanceof Error ? e.message : 'Generation failed')
-    } finally {
-      setGenerating(false)
-    }
+    } finally { setGenerating(false) }
   }
 
   const cycleStatus = async (item: CalItem) => {
-    const order: CalItem['status'][] = ['idea', 'scheduled', 'posted']
+    const order = ['idea', 'scheduled', 'posted']
     const next = order[(order.indexOf(item.status) + 1) % order.length]
     await supabase.from('content_calendar').update({ status: next }).eq('id', item.id)
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, status: next } : i))
@@ -97,19 +212,17 @@ export default function Calendar() {
     setItems(prev => prev.filter(i => i.id !== item.id))
     if (selected) {
       const remaining = selected.items.filter(i => i.id !== item.id)
-      if (remaining.length === 0) setSelected(null)
+      if (!remaining.length) setSelected(null)
       else setSelected({ ...selected, items: remaining })
     }
   }
 
-  // Build calendar grid
-  const firstDay = new Date(year, month - 1, 1).getDay() // 0=Sun
+  const firstDay = new Date(year, month - 1, 1).getDay()
   const daysInMonth = new Date(year, month, 0).getDate()
   const itemsByDate: Record<string, CalItem[]> = {}
   items.forEach(item => {
-    const key = item.scheduled_date
-    if (!itemsByDate[key]) itemsByDate[key] = []
-    itemsByDate[key].push(item)
+    if (!itemsByDate[item.scheduled_date]) itemsByDate[item.scheduled_date] = []
+    itemsByDate[item.scheduled_date].push(item)
   })
 
   const totalPosted = items.filter(i => i.status === 'posted').length
@@ -118,25 +231,31 @@ export default function Calendar() {
   return (
     <DashboardLayout>
       <div className="max-w-5xl">
-
         {/* Header */}
         <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Content Calendar</h1>
             <p className="text-sm text-gray-500 mt-0.5">AI-generated monthly content plan for your campaigns.</p>
           </div>
-          <button
-            onClick={generate}
-            disabled={generating}
-            className="btn-primary text-sm px-4 py-2.5 gap-2 disabled:opacity-60">
-            {generating ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
-            {generating ? 'Generating…' : `Generate ${monthLabel}`}
-          </button>
+          <div className="flex items-center gap-2">
+            {connections.length > 0 && (
+              <div className="flex items-center gap-1.5 text-xs text-gray-500 border border-gray-200 rounded-xl px-3 py-2">
+                {connections.some(c => c.platform === 'facebook') && <Facebook size={13} className="text-blue-500" />}
+                {connections.some(c => c.platform === 'instagram') && <Instagram size={13} className="text-purple-500" />}
+                <span>{connections.length} account{connections.length !== 1 ? 's' : ''} connected</span>
+              </div>
+            )}
+            <button onClick={generate} disabled={generating}
+              className="btn-primary text-sm px-4 py-2.5 gap-2 disabled:opacity-60">
+              {generating ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+              {generating ? 'Generating…' : `Generate ${monthLabel}`}
+            </button>
+          </div>
         </div>
 
         {genError && <p className="text-xs text-red-500 mb-4">{genError}</p>}
 
-        {/* Stats row */}
+        {/* Stats */}
         {items.length > 0 && (
           <div className="flex gap-3 mb-5 flex-wrap">
             <div className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm">
@@ -166,30 +285,22 @@ export default function Calendar() {
           <div className="flex justify-center py-20"><Loader2 size={22} className="animate-spin text-purple-500" /></div>
         ) : (
           <>
-            {/* Day-of-week headers */}
             <div className="grid grid-cols-7 mb-1">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
                 <div key={d} className="text-center text-[10px] font-bold text-gray-400 py-1.5">{d}</div>
               ))}
             </div>
-
-            {/* Calendar grid */}
             <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-2xl overflow-hidden border border-gray-200">
-              {/* Empty cells before month starts */}
               {Array.from({ length: firstDay }).map((_, i) => (
-                <div key={`empty-${i}`} className="bg-gray-50 min-h-[80px] sm:min-h-[100px]" />
+                <div key={`e-${i}`} className="bg-gray-50 min-h-[80px] sm:min-h-[100px]" />
               ))}
-
-              {/* Day cells */}
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1
                 const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
                 const dayItems = itemsByDate[dateKey] ?? []
                 const isToday = dateKey === toDateKey(now)
-
                 return (
-                  <div
-                    key={dateKey}
+                  <div key={dateKey}
                     onClick={() => dayItems.length > 0 && setSelected({ date: dateKey, items: dayItems })}
                     className={`bg-white min-h-[80px] sm:min-h-[100px] p-1.5 flex flex-col ${dayItems.length > 0 ? 'cursor-pointer hover:bg-purple-50/40 transition-colors' : ''}`}>
                     <span className={`text-xs font-semibold mb-1 self-start w-6 h-6 flex items-center justify-center rounded-full ${isToday ? 'text-white' : 'text-gray-600'}`}
@@ -200,17 +311,13 @@ export default function Calendar() {
                       {dayItems.slice(0, 3).map(item => {
                         const meta = TYPE_META[item.content_type] ?? TYPE_META.idea
                         return (
-                          <div key={item.id}
-                            className="text-[9px] sm:text-[10px] font-medium px-1 py-0.5 rounded truncate"
+                          <div key={item.id} className="text-[9px] sm:text-[10px] font-medium px-1 py-0.5 rounded truncate"
                             style={{ background: meta.bg, color: meta.color }}>
-                            {meta.label}
-                            {item.status === 'posted' && ' ✓'}
+                            {meta.label}{item.status === 'posted' ? ' ✓' : item.status === 'scheduled' ? ' ⏰' : ''}
                           </div>
                         )
                       })}
-                      {dayItems.length > 3 && (
-                        <p className="text-[9px] text-gray-400 pl-1">+{dayItems.length - 3} more</p>
-                      )}
+                      {dayItems.length > 3 && <p className="text-[9px] text-gray-400 pl-1">+{dayItems.length - 3} more</p>}
                     </div>
                   </div>
                 )
@@ -250,17 +357,23 @@ export default function Calendar() {
                 const Icon = meta.Icon
                 return (
                   <div key={item.id} className="rounded-xl border border-gray-200 p-4">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: meta.bg }}>
                         <Icon size={12} style={{ color: meta.color }} />
                       </div>
                       <span className="text-xs font-semibold" style={{ color: meta.color }}>{meta.label}</span>
-                      <button
-                        onClick={() => cycleStatus(item)}
+                      <button onClick={() => cycleStatus(item)}
                         className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full border transition-colors"
                         style={{ color: statusMeta.color, borderColor: statusMeta.color }}>
                         {item.status === 'posted' ? <Check size={10} className="inline" /> : null} {statusMeta.label}
                       </button>
+                      {connections.length > 0 && item.status !== 'posted' && (
+                        <button
+                          onClick={() => setScheduleItem(item)}
+                          className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 flex items-center gap-1">
+                          <Send size={9} /> Publish
+                        </button>
+                      )}
                       <button onClick={() => deleteItem(item)} className="text-gray-300 hover:text-red-400 transition-colors ml-1">
                         <X size={13} />
                       </button>
@@ -270,8 +383,27 @@ export default function Calendar() {
                 )
               })}
             </div>
+            {connections.length === 0 && (
+              <div className="px-5 py-3 border-t border-gray-100 bg-blue-50">
+                <p className="text-xs text-blue-700">
+                  Connect your Facebook or Instagram account in{' '}
+                  <a href="/settings?tab=integrations" className="font-semibold underline">Settings → Integrations</a>{' '}
+                  to publish directly from here.
+                </p>
+              </div>
+            )}
           </div>
         </div>
+      )}
+
+      {/* Schedule modal */}
+      {scheduleItem && (
+        <ScheduleModal
+          item={scheduleItem}
+          connections={connections}
+          onClose={() => setScheduleItem(null)}
+          onScheduled={load}
+        />
       )}
     </DashboardLayout>
   )

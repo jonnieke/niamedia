@@ -4,6 +4,7 @@ import {
   LayoutDashboard, Plus, FolderOpen, Palette, Settings,
   ShieldCheck, LogOut, Zap, X, Video, Lightbulb,
   Receipt, Users, Gift, CalendarDays, UserPlus,
+  MessageSquare, Link2,
 } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -22,6 +23,8 @@ const navItems = [
   { to: '/requests', icon: Video, label: 'Requests' },
   { to: '/leads', icon: Users, label: 'Leads' },
   { to: '/calendar', icon: CalendarDays, label: 'Calendar' },
+  { to: '/inbox', icon: MessageSquare, label: 'WhatsApp Inbox' },
+  { to: '/portals', icon: Link2, label: 'Client Portals' },
   { to: '/team', icon: UserPlus, label: 'Team' },
   { to: '/referral', icon: Gift, label: 'Refer & Earn' },
   { to: '/billing', icon: Receipt, label: 'Billing' },
@@ -34,6 +37,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const [newLeadsCount, setNewLeadsCount] = useState(0)
+  const [unreadWa, setUnreadWa] = useState(0)
   const [planLabel, setPlanLabel] = useState('Free Plan')
 
   useEffect(() => {
@@ -63,9 +67,25 @@ export default function Sidebar({ onClose }: SidebarProps) {
     return () => { supabase.removeChannel(channel) }
   }, [user])
 
-  // Clear badge when visiting /leads
+  // WhatsApp unread count
+  useEffect(() => {
+    if (!user) return
+    const fetch = () => {
+      supabase.from('whatsapp_conversations').select('unread_count').eq('user_id', user.id)
+        .then(({ data }) => setUnreadWa((data ?? []).reduce((s, c) => s + (c.unread_count ?? 0), 0)))
+    }
+    fetch()
+    const ch = supabase.channel(`wa-badge-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_conversations', filter: `user_id=eq.${user.id}` },
+        fetch)
+      .subscribe()
+    return () => { supabase.removeChannel(ch) }
+  }, [user])
+
+  // Clear badge when visiting /leads or /inbox
   useEffect(() => {
     if (location.pathname === '/leads') setNewLeadsCount(0)
+    if (location.pathname === '/inbox') setUnreadWa(0)
   }, [location.pathname])
 
   return (
@@ -119,6 +139,12 @@ export default function Sidebar({ onClose }: SidebarProps) {
                 <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white min-w-[18px] text-center"
                   style={{ background: '#7c3aed' }}>
                   {newLeadsCount > 99 ? '99+' : newLeadsCount}
+                </span>
+              )}
+              {label === 'WhatsApp Inbox' && unreadWa > 0 && (
+                <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white min-w-[18px] text-center"
+                  style={{ background: '#25d366' }}>
+                  {unreadWa > 99 ? '99+' : unreadWa}
                 </span>
               )}
             </NavLink>

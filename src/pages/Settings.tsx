@@ -1,10 +1,18 @@
 ﻿import { useState, useRef, useEffect } from 'react'
-import { Save, Bell, Shield, User, CreditCard, Check, Zap, Film, Music, AlertCircle, Camera, Loader2 } from 'lucide-react'
+import { Save, Bell, Shield, User, CreditCard, Check, Zap, Film, Music, AlertCircle, Camera, Loader2, Link2, Facebook, Instagram, MessageSquare, Copy, Trash2 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { useAuth } from '../lib/AuthContext'
 import { supabase, uploadAvatar } from '../lib/supabase'
 
-type Tab = 'profile' | 'plan' | 'billing' | 'notifications' | 'security'
+type Tab = 'profile' | 'plan' | 'billing' | 'notifications' | 'security' | 'integrations'
+
+interface SocialConn {
+  id: string
+  platform: string
+  page_name: string | null
+  page_id: string
+  expires_at: string | null
+}
 
 const PLANS = [
   { id: 'free', label: 'Free', price: 0, features: ['Concept Studio', 'Campaign copy preview', '1 active project'], color: '#94a3b8' },
@@ -25,7 +33,10 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 
 export default function Settings() {
   const { user, refreshProfile } = useAuth()
-  const [tab, setTab] = useState<Tab>('profile')
+  const [tab, setTab] = useState<Tab>(() => {
+    const p = new URLSearchParams(window.location.search)
+    return (p.get('tab') as Tab) || 'profile'
+  })
 
   // Profile tab
   const [name, setName] = useState(user?.name || '')
@@ -55,6 +66,16 @@ export default function Settings() {
   const [weeklyReportEnabled, setWeeklyReportEnabled] = useState(false)
   const [weeklyReportPhone, setWeeklyReportPhone] = useState('')
   const [reportSaving, setReportSaving] = useState(false)
+
+  // Integrations tab
+  const [socialConns, setSocialConns] = useState<SocialConn[]>([])
+  const [connsLoading, setConnsLoading] = useState(false)
+  const [waNumber, setWaNumber] = useState('')
+  const [aiResponderEnabled, setAiResponderEnabled] = useState(false)
+  const [aiGreeting, setAiGreeting] = useState('')
+  const [waSettings, setWaSettings] = useState(false)
+  const [waError, setWaError] = useState('')
+  const [copiedWebhook, setCopiedWebhook] = useState(false)
 
   // Billing history — real transactions
   const [billing, setBilling] = useState<{ id: string; date: string; desc: string; amount: number; status: string }[]>([])
@@ -101,6 +122,48 @@ export default function Settings() {
     })
   }, [user])
 
+  useEffect(() => {
+    if (!user || tab !== 'integrations') return
+    setConnsLoading(true)
+    Promise.all([
+      supabase.from('social_connections').select('id, platform, page_name, page_id, expires_at').eq('user_id', user.id),
+      supabase.from('profiles').select('whatsapp_business_number, ai_responder_enabled, ai_responder_greeting').eq('id', user.id).single(),
+    ]).then(([connRes, profileRes]) => {
+      setSocialConns((connRes.data ?? []) as SocialConn[])
+      if (profileRes.data) {
+        setWaNumber(profileRes.data.whatsapp_business_number ?? '')
+        setAiResponderEnabled(profileRes.data.ai_responder_enabled ?? false)
+        setAiGreeting(profileRes.data.ai_responder_greeting ?? '')
+      }
+      setConnsLoading(false)
+    })
+  }, [user, tab])
+
+  const disconnectSocial = async (id: string) => {
+    await supabase.from('social_connections').delete().eq('id', id)
+    setSocialConns(prev => prev.filter(c => c.id !== id))
+  }
+
+  const saveWaSettings = async () => {
+    if (!user) return
+    setWaSettings(true); setWaError('')
+    const { error } = await supabase.from('profiles').update({
+      whatsapp_business_number: waNumber.trim() || null,
+      ai_responder_enabled: aiResponderEnabled,
+      ai_responder_greeting: aiGreeting.trim() || null,
+    }).eq('id', user.id)
+    setWaSettings(false)
+    if (error) setWaError(error.message)
+  }
+
+  const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-webhook`
+
+  const copyWebhook = async () => {
+    await navigator.clipboard.writeText(webhookUrl)
+    setCopiedWebhook(true)
+    setTimeout(() => setCopiedWebhook(false), 2000)
+  }
+
   const toggleEmailMarketing = async () => {
     const next = !emailMarketing
     setEmailMarketing(next)
@@ -129,6 +192,7 @@ export default function Settings() {
     { id: 'plan', label: 'Plan & Upgrade' },
     { id: 'billing', label: 'Billing History' },
     { id: 'notifications', label: 'Notifications' },
+    { id: 'integrations', label: 'Integrations' },
     { id: 'security', label: 'Security' },
   ]
 
@@ -472,6 +536,105 @@ export default function Settings() {
               </div>
             </div>
           </Card>
+        )}
+
+        {/* Integrations */}
+        {tab === 'integrations' && (
+          <div className="space-y-5">
+            {/* Social Accounts */}
+            <Card title="Social Accounts" icon={Link2}>
+              {connsLoading ? (
+                <div className="flex justify-center py-6"><Loader2 size={18} className="animate-spin text-purple-400" /></div>
+              ) : (
+                <>
+                  {socialConns.length > 0 ? (
+                    <div className="space-y-3 mb-4">
+                      {socialConns.map(conn => (
+                        <div key={conn.id} className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${conn.platform === 'facebook' ? 'bg-blue-100' : 'bg-purple-100'}`}>
+                            {conn.platform === 'facebook'
+                              ? <Facebook size={15} className="text-blue-600" />
+                              : <Instagram size={15} className="text-purple-600" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-800">{conn.page_name ?? conn.page_id}</p>
+                            <p className="text-xs text-gray-500 capitalize">{conn.platform}
+                              {conn.expires_at && <span className="ml-2 text-amber-500">· expires {new Date(conn.expires_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}</span>}
+                            </p>
+                          </div>
+                          <button onClick={() => disconnectSocial(conn.id)}
+                            className="text-gray-300 hover:text-red-400 transition-colors p-1">
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 mb-4">No social accounts connected yet. Connect Facebook to publish posts from the Content Calendar.</p>
+                  )}
+                  <a
+                    href={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/facebook-oauth?userId=${user?.id}`}
+                    className="btn-secondary text-sm px-4 py-2.5 gap-2 inline-flex items-center">
+                    <Facebook size={14} className="text-blue-600" />
+                    {socialConns.some(c => c.platform === 'facebook') ? 'Reconnect Facebook' : 'Connect Facebook'}
+                  </a>
+                  <p className="text-xs text-gray-500 mt-2">Connecting Facebook also links your Instagram Business account if one is attached to the page.</p>
+                </>
+              )}
+            </Card>
+
+            {/* WhatsApp AI Responder */}
+            <Card title="WhatsApp AI Responder" icon={MessageSquare}>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">Enable AI auto-responder</p>
+                    <p className="text-xs text-gray-500">AI replies to incoming WhatsApp messages on your behalf, 24/7.</p>
+                  </div>
+                  <Toggle on={aiResponderEnabled} onToggle={() => setAiResponderEnabled(p => !p)} />
+                </div>
+
+                <div>
+                  <label className="label">Your WhatsApp Business number</label>
+                  <input className="input" placeholder="+254712345678"
+                    value={waNumber} onChange={e => setWaNumber(e.target.value)} />
+                  <p className="text-xs text-gray-500 mt-1">Must match the number registered with Twilio. Include country code.</p>
+                </div>
+
+                <div>
+                  <label className="label">Greeting message (optional)</label>
+                  <textarea className="input" rows={2}
+                    placeholder="e.g. Welcome! I'm Nia, your AI assistant. How can I help you today?"
+                    value={aiGreeting} onChange={e => setAiGreeting(e.target.value)} />
+                </div>
+
+                {waError && (
+                  <div className="flex items-center gap-2 p-3 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs">
+                    <AlertCircle size={13} /> {waError}
+                  </div>
+                )}
+
+                <button onClick={saveWaSettings} disabled={waSettings}
+                  className="btn-primary text-sm px-5 py-2.5 gap-2 disabled:opacity-50">
+                  {waSettings ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                  Save WhatsApp settings
+                </button>
+
+                <div className="border-t border-gray-200 pt-4">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Twilio Webhook URL</p>
+                  <p className="text-xs text-gray-500 mb-2">
+                    In your Twilio console, set the WhatsApp sandbox / number webhook to:
+                  </p>
+                  <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
+                    <code className="text-xs text-gray-700 font-mono flex-1 break-all">{webhookUrl}</code>
+                    <button onClick={copyWebhook} className="text-gray-400 hover:text-purple-600 shrink-0">
+                      {copiedWebhook ? <Check size={13} className="text-green-500" /> : <Copy size={13} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
         )}
 
         {/* Security */}
