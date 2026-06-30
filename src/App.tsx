@@ -39,6 +39,9 @@ const Requests = lazy(() => import('./pages/MyVideoRequests'))
 const ShareTracker = lazy(() => import('./pages/ShareTracker'))
 const ReviewPage = lazy(() => import('./pages/ReviewPage'))
 const Billing = lazy(() => import('./pages/Billing'))
+const Calendar = lazy(() => import('./pages/Calendar'))
+const Team = lazy(() => import('./pages/Team'))
+const AcceptInvite = lazy(() => import('./pages/AcceptInvite'))
 
 function RouteLoader() {
   return (
@@ -83,6 +86,7 @@ function AppRoutes() {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/track/:token" element={<ShareTracker />} />
         <Route path="/review/:token" element={<ReviewPage />} />
+        <Route path="/accept-invite/:token" element={<AcceptInvite />} />
 
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -106,6 +110,8 @@ function AppRoutes() {
         <Route path="/requests" element={<ProtectedRoute><Requests /></ProtectedRoute>} />
         <Route path="/my-requests" element={<Navigate to="/requests" replace />} />
         <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
+        <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+        <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
         <Route path="/admin/voices" element={<ProtectedRoute><AdminRoute><AdminVoices /></AdminRoute></ProtectedRoute>} />

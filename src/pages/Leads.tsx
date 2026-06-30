@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import {
   Plus, Loader2, X, Check, Trash2, Phone, MessageSquare,
-  Users, TrendingUp, Target, DollarSign,
+  Users, TrendingUp, Target, DollarSign, Megaphone,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
+import BroadcastModal from '../components/BroadcastModal'
 
 interface Lead {
   id: string
@@ -55,6 +56,7 @@ export default function Leads() {
   const [showForm, setShowForm] = useState(!!preset.campaign_id)
   const [draft, setDraft] = useState(() => ({ ...EMPTY, campaign_id: preset.campaign_id ?? '' }))
   const [saving, setSaving] = useState(false)
+  const [showBroadcast, setShowBroadcast] = useState(false)
 
   const load = () => {
     if (!user) return
@@ -127,9 +129,16 @@ export default function Leads() {
             <h1 className="text-2xl font-bold text-gray-900 mt-1">Your leads & pipeline</h1>
             <p className="text-gray-500 text-sm mt-0.5">Track every enquiry from first contact to sale.</p>
           </div>
-          <button onClick={() => setShowForm(true)} className="btn-primary text-sm px-4 py-2.5 gap-1.5">
-            <Plus size={15} /> Add Lead
-          </button>
+          <div className="flex gap-2">
+            {leads.some(l => l.phone) && (
+              <button onClick={() => setShowBroadcast(true)} className="btn-secondary text-sm px-4 py-2.5 gap-1.5">
+                <Megaphone size={15} /> Broadcast
+              </button>
+            )}
+            <button onClick={() => setShowForm(true)} className="btn-primary text-sm px-4 py-2.5 gap-1.5">
+              <Plus size={15} /> Add Lead
+            </button>
+          </div>
         </div>
 
         {/* Performance summary */}
@@ -213,6 +222,15 @@ export default function Leads() {
           </div>
         )}
       </div>
+
+      {/* Broadcast modal */}
+      {showBroadcast && (
+        <BroadcastModal
+          leads={leads}
+          campaigns={campaigns}
+          onClose={() => setShowBroadcast(false)}
+        />
+      )}
 
       {/* Add-lead modal */}
       {showForm && (

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import {
   LayoutDashboard, Plus, FolderOpen, Palette, Settings,
   ShieldCheck, LogOut, Zap, X, Video, Lightbulb,
-  Receipt, Users, Gift,
+  Receipt, Users, Gift, CalendarDays, UserPlus,
 } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -21,6 +21,8 @@ const navItems = [
   { to: '/brand-kit', icon: Palette, label: 'Brand Kit' },
   { to: '/requests', icon: Video, label: 'Requests' },
   { to: '/leads', icon: Users, label: 'Leads' },
+  { to: '/calendar', icon: CalendarDays, label: 'Calendar' },
+  { to: '/team', icon: UserPlus, label: 'Team' },
   { to: '/referral', icon: Gift, label: 'Refer & Earn' },
   { to: '/billing', icon: Receipt, label: 'Billing' },
   null,
