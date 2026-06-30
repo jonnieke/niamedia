@@ -28,7 +28,7 @@ interface SuggestedAction {
 type AgentState = 'idle' | 'listening' | 'thinking' | 'speaking'
 
 const GUEST_LIMIT = 30
-const OPENING_LINE = "Hey! I'm Nia, your AI marketing advisor. Tell me — what kind of business are you running?"
+const OPENING_LINE = "Hey! I'm Nia, your AI marketing advisor. Tell me ï¿½ what kind of business are you running?"
 
 /* --- Waveform animation (CSS injected once) ------------------- */
 const WAVE_STYLE = `
@@ -167,7 +167,15 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
   const [guestStarted, setGuestStarted] = useState(false)
   const [guestExpired, setGuestExpired] = useState(false)
   const [suggestedAction, setSuggestedAction] = useState<SuggestedAction | null>(null)
-  const [brandContext, setBrandContext] = useState<{ businessName?: string; industry?: string } | null>(null)
+  const [brandContext, setBrandContext] = useState<{
+    businessName?: string
+    industry?: string
+    tone?: string
+    creditsRemaining?: number
+    campaigns?: { id: string; title: string; leads: number; converted: number; rate: number; tone?: string; created_at: string }[]
+    leadSummary?: { total: number; byStatus: Record<string, number>; pipelineValue: number; wonValue: number; recentNames: string[] }
+    thisMonth?: { campaigns: number; leads: number }
+  } | null>(null)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -206,15 +214,47 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
   useEffect(() => {
     if (!user) return
 
-    // Brand kit
-    supabase
-      .from('brand_kits')
-      .select('business_name, industry')
-      .eq('user_id', user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.business_name) setBrandContext({ businessName: data.business_name, industry: data.industry ?? undefined })
+    // Fetch rich business context in parallel
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+
+    Promise.all([
+      supabase.from('brand_kits').select('business_name, industry, preferred_tone').eq('user_id', user.id).maybeSingle(),
+      supabase.from('campaigns').select('id, title, created_at, metadata').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
+      supabase.from('leads').select('id, campaign_id, status, estimated_value, name').eq('user_id', user.id),
+      supabase.from('profiles').select('credits').eq('id', user.id).single(),
+      supabase.from('campaigns').select('id', { count: 'exact', head: true }).eq('user_id', user.id).gte('created_at', monthStart),
+      supabase.from('leads').select('id', { count: 'exact', head: true }).eq('user_id', user.id).gte('created_at', monthStart),
+    ]).then(([brandRes, campsRes, leadsRes, profileRes, monthCampsRes, monthLeadsRes]) => {
+      const brand = brandRes.data
+      const allCampaigns = campsRes.data ?? []
+      const allLeads = (leadsRes.data ?? []) as { id: string; campaign_id: string | null; status: string; estimated_value: number; name: string }[]
+
+      // Per-campaign performance
+      const campaigns = allCampaigns.map((c: { id: string; title: string; created_at: string; metadata: Record<string, unknown> }) => {
+        const campLeads = allLeads.filter(l => l.campaign_id === c.id)
+        const converted = campLeads.filter(l => l.status === 'Converted').length
+        const rate = campLeads.length > 0 ? Math.round((converted / campLeads.length) * 100) : 0
+        return { id: c.id, title: c.title, leads: campLeads.length, converted, rate, tone: (c.metadata as Record<string, unknown>)?.tone as string | undefined, created_at: c.created_at }
       })
+
+      // Lead summary
+      const byStatus: Record<string, number> = {}
+      allLeads.forEach(l => { byStatus[l.status] = (byStatus[l.status] || 0) + 1 })
+      const pipelineValue = allLeads.filter(l => !['Lost', 'Converted'].includes(l.status)).reduce((s, l) => s + (l.estimated_value || 0), 0)
+      const wonValue = allLeads.filter(l => l.status === 'Converted').reduce((s, l) => s + (l.estimated_value || 0), 0)
+      const recentNames = allLeads.slice(0, 5).map(l => l.name).filter(Boolean)
+
+      setBrandContext({
+        businessName: brand?.business_name,
+        industry: brand?.industry ?? undefined,
+        tone: brand?.preferred_tone ?? undefined,
+        creditsRemaining: profileRes.data?.credits ?? undefined,
+        campaigns,
+        leadSummary: { total: allLeads.length, byStatus, pipelineValue, wonValue, recentNames },
+        thisMonth: { campaigns: monthCampsRes.count ?? 0, leads: monthLeadsRes.count ?? 0 },
+      })
+    })
 
     // Previous session
     supabase
@@ -582,11 +622,12 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
         }),
       })
 
-      const data = await res.json() as { reply: string; audio?: string; suggestedAction?: SuggestedAction }
+      const data = await res.json() as { reply: string; audio?: string; suggestedAction?: SuggestedAction; navigateTo?: string }
       const agentMsg: Message = { id: String(Date.now() + 1), role: 'assistant', content: data.reply }
       setMessages(prev => [...prev, agentMsg])
 
       if (data.suggestedAction) setSuggestedAction(data.suggestedAction)
+      if (data.navigateTo) { setTimeout(() => { onClose(); navigate(data.navigateTo!) }, 1200) }
 
       // Persist conversation for logged-in users
       if (user) {
@@ -906,7 +947,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
               <div className="p-5 text-center">
                 <p className="text-sm font-bold text-gray-900 mb-1">Your 30-second preview is up</p>
                 <p className="text-xs text-gray-500 mb-4">
-                  Sign up free to continue chatting with Nia — no credit card, no commitment.
+                  Sign up free to continue chatting with Nia ï¿½ no credit card, no commitment.
                   Your conversation so far is saved.
                 </p>
                 <Link to="/register" onClick={onClose}
@@ -977,7 +1018,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
           {/* Bottom hint */}
           <p className="text-center text-[10px] text-gray-700 mt-2">
             {isGuest && !guestStarted
-              ? 'Free 30-second preview · No sign up required'
+              ? 'Free 30-second preview ï¿½ No sign up required'
               : isGuest && !guestExpired
               ? `${guestTimeLeft}s of free conversation remaining`
               : !isGuest
