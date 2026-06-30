@@ -120,6 +120,18 @@ Deno.serve(async (req) => {
     sendWhatsAppAlert(brandKit.whatsapp, name?.trim() ?? "", phone.trim(), campaign.title ?? "campaign")
   }
 
+  // Push notification (fire-and-forget)
+  const displayName = name?.trim() ? name.trim() : phone.trim()
+  supabase.functions.invoke("send-push-notification", {
+    body: {
+      userId: campaign.user_id,
+      title: "🔔 New lead!",
+      body: `${displayName} just enquired via your "${campaign.title ?? "campaign"}" page`,
+      url: "/leads",
+      tag: `lead-${campaign.id}`,
+    },
+  }).catch(() => { /* best-effort */ })
+
   supabase.functions.invoke("schedule-follow-ups", {
     body: {
       leadId: (await supabase.from("leads").select("id").eq("campaign_id", campaign.id).eq("phone", phone.trim()).maybeSingle()).data?.id,

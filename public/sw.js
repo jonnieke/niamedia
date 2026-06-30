@@ -22,6 +22,34 @@ self.addEventListener('activate', event => {
   )
 })
 
+// Push notification handler
+self.addEventListener('push', event => {
+  let data = { title: 'Nia Media', body: 'You have a new notification', url: '/dashboard' }
+  try { if (event.data) data = { ...data, ...event.data.json() } } catch { /**/ }
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: '/icon-192.svg',
+      badge: '/icon-192.svg',
+      tag: data.tag ?? 'nia-notification',
+      data: { url: data.url ?? '/dashboard' },
+      vibrate: [200, 100, 200],
+    })
+  )
+})
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close()
+  const url = event.notification.data?.url ?? '/dashboard'
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      const match = list.find(c => c.url.includes(self.location.origin))
+      if (match) { match.focus(); match.navigate(url) }
+      else clients.openWindow(url)
+    })
+  )
+})
+
 self.addEventListener('fetch', event => {
   const { request } = event
   const url = new URL(request.url)

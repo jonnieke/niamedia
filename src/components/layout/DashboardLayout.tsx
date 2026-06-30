@@ -6,6 +6,7 @@ import { useAuth } from '../../lib/AuthContext'
 import { supabase } from '../../lib/supabase'
 import BuyCreditsModal from '../BuyCreditsModal'
 import { NiaAgentButton } from '../NiaAgent'
+import InstallPrompt from '../InstallPrompt'
 
 interface DBNotification {
   id: string
@@ -286,6 +287,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
 
         <NiaAgentButton />
+        <InstallPrompt />
 
         {/* WhatsApp float */}
         {import.meta.env.VITE_WHATSAPP_NUMBER && (
