@@ -39,6 +39,7 @@ const STAGES: { key: ProjectStatus; label: string; icon: typeof Film; color: str
   { key: 'review', label: 'Client Review', icon: Clock, color: '#d97706', bg: 'rgba(217,119,6,0.08)' },
   { key: 'delivered', label: 'Delivered', icon: Truck, color: '#0891b2', bg: 'rgba(8,145,178,0.08)' },
   { key: 'completed', label: 'Completed', icon: Trophy, color: '#059669', bg: 'rgba(5,150,105,0.08)' },
+  { key: 'cancelled', label: 'Cancelled', icon: X, color: '#9ca3af', bg: 'rgba(156,163,175,0.08)' },
 ]
 
 const APP_URL = import.meta.env.VITE_APP_URL ?? window.location.origin
@@ -168,6 +169,7 @@ export default function Production() {
     review: projects.filter(p => p.status === 'review').length,
     delivered: projects.filter(p => p.status === 'delivered').length,
     completed: projects.filter(p => p.status === 'completed').length,
+    cancelled: projects.filter(p => p.status === 'cancelled').length,
   }
 
   const ProjectForm = () => (
@@ -438,3 +440,4 @@ export default function Production() {
     </DashboardLayout>
   )
 }
+
