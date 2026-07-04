@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ChevronRight, ChevronLeft, Sparkles, Loader2, Check, Zap,
-  MessageSquare, Send, Globe, Target, Users, Radio, BookOpen,
+  MessageSquare, Send, Globe, Target, Radio, BookOpen,
   TrendingUp, Lightbulb, AlertCircle, RefreshCw, X,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
@@ -43,6 +43,68 @@ interface ResearchInsights {
 }
 
 interface PastCampaign { id: string; title: string; created_at: string }
+
+/* ── Campaign brief preview ──────────────────────────────────── */
+function BriefPreview({ form, onEdit }: {
+  form: CampaignFormData & { campaign_type?: string }
+  onEdit: (step: number) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const rows: { label: string; value: string; step: number }[] = [
+    { label: 'Business', value: form.business_name, step: 1 },
+    { label: 'Industry', value: form.industry, step: 1 },
+    { label: 'Promoting', value: form.product_name, step: 1 },
+    { label: 'Goal', value: form.objective, step: 2 },
+    { label: 'Offer / Hook', value: form.offer, step: 2 },
+    { label: 'CTA', value: form.cta, step: 2 },
+    { label: 'Audience', value: form.target_audience, step: 3 },
+    { label: 'Location', value: form.location, step: 3 },
+    { label: 'Platforms', value: form.platforms.join(', '), step: 4 },
+    { label: 'Tone', value: form.tone, step: 4 },
+    { label: 'Format', value: form.campaign_type ?? '', step: 4 },
+    { label: 'Notes', value: form.notes, step: 1 },
+  ].filter(r => r.value)
+
+  return (
+    <div className="card-glow overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-5 py-4 text-left"
+      >
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded-full flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg,#7c3aed,#2563eb)' }}>
+            <Check size={10} className="text-white" />
+          </div>
+          <span className="text-sm font-semibold text-gray-900">Your campaign brief</span>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+            {rows.length} fields filled
+          </span>
+        </div>
+        <ChevronRight size={14} className={`text-gray-400 transition-transform ${open ? 'rotate-90' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="border-t border-gray-100 px-5 pb-4 pt-3">
+          <div className="space-y-2">
+            {rows.map(r => (
+              <div key={r.label} className="flex items-start gap-3 group">
+                <span className="text-xs font-semibold text-gray-400 w-20 shrink-0 pt-0.5">{r.label}</span>
+                <span className="text-xs text-gray-700 flex-1 leading-relaxed">{r.value}</span>
+                <button
+                  onClick={() => onEdit(r.step)}
+                  className="text-[10px] font-semibold text-purple-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                >
+                  Edit
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 /* ── Step indicator ──────────────────────────────────────────── */
 const STEPS = ['Business', 'Goal', 'Audience', 'Channels', 'Research']
@@ -538,6 +600,8 @@ export default function NewCampaign() {
         {/* ── Step 5: Research & Strategy ───────────────────── */}
         {step === 5 && (
           <div className="space-y-4">
+            <BriefPreview form={form} onEdit={setStep} />
+
             {researchLoading && (
               <div className="card-glow p-8 text-center">
                 <Loader2 size={24} className="animate-spin text-purple-400 mx-auto mb-3" />

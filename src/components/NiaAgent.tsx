@@ -477,26 +477,13 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
 
     const connectPromise = (async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY as string
-        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gemini-live-token`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY as string,
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({ userContext: brandContext ?? undefined }),
-        })
+        // Use API key directly — ephemeral token endpoint not yet publicly available
+        const apiKey = import.meta.env.VITE_GOOGLE_API_KEY as string
+        if (!apiKey) throw new Error('VITE_GOOGLE_API_KEY is not set')
 
-        const tokenData = await res.json() as { token?: string; model?: string; error?: string }
-        if (!res.ok || !tokenData.token) {
-          throw new Error(tokenData.error || 'Gemini Live token failed')
-        }
-
-        const ai = new GoogleGenAI({ apiKey: tokenData.token, httpOptions: { apiVersion: 'v1alpha' } })
+        const ai = new GoogleGenAI({ apiKey, httpOptions: { apiVersion: 'v1alpha' } })
         const liveSession = await ai.live.connect({
-          model: tokenData.model ?? 'gemini-live-2.5-flash-preview',
+          model: 'gemini-live-2.5-flash-preview',
           config: {
             responseModalities: [Modality.TEXT],
           },
@@ -1056,6 +1043,8 @@ export function NiaAgentButton() {
     </>
   )
 }
+
+
 
 
 
