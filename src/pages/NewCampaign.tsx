@@ -259,7 +259,7 @@ export default function NewCampaign() {
   useEffect(() => {
     if (!user) return
     Promise.all([
-      supabase.from('brand_kits').select('business_name,industry,preferred_tone,target_customer,whatsapp_number,website_url').eq('user_id', user.id).single(),
+      supabase.from('brand_kits').select('business_name,industry,preferred_tone,target_customer,whatsapp_number,website_url').eq('user_id', user.id).maybeSingle(),
       supabase.from('campaigns').select('id,business_name,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
     ]).then(([brand, camps]) => {
       const b = brand.data

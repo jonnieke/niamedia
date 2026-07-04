@@ -161,7 +161,7 @@ export default function Calendar() {
   const [connections, setConnections] = useState<SocialConn[]>([])
   const [scheduleItem, setScheduleItem] = useState<CalItem | null>(null)
   const [scheduleFromCampaign, setScheduleFromCampaign] = useState(false)
-  const [campaigns, setCampaigns] = useState<{ id: string; business_name: string; platforms: string[] }[]>([])
+  const [campaigns, setCampaigns] = useState<{ id: string; business_name: string }[]>([])
   const [selectedCampaign, setSelectedCampaign] = useState('')
   const [scheduleGenerating, setScheduleGenerating] = useState(false)
 
@@ -187,7 +187,7 @@ export default function Calendar() {
 
   useEffect(() => {
     if (!user) return
-    supabase.from('campaigns').select('id,business_name,platforms').eq('user_id', user.id)
+    supabase.from('campaigns').select('id,business_name').eq('user_id', user.id)
       .order('created_at', { ascending: false }).limit(20)
       .then(({ data }) => setCampaigns((data ?? []) as { id: string; business_name: string; platforms: string[] }[]))
   }, [user])
@@ -208,7 +208,7 @@ export default function Calendar() {
         body: JSON.stringify({
           campaign: camp,
           startDate: `${year}-${String(month).padStart(2,'0')}-01`,
-          platforms: camp.platforms ?? ['Facebook','Instagram'],
+          platforms: ['Facebook','Instagram','TikTok','WhatsApp'],
         }),
       })
       const { posts } = await res.json() as { posts: { date: string; platform: string; type: string; caption: string; time: string }[] }
