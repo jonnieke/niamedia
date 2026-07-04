@@ -12,31 +12,46 @@ export default function PaymentCallback() {
 
   const orderId = searchParams.get('OrderMerchantReference')
   const trackingId = searchParams.get('OrderTrackingId')
+  const type = searchParams.get('type')       // 'invoice' | null
+  const invoiceId = searchParams.get('id')    // raw invoice UUID when type=invoice
 
   useEffect(() => {
-    if (!orderId && !trackingId) { setStatus('failed'); return }
+    if (!orderId && !trackingId && !invoiceId) { setStatus('failed'); return }
 
     let attempts = 0
-    const MAX_ATTEMPTS = 10
+    const MAX_ATTEMPTS = 12
 
     const check = async () => {
       attempts++
-      const query = orderId
-        ? supabase.from('audio_orders').select('payment_status, title').eq('id', orderId).single()
-        : supabase.from('audio_orders').select('payment_status, title').eq('order_tracking_id', trackingId!).single()
 
-      const { data } = await query
-      if (data) {
-        setOrderTitle(data.title ?? '')
-        if (data.payment_status === 'paid') { setStatus('paid'); return }
-        if (data.payment_status === 'failed' || data.payment_status === 'reversed') { setStatus('failed'); return }
+      if (type === 'invoice' && invoiceId) {
+        // Poll invoices table
+        const { data } = await supabase.from('invoices')
+          .select('status, invoice_number, client_name').eq('id', invoiceId).single()
+        if (data) {
+          setOrderTitle(`Invoice #${data.invoice_number} — ${data.client_name}`)
+          if (data.status === 'paid') { setStatus('paid'); return }
+          if (data.status === 'cancelled') { setStatus('failed'); return }
+        }
+      } else {
+        // Audio order (existing logic)
+        const query = orderId
+          ? supabase.from('audio_orders').select('payment_status, title').eq('id', orderId).single()
+          : supabase.from('audio_orders').select('payment_status, title').eq('order_tracking_id', trackingId!).single()
+        const { data } = await query
+        if (data) {
+          setOrderTitle(data.title ?? '')
+          if (data.payment_status === 'paid') { setStatus('paid'); return }
+          if (data.payment_status === 'failed' || data.payment_status === 'reversed') { setStatus('failed'); return }
+        }
       }
+
       if (attempts >= MAX_ATTEMPTS) { setStatus('timeout'); return }
       setTimeout(check, 3000)
     }
 
     void check()
-  }, [orderId, trackingId])
+  }, [orderId, trackingId, type, invoiceId])
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4"
@@ -67,21 +82,34 @@ export default function PaymentCallback() {
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Confirmed!</h2>
             {orderTitle && <p className="text-purple-300 font-medium mb-3">{orderTitle}</p>}
-            <p className="text-gray-500 text-sm mb-2">
-              Your brief is now in the production queue. A Nia Media creative will begin work shortly.
-            </p>
-            <p className="text-gray-500 text-xs mb-8">You'll receive an email notification when your audio is ready for review.</p>
-            <div className="flex flex-col gap-3">
-              <Link to="/projects"
-                className="btn-primary w-full py-3 text-sm"
-                style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', display: 'block', borderRadius: '12px', textAlign: 'center', color: 'white', fontWeight: 600 }}>
-                View My Projects
-              </Link>
-              <Link to="/audio-studio"
-                className="text-sm text-gray-500 hover:text-white transition-colors">
-                Order another audio →
-              </Link>
-            </div>
+            {type === 'invoice' ? (
+              <>
+                <p className="text-gray-500 text-sm mb-8">The invoice has been marked as paid. You can view it in your Invoices dashboard.</p>
+                <Link to="/invoices"
+                  className="btn-primary w-full py-3 text-sm"
+                  style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', display: 'block', borderRadius: '12px', textAlign: 'center', color: 'white', fontWeight: 600 }}>
+                  View Invoices
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-500 text-sm mb-2">
+                  Your brief is now in the production queue. A Nia Media creative will begin work shortly.
+                </p>
+                <p className="text-gray-500 text-xs mb-8">You'll receive an email notification when your audio is ready for review.</p>
+                <div className="flex flex-col gap-3">
+                  <Link to="/projects"
+                    className="btn-primary w-full py-3 text-sm"
+                    style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', display: 'block', borderRadius: '12px', textAlign: 'center', color: 'white', fontWeight: 600 }}>
+                    View My Projects
+                  </Link>
+                  <Link to="/audio-studio"
+                    className="text-sm text-gray-500 hover:text-white transition-colors">
+                    Order another audio →
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
         )}
 

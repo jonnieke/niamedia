@@ -173,6 +173,27 @@ Deno.serve(async (req) => {
           .update({ payment_status: paymentStatus, order_tracking_id: orderTrackingId })
           .eq("order_id", orderMerchantReference)
       }
+    } else if (orderMerchantReference.startsWith("inv_")) {
+      // Invoice payment
+      const invoiceId = orderMerchantReference.replace("inv_", "")
+      await supabase.from("invoices").update({
+        status: paymentStatus === "paid" ? "paid" : "sent",
+        ...(paymentStatus === "paid" ? { paid_at: new Date().toISOString(), mpesa_ref: orderTrackingId } : {}),
+      }).eq("id", invoiceId)
+
+      if (paymentStatus === "paid") {
+        const { data: inv } = await supabase.from("invoices")
+          .select("user_id, invoice_number, total, client_name").eq("id", invoiceId).single()
+        if (inv) {
+          void supabase.from("notifications").insert({
+            user_id: inv.user_id,
+            title: "Invoice paid!",
+            body: `${inv.client_name} paid invoice #${inv.invoice_number} — KES ${inv.total.toLocaleString()}`,
+            type: "success",
+            action_url: "/invoices",
+          })
+        }
+      }
     } else {
       // Audio order — existing logic
       await supabase.from("audio_orders")

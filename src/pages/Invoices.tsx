@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Download, Send, CheckCircle, Clock, AlertCircle, X, Printer, Phone, ChevronDown } from 'lucide-react'
+import { Plus, Send, CheckCircle, Clock, AlertCircle, X, Printer, CreditCard } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
@@ -121,7 +121,7 @@ export default function Invoices() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [preview, setPreview] = useState<Invoice | null>(null)
-  const [mpesaLoading, setMpesaLoading] = useState<string | null>(null)
+  const [pesapalLoading, setPesapalLoading] = useState<string | null>(null)
   const [form, setForm] = useState({
     client_name: '', client_email: '', client_phone: '',
     due_date: '', currency: 'KES', tax_rate: 16, notes: '',
@@ -166,11 +166,12 @@ export default function Invoices() {
     setInvoices(prev => prev.map(i => i.id === id ? { ...i, status: status as Invoice['status'], ...extra } : i))
   }
 
-  const requestMpesa = async (inv: Invoice) => {
-    setMpesaLoading(inv.id)
+  const requestPesapal = async (inv: Invoice) => {
+    setPesapalLoading(inv.id)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mpesa-payment`, {
+      const callbackUrl = `${window.location.origin}/payment/callback?type=invoice&id=${inv.id}`
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pesapal-checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -178,23 +179,27 @@ export default function Invoices() {
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
         },
         body: JSON.stringify({
-          phone: inv.client_phone,
-          amount: Math.round(inv.total),
-          invoiceId: inv.id,
-          reference: inv.invoice_number,
+          orderId: `inv_${inv.id}`,
+          amountKes: Math.round(inv.total),
+          description: `Invoice #${inv.invoice_number} — ${inv.client_name}`,
+          callbackUrl,
+          email: inv.client_email ?? '',
+          phone: inv.client_phone ?? '',
+          firstName: inv.client_name.split(' ')[0],
+          lastName: inv.client_name.split(' ').slice(1).join(' ') || inv.client_name,
         }),
       })
-      const data = await res.json()
-      if (data.ResponseCode === '0') {
-        alert(`STK push sent to ${inv.client_phone}. Ask the client to enter their M-Pesa PIN.`)
+      const data = await res.json() as { redirectUrl?: string; error?: string }
+      if (data.redirectUrl) {
         updateStatus(inv.id, 'sent')
+        window.open(data.redirectUrl, '_blank')
       } else {
-        alert(data.CustomerMessage || 'M-Pesa request failed')
+        alert(data.error ?? 'PesaPal checkout failed — check Supabase secrets')
       }
     } catch {
-      alert('M-Pesa request failed — check edge function logs')
+      alert('PesaPal checkout failed')
     }
-    setMpesaLoading(null)
+    setPesapalLoading(null)
   }
 
   const updateItem = (idx: number, field: keyof InvoiceItem, val: string | number) =>
@@ -221,11 +226,11 @@ export default function Invoices() {
                 <Printer size={14} /> Print / PDF
               </button>
               {preview.client_phone && preview.status !== 'paid' && (
-                <button onClick={() => requestMpesa(preview)}
-                  disabled={mpesaLoading === preview.id}
+                <button onClick={() => requestPesapal(preview)}
+                  disabled={pesapalLoading === preview.id}
                   className="flex items-center gap-2 text-sm px-4 py-2 rounded-xl text-white font-medium"
-                  style={{ background: '#00a651' }}>
-                  <Phone size={14} /> M-Pesa STK Push
+                  style={{ background: '#7c3aed' }}>
+                  <CreditCard size={14} /> Pay via PesaPal
                 </button>
               )}
             </div>
@@ -324,11 +329,11 @@ export default function Invoices() {
                             </button>
                           )}
                           {inv.client_phone && inv.status !== 'paid' && (
-                            <button onClick={() => requestMpesa(inv)}
-                              disabled={mpesaLoading === inv.id}
+                            <button onClick={() => requestPesapal(inv)}
+                              disabled={pesapalLoading === inv.id}
                               className="text-xs font-semibold px-2 py-1 rounded-lg text-white"
-                              style={{ background: '#00a651' }}>
-                              M-Pesa
+                              style={{ background: '#7c3aed' }}>
+                              Pay
                             </button>
                           )}
                         </div>
