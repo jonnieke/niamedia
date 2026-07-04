@@ -141,7 +141,7 @@ export default function Billing() {
           lastName: user.name?.split(' ')[1] ?? '',
         },
       })
-      if (error || !data?.redirectUrl) throw new Error(error?.message ?? 'Checkout failed')
+      if (error || !data?.redirectUrl) throw new Error(data?.error ?? error?.message ?? 'Checkout failed')
       window.location.href = data.redirectUrl
     } catch (err) {
       setBuyError(err instanceof Error ? err.message : 'Something went wrong')

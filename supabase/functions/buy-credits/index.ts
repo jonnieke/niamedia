@@ -82,8 +82,23 @@ Deno.serve(async (req: Request) => {
     })
 
     // Initiate PesaPal checkout
-    const token = await getPesapalToken()
-    const ipnId = await getOrRegisterIpn(token)
+    let token: string
+    try {
+      token = await getPesapalToken()
+    } catch (tokenErr) {
+      return new Response(JSON.stringify({ error: `PesaPal auth failed: ${String(tokenErr)}` }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      })
+    }
+
+    let ipnId: string
+    try {
+      ipnId = await getOrRegisterIpn(token)
+    } catch (ipnErr) {
+      return new Response(JSON.stringify({ error: `PesaPal IPN failed: ${String(ipnErr)}` }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      })
+    }
 
     const orderRes = await fetch(`${BASE_URL}/api/Transactions/SubmitOrderRequest`, {
       method: "POST",
@@ -110,7 +125,11 @@ Deno.serve(async (req: Request) => {
     })
 
     const orderData = await orderRes.json()
-    if (!orderData.redirect_url) throw new Error(`PesaPal order failed: ${JSON.stringify(orderData)}`)
+    if (!orderData.redirect_url) {
+      return new Response(JSON.stringify({ error: `PesaPal order failed: ${JSON.stringify(orderData)}` }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      })
+    }
 
     // Store tracking ID
     await supabase.from("credit_transactions")
@@ -121,8 +140,9 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     })
   } catch (err) {
+    console.error("buy-credits error:", String(err))
     return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     })
   }
 })

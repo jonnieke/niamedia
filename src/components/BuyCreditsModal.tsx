@@ -32,7 +32,7 @@ export default function BuyCreditsModal({ onClose }: Props) {
           lastName: user.name?.split(' ')[1] ?? '',
         },
       })
-      if (fnError || !data?.redirectUrl) throw new Error(fnError?.message ?? 'Checkout failed')
+      if (fnError || !data?.redirectUrl) throw new Error(data?.error ?? fnError?.message ?? 'Checkout failed')
       window.location.href = data.redirectUrl
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
