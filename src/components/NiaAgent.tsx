@@ -28,7 +28,7 @@ interface SuggestedAction {
 type AgentState = 'idle' | 'listening' | 'thinking' | 'speaking'
 
 const GUEST_LIMIT = 30
-const OPENING_LINE = "Hey! I'm Nia, your AI marketing advisor. Tell me � what kind of business are you running?"
+const OPENING_LINE = "Hey! I'm Nia, your AI marketing advisor. Tell me - what kind of business are you running?"
 
 /* --- Waveform animation (CSS injected once) ------------------- */
 const WAVE_STYLE = `
@@ -945,7 +945,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
               <div className="p-5 text-center">
                 <p className="text-sm font-bold text-gray-900 mb-1">Your 30-second preview is up</p>
                 <p className="text-xs text-gray-500 mb-4">
-                  Sign up free to continue chatting with Nia � no credit card, no commitment.
+                  Sign up free to continue chatting with Nia - no credit card, no commitment.
                   Your conversation so far is saved.
                 </p>
                 <Link to="/register" onClick={onClose}
@@ -1016,7 +1016,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
           {/* Bottom hint */}
           <p className="text-center text-[10px] text-gray-700 mt-2">
             {isGuest && !guestStarted
-              ? 'Free 30-second preview � No sign up required'
+              ? 'Free 30-second preview - No sign up required'
               : isGuest && !guestExpired
               ? `${guestTimeLeft}s of free conversation remaining`
               : !isGuest

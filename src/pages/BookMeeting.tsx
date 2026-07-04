@@ -1,10 +1,8 @@
 import { useMemo } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { CalendarDays, Clock3, Video, MessageSquare, Sparkles, ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react'
-import '@calcom/atoms/globals.tw3.min.css'
-import { BookerEmbed } from '@calcom/atoms'
 import PublicHeader from '../components/layout/PublicHeader'
-import { getCalBookingTarget, type BookingService } from '../lib/booking'
+import { getBookingUrl, getCalBookingTarget, type BookingService } from '../lib/booking'
 
 export default function BookMeeting() {
   const [searchParams] = useSearchParams()
@@ -16,6 +14,7 @@ export default function BookMeeting() {
       ? 'urgent'
       : 'consultation'
   const calTarget = getCalBookingTarget(service)
+  const bookingUrl = getBookingUrl(service)
 
   const copy = useMemo(() => {
     if (service === 'video') {
@@ -111,11 +110,12 @@ export default function BookMeeting() {
             </div>
             <div className="aspect-[4/5] md:aspect-[3/4] lg:aspect-[4/5] bg-gray-50">
               {bookingReady && calTarget ? (
-                <BookerEmbed
-                  apiUrl="https://api.cal.com/v2"
-                  username={calTarget.username}
-                  eventSlug={calTarget.eventSlug}
-                  isTeamEvent={false}
+                <iframe
+                  src={bookingUrl}
+                  title={`Book ${copy.eventName} with Nia Media`}
+                  className="h-full w-full border-0 bg-white"
+                  allow="camera; microphone; fullscreen; payment"
+                  loading="eager"
                 />
               ) : (
                 <div className="h-full flex items-center justify-center p-8 text-center">

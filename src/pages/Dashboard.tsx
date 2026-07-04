@@ -308,7 +308,7 @@ export default function Dashboard() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-gray-900 truncate">{campaign.title}</p>
-                          <p className="text-xs text-gray-500">{campaign.type || 'Campaign'} � {formatDate(campaign.created_at)}</p>
+                          <p className="text-xs text-gray-500">{campaign.type || 'Campaign'} - {formatDate(campaign.created_at)}</p>
                         </div>
                         <ArrowRight size={13} className="text-gray-300 shrink-0" />
                       </Link>
@@ -344,8 +344,8 @@ export default function Dashboard() {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-gray-900 truncate">{idea.title}</p>
                           <p className="text-xs text-gray-500">
-                            {idea.industry || 'General'} � {idea.status}
-                            {idea.favorite ? ' � Favourite' : ''}
+                            {idea.industry || 'General'} - {idea.status}
+                            {idea.favorite ? ' - Favourite' : ''}
                           </p>
                         </div>
                         <ArrowRight size={13} className="text-gray-300 shrink-0" />
