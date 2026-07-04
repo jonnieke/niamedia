@@ -55,6 +55,8 @@ const Proposals = lazy(() => import('./pages/Proposals'))
 const ProposalView = lazy(() => import('./pages/ProposalView'))
 const BriefView = lazy(() => import('./pages/BriefView'))
 const Portfolio = lazy(() => import('./pages/Portfolio'))
+const Production = lazy(() => import('./pages/Production'))
+const DeliveryView = lazy(() => import('./pages/DeliveryView'))
 
 function RouteLoader() {
   return (
@@ -100,6 +102,7 @@ function AppRoutes() {
         <Route path="/proposal/:token" element={<ProposalView />} />
         <Route path="/brief/:token" element={<BriefView />} />
         <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/delivery/:token" element={<DeliveryView />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/track/:token" element={<ShareTracker />} />
@@ -138,6 +141,7 @@ function AppRoutes() {
         <Route path="/video-pipeline" element={<ProtectedRoute><VideoPipeline /></ProtectedRoute>} />
         <Route path="/roi-tracker" element={<ProtectedRoute><ROITracker /></ProtectedRoute>} />
         <Route path="/proposals" element={<ProtectedRoute><Proposals /></ProtectedRoute>} />
+        <Route path="/production" element={<ProtectedRoute><Production /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
         <Route path="/admin/voices" element={<ProtectedRoute><AdminRoute><AdminVoices /></AdminRoute></ProtectedRoute>} />

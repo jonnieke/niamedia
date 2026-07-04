@@ -192,6 +192,12 @@ export default function Quote() {
     })
     setSubmitting(false)
     if (dbErr) { setError('Something went wrong. Please try again or WhatsApp us directly.'); return }
+    supabase.rpc('notify_admins', {
+      p_type: 'action',
+      p_title: `New quote — ${bizName.trim()}`,
+      p_body: `${length} video · ${platforms.join(', ')} · KES ${price.min.toLocaleString()}–${price.max.toLocaleString()}`,
+      p_action_url: '/admin',
+    })
     setStep(2)
   }
 

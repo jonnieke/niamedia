@@ -1,5 +1,6 @@
 import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
 import { createClient } from "npm:@supabase/supabase-js@2"
+import { notifyAdmins } from "../_shared/notify.ts"
 
 Deno.serve(async (req) => {
   const corsHeaders = corsHeadersFor(req)
@@ -113,6 +114,13 @@ Return valid JSON only. No markdown. No code fences. No extra text outside the J
       status: "ready",
       updated_at: new Date().toISOString(),
     }).eq("id", briefId)
+
+    void notifyAdmins(
+      "action",
+      `Brief ready — ${brief.business_name}`,
+      `AI production brief generated for ${brief.video_length} video. Client can now review and approve.`,
+      `/brief/${brief.token}`,
+    )
 
     // Email client if proposal has an email
     if (brief.proposals?.proposal_id ?? brief.proposal_id) {

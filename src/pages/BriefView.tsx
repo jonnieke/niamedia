@@ -78,7 +78,17 @@ export default function BriefView() {
       client_feedback: feedback.trim() || null,
       approved_at: action === 'approved' ? new Date().toISOString() : prev.approved_at,
     } : prev)
-    // Notify admin
+    // Notify admin via in-app notification + email
+    supabase.rpc('notify_admins', {
+      p_type: action === 'approved' ? 'success' : 'warning',
+      p_title: action === 'approved'
+        ? `Brief approved — ${brief.business_name}`
+        : `Revision requested — ${brief.business_name}`,
+      p_body: action === 'approved'
+        ? `${brief.video_length} brief approved. Production can start immediately.`
+        : `Client requested changes: ${feedback.trim() || 'No details provided.'}`,
+      p_action_url: `/brief/${token}`,
+    })
     supabase.functions.invoke('send-client-email', {
       body: {
         type: action === 'approved' ? 'brief_approved_admin' : 'revision_requested_admin',

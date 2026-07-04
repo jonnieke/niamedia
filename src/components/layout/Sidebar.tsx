@@ -29,6 +29,7 @@ const moreNav = [
   { to: '/inbox',         icon: MessageSquare,label: 'WhatsApp Inbox' },
   { to: '/portals',       icon: Link2,        label: 'Client Portals' },
   { to: '/proposals',     icon: Zap,          label: 'Proposals' },
+  { to: '/production',   icon: Film,         label: 'Production' },
   { to: '/invoices',      icon: FileText,     label: 'Invoices' },
   { to: '/video-pipeline',icon: Film,         label: 'Video Pipeline' },
   { to: '/roi-tracker',   icon: TrendingUp,   label: 'ROI Tracker' },

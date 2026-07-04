@@ -1,8 +1,18 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Loader2, Film, Image, Zap, ExternalLink, ArrowRight } from 'lucide-react'
+import { Loader2, Film, Image, Zap, ExternalLink, ArrowRight, Star } from 'lucide-react'
 import PublicHeader from '../components/layout/PublicHeader'
 import { supabase } from '../lib/supabase'
+
+interface Testimonial {
+  id: string
+  business_name: string
+  contact_name: string | null
+  industry: string | null
+  rating: number
+  body: string
+  video_length: string | null
+}
 
 interface PortfolioItem {
   id: string
@@ -32,18 +42,29 @@ const CLIENTS = [
 
 export default function Portfolio() {
   const [items, setItems] = useState<PortfolioItem[]>([])
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('All')
   const [selected, setSelected] = useState<PortfolioItem | null>(null)
 
   useEffect(() => {
-    supabase.from('portfolio_items')
-      .select('*')
-      .eq('published', true)
-      .order('featured', { ascending: false })
-      .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: false })
-      .then(({ data }) => { if (data) setItems(data as PortfolioItem[]); setLoading(false) })
+    Promise.all([
+      supabase.from('portfolio_items')
+        .select('*')
+        .eq('published', true)
+        .order('featured', { ascending: false })
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: false }),
+      supabase.from('testimonials')
+        .select('id,business_name,contact_name,industry,rating,body,video_length')
+        .eq('approved', true)
+        .order('created_at', { ascending: false })
+        .limit(6),
+    ]).then(([{ data: portData }, { data: testData }]) => {
+      if (portData) setItems(portData as PortfolioItem[])
+      if (testData) setTestimonials(testData as Testimonial[])
+      setLoading(false)
+    })
   }, [])
 
   const filtered = filter === 'All' ? items : items.filter(i => i.type === filter.toLowerCase())
@@ -179,6 +200,37 @@ export default function Portfolio() {
             </div>
           )}
         </div>
+
+        {/* Testimonials */}
+        {testimonials.length > 0 && (
+          <div className="py-16 px-6" style={{ background: 'linear-gradient(135deg, #0a0a14 0%, #1a1035 100%)' }}>
+            <div className="max-w-5xl mx-auto">
+              <p className="text-xs font-bold uppercase tracking-widest text-purple-400 text-center mb-2">Client Stories</p>
+              <h2 className="text-2xl font-extrabold text-white text-center mb-10">What our clients say</h2>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {testimonials.map(t => (
+                  <div key={t.id} className="rounded-2xl p-5"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div className="flex gap-0.5 mb-3">
+                      {[1,2,3,4,5].map(n => (
+                        <Star key={n} size={14}
+                          fill={n <= t.rating ? '#f59e0b' : 'none'}
+                          stroke={n <= t.rating ? '#f59e0b' : 'rgba(255,255,255,0.2)'} />
+                      ))}
+                    </div>
+                    <p className="text-sm text-gray-300 leading-relaxed mb-4 italic">"{t.body}"</p>
+                    <div>
+                      <p className="text-xs font-bold text-white">{t.contact_name ?? t.business_name}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {t.business_name}{t.industry ? ` · ${t.industry}` : ''}{t.video_length ? ` · ${t.video_length}` : ''}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* CTA section */}
         <div className="py-16 px-6 text-center" style={{ background: '#f9fafb', borderTop: '1px solid #f3f4f6' }}>

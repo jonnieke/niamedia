@@ -3,7 +3,8 @@ import {
   Users, BarChart2, Package, TrendingUp, ShieldCheck,
   Film, Music, Upload, Eye, RefreshCw, CheckCircle, Clock,
   AlertCircle, Loader2, Radio, Mic, Phone, Mail, Inbox,
-  Zap, Plus, CreditCard, Search, MessageSquare,
+  Zap, Plus, CreditCard, Search, MessageSquare, Image, Star,
+  Trash2, ExternalLink,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
@@ -623,6 +624,22 @@ export default function Admin() {
     platforms: string[]; what_to_promote: string | null; delivery_speed: string;
     price_min: number; price_max: number; status: string; admin_notes: string | null;
   }[]>([])
+  const [portfolioItems, setPortfolioItems] = useState<{
+    id: string; title: string; type: string; client_name: string | null;
+    industry: string | null; description: string | null; thumbnail_url: string | null;
+    video_url: string | null; tags: string[]; featured: boolean;
+    sort_order: number; published: boolean; created_at: string;
+  }[]>([])
+  const [portfolioModal, setPortfolioModal] = useState<{ open: boolean; item: typeof portfolioItems[number] | null }>({ open: false, item: null })
+  const [portfolioForm, setPortfolioForm] = useState({ title: '', type: 'video', client_name: '', industry: '', description: '', thumbnail_url: '', video_url: '', tags: '', featured: false, published: true })
+  const [portfolioSaving, setPortfolioSaving] = useState(false)
+
+  // Testimonials
+  const [testimonials, setTestimonials] = useState<{
+    id: string; business_name: string; contact_name: string | null
+    industry: string | null; rating: number; body: string
+    video_length: string | null; approved: boolean; featured: boolean; created_at: string
+  }[]>([])
   const [loading, setLoading] = useState(true)
   const [grantingCredit, setGrantingCredit] = useState<string | null>(null)
   const [grantAmounts, setGrantAmounts] = useState<Record<string, number>>({})
@@ -650,6 +667,10 @@ export default function Admin() {
       .then(({ data }) => { if (data) setVideoRequests(data as VideoRequestRow[]) })
     supabase.from('quote_requests').select('*').order('created_at', { ascending: false })
       .then(({ data }) => { if (data) setQuoteRequests(data as typeof quoteRequests) })
+    supabase.from('portfolio_items').select('*').order('sort_order').order('created_at', { ascending: false })
+      .then(({ data }) => { if (data) setPortfolioItems(data as typeof portfolioItems) })
+    supabase.from('testimonials').select('*').order('created_at', { ascending: false })
+      .then(({ data }) => { if (data) setTestimonials(data as typeof testimonials) })
   }, [])
 
   const updateVideoRequestStatus = async (id: string, status: VideoRequestStatus) => {
@@ -693,7 +714,7 @@ export default function Admin() {
   const totalRevenue = audioRevenue + creditRevenue
 
   const newQuotes = quoteRequests.filter(q => q.status === 'new').length
-  const tabs = ['Overview', 'Leads', 'Audio Orders', 'Projects', 'Credits', 'Users', 'Video Requests', 'Quote Requests', 'Analytics']
+  const tabs = ['Overview', 'Leads', 'Audio Orders', 'Projects', 'Credits', 'Users', 'Video Requests', 'Quote Requests', 'Analytics', 'Portfolio', 'Testimonials']
 
   const stats = [
     { label: 'New Leads', value: newLeads, icon: Inbox, sub: `${leads.length} total`, color: 'text-amber-400' },
@@ -1371,6 +1392,302 @@ export default function Admin() {
               </div>
             )
           })()}
+
+          {/* Portfolio */}
+          {tab === 9 && (
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <p className="text-sm text-gray-500 mt-0.5">{portfolioItems.length} items · {portfolioItems.filter(i => i.published).length} published</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setPortfolioForm({ title: '', type: 'video', client_name: '', industry: '', description: '', thumbnail_url: '', video_url: '', tags: '', featured: false, published: true })
+                    setPortfolioModal({ open: true, item: null })
+                  }}
+                  className="btn-primary flex items-center gap-2 px-4 py-2 text-sm">
+                  <Plus size={14} /> Add Item
+                </button>
+              </div>
+
+              {portfolioItems.length === 0 ? (
+                <div className="text-center py-20 text-gray-500">
+                  <Film size={32} className="mx-auto mb-3 opacity-20" />
+                  <p className="text-sm">No portfolio items yet</p>
+                  <p className="text-xs text-gray-400 mt-1">Add your first video commercial or promo poster.</p>
+                </div>
+              ) : (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {portfolioItems.map(item => {
+                    const TypeIcon = item.type === 'poster' ? Image : item.type === 'campaign' ? Zap : Film
+                    return (
+                      <div key={item.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                        <div className="aspect-video bg-gray-100 relative flex items-center justify-center"
+                          style={{ background: '#0f172a' }}>
+                          {item.thumbnail_url
+                            ? <img src={item.thumbnail_url} alt={item.title} className="w-full h-full object-cover" />
+                            : <TypeIcon size={28} className="text-purple-400 opacity-30" />
+                          }
+                          <div className="absolute top-2 left-2 flex gap-1.5">
+                            {item.featured && (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold text-white" style={{ background: '#7c3aed' }}>
+                                Featured
+                              </span>
+                            )}
+                            {!item.published && (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold text-white" style={{ background: '#9ca3af' }}>
+                                Hidden
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="p-4">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold text-gray-900 truncate">{item.title}</p>
+                              {item.client_name && <p className="text-xs text-gray-400 mt-0.5">{item.client_name}{item.industry ? ` · ${item.industry}` : ''}</p>}
+                            </div>
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md capitalize shrink-0"
+                              style={{ background: 'rgba(124,58,237,0.08)', color: '#7c3aed' }}>
+                              {item.type}
+                            </span>
+                          </div>
+                          <div className="flex gap-2 mt-3">
+                            <button
+                              onClick={() => {
+                                setPortfolioForm({
+                                  title: item.title, type: item.type,
+                                  client_name: item.client_name ?? '', industry: item.industry ?? '',
+                                  description: item.description ?? '', thumbnail_url: item.thumbnail_url ?? '',
+                                  video_url: item.video_url ?? '', tags: item.tags.join(', '),
+                                  featured: item.featured, published: item.published,
+                                })
+                                setPortfolioModal({ open: true, item })
+                              }}
+                              className="flex-1 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:border-purple-300 hover:text-purple-600 transition-all">
+                              Edit
+                            </button>
+                            <button
+                              onClick={async () => {
+                                await supabase.from('portfolio_items').update({ published: !item.published }).eq('id', item.id)
+                                setPortfolioItems(prev => prev.map(x => x.id === item.id ? { ...x, published: !x.published } : x))
+                              }}
+                              className="flex-1 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:border-gray-300 transition-all">
+                              {item.published ? 'Hide' : 'Publish'}
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (!window.confirm('Delete this portfolio item?')) return
+                                await supabase.from('portfolio_items').delete().eq('id', item.id)
+                                setPortfolioItems(prev => prev.filter(x => x.id !== item.id))
+                              }}
+                              className="px-2.5 py-1.5 rounded-lg text-xs text-red-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all">
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                          {item.video_url && (
+                            <a href={item.video_url} target="_blank" rel="noopener noreferrer"
+                              className="flex items-center gap-1 mt-2 text-[11px] text-purple-500 hover:underline">
+                              <ExternalLink size={10} /> Preview video
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* Create / Edit Modal */}
+              {portfolioModal.open && (
+                <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto py-8 px-4"
+                  style={{ background: 'rgba(0,0,0,0.5)' }}>
+                  <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl">
+                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                      <h2 className="text-sm font-bold text-gray-900">{portfolioModal.item ? 'Edit Portfolio Item' : 'Add Portfolio Item'}</h2>
+                      <button onClick={() => setPortfolioModal({ open: false, item: null })} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+                    </div>
+                    <div className="px-6 py-5 space-y-3 max-h-[70vh] overflow-y-auto">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">Title *</label>
+                        <input value={portfolioForm.title} onChange={e => setPortfolioForm(f => ({ ...f, title: e.target.value }))}
+                          className="input-field w-full" placeholder="Onfon Mobile — 30s Product Ad" />
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {['video', 'poster', 'campaign'].map(t => (
+                          <button key={t} onClick={() => setPortfolioForm(f => ({ ...f, type: t }))}
+                            className="py-2 rounded-lg text-xs font-semibold border capitalize transition-all"
+                            style={portfolioForm.type === t
+                              ? { background: 'rgba(124,58,237,0.1)', borderColor: '#7c3aed', color: '#7c3aed' }
+                              : { background: '#f9fafb', borderColor: '#e5e7eb', color: '#6b7280' }}>
+                            {t}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-500 mb-1">Client Name</label>
+                          <input value={portfolioForm.client_name} onChange={e => setPortfolioForm(f => ({ ...f, client_name: e.target.value }))}
+                            className="input-field w-full" placeholder="Onfon Mobile" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-500 mb-1">Industry</label>
+                          <input value={portfolioForm.industry} onChange={e => setPortfolioForm(f => ({ ...f, industry: e.target.value }))}
+                            className="input-field w-full" placeholder="Fintech" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">Description</label>
+                        <textarea value={portfolioForm.description} onChange={e => setPortfolioForm(f => ({ ...f, description: e.target.value }))}
+                          className="input-field w-full resize-none" rows={2} placeholder="Brief description of the project..." />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">Thumbnail URL</label>
+                        <input value={portfolioForm.thumbnail_url} onChange={e => setPortfolioForm(f => ({ ...f, thumbnail_url: e.target.value }))}
+                          className="input-field w-full" placeholder="https://..." />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">Video URL (optional)</label>
+                        <input value={portfolioForm.video_url} onChange={e => setPortfolioForm(f => ({ ...f, video_url: e.target.value }))}
+                          className="input-field w-full" placeholder="https://..." />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">Tags (comma-separated)</label>
+                        <input value={portfolioForm.tags} onChange={e => setPortfolioForm(f => ({ ...f, tags: e.target.value }))}
+                          className="input-field w-full" placeholder="TikTok, 30s, Product Launch" />
+                      </div>
+                      <div className="flex gap-5 pt-1">
+                        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                          <input type="checkbox" checked={portfolioForm.featured} onChange={e => setPortfolioForm(f => ({ ...f, featured: e.target.checked }))}
+                            className="rounded accent-purple-600" />
+                          <Star size={13} className="text-amber-400" /> Featured
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                          <input type="checkbox" checked={portfolioForm.published} onChange={e => setPortfolioForm(f => ({ ...f, published: e.target.checked }))}
+                            className="rounded accent-purple-600" />
+                          Published
+                        </label>
+                      </div>
+                    </div>
+                    <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+                      <button onClick={() => setPortfolioModal({ open: false, item: null })} className="btn-secondary px-4 py-2 text-sm">Cancel</button>
+                      <button
+                        disabled={portfolioSaving || !portfolioForm.title.trim()}
+                        onClick={async () => {
+                          setPortfolioSaving(true)
+                          const payload = {
+                            title: portfolioForm.title.trim(),
+                            type: portfolioForm.type,
+                            client_name: portfolioForm.client_name.trim() || null,
+                            industry: portfolioForm.industry.trim() || null,
+                            description: portfolioForm.description.trim() || null,
+                            thumbnail_url: portfolioForm.thumbnail_url.trim() || null,
+                            video_url: portfolioForm.video_url.trim() || null,
+                            tags: portfolioForm.tags.split(',').map(t => t.trim()).filter(Boolean),
+                            featured: portfolioForm.featured,
+                            published: portfolioForm.published,
+                          }
+                          if (portfolioModal.item) {
+                            await supabase.from('portfolio_items').update(payload).eq('id', portfolioModal.item.id)
+                            setPortfolioItems(prev => prev.map(x => x.id === portfolioModal.item!.id ? { ...x, ...payload } : x))
+                          } else {
+                            const { data } = await supabase.from('portfolio_items').insert(payload).select().single()
+                            if (data) setPortfolioItems(prev => [data as typeof portfolioItems[number], ...prev])
+                          }
+                          setPortfolioSaving(false)
+                          setPortfolioModal({ open: false, item: null })
+                        }}
+                        className="btn-primary px-5 py-2 text-sm flex items-center gap-2">
+                        {portfolioSaving ? <><Loader2 size={13} className="animate-spin" /> Saving...</> : (portfolioModal.item ? 'Update' : 'Add to Portfolio')}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Testimonials */}
+          {tab === 10 && (
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <p className="text-sm text-gray-500">
+                  {testimonials.filter(t => !t.approved).length} pending · {testimonials.filter(t => t.approved).length} approved
+                </p>
+              </div>
+              {testimonials.length === 0 ? (
+                <div className="text-center py-20 text-gray-500">
+                  <Star size={32} className="mx-auto mb-3 opacity-20" />
+                  <p className="text-sm">No testimonials yet</p>
+                  <p className="text-xs text-gray-400 mt-1">Client reviews appear here after they complete a project.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {testimonials.map(t => (
+                    <div key={t.id} className="bg-white rounded-2xl border border-gray-200 p-5">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <div className="flex gap-0.5">
+                              {[1,2,3,4,5].map(n => (
+                                <Star key={n} size={13}
+                                  fill={n <= t.rating ? '#f59e0b' : 'none'}
+                                  stroke={n <= t.rating ? '#f59e0b' : '#d1d5db'} />
+                              ))}
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${t.approved ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
+                              {t.approved ? 'Approved' : 'Pending'}
+                            </span>
+                            {t.featured && (
+                              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700">Featured</span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-700 italic mb-2">"{t.body}"</p>
+                          <div className="text-xs text-gray-500">
+                            <span className="font-semibold text-gray-700">{t.contact_name ?? t.business_name}</span>
+                            {t.business_name !== t.contact_name && <span> · {t.business_name}</span>}
+                            {t.industry && <span> · {t.industry}</span>}
+                            {t.video_length && <span> · {t.video_length}</span>}
+                          </div>
+                          <p className="text-xs text-gray-400 mt-0.5">{new Date(t.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                        </div>
+                        <div className="flex flex-col gap-2 shrink-0">
+                          <button
+                            onClick={async () => {
+                              await supabase.from('testimonials').update({ approved: !t.approved }).eq('id', t.id)
+                              setTestimonials(prev => prev.map(x => x.id === t.id ? { ...x, approved: !x.approved } : x))
+                            }}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all"
+                            style={t.approved
+                              ? { borderColor: '#e5e7eb', color: '#6b7280' }
+                              : { borderColor: '#6ee7b7', color: '#059669', background: '#f0fdf4' }}>
+                            {t.approved ? 'Unapprove' : 'Approve'}
+                          </button>
+                          <button
+                            onClick={async () => {
+                              await supabase.from('testimonials').update({ featured: !t.featured }).eq('id', t.id)
+                              setTestimonials(prev => prev.map(x => x.id === t.id ? { ...x, featured: !x.featured } : x))
+                            }}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:border-amber-300 hover:text-amber-600 transition-all">
+                            {t.featured ? 'Unfeature' : 'Feature'}
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (!window.confirm('Delete this testimonial?')) return
+                              await supabase.from('testimonials').delete().eq('id', t.id)
+                              setTestimonials(prev => prev.filter(x => x.id !== t.id))
+                            }}
+                            className="px-3 py-1.5 rounded-lg text-xs text-red-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all">
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Users */}
           {tab === 5 && (

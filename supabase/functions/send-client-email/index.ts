@@ -42,6 +42,8 @@ type EmailType =
   | "brief_ready"
   | "brief_approved_admin"
   | "revision_requested_admin"
+  | "video_delivered"
+  | "balance_paid_admin"
 
 interface EmailPayload {
   type: EmailType
@@ -50,11 +52,15 @@ interface EmailPayload {
   businessName: string
   proposalToken?: string
   briefToken?: string
+  projectToken?: string
   finalPrice?: number
   depositAmount?: number
+  balanceDue?: number
   videoLength?: string
   clientFeedback?: string
   timelineDays?: number
+  deliverableLabel?: string
+  deliverableUrl?: string
 }
 
 function buildEmail(p: EmailPayload): { subject: string; html: string } {
@@ -141,6 +147,41 @@ function buildEmail(p: EmailPayload): { subject: string; html: string } {
           <p><strong>${p.businessName}</strong> has reviewed their production brief and requested changes.</p>
           ${p.clientFeedback ? `<div class="box"><p style="margin:0;font-size:14px;font-style:italic;color:#333">"${p.clientFeedback}"</p></div>` : ""}
           <div class="cta"><a href="${APP_URL}/proposals" class="btn">View Proposals →</a></div>
+        `),
+      }
+    }
+
+    case "video_delivered": {
+      const link = `${APP_URL}/delivery/${p.projectToken}`
+      return {
+        subject: `Your video is ready — ${p.businessName}`,
+        html: base(`
+          <h1>Your video is ready, ${first}! 🎬</h1>
+          <p>Great news! Your video commercial for <strong>${p.businessName}</strong> is complete and ready for you to review and download.</p>
+          <div class="box">
+            <div class="box-row"><span class="box-label">Deliverable</span><span class="box-value">${p.deliverableLabel ?? "Final video"}</span></div>
+            ${p.balanceDue ? `<div class="box-row"><span class="box-label">Balance due</span><span class="box-value" style="color:#d97706">KES ${p.balanceDue.toLocaleString("en-KE")}</span></div>` : ""}
+          </div>
+          <div class="cta"><a href="${link}" class="btn">View & Download My Video →</a></div>
+          <p style="text-align:center;font-size:13px;color:#888">Or paste this link:<br><a href="${link}" style="color:#8b5cf6;word-break:break-all">${link}</a></p>
+          ${p.balanceDue ? `<p>Once you've reviewed the video, please complete your final payment of <strong>KES ${p.balanceDue.toLocaleString("en-KE")}</strong> via the link above. Payment can be made instantly via M-Pesa.</p>` : ""}
+          <p>Happy with the result? Let us know on WhatsApp — we'd love to hear your feedback!</p>
+          <div class="cta"><a href="https://wa.me/254751822556" class="wa">Share Your Feedback</a></div>
+        `),
+      }
+    }
+
+    case "balance_paid_admin": {
+      return {
+        subject: `Final payment received — ${p.businessName}`,
+        html: base(`
+          <h1>Final payment confirmed</h1>
+          <p><strong>${p.businessName}</strong> has paid the final balance. The project is now fully paid and can be marked complete.</p>
+          <div class="box">
+            <div class="box-row"><span class="box-label">Client</span><span class="box-value">${p.businessName}</span></div>
+            ${p.balanceDue ? `<div class="box-row"><span class="box-label">Amount paid</span><span class="box-value green">KES ${p.balanceDue.toLocaleString("en-KE")}</span></div>` : ""}
+          </div>
+          <div class="cta"><a href="${APP_URL}/production" class="btn">View Production Board →</a></div>
         `),
       }
     }

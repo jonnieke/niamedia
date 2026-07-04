@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2"
+import { notifyAdmins } from "../_shared/notify.ts"
 
 const BASE_URL = Deno.env.get("PESAPAL_ENV") === "production"
   ? "https://pay.pesapal.com/v3"
@@ -208,6 +209,13 @@ Deno.serve(async (req) => {
           .select("email, contact_name, business_name, deposit_amount, timeline_days, video_length")
           .eq("id", proposalId).single()
 
+        void notifyAdmins(
+          "success",
+          `Deposit received — ${prop?.business_name ?? "Client"}`,
+          `KES ${prop?.deposit_amount?.toLocaleString("en-KE") ?? "—"} deposit paid. Production can start.`,
+          "/proposals",
+        )
+
         if (prop?.email) {
           void supabase.functions.invoke("send-client-email", {
             body: {
@@ -218,6 +226,39 @@ Deno.serve(async (req) => {
               depositAmount: prop.deposit_amount,
               timelineDays: prop.timeline_days,
               videoLength: prop.video_length,
+            },
+          })
+        }
+      }
+    } else if (orderMerchantReference.startsWith("proj_")) {
+      // Project final balance payment
+      const projectId = orderMerchantReference.replace("proj_", "")
+      if (paymentStatus === "paid") {
+        await supabase.from("projects").update({
+          balance_paid_at: new Date().toISOString(),
+          pesapal_order_id: orderTrackingId,
+          status: "completed",
+          completed_at: new Date().toISOString(),
+        }).eq("id", projectId)
+
+        const { data: proj } = await supabase.from("projects")
+          .select("email, contact_name, business_name, balance_due")
+          .eq("id", projectId).single()
+
+        void notifyAdmins(
+          "success",
+          `Final payment received — ${proj?.business_name ?? "Client"}`,
+          `KES ${proj?.balance_due?.toLocaleString("en-KE") ?? "—"} balance paid. Project is fully settled.`,
+          "/production",
+        )
+
+        if (proj?.email) {
+          void supabase.functions.invoke("send-client-email", {
+            body: {
+              type: "balance_paid_admin",
+              to: "hello@niamedia.co.ke",
+              businessName: proj.business_name,
+              balanceDue: proj.balance_due,
             },
           })
         }
