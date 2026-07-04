@@ -1,5 +1,5 @@
 ﻿import { ReactNode, useState, useRef, useEffect } from 'react'
-import { Bell, Plus, CheckCheck, Eye, CheckCircle, Info, AlertCircle, Zap, Menu } from 'lucide-react'
+import { Bell, Plus, CheckCheck, Eye, CheckCircle, Info, AlertCircle, Zap, Menu, Search } from 'lucide-react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import { useAuth } from '../../lib/AuthContext'
@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase'
 import BuyCreditsModal from '../BuyCreditsModal'
 import { NiaAgentButton } from '../NiaAgent'
 import InstallPrompt from '../InstallPrompt'
+import CommandPalette from '../CommandPalette'
 
 interface DBNotification {
   id: string
@@ -127,6 +128,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [unreadCount, setUnreadCount] = useState(0)
   const [credits, setCredits] = useState<number | null>(null)
   const [showBuyCredits, setShowBuyCredits] = useState(false)
+  const [cmdOpen, setCmdOpen] = useState(false)
   const bellRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { setSidebarOpen(false) }, [location.pathname])
@@ -174,9 +176,22 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
+  // Cmd+K / Ctrl+K to open command palette
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setCmdOpen(v => !v)
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
+
   return (
     <>
       {showBuyCredits && <BuyCreditsModal onClose={() => setShowBuyCredits(false)} />}
+      <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
 
       <div className="flex h-screen overflow-hidden" style={{ background: '#f1f5f9' }}>
 
@@ -222,6 +237,22 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              {/* Search / command palette trigger */}
+              <button
+                onClick={() => setCmdOpen(true)}
+                className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300 transition-all text-xs"
+                style={{ minWidth: 160 }}>
+                <Search size={13} />
+                <span className="flex-1 text-left">Search…</span>
+                <kbd className="text-[10px] px-1.5 py-0.5 rounded"
+                  style={{ background: '#f3f4f6', border: '1px solid #e5e7eb', color: '#9ca3af' }}>
+                  ⌘K
+                </kbd>
+              </button>
+              <button onClick={() => setCmdOpen(true)} className="sm:hidden w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">
+                <Search size={16} />
+              </button>
+
               <Link to="/new-campaign" className="hidden sm:flex btn-primary text-sm px-4 py-2 items-center gap-1.5">
                 <Plus size={15} /> New Campaign
               </Link>
