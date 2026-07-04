@@ -114,6 +114,26 @@ Return valid JSON only. No markdown. No code fences. No extra text outside the J
       updated_at: new Date().toISOString(),
     }).eq("id", briefId)
 
+    // Email client if proposal has an email
+    if (brief.proposals?.proposal_id ?? brief.proposal_id) {
+      const { data: prop } = await supabase.from("proposals")
+        .select("email, contact_name, business_name, video_length")
+        .eq("id", brief.proposal_id).maybeSingle()
+
+      if (prop?.email) {
+        void supabase.functions.invoke("send-client-email", {
+          body: {
+            type: "brief_ready",
+            to: prop.email,
+            name: prop.contact_name,
+            businessName: prop.business_name,
+            videoLength: prop.video_length,
+            briefToken: brief.token,
+          },
+        })
+      }
+    }
+
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     })

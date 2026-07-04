@@ -183,7 +183,7 @@ Deno.serve(async (req) => {
     let subject = ''
     let html = ''
 
-    if (item.email_type === 'day2_nudge' || item.email_type === 'day5_social_proof') {
+    if (['day1_onboarding', 'day2_nudge', 'day5_social_proof'].includes(item.email_type)) {
       // Check email marketing opt-out
       const { data: profile } = await supabase
         .from('profiles')
@@ -196,7 +196,33 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (item.email_type === 'day2_nudge') {
+    if (item.email_type === 'day1_onboarding') {
+      // Skip if user already completed onboarding (has a business_name in profile)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('business_name, email_marketing_opt_out')
+        .eq('id', item.user_id)
+        .single()
+      if (profile?.email_marketing_opt_out || profile?.business_name) {
+        await supabase.from('email_queue').update({ status: 'skipped', sent_at: now }).eq('id', item.id)
+        continue
+      }
+      const firstName = item.recipient_name.split(' ')[0]
+      subject = `${firstName}, finish setting up your Nia Media account`
+      html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1a1a2e}.wrap{max-width:600px;margin:32px auto;padding:0 16px}.card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)}.hero{background:linear-gradient(135deg,#8b5cf6,#3b82f6);padding:36px 40px;text-align:center}.logo{font-size:20px;font-weight:800;color:#fff}.body{padding:32px 40px}.cta{text-align:center;margin:28px 0}.btn{display:inline-block;padding:14px 36px;border-radius:12px;background:linear-gradient(135deg,#8b5cf6,#3b82f6);color:#fff;font-weight:700;font-size:15px;text-decoration:none}.footer{text-align:center;padding:20px 40px;border-top:1px solid #f0f0f5}.footer p{font-size:11px;color:#999}</style></head>
+<body><div class="wrap"><div class="card">
+<div class="hero"><div class="logo">Nia Media</div></div>
+<div class="body">
+<h2 style="font-size:20px;font-weight:800;color:#1a1a2e;margin-bottom:12px">One step away, ${firstName}</h2>
+<p style="font-size:14px;color:#444;line-height:1.7;margin-bottom:16px">You signed up for Nia Media but haven't set up your brand yet. It only takes 2 minutes — tell us your business name, industry, and target audience, and we'll generate your first campaign for free.</p>
+<p style="font-size:14px;color:#444;line-height:1.7;margin-bottom:24px">Your free campaign credit is still waiting.</p>
+<div class="cta"><a href="${APP_URL}/onboarding" class="btn">Complete My Setup →</a></div>
+<p style="font-size:13px;color:#888;text-align:center">Already done? <a href="${APP_URL}/new-campaign" style="color:#8b5cf6">Generate your first campaign →</a></p>
+</div>
+<div class="footer"><p>© ${new Date().getFullYear()} Nia Media · <a href="${APP_URL}/settings" style="color:#8b5cf6">Manage notifications</a></p></div>
+</div></div></body></html>`
+    } else if (item.email_type === 'day2_nudge') {
       // Skip if user already created a campaign — no need to nudge them
       const { count } = await supabase
         .from('campaigns')

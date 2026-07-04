@@ -295,11 +295,20 @@ Deno.serve(async (req) => {
       welcomeEmailHtml(name, APP_URL)
     )
 
-    // Emails 2 & 3: queue for later (day 2, day 5)
+    // Queue follow-up emails: 24h onboarding nudge, day 2, day 5
+    const day1 = new Date(now); day1.setHours(day1.getHours() + 24)
     const day2 = new Date(now); day2.setDate(day2.getDate() + 2)
     const day5 = new Date(now); day5.setDate(day5.getDate() + 5)
 
     await supabase.from('email_queue').insert([
+      {
+        user_id,
+        recipient_email: email,
+        recipient_name: name,
+        email_type: 'day1_onboarding',
+        scheduled_at: day1.toISOString(),
+        status: 'pending',
+      },
       {
         user_id,
         recipient_email: email,

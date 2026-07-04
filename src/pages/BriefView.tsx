@@ -78,6 +78,17 @@ export default function BriefView() {
       client_feedback: feedback.trim() || null,
       approved_at: action === 'approved' ? new Date().toISOString() : prev.approved_at,
     } : prev)
+    // Notify admin
+    supabase.functions.invoke('send-client-email', {
+      body: {
+        type: action === 'approved' ? 'brief_approved_admin' : 'revision_requested_admin',
+        to: 'hello@niamedia.co.ke',
+        businessName: brief.business_name,
+        videoLength: brief.video_length,
+        clientFeedback: feedback.trim() || null,
+        briefToken: token,
+      },
+    })
     setDone(true)
     setSubmitting(false)
   }

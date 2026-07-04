@@ -203,6 +203,24 @@ Deno.serve(async (req) => {
           paid_at: new Date().toISOString(),
           pesapal_order_id: orderTrackingId,
         }).eq("id", proposalId)
+
+        const { data: prop } = await supabase.from("proposals")
+          .select("email, contact_name, business_name, deposit_amount, timeline_days, video_length")
+          .eq("id", proposalId).single()
+
+        if (prop?.email) {
+          void supabase.functions.invoke("send-client-email", {
+            body: {
+              type: "deposit_confirmed",
+              to: prop.email,
+              name: prop.contact_name,
+              businessName: prop.business_name,
+              depositAmount: prop.deposit_amount,
+              timelineDays: prop.timeline_days,
+              videoLength: prop.video_length,
+            },
+          })
+        }
       }
     } else {
       // Audio order — existing logic

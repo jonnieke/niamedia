@@ -54,6 +54,7 @@ const Quote = lazy(() => import('./pages/Quote'))
 const Proposals = lazy(() => import('./pages/Proposals'))
 const ProposalView = lazy(() => import('./pages/ProposalView'))
 const BriefView = lazy(() => import('./pages/BriefView'))
+const Portfolio = lazy(() => import('./pages/Portfolio'))
 
 function RouteLoader() {
   return (
@@ -98,6 +99,7 @@ function AppRoutes() {
         <Route path="/quote" element={<Quote />} />
         <Route path="/proposal/:token" element={<ProposalView />} />
         <Route path="/brief/:token" element={<BriefView />} />
+        <Route path="/portfolio" element={<Portfolio />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/track/:token" element={<ShareTracker />} />

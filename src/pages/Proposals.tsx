@@ -178,7 +178,23 @@ function CreateModal({
     } else {
       const { data, error } = await supabase.from('proposals').insert(payload).select().single()
       if (error || !data) { setErr(error?.message ?? 'Failed to create proposal'); setSaving(false); return }
-      onCreated(data as Proposal)
+      const created = data as Proposal
+      onCreated(created)
+      // Email client if they have an email address
+      if (created.email) {
+        supabase.functions.invoke('send-client-email', {
+          body: {
+            type: 'proposal_sent',
+            to: created.email,
+            name: created.contact_name,
+            businessName: created.business_name,
+            proposalToken: created.token,
+            finalPrice: created.final_price,
+            depositAmount: created.deposit_amount,
+            videoLength: created.video_length,
+          },
+        })
+      }
     }
   }
 
