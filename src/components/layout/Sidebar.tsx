@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Plus, FolderOpen, Palette, Settings,
   ShieldCheck, LogOut, Zap, X, Video, Lightbulb,
   Receipt, Users, Gift, CalendarDays, UserPlus,
-  MessageSquare, Link2,
+  MessageSquare, Link2, FileText, Film, TrendingUp,
 } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -25,6 +25,9 @@ const navItems = [
   { to: '/calendar', icon: CalendarDays, label: 'Calendar' },
   { to: '/inbox', icon: MessageSquare, label: 'WhatsApp Inbox' },
   { to: '/portals', icon: Link2, label: 'Client Portals' },
+  { to: '/invoices', icon: FileText, label: 'Invoices' },
+  { to: '/video-pipeline', icon: Film, label: 'Video Pipeline' },
+  { to: '/roi-tracker', icon: TrendingUp, label: 'ROI Tracker' },
   { to: '/team', icon: UserPlus, label: 'Team' },
   { to: '/referral', icon: Gift, label: 'Refer & Earn' },
   { to: '/billing', icon: Receipt, label: 'Billing' },

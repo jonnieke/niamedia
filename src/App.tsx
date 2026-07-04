@@ -35,6 +35,7 @@ const AdminVoices = lazy(() => import('./pages/AdminVoices'))
 const Terms = lazy(() => import('./pages/Terms'))
 const Privacy = lazy(() => import('./pages/Privacy'))
 const VideoRequest = lazy(() => import('./pages/VideoRequest'))
+const BookMeeting = lazy(() => import('./pages/BookMeeting'))
 const Requests = lazy(() => import('./pages/MyVideoRequests'))
 const ShareTracker = lazy(() => import('./pages/ShareTracker'))
 const ReviewPage = lazy(() => import('./pages/ReviewPage'))
@@ -46,6 +47,9 @@ const ReportView = lazy(() => import('./pages/ReportView'))
 const WhatsAppInbox = lazy(() => import('./pages/WhatsAppInbox'))
 const Portals = lazy(() => import('./pages/Portals'))
 const PortalView = lazy(() => import('./pages/PortalView'))
+const Invoices = lazy(() => import('./pages/Invoices'))
+const VideoPipeline = lazy(() => import('./pages/VideoPipeline'))
+const ROITracker = lazy(() => import('./pages/ROITracker'))
 
 function RouteLoader() {
   return (
@@ -82,6 +86,7 @@ function AppRoutes() {
         <Route path="/templates" element={<Templates />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/package-request" element={<PackageRequest />} />
+        <Route path="/book" element={<BookMeeting />} />
         <Route path="/join" element={<JoinRedirect />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
@@ -120,6 +125,9 @@ function AppRoutes() {
         <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
         <Route path="/inbox" element={<ProtectedRoute><WhatsAppInbox /></ProtectedRoute>} />
         <Route path="/portals" element={<ProtectedRoute><Portals /></ProtectedRoute>} />
+        <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
+        <Route path="/video-pipeline" element={<ProtectedRoute><VideoPipeline /></ProtectedRoute>} />
+        <Route path="/roi-tracker" element={<ProtectedRoute><ROITracker /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
         <Route path="/admin/voices" element={<ProtectedRoute><AdminRoute><AdminVoices /></AdminRoute></ProtectedRoute>} />

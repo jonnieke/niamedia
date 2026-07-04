@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Loader2, Sparkles, ChevronLeft, ChevronRight, X, Check, MessageSquare, Image, Lightbulb, Instagram, Send, Facebook } from 'lucide-react'
+import { Loader2, Sparkles, ChevronLeft, ChevronRight, X, Check, MessageSquare, Image, Lightbulb, Instagram, Send, Facebook, Zap } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
@@ -160,6 +160,10 @@ export default function Calendar() {
   const [genError, setGenError] = useState('')
   const [connections, setConnections] = useState<SocialConn[]>([])
   const [scheduleItem, setScheduleItem] = useState<CalItem | null>(null)
+  const [scheduleFromCampaign, setScheduleFromCampaign] = useState(false)
+  const [campaigns, setCampaigns] = useState<{ id: string; business_name: string; platforms: string[] }[]>([])
+  const [selectedCampaign, setSelectedCampaign] = useState('')
+  const [scheduleGenerating, setScheduleGenerating] = useState(false)
 
   const monthLabel = new Date(year, month - 1, 1).toLocaleString('en-KE', { month: 'long', year: 'numeric' })
 
@@ -180,6 +184,53 @@ export default function Calendar() {
   }
 
   useEffect(() => { load() }, [user, year, month])
+
+  useEffect(() => {
+    if (!user) return
+    supabase.from('campaigns').select('id,business_name,platforms').eq('user_id', user.id)
+      .order('created_at', { ascending: false }).limit(20)
+      .then(({ data }) => setCampaigns((data ?? []) as { id: string; business_name: string; platforms: string[] }[]))
+  }, [user])
+
+  const generateFromCampaign = async () => {
+    const camp = campaigns.find(c => c.id === selectedCampaign)
+    if (!camp || !user) return
+    setScheduleGenerating(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-schedule`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          campaign: camp,
+          startDate: `${year}-${String(month).padStart(2,'0')}-01`,
+          platforms: camp.platforms ?? ['Facebook','Instagram'],
+        }),
+      })
+      const { posts } = await res.json() as { posts: { date: string; platform: string; type: string; caption: string; time: string }[] }
+      if (posts?.length) {
+        const rows = posts.map(p => ({
+          user_id: user.id,
+          scheduled_date: p.date,
+          content_type: 'caption',
+          platform: p.platform,
+          content: p.caption,
+          status: 'scheduled',
+          scheduled_time: p.time,
+        }))
+        await supabase.from('content_calendar').insert(rows)
+        await load()
+      }
+      setScheduleFromCampaign(false)
+    } catch (e) {
+      setGenError(e instanceof Error ? e.message : 'Schedule generation failed')
+    }
+    setScheduleGenerating(false)
+  }
 
   const navigate = (dir: -1 | 1) => {
     let m = month + dir, y = year
@@ -245,6 +296,10 @@ export default function Calendar() {
                 <span>{connections.length} account{connections.length !== 1 ? 's' : ''} connected</span>
               </div>
             )}
+            <button onClick={() => setScheduleFromCampaign(true)}
+              className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl border border-purple-200 text-purple-700 hover:bg-purple-50 transition-colors">
+              <Zap size={14} /> AI Schedule
+            </button>
             <button onClick={generate} disabled={generating}
               className="btn-primary text-sm px-4 py-2.5 gap-2 disabled:opacity-60">
               {generating ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
@@ -404,6 +459,34 @@ export default function Calendar() {
           onClose={() => setScheduleItem(null)}
           onScheduled={load}
         />
+      )}
+      {/* AI Schedule from Campaign modal */}
+      {scheduleFromCampaign && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
+          <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl m-4">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="font-bold text-gray-900">Generate AI Schedule</h2>
+              <button onClick={() => setScheduleFromCampaign(false)}><X size={18} className="text-gray-400" /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-500">Pick a campaign — Nia will generate a 30-day content schedule with captions, hashtags, and optimal posting times for {monthLabel}.</p>
+              <div>
+                <label className="label">Campaign</label>
+                <select className="input" value={selectedCampaign} onChange={e => setSelectedCampaign(e.target.value)}>
+                  <option value="">Select campaign…</option>
+                  {campaigns.map(c => <option key={c.id} value={c.id}>{c.business_name}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+              <button onClick={() => setScheduleFromCampaign(false)} className="btn-secondary text-sm">Cancel</button>
+              <button onClick={generateFromCampaign} disabled={!selectedCampaign || scheduleGenerating}
+                className="btn-primary text-sm gap-2 disabled:opacity-40">
+                {scheduleGenerating ? <><Loader2 size={13} className="animate-spin" /> Generating…</> : <><Zap size={13} /> Generate 30 Posts</>}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </DashboardLayout>
   )
