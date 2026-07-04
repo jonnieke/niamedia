@@ -1,378 +1,686 @@
-﻿import { useState, FormEvent, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ChevronDown, Zap, Sparkles, Languages, Paperclip, X, Loader2 } from 'lucide-react'
+import {
+  ChevronRight, ChevronLeft, Sparkles, Loader2, Check, Zap,
+  MessageSquare, Send, Globe, Target, Users, Radio, BookOpen,
+  TrendingUp, Lightbulb, AlertCircle, RefreshCw, X,
+} from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
-import CreativeAssistant from '../components/CreativeAssistant'
-import BuyCreditsModal from '../components/BuyCreditsModal'
 import { CampaignFormData } from '../types'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
-const industries = ['Real Estate', 'Hospitality', 'Education', 'Fintech / SACCO', 'Restaurant', 'Travel', 'Retail', 'Health & Wellness', 'Events', 'Professional Services', 'Faith & Community', 'Other']
-const objectives = ['Get leads', 'Sell product', 'Promote offer', 'Increase bookings', 'Launch product', 'Grow social media', 'Drive WhatsApp enquiries']
-const tones = ['Professional', 'Friendly', 'Bold', 'Luxury', 'Youthful', 'Emotional', 'Direct sales']
-const platformOptions = ['Facebook', 'Instagram', 'TikTok', 'YouTube Shorts', 'WhatsApp', 'LinkedIn']
-const ctaOptions = ['Call now', 'WhatsApp us', 'Book now', 'Apply today', 'Visit website', 'Send message']
+/* ── Constants ───────────────────────────────────────────────── */
+const INDUSTRIES = ['Real Estate','Hospitality','Education','Fintech / SACCO','Restaurant','Travel','Retail','Health & Wellness','Events','Professional Services','Faith & Community','Other']
+const OBJECTIVES = ['Get leads','Sell product','Promote offer','Increase bookings','Launch product','Grow social media','Drive WhatsApp enquiries']
+const TONES = ['Professional','Friendly','Bold','Luxury','Youthful','Emotional','Direct sales']
+const PLATFORMS = ['Facebook','Instagram','TikTok','YouTube Shorts','WhatsApp','LinkedIn']
+const CTAS = ['Call now','WhatsApp us','Book now','Apply today','Visit website','Send message','Shop now','Get a quote']
+const LOCATIONS = ['Nairobi CBD','Westlands / Parklands','Karen / Langata','Kilimani / Lavington','Mombasa','Kisumu','Nakuru','Kenya-wide','East Africa','Global']
+const CAMPAIGN_TYPES = [
+  { id: 'social', label: 'Social Media', icon: Globe, desc: 'Captions, hooks, hashtags' },
+  { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare, desc: 'Broadcasts & messages' },
+  { id: 'video', label: 'Video Concept', icon: Radio, desc: 'Script & shot list' },
+  { id: 'article', label: 'Article / SEO', icon: BookOpen, desc: 'Blog + keyword strategy' },
+  { id: 'full', label: 'Full Mix', icon: Sparkles, desc: 'Everything above' },
+]
 
 const empty: CampaignFormData = {
   business_name: '', industry: '', product_name: '', objective: '',
-  target_audience: '', location: '', offer: '', tone: '', platforms: [], cta: '', notes: '',
-  whatsapp_number: '', business_url: '',
+  target_audience: '', location: '', offer: '', tone: 'Professional',
+  platforms: [], cta: '', notes: '', whatsapp_number: '', business_url: '',
 }
 
-const GENERATING_STEPS = [
-  'Reading your brief...',
-  'Crafting your strategy...',
-  'Writing your video script...',
-  'Building social captions...',
-  'Finalising your campaign...',
-]
+/* ── Types ───────────────────────────────────────────────────── */
+interface ResearchInsights {
+  marketContext: string
+  messagingAngles: { title: string; description: string; hook: string }[]
+  seoKeywords: string[]
+  platformTips: { platform: string; tip: string }[]
+  competitorWatch: string
+  budgetNote: string
+  advisoryNote: string
+}
 
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+interface PastCampaign { id: string; title: string; created_at: string }
+
+/* ── Step indicator ──────────────────────────────────────────── */
+const STEPS = ['Business', 'Goal', 'Audience', 'Channels', 'Research']
+
+function StepBar({ current }: { current: number }) {
   return (
-    <div className="card-glow p-6">
-      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5 pb-3 border-b border-gray-200">{title}</h2>
-      {children}
+    <div className="flex items-center gap-2 mb-8">
+      {STEPS.map((label, i) => {
+        const idx = i + 1
+        const done = idx < current
+        const active = idx === current
+        return (
+          <div key={label} className="flex items-center gap-2 flex-1 min-w-0">
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all ${
+              done ? 'text-white' : active ? 'text-white' : 'text-gray-400 border-2 border-gray-200'
+            }`} style={done || active ? { background: done ? '#059669' : 'linear-gradient(135deg,#7c3aed,#2563eb)' } : {}}>
+              {done ? <Check size={12} /> : idx}
+            </div>
+            <span className={`text-xs font-medium truncate ${active ? 'text-gray-900' : done ? 'text-emerald-600' : 'text-gray-400'}`}>{label}</span>
+            {i < STEPS.length - 1 && <div className={`h-px flex-1 ml-1 ${done ? 'bg-emerald-300' : 'bg-gray-200'}`} />}
+          </div>
+        )
+      })}
     </div>
   )
 }
 
+/* ── Nia mini chat ───────────────────────────────────────────── */
+function NiaPanel({ step, form, onUpdate, userId }: {
+  step: number
+  form: CampaignFormData
+  onUpdate: (updates: Partial<CampaignFormData>) => void
+  userId: string | undefined
+}) {
+  const [open, setOpen] = useState(false)
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [messages, setMessages] = useState<{ role: 'user' | 'nia'; text: string }[]>([
+    { role: 'nia', text: "Hey! Describe your business or campaign in your own words — I'll fill in the details for you." }
+  ])
+  const bottomRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
+
+  const send = async () => {
+    const trimmed = input.trim()
+    if (!trimmed || loading) return
+    setInput('')
+    setMessages(prev => [...prev, { role: 'user', text: trimmed }])
+    setLoading(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nia-wizard`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ message: trimmed, currentForm: form, step, userId }),
+      })
+      const data = await res.json() as { message: string; updates: Partial<CampaignFormData> }
+      setMessages(prev => [...prev, { role: 'nia', text: data.message }])
+      if (data.updates && Object.keys(data.updates).length > 0) {
+        onUpdate(data.updates)
+      }
+    } catch {
+      setMessages(prev => [...prev, { role: 'nia', text: 'Something went wrong — try again!' }])
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div className="fixed bottom-6 right-6 z-50">
+      {open && (
+        <div className="mb-3 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden" style={{ maxHeight: 420 }}>
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100"
+            style={{ background: 'linear-gradient(135deg,#7c3aed,#2563eb)' }}>
+            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+              <Sparkles size={12} className="text-white" />
+            </div>
+            <span className="text-white text-sm font-semibold flex-1">Ask Nia</span>
+            <button onClick={() => setOpen(false)} className="text-white/70 hover:text-white"><X size={14} /></button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            {messages.map((m, i) => (
+              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[85%] text-sm px-3 py-2 rounded-2xl leading-relaxed ${
+                  m.role === 'user' ? 'text-white rounded-br-sm' : 'bg-gray-100 text-gray-800 rounded-bl-sm'
+                }`} style={m.role === 'user' ? { background: 'linear-gradient(135deg,#7c3aed,#2563eb)' } : {}}>
+                  {m.text}
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <div className="flex justify-start">
+                <div className="bg-gray-100 rounded-2xl rounded-bl-sm px-3 py-2">
+                  <Loader2 size={14} className="animate-spin text-purple-400" />
+                </div>
+              </div>
+            )}
+            <div ref={bottomRef} />
+          </div>
+          <div className="p-3 border-t border-gray-100 flex gap-2">
+            <input
+              className="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-purple-400"
+              placeholder="e.g. I sell wedding cakes in Westlands..."
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && send()}
+            />
+            <button onClick={send} disabled={loading || !input.trim()}
+              className="w-8 h-8 rounded-xl flex items-center justify-center disabled:opacity-40"
+              style={{ background: 'linear-gradient(135deg,#7c3aed,#2563eb)' }}>
+              <Send size={13} className="text-white" />
+            </button>
+          </div>
+        </div>
+      )}
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-105"
+        style={{ background: 'linear-gradient(135deg,#7c3aed,#2563eb)' }}>
+        {open ? <X size={18} className="text-white" /> : <MessageSquare size={18} className="text-white" />}
+      </button>
+    </div>
+  )
+}
+
+/* ── Main wizard ─────────────────────────────────────────────── */
 export default function NewCampaign() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
-  const [form, setForm] = useState<CampaignFormData>(empty)
-  const [language, setLanguage] = useState<'en' | 'sw' | 'sheng' | 'mixed' | 'conversational'>('en')
-  const [showNia, setShowNia] = useState(false)
-  const [showBuyCredits, setShowBuyCredits] = useState(false)
-  const [credits, setCredits] = useState<number | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [step, setStep] = useState(0)
+  const [step, setStep] = useState(1)
+  const [form, setForm] = useState<CampaignFormData & { campaign_type?: string }>({ ...empty })
+  const [returning, setReturning] = useState<{ filled: boolean; pastCampaigns: PastCampaign[] } | null>(null)
+  const [research, setResearch] = useState<ResearchInsights | null>(null)
+  const [selectedAngle, setSelectedAngle] = useState(0)
+  const [researchLoading, setResearchLoading] = useState(false)
+  const [researchError, setResearchError] = useState('')
+  const [generating, setGenerating] = useState(false)
+  const [genStep, setGenStep] = useState(0)
   const [error, setError] = useState('')
-  const [prefilled, setPrefilled] = useState(false)
-  const [uploadedDocs, setUploadedDocs] = useState<{ name: string; path: string }[]>([])
-  const [uploading, setUploading] = useState(false)
 
-  // Fetch credit balance
+  const GEN_STEPS = ['Reading your brief…','Running market research…','Crafting your strategy…','Writing your campaign…','Finalising…']
+
+  const update = (patch: Partial<CampaignFormData & { campaign_type?: string }>) =>
+    setForm(prev => ({ ...prev, ...patch }))
+
+  /* Load brand kit + past campaigns */
   useEffect(() => {
     if (!user) return
-    supabase.from('profiles').select('credits').eq('id', user.id).single()
-      .then(({ data }) => { if (data) setCredits(data.credits) })
-  }, [user])
-
-  // Pre-fill from saved Brand Kit (only fields still empty — URL params win)
-  useEffect(() => {
-    if (!user) return
-    supabase.from('brand_kits')
-      .select('business_name, industry, preferred_tone, target_customer')
-      .eq('user_id', user.id)
-      .single()
-      .then(({ data }) => {
-        if (!data) return
-        const hasContent = data.business_name || data.industry || data.preferred_tone || data.target_customer
+    Promise.all([
+      supabase.from('brand_kits').select('business_name,industry,preferred_tone,target_customer,whatsapp_number,website_url').eq('user_id', user.id).single(),
+      supabase.from('campaigns').select('id,business_name,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
+    ]).then(([brand, camps]) => {
+      const b = brand.data
+      const pastCampaigns = (camps.data ?? []).map(c => ({ id: c.id, title: c.business_name, created_at: c.created_at }))
+      if (b) {
         setForm(prev => ({
           ...prev,
-          business_name: prev.business_name || data.business_name || '',
-          industry: prev.industry || data.industry || '',
-          tone: prev.tone || data.preferred_tone || '',
-          target_audience: prev.target_audience || data.target_customer || '',
+          business_name: searchParams.get('business') || prev.business_name || b.business_name || '',
+          industry: searchParams.get('industry') || prev.industry || b.industry || '',
+          tone: searchParams.get('tone') || prev.tone || b.preferred_tone || 'Professional',
+          target_audience: prev.target_audience || b.target_customer || '',
+          whatsapp_number: prev.whatsapp_number || b.whatsapp_number || '',
+          business_url: prev.business_url || b.website_url || '',
         }))
-        if (hasContent) setPrefilled(true)
-      })
+      }
+      setReturning({ filled: !!b, pastCampaigns })
+    })
   }, [user])
 
-  // Pre-fill from Nia agent URL params
+  /* Pre-fill from template URL params */
   useEffect(() => {
-    const fields: Partial<CampaignFormData> = {}
-    if (searchParams.get('business_name')) fields.business_name = searchParams.get('business_name')!
-    if (searchParams.get('industry')) fields.industry = searchParams.get('industry')!
-    if (searchParams.get('product_name')) fields.product_name = searchParams.get('product_name')!
-    if (searchParams.get('target_audience')) fields.target_audience = searchParams.get('target_audience')!
-    if (searchParams.get('objective')) fields.objective = searchParams.get('objective')!
-    if (searchParams.get('tone')) fields.tone = searchParams.get('tone')!
-    if (searchParams.get('offer')) fields.offer = searchParams.get('offer')!
-    if (searchParams.get('location')) fields.location = searchParams.get('location')!
-    if (searchParams.get('notes')) fields.notes = searchParams.get('notes')!
-    if (Object.keys(fields).length > 0) setForm(prev => ({ ...prev, ...fields }))
-  }, [searchParams])
-
-  const set = (field: keyof CampaignFormData) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => setForm(prev => ({ ...prev, [field]: e.target.value }))
+    const objective = searchParams.get('objective')
+    const tone = searchParams.get('tone')
+    if (objective) update({ objective })
+    if (tone) update({ tone })
+  }, [])
 
   const togglePlatform = (p: string) =>
-    setForm(prev => ({ ...prev, platforms: prev.platforms.includes(p) ? prev.platforms.filter(x => x !== p) : [...prev.platforms, p] }))
+    update({ platforms: form.platforms.includes(p) ? form.platforms.filter(x => x !== p) : [...form.platforms, p] })
 
-  const handleDocUpload = async (files: FileList | null) => {
-    if (!files || !user) return
-    const allowed = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'text/plain', 'text/csv', 'text/html', 'application/msword']
-    const maxSize = 10 * 1024 * 1024 // 10 MB
-
-    setUploading(true)
-    const newDocs: { name: string; path: string }[] = []
-
-    for (const file of Array.from(files)) {
-      if (!allowed.includes(file.type) && !file.name.match(/\.(pdf|docx?|txt|csv|html?)$/i)) continue
-      if (file.size > maxSize) continue
-      const path = `${user.id}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
-      const { error } = await supabase.storage.from('campaign-docs').upload(path, file)
-      if (!error) newDocs.push({ name: file.name, path })
-    }
-
-    setUploadedDocs(prev => [...prev, ...newDocs])
-    setUploading(false)
+  const canAdvance = () => {
+    if (step === 1) return !!form.business_name && !!form.industry && !!form.product_name
+    if (step === 2) return !!form.objective && !!form.offer
+    if (step === 3) return !!form.target_audience
+    if (step === 4) return form.platforms.length > 0 && !!form.tone
+    return true
   }
 
-  const removeDoc = async (path: string) => {
-    await supabase.storage.from('campaign-docs').remove([path])
-    setUploadedDocs(prev => prev.filter(d => d.path !== path))
+  const runResearch = async () => {
+    setResearchLoading(true)
+    setResearchError('')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/campaign-research`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ ...form }),
+      })
+      const data = await res.json() as ResearchInsights
+      setResearch(data)
+    } catch {
+      setResearchError('Research failed — you can still generate your campaign.')
+    }
+    setResearchLoading(false)
   }
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
+  const next = () => {
+    if (step === 4) { setStep(5); runResearch(); return }
+    setStep(s => s + 1)
+  }
 
-    // Gate: no credits
-    if (credits !== null && credits < 1) {
-      setShowBuyCredits(true)
-      return
+  const generateCampaign = async () => {
+    if (!user) return
+    setGenerating(true); setError('')
+
+    // Enrich notes with research insights
+    const researchContext = research ? [
+      `MARKET CONTEXT: ${research.marketContext}`,
+      research.messagingAngles[selectedAngle]
+        ? `PREFERRED MESSAGING ANGLE: "${research.messagingAngles[selectedAngle].title}" — ${research.messagingAngles[selectedAngle].description}. Hook: ${research.messagingAngles[selectedAngle].hook}`
+        : '',
+      research.seoKeywords?.length ? `TARGET KEYWORDS: ${research.seoKeywords.join(', ')}` : '',
+      research.competitorWatch ? `COMPETITIVE CONTEXT: ${research.competitorWatch}` : '',
+      research.advisoryNote ? `STRATEGIC NOTE: ${research.advisoryNote}` : '',
+    ].filter(Boolean).join('\n') : ''
+
+    const enrichedForm = {
+      ...form,
+      notes: [form.notes, researchContext].filter(Boolean).join('\n\n'),
     }
 
-    setLoading(true)
-    setError('')
-    setStep(0)
-
-    // Animate through steps while we wait for Claude
-    const stepInterval = setInterval(() => {
-      setStep(s => (s < GENERATING_STEPS.length - 1 ? s + 1 : s))
-    }, 1800)
+    const ticker = setInterval(() => setGenStep(s => Math.min(s + 1, GEN_STEPS.length - 1)), 1800)
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('generate-campaign', {
-        body: { ...form, language, document_paths: uploadedDocs.map(d => d.path) },
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-campaign`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ form: enrichedForm, language: 'en', userId: user.id }),
       })
-      clearInterval(stepInterval)
 
-      if (fnError) throw new Error(fnError.message)
-      if (data?.error === 'insufficient_credits') {
-        setShowBuyCredits(true)
-        setLoading(false)
-        clearInterval(stepInterval)
-        return
-      }
-      if (data?.error) throw new Error(data.friendly || data.error)
-
-      navigate('/campaign-results', { state: { form, content: data } })
-    } catch (err: unknown) {
-      clearInterval(stepInterval)
-      setError(err instanceof Error ? err.message : "We couldn't generate your campaign just now. No credit was used — please try again.")
-      setLoading(false)
+      if (!res.ok) throw new Error('Generation failed')
+      const result = await res.json()
+      clearInterval(ticker)
+      navigate('/campaign-results', { state: { campaign: result, form: enrichedForm } })
+    } catch (e) {
+      clearInterval(ticker)
+      setError(e instanceof Error ? e.message : 'Generation failed')
+      setGenerating(false); setGenStep(0)
     }
   }
 
-  const SelectWrapper = ({ label, field, options }: { label: string; field: keyof CampaignFormData; options: string[] }) => (
-    <div>
-      <label className="label">{label}</label>
-      <div className="relative">
-        <select className="select pr-9" value={form[field] as string} onChange={set(field)} required>
-          <option value="">Select {label.toLowerCase()}</option>
-          {options.map(o => <option key={o} value={o}>{o}</option>)}
-        </select>
-        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-      </div>
-    </div>
-  )
-
-  const chipClass = (active: boolean) =>
-    `px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-      active
-        ? 'text-white border-purple-500/60 bg-purple-500/20'
-        : 'text-gray-500 border-gray-200 bg-white/3 hover:border-white/20 hover:text-gray-200'
-    }`
-
-  const canSubmit = form.platforms.length > 0 && !!form.cta
-
-  const noCredits = credits !== null && credits < 1
+  /* ── Generating overlay ────────────────────────────────────── */
+  if (generating) {
+    return (
+      <DashboardLayout>
+        <div className="min-h-[70vh] flex flex-col items-center justify-center text-center">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
+            style={{ background: 'linear-gradient(135deg,#7c3aed,#2563eb)' }}>
+            <Sparkles size={28} className="text-white animate-pulse" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Building your campaign</h2>
+          <p className="text-gray-500 text-sm mb-8 max-w-sm">{GEN_STEPS[genStep]}</p>
+          <div className="flex gap-2">
+            {GEN_STEPS.map((_, i) => (
+              <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i <= genStep ? 'w-8' : 'w-3 bg-gray-200'}`}
+                style={i <= genStep ? { background: 'linear-gradient(135deg,#7c3aed,#2563eb)' } : {}} />
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   return (
     <DashboardLayout>
-      {showNia && <CreativeAssistant onClose={() => setShowNia(false)} />}
-      {showBuyCredits && <BuyCreditsModal onClose={() => setShowBuyCredits(false)} />}
-      <div className="max-w-2xl">
-        <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">New Campaign</h1>
-            <p className="text-sm text-gray-500 mt-1">Fill in your brief and we'll generate a complete campaign.</p>
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="section-tag">Campaign Builder</span>
+            {returning?.filled && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                Brand loaded ✓
+              </span>
+            )}
           </div>
-          <button type="button" onClick={() => setShowNia(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-purple-700 shrink-0 transition-all hover:bg-purple-50"
-            style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
-            <Sparkles size={14} className="text-purple-600" />
-            Brainstorm with Nia
-          </button>
+          <h1 className="text-2xl font-bold text-gray-900">New Campaign</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Answer a few questions — or just describe it to Nia below.</p>
         </div>
 
-        {prefilled && (
-          <div className="mb-5 flex items-center gap-2.5 px-4 py-3 rounded-xl border border-purple-200 bg-purple-50">
-            <Zap size={14} className="text-purple-600 shrink-0" />
-            <p className="text-xs text-purple-800">Prefilled from your <a href="/brand-kit" className="font-semibold underline">Brand Kit</a> — edit anything below.</p>
+        <StepBar current={step} />
+
+        {/* Past campaigns (returning users, step 1 only) */}
+        {step === 1 && returning && returning.pastCampaigns.length > 0 && (
+          <div className="mb-5 p-4 rounded-2xl border border-purple-100 bg-purple-50">
+            <p className="text-xs font-bold text-purple-700 mb-2">Continue a past campaign</p>
+            <div className="flex gap-2 flex-wrap">
+              {returning.pastCampaigns.map(c => (
+                <button key={c.id}
+                  onClick={() => navigate(`/campaigns/${c.id}`)}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-white border border-purple-200 text-purple-700 hover:border-purple-400 transition-all">
+                  {c.title || 'Campaign'} →
+                </button>
+              ))}
+              <button onClick={() => setForm({ ...empty })}
+                className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:text-gray-700">
+                Start fresh
+              </button>
+            </div>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <SectionCard title="Business Details">
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="label">Business name</label>
-                <input className="input" placeholder="e.g. Sunrise Homes" value={form.business_name} onChange={set('business_name')} required />
-              </div>
-              <SelectWrapper label="Industry" field="industry" options={industries} />
-              <div className="sm:col-span-2">
-                <label className="label">Product or service name</label>
-                <input className="input" placeholder="e.g. 2-bedroom apartments in Ruaka" value={form.product_name} onChange={set('product_name')} required />
-              </div>
-            </div>
-          </SectionCard>
-
-          <SectionCard title="Campaign Details">
-            <div className="grid sm:grid-cols-2 gap-4">
-              <SelectWrapper label="Campaign objective" field="objective" options={objectives} />
-              <SelectWrapper label="Tone" field="tone" options={tones} />
-              <div>
-                <label className="label">Target audience</label>
-                <input className="input" placeholder="e.g. Young professionals aged 25–40" value={form.target_audience} onChange={set('target_audience')} required />
-              </div>
-              <div>
-                <label className="label">Location</label>
-                <input className="input" placeholder="e.g. Nairobi, Westlands" value={form.location} onChange={set('location')} required />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="label">Offer or price</label>
-                <input className="input" placeholder="e.g. 2 bedrooms from KES 4.5M, free parking" value={form.offer} onChange={set('offer')} required />
-              </div>
-            </div>
-          </SectionCard>
-
-          <SectionCard title="Platforms">
-            <div className="flex flex-wrap gap-2">
-              {platformOptions.map(p => (
-                <button key={p} type="button" onClick={() => togglePlatform(p)} className={chipClass(form.platforms.includes(p))}>{p}</button>
-              ))}
-            </div>
-          </SectionCard>
-
-          <SectionCard title="Call to Action & Notes">
-            <div className="space-y-4">
-              <div>
-                <label className="label">Call to action</label>
-                <div className="flex flex-wrap gap-2">
-                  {ctaOptions.map(c => (
-                    <button key={c} type="button" onClick={() => setForm(prev => ({ ...prev, cta: c }))} className={chipClass(form.cta === c)}>{c}</button>
-                  ))}
+        {/* ── Step 1: Business ──────────────────────────────── */}
+        {step === 1 && (
+          <div className="space-y-5">
+            <div className="card-glow p-6">
+              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">Your Business</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="label">Business name *</label>
+                  <input className="input" value={form.business_name}
+                    onChange={e => update({ business_name: e.target.value })}
+                    placeholder="e.g. Kilele Bakery" />
+                </div>
+                <div>
+                  <label className="label">Industry *</label>
+                  <select className="input" value={form.industry} onChange={e => update({ industry: e.target.value })}>
+                    <option value="">Select industry…</option>
+                    {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">What are you promoting? *</label>
+                  <input className="input" value={form.product_name}
+                    onChange={e => update({ product_name: e.target.value })}
+                    placeholder="e.g. Wedding cakes, 3-bedroom apartment, SACCO membership" />
+                </div>
+                <div>
+                  <label className="label">Your unique edge <span className="text-gray-400 font-normal">(optional)</span></label>
+                  <input className="input" value={form.notes}
+                    onChange={e => update({ notes: e.target.value })}
+                    placeholder="e.g. Only bakery in Westlands open 24/7, free delivery over 5km" />
                 </div>
               </div>
-              <div>
-                <label className="label">WhatsApp number <span className="text-gray-600 normal-case font-normal">(optional)</span></label>
-                <input className="input" placeholder="e.g. 0712 345 678" value={form.whatsapp_number ?? ''} onChange={set('whatsapp_number')} />
-                <p className="text-[11px] text-gray-500 mt-1.5">We'll weave a click-to-chat line into your WhatsApp copy and CTAs.</p>
-              </div>
-              <div>
-                <label className="label">Business website <span className="text-gray-600 normal-case font-normal">(optional)</span></label>
-                <input className="input" type="url" placeholder="https://yourbusiness.co.ke" value={form.business_url ?? ''} onChange={set('business_url')} />
-                <p className="text-[11px] text-gray-500 mt-1.5">We'll research your site to write more specific, credible copy — not generic filler.</p>
-              </div>
-              <div className="sm:col-span-2">
-                <label className="label">Company documents <span className="text-gray-600 normal-case font-normal">(optional)</span></label>
-                <label className={`flex items-center gap-2 cursor-pointer border border-dashed border-white/10 rounded-lg px-4 py-3 text-sm text-gray-400 hover:border-purple-500/50 hover:text-gray-300 transition-colors ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
-                  {uploading ? <Loader2 size={14} className="animate-spin" /> : <Paperclip size={14} />}
-                  {uploading ? 'Uploading…' : 'Attach PDFs, Word docs, or text files'}
-                  <input type="file" className="hidden" multiple accept=".pdf,.doc,.docx,.txt,.csv,.html" onChange={e => handleDocUpload(e.target.files)} disabled={uploading} />
-                </label>
-                {uploadedDocs.length > 0 && (
-                  <ul className="mt-2 space-y-1">
-                    {uploadedDocs.map(doc => (
-                      <li key={doc.path} className="flex items-center gap-2 text-[11px] text-gray-400 bg-white/5 rounded px-2 py-1">
-                        <Paperclip size={11} className="text-purple-400 shrink-0" />
-                        <span className="truncate flex-1">{doc.name}</span>
-                        <button type="button" onClick={() => removeDoc(doc.path)} className="text-gray-600 hover:text-red-400 transition-colors"><X size={11} /></button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <p className="text-[11px] text-gray-500 mt-1.5">Brochures, price lists, case studies — we'll read them to write copy that reflects your real business.</p>
-              </div>
-              <div>
-                <label className="label">Extra notes <span className="text-gray-600 normal-case font-normal">(optional)</span></label>
-                <textarea className="input resize-none" rows={3} placeholder="Any specific details, special requirements..." value={form.notes} onChange={set('notes')} />
-              </div>
             </div>
-          </SectionCard>
+          </div>
+        )}
 
-          {/* Language toggle */}
-          <div className="card-glow p-5">
-            <label className="label mb-3 flex items-center gap-1.5"><Languages size={13} /> Output language</label>
-            <div className="flex flex-wrap gap-2">
-              {([
-                { id: 'en', label: 'English' },
-                { id: 'sw', label: 'Kiswahili' },
-                { id: 'conversational', label: 'Kenyan English' },
-                { id: 'sheng', label: 'Sheng-light' },
-                { id: 'mixed', label: 'Mixed EN/SW' },
-              ] as const).map(({ id, label }) => (
-                <button key={id} type="button" onClick={() => setLanguage(id)}
-                  className={`px-3.5 py-2 rounded-xl text-sm font-semibold border transition-all ${
-                    language === id
-                      ? 'border-purple-500/60 bg-purple-500/15 text-purple-700'
-                      : 'border-gray-200 text-gray-500 hover:border-white/20 hover:text-gray-600'
-                  }`}>
-                  {label}
-                </button>
-              ))}
+        {/* ── Step 2: Goal ──────────────────────────────────── */}
+        {step === 2 && (
+          <div className="space-y-5">
+            <div className="card-glow p-6">
+              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">Campaign Goal</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="label">What do you want to achieve? *</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
+                    {OBJECTIVES.map(obj => (
+                      <button key={obj} onClick={() => update({ objective: obj })}
+                        className={`text-xs font-medium px-3 py-2.5 rounded-xl border text-left transition-all ${
+                          form.objective === obj
+                            ? 'border-purple-400 bg-purple-50 text-purple-700'
+                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                        }`}>
+                        <Target size={11} className="mb-1 opacity-60" />
+                        <br />{obj}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="label">Your offer or hook *</label>
+                  <input className="input" value={form.offer}
+                    onChange={e => update({ offer: e.target.value })}
+                    placeholder="e.g. 30% off this weekend, Free tasting session, No deposit required" />
+                  <p className="text-xs text-gray-400 mt-1">What makes someone stop scrolling right now?</p>
+                </div>
+                <div>
+                  <label className="label">Call to action</label>
+                  <select className="input" value={form.cta} onChange={e => update({ cta: e.target.value })}>
+                    <option value="">Select CTA…</option>
+                    {CTAS.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+              </div>
             </div>
-            {language !== 'en' && (
-              <p className="text-xs text-gray-500 mt-2">
-                {language === 'sw' && 'All copy in natural Kiswahili.'}
-                {language === 'conversational' && 'Warm, everyday Kenyan English — not corporate.'}
-                {language === 'sheng' && 'Light, professional Sheng — current but clear to everyone.'}
-                {language === 'mixed' && 'Natural English/Kiswahili code-switching, the way Kenyans actually chat.'}
-              </p>
+          </div>
+        )}
+
+        {/* ── Step 3: Audience ──────────────────────────────── */}
+        {step === 3 && (
+          <div className="space-y-5">
+            <div className="card-glow p-6">
+              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">Your Audience</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="label">Who are you talking to? *</label>
+                  <textarea className="input" rows={3} value={form.target_audience}
+                    onChange={e => update({ target_audience: e.target.value })}
+                    placeholder="e.g. Brides-to-be aged 25–38, working professionals planning a wedding in Nairobi in 2026" />
+                  <p className="text-xs text-gray-400 mt-1">Be as specific as you can — this shapes every word of the campaign.</p>
+                </div>
+                <div>
+                  <label className="label">Where are they?</label>
+                  <select className="input" value={form.location} onChange={e => update({ location: e.target.value })}>
+                    <option value="">Select location…</option>
+                    {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">WhatsApp / contact number <span className="text-gray-400 font-normal">(optional)</span></label>
+                  <input className="input" value={form.whatsapp_number ?? ''}
+                    onChange={e => update({ whatsapp_number: e.target.value })}
+                    placeholder="e.g. 254712345678" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 4: Channels ──────────────────────────────── */}
+        {step === 4 && (
+          <div className="space-y-5">
+            <div className="card-glow p-6">
+              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">Campaign Format</h2>
+              <div className="space-y-5">
+                <div>
+                  <label className="label">Campaign type</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
+                    {CAMPAIGN_TYPES.map(ct => {
+                      const Icon = ct.icon
+                      const active = form.campaign_type === ct.id
+                      return (
+                        <button key={ct.id} onClick={() => update({ campaign_type: ct.id })}
+                          className={`text-left px-3 py-3 rounded-xl border transition-all ${
+                            active ? 'border-purple-400 bg-purple-50' : 'border-gray-200 hover:border-gray-300'
+                          }`}>
+                          <Icon size={14} className={active ? 'text-purple-600 mb-1' : 'text-gray-400 mb-1'} />
+                          <p className={`text-xs font-semibold ${active ? 'text-purple-700' : 'text-gray-700'}`}>{ct.label}</p>
+                          <p className="text-[10px] text-gray-400 mt-0.5">{ct.desc}</p>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="label">Platforms *</label>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {PLATFORMS.map(p => (
+                      <button key={p} onClick={() => togglePlatform(p)}
+                        className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-all ${
+                          form.platforms.includes(p)
+                            ? 'border-purple-400 bg-purple-50 text-purple-700'
+                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                        }`}>{p}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="label">Tone *</label>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {TONES.map(t => (
+                      <button key={t} onClick={() => update({ tone: t })}
+                        className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-all ${
+                          form.tone === t
+                            ? 'border-purple-400 bg-purple-50 text-purple-700'
+                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                        }`}>{t}</button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 5: Research & Strategy ───────────────────── */}
+        {step === 5 && (
+          <div className="space-y-4">
+            {researchLoading && (
+              <div className="card-glow p-8 text-center">
+                <Loader2 size={24} className="animate-spin text-purple-400 mx-auto mb-3" />
+                <p className="font-semibold text-gray-900 mb-1">Researching your market…</p>
+                <p className="text-sm text-gray-500">Analysing trends, angles, and keywords for your campaign</p>
+              </div>
+            )}
+
+            {researchError && (
+              <div className="flex items-center gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50">
+                <AlertCircle size={16} className="text-amber-500 shrink-0" />
+                <p className="text-sm text-amber-700 flex-1">{researchError}</p>
+                <button onClick={runResearch} className="text-xs font-semibold text-amber-700 hover:text-amber-900 flex items-center gap-1">
+                  <RefreshCw size={12} /> Retry
+                </button>
+              </div>
+            )}
+
+            {research && (
+              <>
+                {/* Market context */}
+                <div className="card-glow p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <TrendingUp size={14} className="text-purple-500" />
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Market Context</p>
+                  </div>
+                  <p className="text-sm text-gray-700 leading-relaxed">{research.marketContext}</p>
+                </div>
+
+                {/* Messaging angles */}
+                <div className="card-glow p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Lightbulb size={14} className="text-purple-500" />
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Pick your messaging angle</p>
+                  </div>
+                  <div className="space-y-2">
+                    {research.messagingAngles.map((angle, i) => (
+                      <button key={i} onClick={() => setSelectedAngle(i)}
+                        className={`w-full text-left p-4 rounded-xl border transition-all ${
+                          selectedAngle === i
+                            ? 'border-purple-400 bg-purple-50'
+                            : 'border-gray-200 hover:border-gray-300 bg-white'
+                        }`}>
+                        <div className="flex items-start gap-3">
+                          <div className={`w-5 h-5 rounded-full border-2 mt-0.5 shrink-0 flex items-center justify-center ${
+                            selectedAngle === i ? 'border-purple-500' : 'border-gray-300'
+                          }`}>
+                            {selectedAngle === i && <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />}
+                          </div>
+                          <div>
+                            <p className={`text-sm font-semibold mb-0.5 ${selectedAngle === i ? 'text-purple-700' : 'text-gray-800'}`}>
+                              {angle.title}
+                            </p>
+                            <p className="text-xs text-gray-500 mb-1.5">{angle.description}</p>
+                            <p className="text-xs italic text-gray-600 bg-gray-50 rounded-lg px-3 py-1.5">
+                              "{angle.hook}"
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* SEO keywords */}
+                {research.seoKeywords?.length > 0 && (
+                  <div className="card-glow p-5">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Target Keywords</p>
+                    <div className="flex flex-wrap gap-2">
+                      {research.seoKeywords.map(kw => (
+                        <span key={kw} className="text-xs font-medium px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Platform tips */}
+                {research.platformTips?.length > 0 && (
+                  <div className="card-glow p-5">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Platform Strategy</p>
+                    <div className="space-y-2">
+                      {research.platformTips.map((t, i) => (
+                        <div key={i} className="flex items-start gap-3 text-sm">
+                          <span className="font-semibold text-gray-800 shrink-0 w-24">{t.platform}</span>
+                          <span className="text-gray-600">{t.tip}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Advisory note */}
+                {(research.competitorWatch || research.advisoryNote) && (
+                  <div className="p-4 rounded-xl border border-amber-200 bg-amber-50">
+                    <p className="text-xs font-bold text-amber-700 uppercase tracking-widest mb-2">Strategic Advisory</p>
+                    {research.competitorWatch && <p className="text-sm text-amber-800 mb-1">⚡ {research.competitorWatch}</p>}
+                    {research.advisoryNote && <p className="text-sm text-amber-800">💡 {research.advisoryNote}</p>}
+                  </div>
+                )}
+              </>
+            )}
+
+            {error && (
+              <div className="flex items-center gap-2 p-3 rounded-xl border border-red-200 bg-red-50 text-red-600 text-sm">
+                <AlertCircle size={14} /> {error}
+              </div>
             )}
           </div>
+        )}
 
-          {error && (
-            <div className="p-3 rounded-xl border border-red-500/30 bg-red-500/10 text-sm text-red-400">
-              {error}
-            </div>
-          )}
+        {/* ── Nav buttons ───────────────────────────────────── */}
+        <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
+          {step > 1 ? (
+            <button onClick={() => setStep(s => s - 1)}
+              className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors">
+              <ChevronLeft size={16} /> Back
+            </button>
+          ) : <div />}
 
-          {noCredits ? (
-            <button type="button" onClick={() => setShowBuyCredits(true)}
-              className="w-full py-4 text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
-              style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(59,130,246,0.15))', border: '1px solid rgba(139,92,246,0.4)', color: '#a78bfa' }}>
-              <Zap size={15} /> Buy Credits to Generate
+          {step < 5 ? (
+            <button onClick={next} disabled={!canAdvance()}
+              className="btn-primary text-sm px-6 py-2.5 gap-2 disabled:opacity-40">
+              Continue <ChevronRight size={15} />
             </button>
           ) : (
-            <button type="submit" className="btn-primary w-full py-4 text-sm" disabled={loading || !canSubmit}>
-              {loading ? (
-                <span className="flex items-center gap-2 justify-center">
-                  <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  {GENERATING_STEPS[step]}
-                </span>
-              ) : (
-                <><Zap size={15} /> Generate Campaign {credits !== null && <span className="opacity-60 text-xs ml-1">· {credits} credit{credits !== 1 ? 's' : ''} remaining</span>}</>
-              )}
+            <button
+              onClick={generateCampaign}
+              disabled={generating || researchLoading}
+              className="btn-primary text-sm px-6 py-2.5 gap-2 disabled:opacity-50">
+              {generating
+                ? <><Loader2 size={14} className="animate-spin" /> Building…</>
+                : <><Zap size={14} /> Build My Campaign</>}
             </button>
           )}
-
-          {!noCredits && !canSubmit && !loading && (
-            <p className="text-xs text-gray-600 text-center -mt-2">Select at least one platform and a call to action to continue</p>
-          )}
-        </form>
+        </div>
       </div>
+
+      {/* Floating Nia chat — steps 1-4 */}
+      {step < 5 && (
+        <NiaPanel step={step} form={form} onUpdate={update} userId={user?.id} />
+      )}
     </DashboardLayout>
   )
 }
-
