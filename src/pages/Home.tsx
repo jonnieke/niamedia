@@ -1,1071 +1,501 @@
-import { Link } from 'react-router-dom'
-import { Suspense, lazy, useState, useEffect } from 'react'
-import PublicHeader from '../components/layout/PublicHeader'
-import Logo from '../components/ui/Logo'
+import { lazy, Suspense, useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import Logo from "../components/ui/Logo";
 import {
-  ArrowRight, TrendingUp, Target, Zap,
-  Film, MessageSquare, Building2, Hotel,
-  GraduationCap, CreditCard, UtensilsCrossed, Plane,
-  ShoppingBag, Calendar, Stethoscope, Briefcase,
-  CheckCircle2, Star, BarChart2, Copy, Check,
-  Music, Shield, Sparkles, Clock, Loader2, Languages, Bot,
-} from 'lucide-react'
+  ArrowRight,
+  Bot,
+  Check,
+  CheckCircle2,
+  Clock,
+  Copy,
+  Film,
+  MessageSquare,
+  Music,
+  ShoppingBag,
+  Sparkles,
+  Star,
+  Target,
+} from "lucide-react";
 
-/* ─── Live AI Demo ─────────────────────────────────────────────── */
-const NiaAgent = lazy(() => import('../components/NiaAgent'))
+const NiaAgent = lazy(() => import("../components/NiaAgent"));
 
-const DEMO_INDUSTRIES = [
-  'Real Estate', 'Hospitality', 'Education', 'Fintech / SACCO',
-  'Restaurant', 'Travel', 'Retail', 'Health & Wellness', 'Events', 'Professional Services', 'Faith & Community',
-]
-const DEMO_STEPS = [
-  'Reading your brief...',
-  'Researching your market...',
-  'Crafting your strategy...',
-  'Writing your campaign copy...',
-  'Polishing your assets...',
-]
-const DEMO_TABS = [
-  { id: 'instagram', label: 'Instagram' },
-  { id: 'whatsapp', label: 'WhatsApp' },
-  { id: 'script', label: 'Video Script' },
-  { id: 'poster', label: 'Poster Copy' },
-]
-
-interface DemoOutput {
-  captions: { instagram: string; facebook: string; tiktok: string; linkedin: string }
-  whatsapp: { status: string; broadcast: string; reply: string }
-  videoScript: { hook: string; scene1: string; scene2: string; scene3: string; callToAction: string; visualDirection: string }
-  posterCopy: { headline: string; subheadline: string; offerText: string; cta: string }
-  strategy: { angle: string; keyMessage: string }
-}
-
-function CampaignOutputDemo() {
-  const [businessName, setBusinessName] = useState('')
-  const [industry, setIndustry] = useState('')
-  const [product, setProduct] = useState('')
-  const [language, setLanguage] = useState<'en' | 'sw'>('en')
-  const [loading, setLoading] = useState(false)
-  const [stepIdx, setStepIdx] = useState(0)
-  const [output, setOutput] = useState<DemoOutput | null>(null)
-  const [activeTab, setActiveTab] = useState('instagram')
-  const [copied, setCopied] = useState(false)
-  const [error, setError] = useState('')
-
-  const canGenerate = businessName.trim().length >= 2 && industry
-
-  const handleGenerate = async () => {
-    if (!canGenerate || loading) return
-    setLoading(true); setError(''); setOutput(null); setStepIdx(0)
-    const stepTimer = setInterval(() => setStepIdx(i => i < DEMO_STEPS.length - 1 ? i + 1 : i), 1400)
-    try {
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-campaign`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY as string,
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY as string}`,
-        },
-        body: JSON.stringify({
-          business_name: businessName.trim(), industry,
-          product_name: product.trim() || `${industry} services`,
-          objective: 'Get leads and grow brand awareness',
-          target_audience: 'Kenyan professionals and households',
-          location: 'Nairobi, Kenya', offer: '',
-          tone: 'Professional, warm, and locally resonant',
-          platforms: ['Instagram', 'WhatsApp', 'Facebook'],
-          cta: 'Contact us today',
-          notes: 'Make the copy specific and locally resonant for the Kenyan market.',
-          language,
-        }),
-      })
-      clearInterval(stepTimer)
-      const data = await res.json()
-      if (data.error) throw new Error(data.error)
-      setOutput(data as DemoOutput); setActiveTab('instagram')
-    } catch {
-      clearInterval(stepTimer)
-      setError('Generation failed — please try again in a moment.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const getTabContent = (): { heading: string; body: string } => {
-    if (!output) return { heading: '', body: '' }
-    switch (activeTab) {
-      case 'instagram': return { heading: 'Instagram Caption', body: output.captions.instagram }
-      case 'whatsapp': return { heading: 'WhatsApp Broadcast', body: output.whatsapp.broadcast }
-      case 'script': return { heading: '15-Second Video Script', body: `[HOOK]\n${output.videoScript.hook}\n\n[SCENE 1]\n${output.videoScript.scene1}\n\n[SCENE 2]\n${output.videoScript.scene2}\n\n[CTA]\n${output.videoScript.callToAction}` }
-      case 'poster': return { heading: 'Poster Copy', body: `HEADLINE:\n"${output.posterCopy.headline}"\n\nSUB-HEADLINE:\n${output.posterCopy.subheadline}\n\nOFFER:\n${output.posterCopy.offerText}\n\nCTA:\n"${output.posterCopy.cta}"` }
-      default: return { heading: '', body: '' }
-    }
-  }
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(getTabContent().body)
-    setCopied(true); setTimeout(() => setCopied(false), 2000)
-  }
-
-  return (
-    <section id="demo" className="py-24 px-6 relative" style={{ background: '#f1f5f9' }}>
-      <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-5"
-            style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #c4b5fd' }}>
-            <Zap size={12} /> Live AI Demo — No account needed
-          </div>
-          <h2 className="text-4xl font-extrabold text-gray-900 mb-3">
-            {output ? `Your campaign for ${businessName} is ready` : 'Generate your campaign — right now'}
-          </h2>
-          <p className="text-gray-500 max-w-md mx-auto">
-            {output ? 'Real AI output. Copy it, use it, own it.' : 'Type your business name. Get real ad copy in under 60 seconds.'}
-          </p>
-        </div>
-
-        {!loading && !output && (
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
-              <div className="space-y-4">
-                <div>
-                  <label className="label">Your business name *</label>
-                  <input className="input w-full text-base" placeholder="e.g. Sunrise Homes, Mama Pima SACCO, Safari Stays…"
-                    value={businessName} onChange={e => setBusinessName(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleGenerate()} autoFocus />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="label">Industry *</label>
-                    <select className="input w-full" value={industry} onChange={e => setIndustry(e.target.value)}>
-                      <option value="">Select industry…</option>
-                      {DEMO_INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="label">Language</label>
-                    <div className="flex gap-2 mt-1">
-                      {(['en', 'sw'] as const).map(lang => (
-                        <button key={lang} type="button" onClick={() => setLanguage(lang)}
-                          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
-                            language === lang
-                              ? 'border-purple-500 bg-purple-50 text-purple-700'
-                              : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                          }`}>
-                          <Languages size={12} />
-                          {lang === 'en' ? 'English' : 'Kiswahili'}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <label className="label">What are you promoting? <span className="text-gray-400 normal-case font-normal">(optional)</span></label>
-                  <input className="input w-full" placeholder="e.g. 2BR apartments from KES 6.5M, weekend lunch special…"
-                    value={product} onChange={e => setProduct(e.target.value)} />
-                </div>
-                {error && <p className="text-xs text-red-500">{error}</p>}
-                <button onClick={handleGenerate} disabled={!canGenerate}
-                  className="btn-primary w-full py-3.5 text-sm gap-2 disabled:opacity-40">
-                  <Zap size={15} /> Generate My Campaign — Free
-                </button>
-                <p className="text-center text-xs text-gray-400">No account needed · Takes 30–60 seconds</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {loading && (
-          <div className="max-w-lg mx-auto text-center py-16">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 8px 32px rgba(124,58,237,0.4)' }}>
-              <Loader2 size={28} className="text-white animate-spin" />
-            </div>
-            <p className="text-gray-900 font-bold text-lg mb-2">{DEMO_STEPS[stepIdx]}</p>
-            <p className="text-sm text-gray-500 mb-8">Generating for <span className="text-purple-600 font-semibold">{businessName}</span>…</p>
-            <div className="h-2 rounded-full bg-gray-200 overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-1000"
-                style={{ width: `${Math.round(((stepIdx + 1) / DEMO_STEPS.length) * 100)}%`, background: 'linear-gradient(90deg, #7c3aed, #2563eb)' }} />
-            </div>
-            <p className="text-xs text-gray-400 mt-2">Step {stepIdx + 1} of {DEMO_STEPS.length}</p>
-          </div>
-        )}
-
-        {output && !loading && (
-          <div className="flex flex-col lg:flex-row gap-6 items-start">
-            <div className="w-full lg:w-72 xl:w-80 shrink-0 bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5 pb-3 border-b border-gray-100">Campaign Brief</p>
-              <div className="space-y-4">
-                {[
-                  { label: 'Business', value: businessName },
-                  { label: 'Industry', value: industry },
-                  { label: 'Goal', value: 'Get leads & grow awareness' },
-                  { label: 'Language', value: language === 'sw' ? 'Kiswahili' : 'English' },
-                  { label: 'Strategy', value: output.strategy.angle },
-                ].map(({ label, value }) => (
-                  <div key={label}>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{label}</p>
-                    <p className="text-sm text-gray-900 leading-snug">{value}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-6 pt-4 border-t border-gray-100 space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <p className="text-xs text-emerald-600 font-semibold">Generated by Nia AI</p>
-                </div>
-                <Link to="/register" className="btn-primary w-full text-center text-xs py-2.5 gap-1.5">
-                  Get My Full Campaign <ArrowRight size={12} />
-                </Link>
-                <button onClick={() => setOutput(null)}
-                  className="w-full text-xs text-gray-400 hover:text-gray-600 transition-colors text-center py-1">
-                  Try a different business
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1 min-w-0 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-              <div className="flex border-b border-gray-100 overflow-x-auto">
-                {DEMO_TABS.map(tab => (
-                  <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                    className={`px-4 py-3 text-xs font-semibold whitespace-nowrap transition-colors flex-1 ${
-                      activeTab === tab.id
-                        ? 'text-purple-700 border-b-2 border-purple-600 bg-purple-50/60'
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                    }`}>
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-sm font-bold text-gray-900">{getTabContent().heading}</p>
-                  <button onClick={handleCopy}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
-                      copied ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300'
-                    }`}>
-                    {copied ? <Check size={12} /> : <Copy size={12} />}
-                    {copied ? 'Copied!' : 'Copy'}
-                  </button>
-                </div>
-                <pre className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap font-sans max-h-72 overflow-y-auto">
-                  {getTabContent().body}
-                </pre>
-              </div>
-              <div className="px-6 pb-6 pt-2 border-t border-gray-100">
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  <p className="text-xs text-gray-500">
-                    Preview only. Full campaign includes <span className="text-purple-600 font-semibold">6 formats + strategy brief</span>.
-                  </p>
-                  <Link to="/register" className="btn-primary text-xs px-4 py-2 shrink-0 gap-1.5">
-                    Get Full Campaign <ArrowRight size={12} />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </section>
-  )
-}
-
-/* ─── Hero output preview (static, cycles industries) ─────────── */
-const PREVIEW_OUTPUTS = [
-  {
-    industry: 'Real Estate',
-    color: '#7c3aed',
-    tabs: ['Instagram', 'WhatsApp', 'Video Script'],
-    copy: `Homes that sell lifestyles, not just walls.
-
-Heri Heights - 2BR from KES 6.5M. Walk to everything that matters in Westlands. Schools, malls, and the pulse of the city.
-
-Why rent forever when ownership is this close? DM for a private viewing this weekend.`,
-  },
-  {
-    industry: 'Fintech / SACCO',
-    color: '#2563eb',
-    tabs: ['Instagram', 'WhatsApp', 'Video Script'],
-    copy: `Your money should work as hard as you do.
-
-With Mama Pima SACCO, save KES 5,000 per month and access up to 3X your deposits in emergency loans - no collateral needed.
-
-Over 4,000 members are already growing with us. Click the link to apply.`,
-  },
-  {
-    industry: 'Restaurant',
-    color: '#dc2626',
-    tabs: ['Instagram', 'WhatsApp', 'Video Script'],
-    copy: `Lunch just got a serious upgrade.
-
-Every Thursday, our Chef's Special changes. This week: Swahili Coastal Biryani with freshly caught samaki - KES 650 only.
-
-Reserve your table before noon or miss out. Karen, Nairobi. Call 0700 000 000.`,
-  },
-]
-
-function HeroCreativeVisual() {
-  return (
-    <div className="relative w-full max-w-[480px]" style={{ aspectRatio: '4/3' }}>
-      {/* Main video frame */}
-      <div className="absolute inset-0 rounded-2xl overflow-hidden"
-        style={{ background: 'linear-gradient(145deg, #0d0025 0%, #160040 100%)', border: '1px solid rgba(167,139,250,0.25)', boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
-
-        {/* Film strip top */}
-        <div className="flex gap-1.5 px-3 pt-3 pb-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="h-3 rounded-sm flex-1"
-              style={{ background: i < 4 ? 'rgba(124,58,237,0.6)' : i < 7 ? 'rgba(6,182,212,0.4)' : 'rgba(255,255,255,0.06)' }} />
-          ))}
-        </div>
-
-        {/* Video preview area */}
-        <div className="relative mx-3 mt-3 rounded-xl overflow-hidden" style={{ aspectRatio: '16/9', background: 'linear-gradient(135deg, #1a0040 0%, #001a40 100%)' }}>
-          {/* Scene gradient backdrop */}
-          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 30% 40%, rgba(124,58,237,0.35) 0%, transparent 60%), radial-gradient(ellipse at 70% 60%, rgba(6,182,212,0.2) 0%, transparent 55%)' }} />
-
-          {/* Clapperboard icon, centered */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-            <div className="relative">
-              {/* Clapperboard body */}
-              <div className="w-20 h-16 rounded-lg flex items-end justify-center pb-2"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.18)' }}>
-                <div className="flex gap-1">
-                  {['#a78bfa','#7dd3fc','#6ee7b7','#fcd34d'].map(c => (
-                    <div key={c} className="w-3 h-8 rounded-sm" style={{ background: c, opacity: 0.7 }} />
-                  ))}
-                </div>
-              </div>
-              {/* Clapper arm */}
-              <div className="absolute -top-3 left-0 right-0 h-4 rounded-md"
-                style={{ background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.18)', transformOrigin: 'left', transform: 'rotate(-8deg)' }}>
-                <div className="flex gap-0.5 p-0.5 h-full items-center">
-                  {[0,1,2,3,4,5,6,7].map(i => (
-                    <div key={i} className="flex-1 h-full"
-                      style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)', borderRadius: 1 }} />
-                  ))}
-                </div>
-              </div>
-            </div>
-            <p className="text-xs font-bold tracking-wider" style={{ color: 'rgba(196,181,253,0.8)' }}>NIA MEDIA PRODUCTION</p>
-          </div>
-
-          {/* Play button overlay */}
-          <div className="absolute bottom-3 right-3 w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(124,58,237,0.8)', backdropFilter: 'blur(8px)' }}>
-            <svg width="10" height="12" viewBox="0 0 10 12" fill="white"><path d="M0 0 L10 6 L0 12 Z" /></svg>
-          </div>
-
-          {/* Duration badge */}
-          <div className="absolute bottom-3 left-3 px-2 py-0.5 rounded text-[10px] font-bold"
-            style={{ background: 'rgba(0,0,0,0.6)', color: 'rgba(255,255,255,0.8)' }}>0:30</div>
-        </div>
-
-        {/* Poster thumbnails row */}
-        <div className="flex gap-2 mx-3 mt-3">
-          {[
-            { label: 'Launch Offer', grad: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)' },
-            { label: 'Product Promo', grad: 'linear-gradient(135deg, #059669 0%, #0891b2 100%)' },
-            { label: 'Event Flyer', grad: 'linear-gradient(135deg, #d97706 0%, #dc2626 100%)' },
-          ].map(({ label, grad }) => (
-            <div key={label} className="flex-1 rounded-lg flex flex-col items-center justify-center gap-1 py-3"
-              style={{ background: grad, opacity: 0.85 }}>
-              <div className="w-5 h-5 rounded-sm" style={{ background: 'rgba(255,255,255,0.25)' }} />
-              <p className="text-[8px] font-bold text-white text-center leading-tight">{label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Campaign copy preview */}
-        <div className="mx-3 mt-3 mb-3 p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-4 h-4 rounded-full" style={{ background: 'linear-gradient(135deg, #a78bfa, #7dd3fc)' }} />
-            <span className="text-[10px] font-bold" style={{ color: 'rgba(167,139,250,0.9)' }}>Nia AI</span>
-            <div className="ml-auto flex gap-1">
-              {['#a78bfa','#7dd3fc','#6ee7b7'].map(c => (
-                <div key={c} className="w-1.5 h-1.5 rounded-full" style={{ background: c }} />
-              ))}
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <div className="h-1.5 rounded-full" style={{ width: '88%', background: 'rgba(255,255,255,0.15)' }} />
-            <div className="h-1.5 rounded-full" style={{ width: '72%', background: 'rgba(255,255,255,0.1)' }} />
-            <div className="h-1.5 rounded-full" style={{ width: '60%', background: 'rgba(255,255,255,0.08)' }} />
-          </div>
-        </div>
-      </div>
-
-      {/* Floating badge — video commercial */}
-      <div className="absolute -top-4 -right-4 flex items-center gap-2 px-3 py-2 rounded-xl shadow-lg"
-        style={{ background: 'rgba(124,58,237,0.9)', border: '1px solid rgba(167,139,250,0.4)', backdropFilter: 'blur(12px)' }}>
-        <Film size={12} className="text-white" />
-        <p className="text-[11px] font-bold text-white">Video Commercial</p>
-      </div>
-
-      {/* Floating badge — promo poster */}
-      <div className="absolute -bottom-4 -left-4 flex items-center gap-2 px-3 py-2 rounded-xl shadow-lg"
-        style={{ background: 'rgba(5,150,105,0.85)', border: '1px solid rgba(110,231,183,0.35)', backdropFilter: 'blur(12px)' }}>
-        <Sparkles size={12} className="text-white" />
-        <p className="text-[11px] font-bold text-white">Promo Poster</p>
-      </div>
-    </div>
-  )
-}
-
-function HeroOutputPreview() {
-  const [idx, setIdx] = useState(0)
-  const [activeTab, setActiveTab] = useState(0)
-  const [fade, setFade] = useState(true)
-  const current = PREVIEW_OUTPUTS[idx]
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setFade(false)
-      setTimeout(() => {
-        setIdx(i => (i + 1) % PREVIEW_OUTPUTS.length)
-        setActiveTab(0)
-        setFade(true)
-      }, 300)
-    }, 5000)
-    return () => clearInterval(timer)
-  }, [])
-
-  return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
-      {/* top bar */}
-      <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#34d399' }} />
-          <span className="text-xs font-bold text-white/70">Nia AI generating for</span>
-          <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-            style={{ background: `${current.color}30`, color: current.color, border: `1px solid ${current.color}50`, transition: 'all 0.3s' }}>
-            {current.industry}
-          </span>
-        </div>
-        <div className="flex gap-1">
-          {PREVIEW_OUTPUTS.map((_, i) => (
-            <button key={i} onClick={() => { setFade(false); setTimeout(() => { setIdx(i); setFade(true) }, 200) }}
-              className="w-1.5 h-1.5 rounded-full transition-all"
-              style={{ background: i === idx ? '#a78bfa' : 'rgba(255,255,255,0.2)' }} />
-          ))}
-        </div>
-      </div>
-      {/* format tabs */}
-      <div className="flex" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        {current.tabs.map((tab, i) => (
-          <button key={tab} onClick={() => setActiveTab(i)}
-            className="px-4 py-2.5 text-xs font-semibold transition-all flex-1"
-            style={{
-              color: i === activeTab ? '#a78bfa' : 'rgba(255,255,255,0.4)',
-              borderBottom: i === activeTab ? '2px solid #a78bfa' : '2px solid transparent',
-              background: i === activeTab ? 'rgba(167,139,250,0.08)' : 'transparent',
-            }}>
-            {tab}
-          </button>
-        ))}
-      </div>
-      {/* output */}
-      <div className="p-5" style={{ opacity: fade ? 1 : 0, transition: 'opacity 0.3s ease', minHeight: 140 }}>
-        <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.82)', whiteSpace: 'pre-line' }}>
-          {current.copy}
-        </p>
-      </div>
-      {/* footer */}
-      <div className="px-5 pb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-          <span className="text-xs font-semibold text-emerald-400">Generated by Nia AI · 47 seconds</span>
-        </div>
-        <Link to="/register"
-          className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg transition-all"
-          style={{ background: 'rgba(167,139,250,0.15)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.3)' }}>
-          Get yours <ArrowRight size={11} />
-        </Link>
-      </div>
-    </div>
-  )
-}
-
-/* ─── Industries ───────────────────────────────────────────────── */
-const industries = [
-  { icon: Building2, name: 'Real Estate', desc: 'Property listings & launches', color: '#7c3aed' },
-  { icon: Hotel, name: 'Hospitality', desc: 'Hotels, resorts & travel', color: '#2563eb' },
-  { icon: GraduationCap, name: 'Education', desc: 'Schools, tutors & edtech', color: '#059669' },
-  { icon: CreditCard, name: 'Fintech & SACCOs', desc: 'Loans, savings & finance', color: '#d97706' },
-  { icon: UtensilsCrossed, name: 'Restaurants', desc: 'Food promos & delivery', color: '#dc2626' },
-  { icon: Plane, name: 'Travel', desc: 'Tours & destinations', color: '#0891b2' },
-  { icon: ShoppingBag, name: 'Retail', desc: 'Product launches & sales', color: '#7c3aed' },
-  { icon: Calendar, name: 'Events', desc: 'Conferences & concerts', color: '#c026d3' },
-  { icon: Stethoscope, name: 'Clinics', desc: 'Health & wellness', color: '#059669' },
-  { icon: Briefcase, name: 'Professional', desc: 'Consulting & agencies', color: '#2563eb' },
-]
-
-/* ─── Main ─────────────────────────────────────────────────────── */
 export default function Home() {
-  const [showAssistant, setShowAssistant] = useState(false)
-  const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const [showAssistant, setShowAssistant] = useState(false);
+  const [params] = useSearchParams();
+  useEffect(() => {
+    if (params.get("assistant") === "1") setShowAssistant(true);
+  }, [params]);
+  const packages = [
+    {
+      title: "Quick Promo",
+      price: "KES 3,500 � 5,000",
+      intro: "Perfect for simple offers and quick promotions.",
+      features: [
+        "15�20 sec video",
+        "Basic script",
+        "AI visuals & music",
+        "9:16 vertical format",
+        "1 revision",
+        "WhatsApp caption",
+      ],
+      color: "#11996a",
+      bg: "#f1fbf7",
+    },
+    {
+      title: "Social Commercial",
+      price: "KES 7,500 � 12,000",
+      intro: "Best for social media ads that get attention.",
+      features: [
+        "30 sec video",
+        "Creative concept",
+        "Voiceover & music",
+        "Captions & subtitles",
+        "9:16 & 1:1 formats",
+        "2 revisions",
+        "Social captions",
+      ],
+      color: "#2949df",
+      bg: "#f2f5ff",
+      popular: true,
+    },
+    {
+      title: "Brand Campaign Video",
+      price: "KES 15,000 � 25,000",
+      intro: "Ideal for brands and serious marketing campaigns.",
+      features: [
+        "45�60 sec video",
+        "Campaign strategy",
+        "Voiceover & music",
+        "Multiple formats",
+        "Poster copy & messages",
+        "3 revisions",
+        "Human creative direction",
+      ],
+      color: "#f47613",
+      bg: "#fff8ef",
+    },
+    {
+      title: "Premium Commercial",
+      price: "KES 35,000 � 60,000",
+      intro: "For businesses that want the very best.",
+      features: [
+        "60�90 sec video",
+        "Full concept development",
+        "Advanced script & scenes",
+        "Multi-platform versions",
+        "Campaign copy pack",
+        "3�4 revisions",
+        "Strategy call",
+      ],
+      color: "#8c21b7",
+      bg: "#faf4ff",
+    },
+  ];
+  const steps = [
+    {
+      icon: Copy,
+      title: "Submit Your Brief",
+      desc: "Tell us about your business, offer, target audience and preferred style.",
+      color: "#7c3aed",
+    },
+    {
+      icon: Bot,
+      title: "Nia Sharpens the Idea",
+      desc: "Our AI assistant helps you create a strong hook, script and video concept.",
+      color: "#3347e8",
+    },
+    {
+      icon: ShoppingBag,
+      title: "Choose Your Package",
+      desc: "Pick the package that fits your goals, budget and timeline.",
+      color: "#ec4899",
+    },
+    {
+      icon: Film,
+      title: "We Produce the Video",
+      desc: "AI-assisted production with human creative direction brings your video to life.",
+      color: "#f97316",
+    },
+    {
+      icon: CheckCircle2,
+      title: "Review & Publish",
+      desc: "Review, request changes and publish your ad with confidence.",
+      color: "#22a447",
+    },
+  ];
+  const featureBadges = [
+    [Film, "Video ads from", "KES 3,500"],
+    [Clock, "24�72 hour", "delivery"],
+    [Sparkles, "AI-assisted", "production"],
+    [Target, "Human creative", "direction"],
+    [Star, "Ready for all", "social platforms"],
+    [Music, "Scripts, voiceover,", "music, captions"],
+  ] as const;
+  const niaFeatures = [
+    "Campaign ideas",
+    "Instagram & TikTok captions",
+    "Video scripts",
+    "Poster copy",
+    "Hooks & concepts",
+    "Creative direction",
+    "WhatsApp messages",
+    "Package recommendations",
+  ];
+  const trustedBusinesses = [
+    { initials: "NG", name: "Ndovu Group", label: "Corporate" },
+    { initials: "PF", name: "PesaFlix", label: "Fintech" },
+    { initials: "SC", name: "Shekel Coin", label: "Web3" },
+    { initials: "OM", name: "Onfon Media", label: "Media" },
+    { initials: "AM", name: "Adiel Media", label: "Agency" },
+    { initials: "NC", name: "NCBA", label: "Banking" },
+  ];
+  const gradient =
+    "linear-gradient(100deg,#ff5f65 0%,#ec4899 48%,#8b32ff 100%)";
 
   return (
-    <div style={{ background: '#f1f5f9' }}>
-      <PublicHeader />
-
-      {/* ── HERO ────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(145deg, #04000d 0%, #0b001f 55%, #040010 100%)', paddingTop: 80 }}>
-        {/* Glow orbs */}
-        <div className="absolute pointer-events-none" style={{ top: -80, left: '30%', width: 600, height: 400, background: 'radial-gradient(ellipse, rgba(124,58,237,0.3) 0%, transparent 65%)', filter: 'blur(1px)' }} />
-        <div className="absolute pointer-events-none" style={{ top: 100, right: -100, width: 400, height: 300, background: 'radial-gradient(ellipse, rgba(6,182,212,0.12) 0%, transparent 65%)' }} />
-        <div className="absolute pointer-events-none" style={{ bottom: -40, left: -60, width: 300, height: 200, background: 'radial-gradient(ellipse, rgba(52,211,153,0.1) 0%, transparent 65%)' }} />
-
-        <div className="relative max-w-7xl mx-auto px-6 pt-16 pb-12">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left */}
-            <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-7"
-                style={{ background: 'rgba(124,58,237,0.18)', border: '1px solid rgba(167,139,250,0.35)' }}>
-                <Film size={13} style={{ color: '#a78bfa' }} />
-                <span className="text-xs font-bold tracking-widest" style={{ color: '#c4b5fd' }}>VIDEO COMMERCIALS · PROMO POSTERS · AI CAMPAIGNS</span>
-              </div>
-
-              <h1 className="font-extrabold leading-[1.05] tracking-tight mb-6" style={{ fontSize: 'clamp(38px, 5.5vw, 60px)', color: '#ffffff' }}>
-                Your brand, on screen.<br />
-                <span style={{ background: 'linear-gradient(90deg, #c4b5fd 0%, #7dd3fc 50%, #6ee7b7 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                  Ready to convert.
-                </span>
-              </h1>
-
-              <p className="text-lg leading-relaxed mb-8 max-w-lg" style={{ color: 'rgba(255,255,255,0.62)' }}>
-                We produce short video commercials and promo posters for SMEs across East Africa — then back every asset with AI-powered campaigns, captions, and WhatsApp copy so your creative actually drives revenue.
-              </p>
-
-              <div className="flex flex-wrap gap-3 mb-10">
-                <Link to="/request-video"
-                  className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-bold text-white transition-all"
-                  style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 4px 24px rgba(124,58,237,0.45)' }}
-                  onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 8px 32px rgba(124,58,237,0.6)')}
-                  onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 4px 24px rgba(124,58,237,0.45)')}>
-                  <Film size={15} /> Get Your Video Commercial
-                </Link>
-                <a href={`https://wa.me/254751822556?text=Hi%2C%20I%20need%20a%20video%20commercial%20for%20my%20business`} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold transition-all"
-                  style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.35)', color: '#22c55e' }}>
-                  <MessageSquare size={15} /> WhatsApp Us
-                </a>
-              </div>
-
-              {/* Trust strips */}
-              <div className="flex flex-wrap gap-5">
-                {[
-                  { icon: Film, text: 'Video commercials produced', color: '#a78bfa' },
-                  { icon: Target, text: '1000+ SMEs connected', color: '#7dd3fc' },
-                  { icon: CheckCircle2, text: 'First campaign is free', color: '#6ee7b7' },
-                ].map(({ icon: Icon, text, color }) => (
-                  <div key={text} className="flex items-center gap-2">
-                    <Icon size={13} style={{ color }} />
-                    <span className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>{text}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right — hero visual */}
-            <div className="relative z-10 flex items-center justify-center">
-              <HeroCreativeVisual />
-            </div>
-          </div>
-        </div>
-
-        {/* Trusted-by client strip */}
-        <div className="relative max-w-7xl mx-auto px-6 pb-10 z-10">
-          <div className="text-center mb-5">
-            <p className="text-xs font-bold tracking-widest" style={{ color: 'rgba(255,255,255,0.28)' }}>TRUSTED BY BRANDS ACROSS EAST AFRICA</p>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
-            {[
-              'Adiel Media', 'Somo Smart', 'Onfon Media', 'Onfon Mobile',
-              'Ndovu Group', 'NCBA', 'PesaFlix', 'Shekel Coin',
-            ].map((name, i) => (
-              <span key={name} className="text-sm font-bold"
-                style={{ color: i % 2 === 0 ? 'rgba(196,181,253,0.55)' : 'rgba(125,211,252,0.55)', letterSpacing: '0.04em' }}>
-                {name}
+    <div className="min-h-screen overflow-x-hidden bg-white">
+      {" "}
+      <section className="relative overflow-hidden bg-[#03040d] pb-20 text-white">
+        {" "}
+        <div className="absolute -bottom-44 left-1/2 h-96 w-[80%] -translate-x-1/2 bg-purple-700/25 blur-[100px]" />{" "}
+        <header className="relative z-20 mx-auto flex h-[84px] max-w-[1450px] items-center justify-between px-5 lg:px-10">
+          {" "}
+          <Link to="/">
+            <Logo size="lg" />
+          </Link>{" "}
+          <nav className="hidden items-center gap-9 text-[13px] font-medium text-white/90 xl:flex">
+            {" "}
+            <Link to="/">Home</Link>
+            <Link to="/request-video">Video Commercials?</Link>
+            <Link to="/pricing">Pricing</Link>{" "}
+            <a href="#how-it-works">How It Works</a>
+            <Link to="/portfolio">Portfolio</Link>
+            <a href="#industries">Industries</a>
+            <a href="#about">About Us</a>{" "}
+          </nav>{" "}
+          <div className="flex items-center gap-3">
+            <Link
+              to="/login"
+              className="hidden rounded-xl border border-white/40 px-6 py-3 text-sm font-semibold sm:block"
+            >
+              Login
+            </Link>
+            <Link
+              to="/book?service=video"
+              className="rounded-xl px-5 py-3 text-sm font-bold"
+              style={{ background: gradient }}
+            >
+              Request a Video
+            </Link>
+          </div>{" "}
+        </header>{" "}
+        <div className="relative mx-auto grid max-w-[1380px] gap-10 px-6 pb-3 pt-9 lg:grid-cols-[.93fr_1.07fr] lg:px-10">
+          {" "}
+          <div className="flex flex-col justify-center">
+            {" "}
+            <h1 className="text-[clamp(43px,4.4vw,69px)] font-black leading-[1.05] tracking-[-.045em] text-white">
+              Affordable AI
+              <br />
+              <span className="bg-gradient-to-r from-violet-500 to-pink-500 bg-clip-text text-transparent">
+                Video Commercials
               </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Stats bar — bleeds into next section */}
-        <div className="relative max-w-7xl mx-auto px-6 -mb-10 z-20">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-px rounded-2xl overflow-hidden shadow-2xl"
-            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)' }}>
-            {[
-              { val: '1000+', label: 'SMEs in our network', color: '#c4b5fd' },
-              { val: '8+', label: 'Named brands served', color: '#7dd3fc' },
-              { val: 'KES 150K', label: 'Avg. annual savings', color: '#6ee7b7' },
-              { val: '10+', label: 'Industries covered', color: '#fcd34d' },
-            ].map(({ val, label, color }) => (
-              <div key={label} className="text-center px-6 py-5" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                <p className="text-2xl font-extrabold mb-1" style={{ color }}>{val}</p>
-                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>{label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Wave to light section */}
-        <div style={{ height: 80, background: 'linear-gradient(145deg, #04000d 0%, #0b001f 55%, #040010 100%)' }} />
-      </section>
-
-      {/* ── LIVE DEMO ────────────────────────────────────────── */}
-      <CampaignOutputDemo />
-
-      {/* ── MEET NIA ─────────────────────────────────────────── */}
-      <section style={{ background: 'linear-gradient(145deg, #100030 0%, #08001a 100%)', padding: '80px 24px' }}>
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left */}
-            <div>
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6"
-                style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.28)' }}>
-                <Bot size={13} style={{ color: '#a78bfa' }} />
-                <span className="text-xs font-bold tracking-widest" style={{ color: '#a78bfa' }}>MEET NIA AI</span>
-              </div>
-              <h2 className="font-extrabold text-white mb-4" style={{ fontSize: 36, lineHeight: 1.15 }}>
-                Your AI creative director — always on.
-              </h2>
-              <p className="text-base leading-relaxed mb-8" style={{ color: 'rgba(255,255,255,0.55)', maxWidth: 440 }}>
-                Tell Nia about your business. She'll ask the right questions, pitch campaign angles, and hand you ready-to-run copy — without you having to write a brief.
-              </p>
-              <div className="flex flex-col gap-3 mb-8">
-                {[
-                  'Pitches 3 campaign angles before you even ask',
-                  'Speaks Kiswahili and understands Kenyan culture',
-                  'Available 24/7 — no waiting for a creative team',
-                ].map(point => (
-                  <div key={point} className="flex items-start gap-3">
-                    <CheckCircle2 size={16} style={{ color: '#6ee7b7', flexShrink: 0, marginTop: 2 }} />
-                    <span className="text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>{point}</span>
-                  </div>
-                ))}
-              </div>
+              <br />
+              for Your Business
+            </h1>{" "}
+            <p className="mt-5 max-w-[575px] text-[16px] leading-[1.55] text-white/90">
+              Nia Media helps SMEs create professional, AI-assisted video ads
+              fast. From idea to final video � scripts, voiceover, music,
+              captions and more. Ready for WhatsApp, Instagram, TikTok, Facebook
+              and YouTube.
+            </p>{" "}
+            <div className="mt-7 flex flex-wrap gap-4">
+              {" "}
+              <Link
+                to="/book?service=video"
+                className="inline-flex items-center gap-3 rounded-xl px-7 py-4 text-[15px] font-bold text-white shadow-lg"
+                style={{ background: gradient }}
+              >
+                Request a Video Commercial <ArrowRight size={18} />
+              </Link>{" "}
               <button
                 onClick={() => setShowAssistant(true)}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold text-white"
-                style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
-                <MessageSquare size={15} /> Talk to Nia
-              </button>
+                className="inline-flex items-center gap-3 rounded-xl border border-white/45 bg-white/[.03] px-7 py-4 text-[15px] font-bold"
+              >
+                <MessageSquare size={20} /> Talk to Nia Assistant
+              </button>{" "}
+            </div>{" "}
+          </div>{" "}
+          <div className="relative aspect-[1.34/1] overflow-hidden rounded-[22px] border border-white/35 bg-black shadow-2xl">
+            {" "}
+            <img
+              src="/images/nia-cafe-owner.png"
+              alt="Kenyan caf� business owner"
+              className="absolute inset-0 h-full w-full object-cover"
+            />{" "}
+            <div className="absolute left-[7%] top-[13%] max-w-[44%]">
+              {" "}
+              <p className="text-[clamp(28px,3vw,50px)] font-black leading-[.85]">
+                GROW
+              </p>
+              <p className="mt-2 text-[clamp(23px,2.7vw,44px)] font-black italic leading-[.86] text-amber-400">
+                YOUR BUSINESS
+              </p>{" "}
+              <p className="mt-5 text-[clamp(14px,1.4vw,23px)] font-semibold leading-tight">
+                with videos that
+                <br />
+                bring customers
+                <br />
+                <span className="text-fuchsia-400">to you.</span>
+              </p>{" "}
+              <p className="mt-7 rotate-[-4deg] text-[clamp(12px,1.2vw,19px)] italic leading-none">
+                Let�s create
+                <br />
+                your next
+                <br />
+                big ad! <span className="text-3xl text-fuchsia-400">?</span>
+              </p>{" "}
+            </div>{" "}
+            <button
+              aria-label="Play showcase video"
+              className="absolute left-[51%] top-1/2 grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-[3px] border-white text-white"
+            >
+              <span className="ml-1 text-4xl">?</span>
+            </button>{" "}
+            <div className="absolute inset-x-0 bottom-0 flex h-11 items-center gap-3 bg-black/80 px-5 text-[10px]">
+              <span>?</span>
+              <span>0:00 / 0:30</span>
+              <div className="h-1 flex-1 rounded bg-white/70">
+                <div className="h-full w-[58%] bg-gradient-to-r from-pink-500 to-purple-500" />
+              </div>
+              <span>?</span>
+            </div>{" "}
+          </div>{" "}
+        </div>{" "}
+        <div className="relative mx-auto mt-5 grid max-w-[1380px] grid-cols-2 gap-y-4 px-6 sm:grid-cols-3 lg:grid-cols-6 lg:px-10">
+          {" "}
+          {featureBadges.map(([Icon, a, b]) => (
+            <div
+              key={a}
+              className="flex items-center gap-3 text-[11px] leading-tight text-white/85"
+            >
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-purple-500/15 text-purple-300">
+                <Icon size={19} />
+              </span>
+              <span>
+                {a}
+                <br />
+                <b>{b}</b>
+              </span>
             </div>
-
-            {/* Right — chat mockup */}
-            <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-              {/* Chat header */}
-              <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                <div className="w-9 h-9 rounded-full flex items-center justify-center text-white"
-                  style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
-                  <Bot size={18} />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-white">Nia AI</p>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <p className="text-xs" style={{ color: '#6ee7b7' }}>Online · responds instantly</p>
-                  </div>
-                </div>
-              </div>
-              {/* Messages */}
-              <div className="p-5 space-y-4">
-                {[
-                  { from: 'nia', text: 'Habari! I\'m Nia 👋 Tell me about your business and I\'ll pitch you 3 campaign angles right now — no brief needed.' },
-                  { from: 'user', text: 'We sell 2BR apartments in Westlands from KES 6.5M' },
-                  { from: 'nia', text: 'Perfect! Here are 3 angles converting for Nairobi real estate RIGHT NOW:\n\n🔑 Lifestyle upgrade (aspiration)\n📈 Investment urgency (FOMO)\n🏘️ Neighbourhood pride (local identity)\n\nWhich do I write first?' },
-                  { from: 'user', text: 'Lifestyle upgrade' },
-                  { from: 'nia', text: '"Stop renting someone else\'s dream. Heri Heights puts you in Westlands — 2BR from KES 6.5M. Walk to everything. Own what matters. 📲 Book a private viewing this weekend."' },
-                ].map((msg, i) => (
-                  <div key={i} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                      msg.from === 'user' ? 'rounded-br-sm' : 'rounded-bl-sm'
-                    }`} style={{
-                      background: msg.from === 'nia' ? 'rgba(124,58,237,0.18)' : 'rgba(255,255,255,0.08)',
-                      color: msg.from === 'nia' ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.7)',
-                      whiteSpace: 'pre-line',
-                    }}>
-                      {msg.text}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {/* Input bar */}
-              <div className="px-5 pb-5">
-                <div className="flex items-center gap-3 rounded-xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <span className="text-sm flex-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Sign up to keep chatting…</span>
-                  <Link to="/register" className="text-xs font-bold px-3 py-1.5 rounded-lg"
-                    style={{ background: 'rgba(124,58,237,0.25)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.3)' }}>
-                    Get Started
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SERVICES ─────────────────────────────────────────── */}
-      <section id="services" className="py-24 px-6" style={{ background: '#ffffff' }}>
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-5"
-              style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #c4b5fd' }}>
-              One Platform
-            </div>
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-3">Three services. Every format.</h2>
-            <p className="text-gray-500 max-w-lg mx-auto">From a quick WhatsApp blast to a full broadcast commercial — everything your brand needs to show up professionally.</p>
-          </div>
-          <div className="grid lg:grid-cols-3 gap-6">
-            {[
-              {
-                icon: Zap, color: '#7c3aed', bgColor: '#ede9fe',
-                label: 'Campaign Copy', tag: 'From KES 500 / credit',
-                desc: 'AI-generated captions, scripts, WhatsApp ads, poster copy — instantly, for any industry.',
-                items: ['Instagram & Facebook captions', 'WhatsApp broadcast messages', 'Video ad scripts (15s / 30s)', 'Poster & billboard copy', 'Landing page copy'],
-                cta: 'Generate Free Preview', to: '#demo', isAnchor: true,
-              },
-              {
-                icon: Film, color: '#2563eb', bgColor: '#dbeafe',
-                label: 'Video Production', tag: 'From KES 5,000',
-                desc: 'Human creative + AI tools produce broadcast-quality commercials and brand films.',
-                items: ['15s / 30s / 60s commercials', 'Brand films & documentaries', 'AI-generated footage & avatars', '2 revision rounds included', 'Full exclusive rights on delivery'],
-                cta: 'Start a Video Concept', to: '/register', isAnchor: false,
-              },
-              {
-                icon: Music, color: '#059669', bgColor: '#d1fae5',
-                label: 'Audio Studio', tag: 'From KES 1,500',
-                desc: 'Radio-ready jingles, professional voice overs, and produced radio spots.',
-                items: ['Brand jingles (15s, 30s, 60s)', 'African voice overs — 14 voices', 'Fully produced radio spots', 'Kiswahili & English mix', 'All rights yours on delivery'],
-                cta: 'Order Audio', to: '/register', isAnchor: false,
-              },
-            ].map(({ icon: Icon, color, bgColor, label, tag, desc, items, cta, to, isAnchor }) => (
-              <div key={label} className="rounded-2xl border border-gray-200 bg-white p-7 hover:border-purple-200 hover:shadow-lg transition-all flex flex-col group">
-                <div className="flex items-start justify-between mb-5">
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                    style={{ background: bgColor }}>
-                    <Icon size={22} style={{ color }} />
-                  </div>
-                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg border border-gray-200 text-gray-500">{tag}</span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{label}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed mb-5">{desc}</p>
-                <div className="space-y-2.5 mb-6 flex-1">
-                  {items.map(item => (
-                    <div key={item} className="flex items-center gap-2 text-sm text-gray-600">
-                      <CheckCircle2 size={13} style={{ color }} className="shrink-0" />
-                      {item}
-                    </div>
-                  ))}
-                </div>
-                {isAnchor ? (
-                  <button onClick={() => scrollTo('demo')}
-                    className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white transition-all"
-                    style={{ background: color, boxShadow: `0 4px 16px ${color}40` }}>
-                    {cta} <ArrowRight size={14} />
-                  </button>
-                ) : (
-                  <Link to={to} className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all border"
-                    style={{ borderColor: `${color}40`, color, background: `${color}08` }}
-                    onMouseEnter={e => { e.currentTarget.style.background = `${color}15` }}
-                    onMouseLeave={e => { e.currentTarget.style.background = `${color}08` }}>
-                    {cta} <ArrowRight size={14} />
-                  </Link>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── SOCIAL PROOF ─────────────────────────────────────── */}
-      <section className="py-20 px-6" style={{ background: '#f1f5f9' }}>
-        <div className="max-w-7xl mx-auto">
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(145deg, #0d0024 0%, #06000f 100%)', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div className="grid lg:grid-cols-2 gap-0 items-stretch">
-              {/* Testimonial */}
-              <div className="p-10 lg:p-12" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
-                <div className="flex gap-1 mb-6">
-                  {[1,2,3,4,5].map(i => <Star key={i} size={16} fill="#f59e0b" style={{ color: '#f59e0b' }} />)}
-                </div>
-                <blockquote className="text-xl font-semibold text-white leading-relaxed mb-6">
-                  "Nia Media helps us launch campaigns faster and get more results. It's like having a creative team on autopilot."
-                </blockquote>
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white"
-                    style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>B</div>
-                  <div>
-                    <p className="text-sm font-bold text-white">Brian M.</p>
-                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>Co-founder, PesaSure Fintech</p>
-                  </div>
-                </div>
-              </div>
-              {/* Stats */}
-              <div className="grid grid-cols-3 divide-x" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                {[
-                  { icon: TrendingUp, val: '10X', label: 'Faster ad creation', color: '#c4b5fd' },
-                  { icon: BarChart2, val: '3X', label: 'More engagement', color: '#7dd3fc' },
-                  { icon: Target, val: '40%', label: 'Lower cost per lead', color: '#6ee7b7' },
-                ].map(({ icon: Icon, val, label, color }, i) => (
-                  <div key={label} className="flex flex-col items-center justify-center py-10 px-6 text-center"
-                    style={{ borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
-                    <Icon size={18} style={{ color, marginBottom: 10 }} />
-                    <p className="font-extrabold mb-1" style={{ fontSize: 36, color }}>{val}</p>
-                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS ─────────────────────────────────────── */}
-      <section id="how-it-works" className="py-24 px-6" style={{ background: '#ffffff' }}>
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-5"
-              style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #c4b5fd' }}>
-              Process
-            </div>
-            <h2 className="text-4xl font-extrabold text-gray-900">From brief to campaign in minutes.</h2>
-          </div>
-          <div className="grid lg:grid-cols-5 gap-4 relative">
-            {[
-              { n: '01', title: 'Pick your service', desc: 'Campaign copy, video, or audio.', color: '#7c3aed' },
-              { n: '02', title: 'Add your brief', desc: 'Your business, audience & goal.', color: '#5b21b6' },
-              { n: '03', title: 'AI generates', desc: 'Multiple creative options in seconds.', color: '#4338ca' },
-              { n: '04', title: 'Tweak it', desc: 'Refine any section with one click.', color: '#2563eb' },
-              { n: '05', title: 'Publish & grow', desc: 'Launch to every platform at once.', color: '#0891b2' },
-            ].map(({ n, title, desc, color }, i, arr) => (
-              <div key={n} className="relative text-center">
-                {i < arr.length - 1 && (
-                  <div className="hidden lg:block absolute top-7 left-[60%] w-[80%] h-px z-10"
-                    style={{ background: 'linear-gradient(90deg, rgba(124,58,237,0.4), rgba(8,145,178,0.2))' }} />
-                )}
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5 text-sm font-black text-white"
-                  style={{ background: `linear-gradient(135deg, ${color}, ${color}cc)`, boxShadow: `0 4px 16px ${color}40` }}>
-                  {n}
-                </div>
-                <h3 className="text-sm font-bold text-gray-900 mb-1.5">{title}</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── BUILT BY CREATIVES ───────────────────────────────── */}
-      <section className="py-16 px-6" style={{ background: '#ffffff' }}>
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-5"
-            style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #c4b5fd' }}>
-            Creative authority
-          </div>
-          <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Not a generic AI wrapper.</h2>
-          <p className="text-gray-500 leading-relaxed max-w-2xl mx-auto mb-8">
-            Nia Media is built by creative professionals with real experience in storytelling, film & TV, sound, editing, creative direction, and campaign production. The AI does the speed — our craft shapes what good looks like.
+          ))}{" "}
+        </div>{" "}
+      </section>{" "}
+      <div className="relative z-10 mx-auto -mt-10 max-w-[1380px] px-5">
+        <div className="rounded-[20px] border border-slate-200 bg-white px-7 py-4 shadow-xl">
+          <p className="mb-4 text-center text-base font-bold text-[#121329]">
+            Trusted by real Kenyan businesses
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
-            {['Storytelling', 'Film & TV', 'Sound & Audio', 'Creative Direction', 'Campaign Production'].map(d => (
-              <div key={d} className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                <CheckCircle2 size={14} className="text-purple-500" /> {d}
+          <div className="flex items-center justify-between gap-6 overflow-x-auto pb-1">
+            {trustedBusinesses.map((business) => (
+              <div
+                key={business.name}
+                className="flex shrink-0 items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3"
+              >
+                <span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#111329] text-[11px] font-black tracking-[.15em] text-white">
+                  {business.initials}
+                </span>
+                <span className="leading-none">
+                  <b className="block text-[13px] text-[#111329]">{business.name}</b>
+                  <small className="text-[9px] uppercase tracking-[.2em] text-slate-500">
+                    {business.label}
+                  </small>
+                </span>
               </div>
             ))}
+            <span className="shrink-0 text-xs text-slate-500">and more trusted clients</span>
           </div>
         </div>
-      </section>
-
-      {/* ── VIDEO UPSELL ─────────────────────────────────────── */}
-      <section className="py-12 px-6" style={{ background: '#f1f5f9' }}>
-        <div className="mt-0 max-w-2xl mx-auto text-center bg-white rounded-2xl border border-gray-200 p-8">
-          <Film size={24} className="text-purple-600 mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Need the final video too?</h3>
-          <p className="text-sm text-gray-500 mb-5 leading-relaxed">
-            Generate your script instantly, then let Nia Media turn it into a polished campaign video for WhatsApp, Instagram, TikTok, Facebook, or YouTube. Short campaign videos can be delivered within 24–48 hours depending on scope and asset availability.
-          </p>
-          <Link to="/request-video" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
-            <Film size={14} /> Request Video Production
-          </Link>
-        </div>
-      </section>
-
-      {/* ── INDUSTRIES ───────────────────────────────────────── */}
-      <section className="py-20 px-6" style={{ background: '#f1f5f9' }}>
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-xl mx-auto mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-5"
-              style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #c4b5fd' }}>
-              Industries
-            </div>
-            <h2 className="text-4xl font-extrabold text-gray-900">Built for businesses that sell every day.</h2>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            {industries.map(({ icon: Icon, name, desc, color }) => (
-              <div key={name} className="bg-white rounded-2xl border border-gray-200 p-5 text-center hover:border-purple-200 hover:shadow-md transition-all group cursor-pointer">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3 transition-transform group-hover:scale-110"
-                  style={{ background: `${color}15`, border: `1px solid ${color}30` }}>
-                  <Icon size={18} style={{ color }} />
-                </div>
-                <p className="text-xs font-bold text-gray-900 mb-1">{name}</p>
-                <p className="text-[11px] text-gray-500 leading-snug">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── PRICING ──────────────────────────────────────────── */}
-      <section className="py-24 px-6" id="pricing" style={{ background: '#ffffff' }}>
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-5"
-              style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #c4b5fd' }}>
-              Pricing
-            </div>
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-3">Start free. Pay as you grow.</h2>
-            <p className="text-gray-500">Buy a single campaign, subscribe monthly, or let our team run it for you.</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {/* Pay as you go */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-7">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Pay As You Go</p>
-              <p className="font-extrabold text-gray-900 mb-0.5" style={{ fontSize: 32 }}>KES 500</p>
-              <p className="text-xs text-gray-400 mb-6">Per campaign credit · 5 for 2,000</p>
-              <div className="space-y-2.5 mb-8">
-                {['WhatsApp broadcast + status', 'Social captions (all platforms)', 'Poster copy + video script', '7-day content calendar', 'Lead follow-up messages'].map(f => (
-                  <div key={f} className="flex items-center gap-2.5">
-                    <CheckCircle2 size={13} className="text-gray-400 shrink-0" />
-                    <span className="text-sm text-gray-600">{f}</span>
-                  </div>
-                ))}
-              </div>
-              <button onClick={() => scrollTo('demo')} className="btn-secondary w-full text-center text-sm py-3">Generate Free Campaign</button>
-            </div>
-
-            {/* Growth — highlighted */}
-            <div className="relative rounded-2xl p-7 overflow-hidden"
-              style={{ background: 'linear-gradient(145deg, #0b001f 0%, #060012 100%)', border: '1px solid rgba(167,139,250,0.35)' }}>
-              <div className="absolute top-0 left-0 right-0 h-1" style={{ background: 'linear-gradient(90deg, #7c3aed, #2563eb)' }} />
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="px-3 py-1 rounded-full text-xs font-bold text-white"
-                  style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>Most Popular</span>
-              </div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-4 mt-2" style={{ color: '#a78bfa' }}>Growth Monthly</p>
-              <p className="font-extrabold text-white mb-0.5" style={{ fontSize: 32 }}>KES 2,500</p>
-              <p className="text-xs mb-6" style={{ color: 'rgba(255,255,255,0.4)' }}>Per month · cancel anytime</p>
-              <div className="space-y-2.5 mb-8">
-                {['15 campaigns / month', '3 brand kits', 'Ideas Bank + Nia Assistant', '7-day calendars + follow-ups', 'Priority generation'].map(f => (
-                  <div key={f} className="flex items-center gap-2.5">
-                    <CheckCircle2 size={13} style={{ color: '#a78bfa' }} className="shrink-0" />
-                    <span className="text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>{f}</span>
-                  </div>
-                ))}
-              </div>
-              <Link to="/register" className="btn-primary w-full text-center text-sm py-3">Start Growth</Link>
-            </div>
-
-            {/* Done-for-you */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-7">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Done-For-You</p>
-              <p className="font-extrabold text-gray-900 mb-0.5" style={{ fontSize: 32 }}>From KES 5,000</p>
-              <p className="text-xs text-gray-400 mb-6">One-off or monthly managed</p>
-              <div className="space-y-2.5 mb-8">
-                {['Human-reviewed campaign kit', 'Poster + short-video production', 'Monthly managed packages', 'Competitor tracking & reports', 'Creative direction by our team'].map(f => (
-                  <div key={f} className="flex items-center gap-2.5">
-                    <CheckCircle2 size={13} className="text-gray-400 shrink-0" />
-                    <span className="text-sm text-gray-600">{f}</span>
-                  </div>
-                ))}
-              </div>
-              <Link to="/package-request" className="btn-secondary w-full text-center text-sm py-3">Talk to Us</Link>
-            </div>
-          </div>
-          <div className="text-center mt-6">
-            <Link to="/pricing" className="text-sm font-semibold text-purple-700 hover:underline inline-flex items-center gap-1">
-              See full pricing — credits, monthly & managed <ArrowRight size={13} />
-            </Link>
-          </div>
-          <div className="mt-6 flex items-center justify-center gap-5 text-xs text-gray-400 flex-wrap">
-            <span className="flex items-center gap-1.5"><Shield size={11} className="text-emerald-500" /> Secure checkout</span>
-            <span>·</span>
-            <span>M-Pesa, Visa, Mastercard accepted</span>
-            <span>·</span>
-            <span>PesaPal powered</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ── FINAL CTA ────────────────────────────────────────── */}
-      <section className="py-24 px-6 relative overflow-hidden"
-        style={{ background: 'linear-gradient(145deg, #04000d 0%, #0b001f 55%, #040010 100%)' }}>
-        <div className="absolute inset-0 pointer-events-none">
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 600, height: 300, background: 'radial-gradient(ellipse, rgba(124,58,237,0.28) 0%, transparent 65%)' }} />
-        </div>
-        <div className="max-w-3xl mx-auto text-center relative z-10">
-          <p className="text-xs font-bold tracking-widest mb-5" style={{ color: '#a78bfa', letterSpacing: '0.12em' }}>
-            FINALLY — ADS BUILT FOR YOUR BUSINESS
-          </p>
-          <h2 className="font-extrabold text-white mb-5" style={{ fontSize: 'clamp(32px, 5vw, 52px)', lineHeight: 1.1 }}>
-            Your next campaign is<br />
-            <span style={{ background: 'linear-gradient(90deg, #c4b5fd, #7dd3fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              60 seconds away.
-            </span>
+      </div>{" "}
+      <section
+        id="how-it-works"
+        className="bg-[radial-gradient(circle_at_center,#f3efff_0,#fbfbff_65%)] px-6 pb-7 pt-10"
+      >
+        {" "}
+        <div className="mx-auto max-w-[1380px]">
+          <h2 className="mb-5 text-center text-[32px] font-black text-[#111329]">
+            How It Works
           </h2>
-          <p className="text-base mb-10 max-w-xl mx-auto" style={{ color: 'rgba(255,255,255,0.5)', lineHeight: 1.7 }}>
-            Join businesses across Kenya using Nia Media to launch faster, spend smarter, and grow with professional creative content.
-          </p>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link to="/register"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl text-base font-bold text-white"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 6px 32px rgba(124,58,237,0.5)' }}>
-              <Zap size={17} /> Start for Free
-            </Link>
-            <Link to="/pricing"
-              className="inline-flex items-center gap-2 px-7 py-4 rounded-xl text-base font-bold"
-              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.16)', color: 'rgba(255,255,255,0.8)' }}>
-              View Pricing
+          <div className="grid gap-7 md:grid-cols-5">
+            {" "}
+            {steps.map(({ icon: Icon, color, title, desc }, i) => (
+              <div key={title} className="relative text-center">
+                {i < 4 && (
+                  <div className="absolute left-[70%] top-14 hidden w-[60%] border-t-2 border-dashed border-slate-300 md:block" />
+                )}
+                <div className="relative mx-auto mb-3 grid h-[100px] w-[100px] place-items-center rounded-full border border-slate-200 bg-white shadow-sm">
+                  <Icon size={43} style={{ color }} />
+                  <span
+                    className="absolute -bottom-2 left-0 grid h-6 w-6 place-items-center rounded-full text-xs font-black text-white"
+                    style={{ background: color }}
+                  >
+                    {i + 1}
+                  </span>
+                </div>
+                <h3 className="text-sm font-extrabold text-[#111329]">
+                  {title}
+                </h3>
+                <p className="mx-auto mt-2 max-w-[190px] text-[12px] leading-[1.45] text-slate-600">
+                  {desc}
+                </p>
+              </div>
+            ))}{" "}
+          </div>
+          <div className="mt-5 text-center">
+            <Link
+              to="/request-video"
+              className="inline-flex items-center gap-3 rounded-xl px-7 py-3 text-sm font-bold text-white shadow-lg"
+              style={{ background: "linear-gradient(90deg,#4f46e5,#d946ef)" }}
+            >
+              Start Your Video Brief <ArrowRight size={16} />
             </Link>
           </div>
-          <p className="text-xs mt-6" style={{ color: 'rgba(255,255,255,0.25)' }}>
-            No credit card required · Free to explore · M-Pesa accepted
-          </p>
-        </div>
-      </section>
-
-      {/* ── FOOTER ───────────────────────────────────────────── */}
-      <footer className="py-10 px-6" style={{ background: '#04000d', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <Logo size="sm" />
-          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Professional ads for East African businesses.</p>
-          <div className="flex items-center gap-4">
-            <Link to="/terms" className="text-xs transition-colors" style={{ color: 'rgba(255,255,255,0.3)' }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.3)')}>Terms</Link>
-            <Link to="/privacy" className="text-xs transition-colors" style={{ color: 'rgba(255,255,255,0.3)' }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.3)')}>Privacy</Link>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>© 2026 Nia Media.</p>
+        </div>{" "}
+      </section>{" "}
+      <section className="bg-white px-6 py-8">
+        <div className="mx-auto max-w-[1380px]">
+          <h2 className="mb-5 text-center text-[30px] font-black text-[#111329]">
+            Popular Video Packages
+          </h2>
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+            {" "}
+            {packages.map((p) => (
+              <article
+                key={p.title}
+                className="relative flex min-h-[405px] flex-col rounded-[16px] border p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+                style={{ background: p.bg, borderColor: p.color + "45" }}
+              >
+                {p.popular && (
+                  <span
+                    className="absolute -top-px right-5 rounded-b-lg px-4 py-1.5 text-[10px] font-bold text-white"
+                    style={{ background: p.color }}
+                  >
+                    Most Popular
+                  </span>
+                )}
+                <h3
+                  className="text-base font-extrabold"
+                  style={{ color: p.color }}
+                >
+                  {p.title}
+                </h3>
+                <p
+                  className="mt-2 text-xl font-black"
+                  style={{ color: p.color }}
+                >
+                  {p.price}
+                </p>
+                <p className="mt-3 min-h-10 text-[12px] text-slate-700">
+                  {p.intro}
+                </p>
+                <ul className="mt-4 flex-1 space-y-2">
+                  {p.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2 text-[11px]">
+                      <span
+                        className="h-1.5 w-1.5 rounded-full"
+                        style={{ background: p.color }}
+                      />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  to={
+                    "/book?service=video&package=" + encodeURIComponent(p.title)
+                  }
+                  className="mt-5 rounded-lg py-3 text-center text-[11px] font-bold text-white"
+                  style={{ background: p.color }}
+                >
+                  Request {p.title}
+                </Link>
+              </article>
+            ))}{" "}
           </div>
         </div>
-      </footer>
-
-      {showAssistant && (
-        <Suspense fallback={
-          <div className="fixed inset-0 z-[70] bg-black/40 flex items-center justify-center p-4">
-            <div className="rounded-2xl bg-white px-5 py-4 text-sm font-medium text-gray-700 shadow-xl">
-              Loading assistant...
+      </section>{" "}
+      <section className="bg-white px-6 pb-12">
+        <div className="relative mx-auto grid min-h-[340px] max-w-[1320px] overflow-hidden rounded-[27px] bg-[radial-gradient(circle_at_35%_30%,#32106c_0,#16063f_45%,#09021c_100%)] text-white lg:grid-cols-[1.6fr_1fr]">
+          {" "}
+          <div className="relative flex min-h-[350px] items-center pl-[43%] pr-8">
+            <img
+              src="/images/nia-mascot.png"
+              alt="Nia creative assistant"
+              className="absolute bottom-0 left-3 h-[96%] max-w-[42%] object-contain object-bottom"
+            />
+            <div className="relative py-9">
+              <h2 className="text-[28px] font-black leading-tight text-white">
+                Not Sure What Video to Make?
+                <br />
+                <span className="text-fuchsia-400">Talk to Nia.</span>
+              </h2>
+              <p className="mt-4 text-sm text-white/80">
+                Your creative assistant for ideas, scripts, hooks, captions and
+                more.
+              </p>
+              <div className="mt-5 grid grid-cols-2 gap-x-8 gap-y-2">
+                {niaFeatures.map((f) => (
+                  <span key={f} className="flex items-center gap-2 text-[11px]">
+                    <Check size={13} />
+                    {f}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
-        }>
+          </div>{" "}
+          <div className="m-5 flex flex-col rounded-[18px] border border-white/20 bg-[#13072f]/90 p-5">
+            <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-amber-500 to-purple-700">
+                N
+              </span>
+              <span>
+                <b className="block text-xs">Chat with Nia</b>
+                <small className="text-[9px] text-emerald-300">? Online</small>
+              </span>
+            </div>
+            <div className="flex-1 space-y-3 py-4">
+              <div className="ml-auto max-w-[76%] rounded-2xl rounded-br-sm bg-gradient-to-r from-fuchsia-600 to-violet-700 p-3 text-[10px]">
+                Help me create a 30-second video for my restaurant weekend offer
+              </div>
+              <div className="max-w-[82%] rounded-2xl rounded-bl-sm bg-white p-3 text-[10px] text-slate-700">
+                Great! I have some amazing ideas for your restaurant. What type
+                of food do you specialise in?
+              </div>
+            </div>
+            <div className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-[10px] text-white/35">
+              Type your message...{" "}
+              <span className="float-right text-purple-400">?</span>
+            </div>
+            <button
+              onClick={() => setShowAssistant(true)}
+              className="mx-auto mt-3 inline-flex items-center gap-2 rounded-lg px-7 py-2.5 text-xs font-bold text-white"
+              style={{ background: gradient }}
+            >
+              <MessageSquare size={14} /> Talk to Nia Assistant
+            </button>
+          </div>{" "}
+        </div>
+      </section>{" "}
+      {showAssistant && (
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 z-[90] grid place-items-center bg-black/60 text-white">
+              Loading Nia�
+            </div>
+          }
+        >
           <NiaAgent onClose={() => setShowAssistant(false)} />
         </Suspense>
-      )}
+      )}{" "}
     </div>
-  )
+  );
 }
-
-
-
 
