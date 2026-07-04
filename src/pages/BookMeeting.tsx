@@ -4,7 +4,7 @@ import { CalendarDays, Clock3, Video, MessageSquare, Sparkles, ArrowRight, Check
 import '@calcom/atoms/globals.tw3.min.css'
 import { BookerEmbed } from '@calcom/atoms'
 import PublicHeader from '../components/layout/PublicHeader'
-import { getBookingUrl, getCalBookingTarget, type BookingService } from '../lib/booking'
+import { getCalBookingTarget, type BookingService } from '../lib/booking'
 
 export default function BookMeeting() {
   const [searchParams] = useSearchParams()
@@ -15,7 +15,6 @@ export default function BookMeeting() {
     : priority === 'urgent'
       ? 'urgent'
       : 'consultation'
-  const bookingUrl = getBookingUrl(service)
   const calTarget = getCalBookingTarget(service)
 
   const copy = useMemo(() => {
@@ -87,11 +86,11 @@ export default function BookMeeting() {
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/request-video" className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
-                Back to quote flow <ArrowRight size={14} />
+                Request a Video Commercial <ArrowRight size={14} />
               </Link>
-              <a href={bookingUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold border border-gray-200 bg-white text-gray-700">
-                Open scheduler in new tab
-              </a>
+              <Link to="/?assistant=1" className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold border border-gray-200 bg-white text-gray-700">
+                Talk to Nia
+              </Link>
             </div>
 
             <div className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 max-w-2xl">
@@ -116,6 +115,7 @@ export default function BookMeeting() {
                   apiUrl="https://api.cal.com/v2"
                   username={calTarget.username}
                   eventSlug={calTarget.eventSlug}
+                  isTeamEvent={false}
                 />
               ) : (
                 <div className="h-full flex items-center justify-center p-8 text-center">
@@ -133,3 +133,5 @@ export default function BookMeeting() {
     </div>
   )
 }
+
+
