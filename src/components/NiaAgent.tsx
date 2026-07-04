@@ -477,13 +477,24 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
 
     const connectPromise = (async () => {
       try {
-        // Use API key directly — ephemeral token endpoint not yet publicly available
-        const apiKey = import.meta.env.VITE_GOOGLE_API_KEY as string
-        if (!apiKey) throw new Error('VITE_GOOGLE_API_KEY is not set')
+        // Obtain ephemeral token from the edge function — API key stays server-side
+        const { data: tokenData, error: tokenError } = await supabase.functions.invoke('gemini-live-token', {
+          body: {
+            userContext: brandContext
+              ? { businessName: brandContext.businessName, industry: brandContext.industry }
+              : {},
+          },
+        })
+        // Use server-issued ephemeral token — API key lives in Supabase secrets only
+        if (tokenError || !tokenData?.token) {
+          throw new Error(tokenData?.error ?? tokenError?.message ?? 'Could not obtain Gemini token from server')
+        }
+        const resolvedKey = tokenData.token as string
+        const resolvedModel = (tokenData.model as string | undefined) ?? 'gemini-live-2.5-flash-preview'
 
-        const ai = new GoogleGenAI({ apiKey, httpOptions: { apiVersion: 'v1alpha' } })
+        const ai = new GoogleGenAI({ apiKey: resolvedKey, httpOptions: { apiVersion: 'v1alpha' } })
         const liveSession = await ai.live.connect({
-          model: 'gemini-live-2.5-flash-preview',
+          model: resolvedModel,
           config: {
             responseModalities: [Modality.TEXT],
           },

@@ -29,6 +29,60 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- Structured data — Organization + Service -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://niamedia.co.ke/#org",
+          "name": "Nia Media",
+          "url": "https://niamedia.co.ke",
+          "logo": "https://niamedia.co.ke/icon-512.svg",
+          "description": "Nia Media produces short video commercials and promo posters for SMEs across East Africa, backed by AI-powered campaign copy and WhatsApp marketing.",
+          "foundingLocation": { "@type": "Place", "name": "Nairobi, Kenya" },
+          "areaServed": ["Kenya", "East Africa"],
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+254751822556",
+            "contactType": "customer service",
+            "availableLanguage": ["English", "Swahili"]
+          },
+          "sameAs": []
+        },
+        {
+          "@type": "Service",
+          "@id": "https://niamedia.co.ke/#video-service",
+          "name": "Video Commercial Production",
+          "provider": { "@id": "https://niamedia.co.ke/#org" },
+          "description": "Short video commercials for SMEs — 15s, 30s, 60s formats for TikTok, Instagram, Facebook, YouTube, and WhatsApp.",
+          "areaServed": ["Kenya", "East Africa"],
+          "offers": {
+            "@type": "AggregateOffer",
+            "priceCurrency": "KES",
+            "lowPrice": "3500",
+            "highPrice": "60000"
+          }
+        },
+        {
+          "@type": "Service",
+          "@id": "https://niamedia.co.ke/#ai-campaign-service",
+          "name": "AI Marketing Campaigns",
+          "provider": { "@id": "https://niamedia.co.ke/#org" },
+          "description": "AI-generated ad campaigns including captions, WhatsApp copy, poster copy, and video scripts — delivered in under 60 seconds.",
+          "areaServed": ["Kenya", "East Africa"],
+          "offers": {
+            "@type": "Offer",
+            "priceCurrency": "KES",
+            "price": "500",
+            "description": "Per campaign credit"
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

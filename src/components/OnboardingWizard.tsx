@@ -89,6 +89,10 @@ export default function OnboardingWizard({ onDismiss }: Props) {
           <div className="flex items-center gap-2 mb-3">
             <Sparkles size={18} className="text-white" />
             <span className="text-white/80 text-sm font-semibold">Quick setup — 60 seconds</span>
+            <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full"
+              style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}>
+              First campaign free
+            </span>
           </div>
           <h2 className="text-2xl font-extrabold text-white mb-1">
             {step === 0 ? 'Tell us about your business' : step === 1 ? 'Pick a campaign type' : 'You\'re ready to go!'}

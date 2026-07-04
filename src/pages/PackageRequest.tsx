@@ -3,8 +3,10 @@ import { useSearchParams } from 'react-router-dom'
 import { CheckCircle2, Zap, Film, Music, Layers, ArrowRight, Check } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { useAuth } from '../lib/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import PublicHeader from '../components/layout/PublicHeader'
+import { getBookingPath } from '../lib/booking'
 
 const INDUSTRIES = ['Real Estate', 'Hospitality', 'Education', 'Fintech', 'Restaurant', 'Travel', 'Retail', 'Health', 'Events', 'Professional Services', 'Other']
 const TIMELINES = ['ASAP (rush)', '1–2 weeks', '2–4 weeks', '1–2 months', 'Flexible']
@@ -82,9 +84,10 @@ function ChipSelect({ options, value, onChange, multi = false }: {
 }
 
 function Form() {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
-  const [service, setService] = useState<Service>('campaign')
+  const [service, setService] = useState<Service>((searchParams.get('service') as Service | null) ?? 'campaign')
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -92,13 +95,14 @@ function Form() {
   // Pre-fill from ConceptStudio / AudioStudio query params
   const conceptTitle = searchParams.get('concept') ?? ''
   const conceptFormat = searchParams.get('format') ?? ''
+  const urgentFlow = searchParams.get('priority') === 'urgent' || searchParams.get('fast') === '1'
 
   // Shared fields
   const [base, setBase] = useState({
     name: '', business: '', phone: '',
     email: user?.email ?? '',
     industry: '', timeline: '', budget: '',
-    extra: conceptTitle ? `Concept: "${conceptTitle}"${conceptFormat ? ` (${conceptFormat})` : ''}` : '',
+    extra: conceptTitle ? `Concept: "${conceptTitle}"${conceptFormat ? ` (${conceptFormat})` : ''}` : urgentFlow ? 'Need a fast-track quote and a meeting with the production team.' : '',
   })
 
   // Sync email from user if it loads after mount
@@ -239,7 +243,15 @@ function Form() {
       )}
 
       {/* Video-specific fields */}
-      {service === 'video' && (
+      {service === 'video' && (<>
+        <div className="mb-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-blue-700">Video fast-track</p>
+            <p className="text-sm text-blue-900">Already know the job? Skip ideation, share the brief, and we?ll book the right meeting.</p>
+          </div>
+          <button type="button" onClick={() => setBase(p => ({ ...p, timeline: p.timeline || 'ASAP (rush)' }))} className="px-3 py-2 rounded-xl text-xs font-semibold text-blue-800 bg-white border border-blue-200">Mark as urgent</button>
+        </div>
+
         <div className="card-glow p-5">
           <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 pb-2 border-b border-gray-200">Video Brief</p>
           <div className="space-y-5">
@@ -274,7 +286,7 @@ function Form() {
             </div>
           </div>
         </div>
-      )}
+      </>)}
 
       {/* Audio-specific fields */}
       {service === 'audio' && (

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
+import { getBookingPath } from '../lib/booking'
 import { useAuth } from '../lib/AuthContext'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -816,10 +817,17 @@ export default function VideoJourney() {
           </div>
           <p className="text-sm text-gray-500">Sign off every stage before production begins — zero surprises, fewer revisions.</p>
         </div>
-        <button onClick={() => navigate('/concept-studio')}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 border border-gray-200 bg-white hover:border-gray-300 transition-all">
-          <ArrowLeft size={12} /> Back to Concept Studio
-        </button>
+        <div className="flex flex-col gap-2">
+          <button onClick={() => navigate('/concept-studio')}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 border border-gray-200 bg-white hover:border-gray-300 transition-all">
+            <ArrowLeft size={12} /> Back to Concept Studio
+          </button>
+          <button onClick={() => navigate(getBookingPath('video'))}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white border border-transparent"
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
+            Book meeting
+          </button>
+        </div>
       </div>
 
       {/* Step progress */}

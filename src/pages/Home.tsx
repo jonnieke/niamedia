@@ -303,6 +303,114 @@ Reserve your table before noon or miss out. Karen, Nairobi. Call 0700 000 000.`,
   },
 ]
 
+function HeroCreativeVisual() {
+  return (
+    <div className="relative w-full max-w-[480px]" style={{ aspectRatio: '4/3' }}>
+      {/* Main video frame */}
+      <div className="absolute inset-0 rounded-2xl overflow-hidden"
+        style={{ background: 'linear-gradient(145deg, #0d0025 0%, #160040 100%)', border: '1px solid rgba(167,139,250,0.25)', boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
+
+        {/* Film strip top */}
+        <div className="flex gap-1.5 px-3 pt-3 pb-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="h-3 rounded-sm flex-1"
+              style={{ background: i < 4 ? 'rgba(124,58,237,0.6)' : i < 7 ? 'rgba(6,182,212,0.4)' : 'rgba(255,255,255,0.06)' }} />
+          ))}
+        </div>
+
+        {/* Video preview area */}
+        <div className="relative mx-3 mt-3 rounded-xl overflow-hidden" style={{ aspectRatio: '16/9', background: 'linear-gradient(135deg, #1a0040 0%, #001a40 100%)' }}>
+          {/* Scene gradient backdrop */}
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 30% 40%, rgba(124,58,237,0.35) 0%, transparent 60%), radial-gradient(ellipse at 70% 60%, rgba(6,182,212,0.2) 0%, transparent 55%)' }} />
+
+          {/* Clapperboard icon, centered */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+            <div className="relative">
+              {/* Clapperboard body */}
+              <div className="w-20 h-16 rounded-lg flex items-end justify-center pb-2"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.18)' }}>
+                <div className="flex gap-1">
+                  {['#a78bfa','#7dd3fc','#6ee7b7','#fcd34d'].map(c => (
+                    <div key={c} className="w-3 h-8 rounded-sm" style={{ background: c, opacity: 0.7 }} />
+                  ))}
+                </div>
+              </div>
+              {/* Clapper arm */}
+              <div className="absolute -top-3 left-0 right-0 h-4 rounded-md"
+                style={{ background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.18)', transformOrigin: 'left', transform: 'rotate(-8deg)' }}>
+                <div className="flex gap-0.5 p-0.5 h-full items-center">
+                  {[0,1,2,3,4,5,6,7].map(i => (
+                    <div key={i} className="flex-1 h-full"
+                      style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)', borderRadius: 1 }} />
+                  ))}
+                </div>
+              </div>
+            </div>
+            <p className="text-xs font-bold tracking-wider" style={{ color: 'rgba(196,181,253,0.8)' }}>NIA MEDIA PRODUCTION</p>
+          </div>
+
+          {/* Play button overlay */}
+          <div className="absolute bottom-3 right-3 w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(124,58,237,0.8)', backdropFilter: 'blur(8px)' }}>
+            <svg width="10" height="12" viewBox="0 0 10 12" fill="white"><path d="M0 0 L10 6 L0 12 Z" /></svg>
+          </div>
+
+          {/* Duration badge */}
+          <div className="absolute bottom-3 left-3 px-2 py-0.5 rounded text-[10px] font-bold"
+            style={{ background: 'rgba(0,0,0,0.6)', color: 'rgba(255,255,255,0.8)' }}>0:30</div>
+        </div>
+
+        {/* Poster thumbnails row */}
+        <div className="flex gap-2 mx-3 mt-3">
+          {[
+            { label: 'Launch Offer', grad: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)' },
+            { label: 'Product Promo', grad: 'linear-gradient(135deg, #059669 0%, #0891b2 100%)' },
+            { label: 'Event Flyer', grad: 'linear-gradient(135deg, #d97706 0%, #dc2626 100%)' },
+          ].map(({ label, grad }) => (
+            <div key={label} className="flex-1 rounded-lg flex flex-col items-center justify-center gap-1 py-3"
+              style={{ background: grad, opacity: 0.85 }}>
+              <div className="w-5 h-5 rounded-sm" style={{ background: 'rgba(255,255,255,0.25)' }} />
+              <p className="text-[8px] font-bold text-white text-center leading-tight">{label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Campaign copy preview */}
+        <div className="mx-3 mt-3 mb-3 p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-4 h-4 rounded-full" style={{ background: 'linear-gradient(135deg, #a78bfa, #7dd3fc)' }} />
+            <span className="text-[10px] font-bold" style={{ color: 'rgba(167,139,250,0.9)' }}>Nia AI</span>
+            <div className="ml-auto flex gap-1">
+              {['#a78bfa','#7dd3fc','#6ee7b7'].map(c => (
+                <div key={c} className="w-1.5 h-1.5 rounded-full" style={{ background: c }} />
+              ))}
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <div className="h-1.5 rounded-full" style={{ width: '88%', background: 'rgba(255,255,255,0.15)' }} />
+            <div className="h-1.5 rounded-full" style={{ width: '72%', background: 'rgba(255,255,255,0.1)' }} />
+            <div className="h-1.5 rounded-full" style={{ width: '60%', background: 'rgba(255,255,255,0.08)' }} />
+          </div>
+        </div>
+      </div>
+
+      {/* Floating badge — video commercial */}
+      <div className="absolute -top-4 -right-4 flex items-center gap-2 px-3 py-2 rounded-xl shadow-lg"
+        style={{ background: 'rgba(124,58,237,0.9)', border: '1px solid rgba(167,139,250,0.4)', backdropFilter: 'blur(12px)' }}>
+        <Film size={12} className="text-white" />
+        <p className="text-[11px] font-bold text-white">Video Commercial</p>
+      </div>
+
+      {/* Floating badge — promo poster */}
+      <div className="absolute -bottom-4 -left-4 flex items-center gap-2 px-3 py-2 rounded-xl shadow-lg"
+        style={{ background: 'rgba(5,150,105,0.85)', border: '1px solid rgba(110,231,183,0.35)', backdropFilter: 'blur(12px)' }}>
+        <Sparkles size={12} className="text-white" />
+        <p className="text-[11px] font-bold text-white">Promo Poster</p>
+      </div>
+    </div>
+  )
+}
+
 function HeroOutputPreview() {
   const [idx, setIdx] = useState(0)
   const [activeTab, setActiveTab] = useState(0)
@@ -407,48 +515,48 @@ export default function Home() {
         <div className="absolute pointer-events-none" style={{ top: 100, right: -100, width: 400, height: 300, background: 'radial-gradient(ellipse, rgba(6,182,212,0.12) 0%, transparent 65%)' }} />
         <div className="absolute pointer-events-none" style={{ bottom: -40, left: -60, width: 300, height: 200, background: 'radial-gradient(ellipse, rgba(52,211,153,0.1) 0%, transparent 65%)' }} />
 
-        <div className="relative max-w-7xl mx-auto px-6 pt-16 pb-20">
+        <div className="relative max-w-7xl mx-auto px-6 pt-16 pb-12">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left */}
             <div className="relative z-10">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-7"
                 style={{ background: 'rgba(124,58,237,0.18)', border: '1px solid rgba(167,139,250,0.35)' }}>
-                <MessageSquare size={13} style={{ color: '#a78bfa' }} />
-                <span className="text-xs font-bold tracking-widest" style={{ color: '#c4b5fd' }}>WHATSAPP-FIRST · BUILT FOR KENYA</span>
+                <Film size={13} style={{ color: '#a78bfa' }} />
+                <span className="text-xs font-bold tracking-widest" style={{ color: '#c4b5fd' }}>VIDEO COMMERCIALS · PROMO POSTERS · AI CAMPAIGNS</span>
               </div>
 
-              <h1 className="font-extrabold leading-[1.05] tracking-tight mb-6" style={{ fontSize: 'clamp(40px, 6vw, 64px)', color: '#ffffff' }}>
-                Ready-to-post ads for your business,<br />
+              <h1 className="font-extrabold leading-[1.05] tracking-tight mb-6" style={{ fontSize: 'clamp(38px, 5.5vw, 60px)', color: '#ffffff' }}>
+                Your brand, on screen.<br />
                 <span style={{ background: 'linear-gradient(90deg, #c4b5fd 0%, #7dd3fc 50%, #6ee7b7 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                  in minutes.
+                  Ready to convert.
                 </span>
               </h1>
 
               <p className="text-lg leading-relaxed mb-8 max-w-lg" style={{ color: 'rgba(255,255,255,0.62)' }}>
-                Nia Media helps African SMEs generate WhatsApp messages, social captions, poster copy, video scripts, and sales follow-ups — with optional human creative production when you need polished assets.
+                We produce short video commercials and promo posters for SMEs across East Africa — then back every asset with AI-powered campaigns, captions, and WhatsApp copy so your creative actually drives revenue.
               </p>
 
               <div className="flex flex-wrap gap-3 mb-10">
-                <button onClick={() => scrollTo('demo')}
+                <Link to="/request-video"
                   className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-bold text-white transition-all"
                   style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 4px 24px rgba(124,58,237,0.45)' }}
                   onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 8px 32px rgba(124,58,237,0.6)')}
                   onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 4px 24px rgba(124,58,237,0.45)')}>
-                  <Zap size={15} /> Generate Free Campaign
-                </button>
-                <a href="https://wa.me/254790000000?text=Create%20my%20first%20campaign" target="_blank" rel="noopener noreferrer"
+                  <Film size={15} /> Get Your Video Commercial
+                </Link>
+                <a href={`https://wa.me/254751822556?text=Hi%2C%20I%20need%20a%20video%20commercial%20for%20my%20business`} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold transition-all"
                   style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.35)', color: '#22c55e' }}>
-                  <MessageSquare size={15} /> Start on WhatsApp
+                  <MessageSquare size={15} /> WhatsApp Us
                 </a>
               </div>
 
               {/* Trust strips */}
               <div className="flex flex-wrap gap-5">
                 {[
-                  { icon: Clock, text: 'Ready in 60 seconds', color: '#a78bfa' },
-                  { icon: Target, text: 'Built for East Africa', color: '#7dd3fc' },
-                  { icon: Shield, text: '100% yours to own', color: '#6ee7b7' },
+                  { icon: Film, text: 'Video commercials produced', color: '#a78bfa' },
+                  { icon: Target, text: '1000+ SMEs connected', color: '#7dd3fc' },
+                  { icon: CheckCircle2, text: 'First campaign is free', color: '#6ee7b7' },
                 ].map(({ icon: Icon, text, color }) => (
                   <div key={text} className="flex items-center gap-2">
                     <Icon size={13} style={{ color }} />
@@ -458,28 +566,28 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right — live output preview */}
-            <div className="relative z-10">
-              <HeroOutputPreview />
-              {/* floating social proof pill */}
-              <div className="absolute -bottom-4 -left-4 flex items-center gap-2.5 px-4 py-2.5 rounded-xl shadow-lg"
-                style={{ background: 'rgba(10,0,30,0.9)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)' }}>
-                <div className="flex -space-x-1.5">
-                  {['#7c3aed','#2563eb','#059669'].map(c => (
-                    <div key={c} className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-[9px] font-bold text-white"
-                      style={{ background: c, borderColor: 'rgba(10,0,30,0.9)' }}>
-                      {c === '#7c3aed' ? 'J' : c === '#2563eb' ? 'A' : 'B'}
-                    </div>
-                  ))}
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-white leading-tight">500+ campaigns generated</p>
-                  <div className="flex gap-0.5 mt-0.5">
-                    {[1,2,3,4,5].map(i => <Star key={i} size={9} fill="#f59e0b" style={{ color: '#f59e0b' }} />)}
-                  </div>
-                </div>
-              </div>
+            {/* Right — hero visual */}
+            <div className="relative z-10 flex items-center justify-center">
+              <HeroCreativeVisual />
             </div>
+          </div>
+        </div>
+
+        {/* Trusted-by client strip */}
+        <div className="relative max-w-7xl mx-auto px-6 pb-10 z-10">
+          <div className="text-center mb-5">
+            <p className="text-xs font-bold tracking-widest" style={{ color: 'rgba(255,255,255,0.28)' }}>TRUSTED BY BRANDS ACROSS EAST AFRICA</p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
+            {[
+              'Adiel Media', 'Somo Smart', 'Onfon Media', 'Onfon Mobile',
+              'Ndovu Group', 'NCBA', 'PesaFlix', 'Shekel Coin',
+            ].map((name, i) => (
+              <span key={name} className="text-sm font-bold"
+                style={{ color: i % 2 === 0 ? 'rgba(196,181,253,0.55)' : 'rgba(125,211,252,0.55)', letterSpacing: '0.04em' }}>
+                {name}
+              </span>
+            ))}
           </div>
         </div>
 
@@ -488,10 +596,10 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-px rounded-2xl overflow-hidden shadow-2xl"
             style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)' }}>
             {[
-              { val: '60s', label: 'Avg. generation time', color: '#c4b5fd' },
-              { val: '10X', label: 'Faster than agencies', color: '#7dd3fc' },
+              { val: '1000+', label: 'SMEs in our network', color: '#c4b5fd' },
+              { val: '8+', label: 'Named brands served', color: '#7dd3fc' },
               { val: 'KES 150K', label: 'Avg. annual savings', color: '#6ee7b7' },
-              { val: '10+', label: 'Industries served', color: '#fcd34d' },
+              { val: '10+', label: 'Industries covered', color: '#fcd34d' },
             ].map(({ val, label, color }) => (
               <div key={label} className="text-center px-6 py-5" style={{ background: 'rgba(255,255,255,0.04)' }}>
                 <p className="text-2xl font-extrabold mb-1" style={{ color }}>{val}</p>

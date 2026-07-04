@@ -194,6 +194,16 @@ Deno.serve(async (req) => {
           })
         }
       }
+    } else if (orderMerchantReference.startsWith("prop_")) {
+      // Proposal deposit
+      const proposalId = orderMerchantReference.replace("prop_", "")
+      if (paymentStatus === "paid") {
+        await supabase.from("proposals").update({
+          status: "paid",
+          paid_at: new Date().toISOString(),
+          pesapal_order_id: orderTrackingId,
+        }).eq("id", proposalId)
+      }
     } else {
       // Audio order — existing logic
       await supabase.from("audio_orders")

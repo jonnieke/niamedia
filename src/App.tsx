@@ -50,6 +50,10 @@ const PortalView = lazy(() => import('./pages/PortalView'))
 const Invoices = lazy(() => import('./pages/Invoices'))
 const VideoPipeline = lazy(() => import('./pages/VideoPipeline'))
 const ROITracker = lazy(() => import('./pages/ROITracker'))
+const Quote = lazy(() => import('./pages/Quote'))
+const Proposals = lazy(() => import('./pages/Proposals'))
+const ProposalView = lazy(() => import('./pages/ProposalView'))
+const BriefView = lazy(() => import('./pages/BriefView'))
 
 function RouteLoader() {
   return (
@@ -91,6 +95,9 @@ function AppRoutes() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/payment/callback" element={<PaymentCallback />} />
+        <Route path="/quote" element={<Quote />} />
+        <Route path="/proposal/:token" element={<ProposalView />} />
+        <Route path="/brief/:token" element={<BriefView />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/track/:token" element={<ShareTracker />} />
@@ -128,6 +135,7 @@ function AppRoutes() {
         <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
         <Route path="/video-pipeline" element={<ProtectedRoute><VideoPipeline /></ProtectedRoute>} />
         <Route path="/roi-tracker" element={<ProtectedRoute><ROITracker /></ProtectedRoute>} />
+        <Route path="/proposals" element={<ProtectedRoute><Proposals /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
         <Route path="/admin/voices" element={<ProtectedRoute><AdminRoute><AdminVoices /></AdminRoute></ProtectedRoute>} />

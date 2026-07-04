@@ -1,18 +1,19 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Send, Upload, Loader2, CheckCircle2, Film, Clock } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import CreativeAssistant, { CreativeAssistantButton } from '../components/CreativeAssistant'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
+import { getBookingPath } from '../lib/booking'
 
 const INDUSTRIES = ['Real Estate', 'Hospitality', 'Education', 'Fintech / SACCO', 'Restaurant', 'Travel', 'Retail', 'Health & Wellness', 'Events', 'Professional Services', 'Faith & Community', 'Other']
-const LENGTHS = ['15 seconds', '30 seconds', '60 seconds', '90 seconds']
+const LENGTHS = ['15 seconds', '30 seconds', '60 seconds', '90 seconds', '3+ minutes (Infomercial)']
 const FORMATS = ['9:16 (Vertical)', '1:1 (Square)', '16:9 (Landscape)']
 const PLATFORMS = ['WhatsApp', 'TikTok', 'Instagram', 'Facebook', 'YouTube']
 const LANGUAGES = ['English', 'Kiswahili', 'Sheng', 'Other']
 const MUSIC_STYLES = ['Afrobeat', 'Afro-pop', 'Corporate / Ambient', 'Gospel / Worship', 'Hip-hop', 'Classical', 'No music']
-const BUDGET_RANGES = ['KES 3,500 – 5,000', 'KES 7,500 – 15,000', 'KES 25,000 – 60,000', 'Not sure yet']
+const BUDGET_RANGES = ['KES 3,500 ? 5,000', 'KES 7,500 ? 15,000', 'KES 25,000 ? 60,000', 'KES 60,000+', 'Not sure yet']
 
 interface LocationState {
   form?: { business_name?: string; industry?: string; product_name?: string }
@@ -34,9 +35,12 @@ export default function VideoRequest() {
     length: '30 seconds',
     format: '9:16 (Vertical)',
     platform: 'Instagram',
-    voiceover: true,
+    voiceoverMode: 'ai',
     language: 'English',
     music_style: 'Afrobeat',
+    needPoster: true,
+    needJingle: false,
+    needSubtitles: true,
     delivery_speed: 'standard',
     budget_range: 'KES 7,500 – 15,000',
     notes: '',
@@ -47,6 +51,46 @@ export default function VideoRequest() {
 
   const set = (field: string, value: string | boolean) =>
     setForm(prev => ({ ...prev, [field]: value }))
+
+  const estimate = useMemo(() => {
+    const lengthMap: Record<string, { min: number; max: number; label: string }> = {
+      '15 seconds': { min: 3500, max: 5000, label: '15s starter' },
+      '30 seconds': { min: 5000, max: 8000, label: '30s promo' },
+      '60 seconds': { min: 7500, max: 15000, label: '60s campaign film' },
+      '90 seconds': { min: 12000, max: 20000, label: '90s extended story' },
+      '3+ minutes (Infomercial)': { min: 25000, max: 60000, label: '3+ min infomercial' },
+    }
+    const voiceoverDelta: Record<string, { min: number; max: number }> = {
+      ai: { min: 0, max: 0 },
+      human: { min: 2000, max: 5000 },
+      none: { min: -1000, max: -500 },
+    }
+    const addonMap = {
+      needPoster: { min: 300, max: 1000 },
+      needJingle: { min: 5000, max: 12000 },
+      needSubtitles: { min: 1000, max: 2500 },
+    }
+    const base = lengthMap[form.length] ?? lengthMap['30 seconds']
+    const vo = voiceoverDelta[form.voiceoverMode as keyof typeof voiceoverDelta] ?? voiceoverDelta.ai
+    const selectedAddons = (['needPoster', 'needJingle', 'needSubtitles'] as const).filter(k => Boolean((form as Record<string, unknown>)[k]))
+    const addonRange = selectedAddons.reduce((acc, key) => {
+      const delta = addonMap[key]
+      return { min: acc.min + delta.min, max: acc.max + delta.max }
+    }, { min: 0, max: 0 })
+    const rushMultiplier = form.delivery_speed === '24h' ? 1.5 : form.delivery_speed === '48h' ? 1.25 : 1
+    const min = Math.round((base.min + vo.min + addonRange.min) * rushMultiplier)
+    const max = Math.round((base.max + vo.max + addonRange.max) * rushMultiplier)
+    const fmt = (n: number) => `KES ${n.toLocaleString('en-KE')}`
+    const voiceoverLabel = form.voiceoverMode === 'human' ? 'Human voiceover' : form.voiceoverMode === 'none' ? 'No voiceover' : 'AI voiceover'
+    return {
+      title: `${base.label} ? ${voiceoverLabel}${selectedAddons.length ? ' ? with add-ons' : ''}`,
+      range: `${fmt(min)} ? ${fmt(max)}`,
+      lengthLabel: base.label,
+      voiceoverLabel,
+      addons: selectedAddons.map(key => key === 'needPoster' ? 'Poster pack' : key === 'needJingle' ? 'Jingle' : 'Subtitles'),
+      delivery: form.delivery_speed === '24h' ? '24-hour rush' : form.delivery_speed === '48h' ? '48-hour rush' : 'Standard delivery',
+    }
+  }, [form.delivery_speed, form.length, form.needJingle, form.needPoster, form.needSubtitles, form.voiceoverMode])
 
   const handleSubmit = async () => {
     if (!form.business_name.trim() || !form.script.trim()) {
@@ -64,12 +108,12 @@ export default function VideoRequest() {
       length: form.length,
       format: form.format,
       platform: form.platform,
-      voiceover: form.voiceover,
+      voiceover: form.voiceoverMode !== 'none',
       language: form.language,
       music_style: form.music_style,
       delivery_speed: form.delivery_speed,
       budget_range: form.budget_range,
-      notes: form.notes,
+      notes: [form.notes.trim(), `Quote snapshot: ${estimate.title}`, `Estimated range: ${estimate.range}`, `Voiceover: ${estimate.voiceoverLabel}`, estimate.addons.length ? `Add-ons: ${estimate.addons.join(', ')}` : '', `Delivery: ${estimate.delivery}`].filter(Boolean).join('\n'),
       status: 'new',
     })
     setSubmitting(false)
@@ -116,8 +160,17 @@ export default function VideoRequest() {
   return (
     <DashboardLayout>
       {showNia && <CreativeAssistant onClose={() => setShowNia(false)} />}
-      {/* Header */}
       <div className="mb-6">
+        <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-emerald-700">Fast-track video brief</p>
+            <p className="text-sm text-emerald-900">Already know what you need? Skip ideation and book a meeting with us for a tailored quote.</p>
+          </div>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => navigate(getBookingPath('video', { priority: 'urgent' }))} className="px-3 py-2 rounded-xl text-xs font-semibold border border-emerald-200 text-emerald-800 bg-white">Book meeting</button>
+            <button type="button" onClick={() => navigate('/video-journey')} className="px-3 py-2 rounded-xl text-xs font-semibold text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>Need ideas first</button>
+          </div>
+        </div>
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -213,12 +266,38 @@ export default function VideoRequest() {
                 </select>
               </div>
             </div>
-            <div className="flex items-center justify-between">
-              <span className={labelCls + ' mb-0'}>Voice-Over Required?</span>
-              <button onClick={() => set('voiceover', !form.voiceover)}
-                className={`w-11 h-6 rounded-full relative transition-colors ${form.voiceover ? 'bg-purple-600' : 'bg-gray-200'}`}>
-                <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${form.voiceover ? 'translate-x-5' : 'translate-x-0.5'}`} />
-              </button>
+            <div>
+              <label className={labelCls}>Voice-over style</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {[
+                  { id: 'ai', label: 'AI voiceover', note: 'Fastest and cost-efficient' },
+                  { id: 'human', label: 'Human voiceover', note: 'Warm, premium narration' },
+                  { id: 'none', label: 'No voiceover', note: 'Visual-only or text-led edit' },
+                ].map(o => (
+                  <button key={o.id} type="button" onClick={() => set('voiceoverMode', o.id)}
+                    className={`rounded-xl border p-3 text-left transition-all ${form.voiceoverMode === o.id ? 'border-purple-500 bg-purple-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                    <p className="text-sm font-semibold text-gray-900">{o.label}</p>
+                    <p className="text-[11px] text-gray-500 mt-0.5">{o.note}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className={labelCls}>Add-ons</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {[
+                  { key: 'needPoster', label: 'Poster + promo pack' },
+                  { key: 'needJingle', label: 'Custom jingle' },
+                  { key: 'needSubtitles', label: 'Subtitles / captions' },
+                ].map(o => (
+                  <button key={o.key} type="button" onClick={() => set(o.key, !(form as unknown as Record<string, boolean>)[o.key])}
+                    className={`rounded-xl border p-3 text-left transition-all ${(form as unknown as Record<string, boolean>)[o.key] ? 'border-amber-400 bg-amber-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                    <p className="text-sm font-semibold text-gray-900">{o.label}</p>
+                    <p className="text-[11px] text-gray-500 mt-0.5">{o.key === 'needPoster' ? 'from KES 300' : o.key === 'needJingle' ? 'from KES 5,000' : 'from KES 1,000'}</p>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -251,6 +330,28 @@ export default function VideoRequest() {
 
         {/* Right column */}
         <div className="space-y-4">
+          <div className="rounded-2xl border border-gray-200 bg-gray-900 p-5 text-white shadow-xl">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Quote preview</p>
+            <div className="mt-3 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-lg font-extrabold">{estimate.range}</p>
+                <p className="text-xs text-gray-300 mt-1">{estimate.title}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[11px] text-gray-400 uppercase tracking-widest">Delivery</p>
+                <p className="text-sm font-semibold">{estimate.delivery}</p>
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-1 gap-2 text-xs text-gray-200">
+              <div className="rounded-xl bg-white/5 px-3 py-2">Length: {estimate.lengthLabel}</div>
+              <div className="rounded-xl bg-white/5 px-3 py-2">Voice-over: {estimate.voiceoverLabel}</div>
+              <div className="rounded-xl bg-white/5 px-3 py-2">Add-ons: {estimate.addons.length ? estimate.addons.join(', ') : 'None selected yet'}</div>
+            </div>
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+              <button type="button" onClick={() => navigate(getBookingPath('video'))} className="flex-1 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-gray-900">Book a meeting</button>
+              <button type="button" onClick={() => navigate('/video-journey')} className="flex-1 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white">Explore ideas first</button>
+            </div>
+          </div>
           <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest pb-2 border-b border-gray-100">Video Script *</h3>
             <p className="text-xs text-gray-400">Paste your generated script or write one from scratch. The more detail, the better the result.</p>

@@ -617,6 +617,12 @@ export default function Admin() {
   const [adminCampaigns, setAdminCampaigns] = useState<{ id: string; type: string; created_at: string }[]>([])
   const [videoSearch, setVideoSearch] = useState('')
   const [videoStatusFilter, setVideoStatusFilter] = useState<VideoRequestStatus | 'all'>('all')
+  const [quoteRequests, setQuoteRequests] = useState<{
+    id: string; created_at: string; business_name: string; contact_name: string | null;
+    phone: string; email: string | null; industry: string | null; video_length: string;
+    platforms: string[]; what_to_promote: string | null; delivery_speed: string;
+    price_min: number; price_max: number; status: string; admin_notes: string | null;
+  }[]>([])
   const [loading, setLoading] = useState(true)
   const [grantingCredit, setGrantingCredit] = useState<string | null>(null)
   const [grantAmounts, setGrantAmounts] = useState<Record<string, number>>({})
@@ -642,6 +648,8 @@ export default function Admin() {
     })
     supabase.from('video_requests').select('*, profiles!user_id(name, email)').order('created_at', { ascending: false })
       .then(({ data }) => { if (data) setVideoRequests(data as VideoRequestRow[]) })
+    supabase.from('quote_requests').select('*').order('created_at', { ascending: false })
+      .then(({ data }) => { if (data) setQuoteRequests(data as typeof quoteRequests) })
   }, [])
 
   const updateVideoRequestStatus = async (id: string, status: VideoRequestStatus) => {
@@ -684,7 +692,8 @@ export default function Admin() {
   }, 0)
   const totalRevenue = audioRevenue + creditRevenue
 
-  const tabs = ['Overview', 'Leads', 'Audio Orders', 'Projects', 'Credits', 'Users', 'Video Requests', 'Analytics']
+  const newQuotes = quoteRequests.filter(q => q.status === 'new').length
+  const tabs = ['Overview', 'Leads', 'Audio Orders', 'Projects', 'Credits', 'Users', 'Video Requests', 'Quote Requests', 'Analytics']
 
   const stats = [
     { label: 'New Leads', value: newLeads, icon: Inbox, sub: `${leads.length} total`, color: 'text-amber-400' },
@@ -740,6 +749,11 @@ export default function Admin() {
                 Video Requests →
               </button>
             )}
+            {newQuotes > 0 && (
+              <button onClick={() => setTab(7)} className="text-xs px-3 py-1.5 rounded-lg border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition-all">
+                Quote Requests →
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -763,6 +777,9 @@ export default function Admin() {
             )}
             {t === 'Video Requests' && newVideoRequests > 0 && (
               <span className="w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center bg-purple-500 text-white">{newVideoRequests}</span>
+            )}
+            {t === 'Quote Requests' && newQuotes > 0 && (
+              <span className="w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center bg-amber-500 text-white">{newQuotes}</span>
             )}
           </button>
         ))}
@@ -1127,8 +1144,105 @@ export default function Admin() {
             </div>
           )}
 
+          {/* Quote Requests */}
+          {tab === 7 && (
+            <div>
+              {newQuotes > 0 && (
+                <div className="mb-5 p-3.5 rounded-xl border border-amber-500/25 bg-amber-500/8 flex items-center gap-3">
+                  <AlertCircle size={15} className="text-amber-400 shrink-0" />
+                  <p className="text-sm text-amber-300">{newQuotes} new quote request{newQuotes !== 1 ? 's' : ''} waiting for follow-up.</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-3 gap-3 mb-5">
+                {(['new', 'contacted', 'converted'] as const).map(s => {
+                  const count = quoteRequests.filter(q => q.status === s).length
+                  const colors: Record<string, string> = { new: '#f59e0b', contacted: '#3b82f6', converted: '#10b981' }
+                  return (
+                    <div key={s} className="rounded-xl p-3.5 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <p className="text-2xl font-extrabold" style={{ color: colors[s] }}>{count}</p>
+                      <p className="text-xs text-gray-500 mt-0.5 capitalize">{s}</p>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className="rounded-2xl overflow-hidden" style={{ background: '#ffffff', border: '1px solid #e5e7eb' }}>
+                {quoteRequests.length === 0 ? (
+                  <div className="py-16 text-center text-gray-400">
+                    <Film size={28} className="mx-auto mb-2 opacity-30" />
+                    <p className="text-sm">No quote requests yet</p>
+                  </div>
+                ) : quoteRequests.map(q => (
+                  <div key={q.id} className="border-b border-gray-100 last:border-0 px-5 py-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <p className="text-sm font-bold text-gray-900">{q.business_name}</p>
+                          {q.contact_name && <span className="text-xs text-gray-500">· {q.contact_name}</span>}
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                            style={{
+                              background: q.status === 'new' ? 'rgba(245,158,11,0.12)' : q.status === 'contacted' ? 'rgba(59,130,246,0.12)' : 'rgba(16,185,129,0.12)',
+                              color: q.status === 'new' ? '#d97706' : q.status === 'contacted' ? '#2563eb' : '#059669',
+                            }}>
+                            {q.status}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mb-2">
+                          <span>{q.video_length} video</span>
+                          <span>{q.platforms.join(', ')}</span>
+                          <span className="font-semibold text-gray-700">KES {q.price_min.toLocaleString()} – {q.price_max.toLocaleString()}</span>
+                          <span>{q.delivery_speed === 'standard' ? '3–5 days' : q.delivery_speed === '48h' ? '48-hr rush' : '24-hr rush'}</span>
+                        </div>
+                        {q.what_to_promote && (
+                          <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{q.what_to_promote}</p>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-end gap-2 shrink-0">
+                        <p className="text-xs text-gray-400">{new Date(q.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                        <div className="flex gap-1.5">
+                          <a href={`/proposals?from_quote_id=${q.id}`}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all"
+                            style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.25)', color: '#7c3aed' }}>
+                            <Plus size={10} /> Proposal
+                          </a>
+                          <a href={`https://wa.me/${q.phone.replace(/\D/g, '').replace(/^0/, '254')}?text=${encodeURIComponent(`Hi ${q.contact_name || q.business_name}, this is Nia Media. We received your quote request for a ${q.video_length} video commercial. Let me confirm the details and pricing for you.`)}`}
+                            target="_blank" rel="noopener noreferrer"
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-white transition-all"
+                            style={{ background: '#25d366' }}>
+                            <MessageSquare size={10} /> WhatsApp
+                          </a>
+                          <select
+                            value={q.status}
+                            onChange={async e => {
+                              const newStatus = e.target.value
+                              await supabase.from('quote_requests').update({ status: newStatus }).eq('id', q.id)
+                              setQuoteRequests(prev => prev.map(x => x.id === q.id ? { ...x, status: newStatus } : x))
+                            }}
+                            className="text-[11px] font-semibold border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:border-purple-400">
+                            <option value="new">New</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="quoted">Quoted</option>
+                            <option value="converted">Converted</option>
+                            <option value="lost">Lost</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    {q.email && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        <Mail size={9} className="inline mr-1" />{q.email}
+                        {q.phone && <span className="ml-3"><Phone size={9} className="inline mr-1" />{q.phone}</span>}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Analytics */}
-          {tab === 7 && (() => {
+          {tab === 8 && (() => {
             const now = new Date()
             const weekMs = 7 * 24 * 60 * 60 * 1000
             const weeks = Array.from({ length: 8 }, (_, i) => {

@@ -1,5 +1,4 @@
 import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
-import { GoogleGenAI } from "npm:@google/genai"
 
 type UserContext = {
   businessName?: string
@@ -41,7 +40,7 @@ Deno.serve(async (req: Request) => {
   try {
     const googleKey = Deno.env.get("GOOGLE_API_KEY") ?? Deno.env.get("GEMINI_API_KEY")
     if (!googleKey) {
-      return new Response(JSON.stringify({ error: "Gemini Live is not configured" }), {
+      return new Response(JSON.stringify({ error: "Gemini Live is not configured. Set GOOGLE_API_KEY in Supabase secrets." }), {
         status: 503,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       })
@@ -56,29 +55,61 @@ Deno.serve(async (req: Request) => {
         : "",
     ].join("\n")
 
-    const ai = new GoogleGenAI({ apiKey: googleKey, httpOptions: { apiVersion: "v1alpha" } })
-
     const expireTime = new Date(Date.now() + 10 * 60 * 1000).toISOString()
-    const token = await ai.tokens.create({
-      config: {
-        uses: 1,
-        expireTime,
-        liveConnectConstraints: {
-          model: "gemini-live-2.5-flash-preview",
-          config: {
-            responseModalities: ["TEXT"],
-            systemInstruction,
-          },
-        },
-        lockAdditionalFields: [],
-      },
-    })
+    const model = "gemini-live-2.5-flash-preview"
 
-    return new Response(JSON.stringify({ token: token.name, model: "gemini-live-2.5-flash-preview" }), {
+    // Use REST API directly to avoid SDK version issues
+    const tokenRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1alpha/tokens?key=${googleKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          config: {
+            uses: 1,
+            expireTime,
+            liveConnectConstraints: {
+              model,
+              config: {
+                responseModalities: ["TEXT"],
+                systemInstruction: {
+                  parts: [{ text: systemInstruction }],
+                },
+              },
+            },
+          },
+        }),
+      }
+    )
+
+    const rawText = await tokenRes.text()
+    console.log("Token API status:", tokenRes.status, "body:", rawText.slice(0, 500))
+
+    let tokenData: Record<string, unknown>
+    try {
+      tokenData = JSON.parse(rawText)
+    } catch {
+      return new Response(JSON.stringify({ error: `Google API returned non-JSON (${tokenRes.status}): ${rawText.slice(0, 200)}` }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      })
+    }
+
+    if (!tokenRes.ok) {
+      const msg = (tokenData?.error as Record<string, string>)?.message ?? rawText.slice(0, 200)
+      console.error("Token API error:", msg)
+      return new Response(JSON.stringify({ error: msg }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      })
+    }
+
+    return new Response(JSON.stringify({ token: tokenData.name, model }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
+    console.error("gemini-live-token error:", message)
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

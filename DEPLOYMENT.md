@@ -163,12 +163,17 @@ For issues:
 - `VITE_SUPABASE_ANON_KEY` — Frontend anon key
 
 ### Optional (for full integration)
-- `ALLOWED_ORIGINS` — CORS whitelist
-- `FALAI_API_KEY` — Poster generation (fal.ai)
-- `RESEND_API_KEY` — Email sending
-- `PESAPAL_CONSUMER_KEY` / `PESAPAL_CONSUMER_SECRET` — Payments
-- `ANTHROPIC_API_KEY` — Claude API
+- `ALLOWED_ORIGINS` ??? CORS whitelist
+- `FALAI_API_KEY` ??? Poster generation (fal.ai)
+- `RESEND_API_KEY` ??? Email sending
+- `PESAPAL_CONSUMER_KEY` / `PESAPAL_CONSUMER_SECRET` ??? Payments
+- `ANTHROPIC_API_KEY` ??? Claude API
+- `VITE_CAL_BOOKING_URL` ??? Fallback public Cal booking link
+- `VITE_CAL_BOOKING_URL_VIDEO` ??? Public Cal link for video briefing
+- `VITE_CAL_BOOKING_URL_CAMPAIGN` ??? Public Cal link for campaign strategy
+- `VITE_CAL_BOOKING_URL_CONSULTATION` ??? Public Cal link for general consultation
+- `VITE_CAL_BOOKING_URL_URGENT` ??? Public Cal link for fast-track / same-day calls
 
 ---
 
-Last updated: 2026-06-29
+Last updated: 2026-07-03

@@ -55,9 +55,24 @@ export default function Pricing() {
           Simple, transparent pricing
         </h1>
         <p className="text-gray-500 max-w-xl mx-auto text-sm md:text-base">
-          Buy campaign credits, subscribe monthly, or upgrade into managed creative support. No risky unlimited plans.
+          Buy campaign credits, explore ideas, or jump straight into a managed quote for video production.
         </p>
       </section>
+
+      <div className="max-w-5xl mx-auto px-4 mb-10">
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Trusted by</p>
+            <p className="text-sm text-gray-700 mt-1">Ndovu Group, Pesaflix, Shekel Coin, Onfon Media, Adiel Media, and NCBA Junior account.</p>
+          </div>
+          <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-gray-600">
+            <span className="px-3 py-1.5 rounded-full bg-gray-100">Campaign ideas</span>
+            <span className="px-3 py-1.5 rounded-full bg-gray-100">Video production</span>
+            <span className="px-3 py-1.5 rounded-full bg-gray-100">Voiceovers</span>
+            <span className="px-3 py-1.5 rounded-full bg-gray-100">Posters & jingles</span>
+          </div>
+        </div>
+      </div>
 
       {/* DIY Platform */}
       <section className="max-w-5xl mx-auto px-4 mb-16">
@@ -145,14 +160,17 @@ export default function Pricing() {
 
       {/* Custom Videos */}
       <section className="max-w-5xl mx-auto px-4 mb-16">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="p-2 rounded-xl" style={{ background: 'rgba(5,150,105,0.08)' }}>
-            <Film size={16} className="text-emerald-600" />
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl" style={{ background: 'rgba(5,150,105,0.08)' }}>
+              <Film size={16} className="text-emerald-600" />
+            </div>
+            <div>
+              <h2 className="text-lg font-extrabold text-gray-900">Custom Video Production</h2>
+              <p className="text-xs text-gray-500">See the price ladder from 15s promos to 3+ minute infomercials, then book a meeting when the brief is ready.</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-extrabold text-gray-900">Custom Video Production</h2>
-            <p className="text-xs text-gray-500">Generate your script, then let Nia Media turn it into a polished video.</p>
-          </div>
+          <Link to="/book?service=video" className="inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-semibold text-white" style={{ background: 'linear-gradient(135deg, #059669, #0891b2)' }}>Book a consultation</Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           {[

@@ -24,8 +24,8 @@ const PLANS = [
 function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
     <button onClick={onToggle}
-      className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors shrink-0"
-      style={{ background: on ? 'linear-gradient(135deg, #8b5cf6, #3b82f6)' : 'rgba(255,255,255,0.1)' }}>
+      className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors shrink-0 border border-gray-200"
+      style={{ background: on ? 'linear-gradient(135deg, #8b5cf6, #3b82f6)' : '#e5e7eb' }}>
       <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${on ? 'translate-x-4' : 'translate-x-0.5'}`} />
     </button>
   )
@@ -54,7 +54,7 @@ export default function Settings() {
   const [pwSaved, setPwSaved] = useState(false)
   const [pwError, setPwError] = useState('')
 
-  const [currentPlan] = useState('growth')
+  const [currentPlan, setCurrentPlan] = useState('free')
   const [notifs, setNotifs] = useState({
     projectReady: true, revisionDone: true, audioReady: true,
     campaigns: true, billing: true, product: false,
@@ -83,12 +83,17 @@ export default function Settings() {
 
   useEffect(() => {
     if (!user) return
-    supabase.from('profiles').select('email_marketing_opt_out, weekly_report_enabled, weekly_report_phone').eq('id', user.id).single()
+    supabase.from('profiles')
+      .select('email_marketing_opt_out, weekly_report_enabled, weekly_report_phone, subscription_plan')
+      .eq('id', user.id).single()
       .then(({ data }) => {
         if (data) {
           setEmailMarketing(!data.email_marketing_opt_out)
           setWeeklyReportEnabled(data.weekly_report_enabled ?? false)
           setWeeklyReportPhone(data.weekly_report_phone ?? '')
+          // Map DB plan names to Settings plan IDs
+          const planMap: Record<string, string> = { free: 'free', pro: 'growth', agency: 'business', starter: 'starter', growth: 'growth', business: 'business' }
+          setCurrentPlan(planMap[data.subscription_plan ?? 'free'] ?? 'free')
         }
       })
   }, [user])

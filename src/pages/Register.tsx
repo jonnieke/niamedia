@@ -147,6 +147,11 @@ export default function Register() {
           <Link to="/" className="inline-flex justify-center mb-6"><Logo size="md" /></Link>
           <h1 className="text-2xl font-bold text-gray-900">Create your account</h1>
           <p className="text-sm text-gray-500 mt-1">Start creating campaigns in minutes</p>
+          <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full"
+            style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)' }}>
+            <CheckCircle2 size={13} className="text-purple-500" />
+            <span className="text-xs font-semibold text-purple-700">First campaign is on us — no card needed</span>
+          </div>
         </div>
 
         {refCode && (
@@ -195,7 +200,7 @@ export default function Register() {
 
           <div className="mt-5 pt-5 border-t border-gray-200">
             <div className="flex flex-col gap-1.5 mb-5">
-              {['No credit card required', 'Free to explore', 'Cancel anytime'].map(t => (
+              {['First full campaign is free', 'No credit card required', 'Cancel anytime'].map(t => (
                 <div key={t} className="flex items-center gap-2">
                   <CheckCircle2 size={12} className="text-purple-400" />
                   <span className="text-xs text-gray-500">{t}</span>
