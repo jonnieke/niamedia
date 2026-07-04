@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import {
   Plus, Copy, Check, CheckCircle2, Clock, XCircle,
   Loader2, MessageSquare, ExternalLink, Trash2, FileText, Zap,
+  Bell, TrendingUp, AlertTriangle,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
@@ -33,6 +34,8 @@ interface Proposal {
   status: string
   admin_notes: string | null
   paid_at: string | null
+  reminder_sent_at: string | null
+  reminder_count: number
 }
 
 interface QuoteSnap {
@@ -392,6 +395,8 @@ export default function Proposals() {
   const [modal, setModal] = useState<ModalState>({ open: false, quote: null, editing: null })
   const [copied, setCopied] = useState<string | null>(null)
   const [prefillQuote, setPrefillQuote] = useState<QuoteSnap | null>(null)
+  const [reminding, setReminding] = useState<string | null>(null)
+  const [expiring, setExpiring] = useState(false)
 
   const load = useCallback(async () => {
     const { data } = await supabase.from('proposals').select('*').order('created_at', { ascending: false })
@@ -418,6 +423,54 @@ export default function Proposals() {
     navigator.clipboard.writeText(url)
     setCopied(token)
     setTimeout(() => setCopied(null), 2000)
+  }
+
+  const daysSince = (iso: string) => Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)
+
+  const isExpired = (p: Proposal) =>
+    p.valid_until ? new Date(p.valid_until) < new Date() : false
+
+  const sendReminder = async (p: Proposal) => {
+    if (!p.email) {
+      // Fallback: open WhatsApp
+      const wa = `https://wa.me/${p.phone.replace(/\D/g, '').replace(/^0/, '254')}?text=${encodeURIComponent(`Hi ${p.contact_name || p.business_name}, just checking in on your Nia Media proposal — it's still available: ${window.location.origin}/proposal/${p.token}`)}`
+      window.open(wa, '_blank')
+      return
+    }
+    setReminding(p.id)
+    await supabase.functions.invoke('send-client-email', {
+      body: {
+        type: 'proposal_reminder',
+        to: p.email,
+        name: p.contact_name,
+        businessName: p.business_name,
+        proposalToken: p.token,
+        validUntil: p.valid_until,
+      },
+    })
+    const now = new Date().toISOString()
+    await supabase.from('proposals').update({
+      reminder_sent_at: now,
+      reminder_count: (p.reminder_count ?? 0) + 1,
+    }).eq('id', p.id)
+    setProposals(prev => prev.map(x => x.id === p.id
+      ? { ...x, reminder_sent_at: now, reminder_count: (x.reminder_count ?? 0) + 1 }
+      : x))
+    setReminding(null)
+  }
+
+  const expireOverdue = async () => {
+    const overdue = proposals.filter(p => p.status === 'sent' && isExpired(p))
+    if (overdue.length === 0) return
+    if (!window.confirm(`Mark ${overdue.length} overdue proposal${overdue.length > 1 ? 's' : ''} as expired?`)) return
+    setExpiring(true)
+    await Promise.all(overdue.map(p =>
+      supabase.from('proposals').update({ status: 'expired' }).eq('id', p.id)
+    ))
+    setProposals(prev => prev.map(p =>
+      overdue.some(o => o.id === p.id) ? { ...p, status: 'expired' } : p
+    ))
+    setExpiring(false)
   }
 
   const markPaid = async (id: string) => {
@@ -458,19 +511,59 @@ export default function Proposals() {
     return acc
   }, {} as Record<string, number>)
 
+  // Pipeline funnel metrics
+  const totalSent = proposals.filter(p => ['sent','accepted','paid','declined','expired'].includes(p.status)).length
+  const totalAccepted = proposals.filter(p => ['accepted','paid'].includes(p.status)).length
+  const totalPaid = proposals.filter(p => p.status === 'paid').length
+  const totalRevenue = proposals.filter(p => p.status === 'paid').reduce((s, p) => s + (p.final_price ?? 0), 0)
+  const overdueCount = proposals.filter(p => p.status === 'sent' && isExpired(p)).length
+  const toRate = (n: number, d: number) => d === 0 ? '—' : `${Math.round((n / d) * 100)}%`
+
   return (
     <DashboardLayout>
-      <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-extrabold text-gray-900">Proposals</h1>
           <p className="text-sm text-gray-500 mt-0.5">Send video production proposals and collect deposits.</p>
         </div>
-        <button
-          onClick={() => setModal({ open: true, quote: prefillQuote, editing: null })}
-          className="btn-primary flex items-center gap-2 px-4 py-2 text-sm">
-          <Plus size={15} /> New Proposal
-        </button>
+        <div className="flex gap-2 flex-wrap">
+          {overdueCount > 0 && (
+            <button onClick={expireOverdue} disabled={expiring}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border border-red-200 text-red-600 hover:bg-red-50 transition-all disabled:opacity-50">
+              {expiring ? <Loader2 size={12} className="animate-spin" /> : <AlertTriangle size={12} />}
+              Expire {overdueCount} overdue
+            </button>
+          )}
+          <button
+            onClick={() => setModal({ open: true, quote: prefillQuote, editing: null })}
+            className="btn-primary flex items-center gap-2 px-4 py-2 text-sm">
+            <Plus size={15} /> New Proposal
+          </button>
+        </div>
       </div>
+
+      {/* Pipeline funnel */}
+      {proposals.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          {[
+            { label: 'Sent', value: totalSent, sub: 'total proposals', icon: FileText, color: '#3b82f6' },
+            { label: 'Accepted', value: totalAccepted, sub: `${toRate(totalAccepted, totalSent)} conversion`, icon: CheckCircle2, color: '#f59e0b' },
+            { label: 'Paid', value: totalPaid, sub: `${toRate(totalPaid, totalAccepted)} close rate`, icon: TrendingUp, color: '#10b981' },
+            { label: 'Revenue', value: `KES ${(totalRevenue / 1000).toFixed(0)}K`, sub: 'from paid proposals', icon: TrendingUp, color: '#7c3aed' },
+          ].map(stat => (
+            <div key={stat.label} className="bg-white rounded-2xl border border-gray-200 p-4 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: `${stat.color}15` }}>
+                <stat.icon size={16} style={{ color: stat.color }} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-lg font-extrabold text-gray-900 leading-none">{stat.value}</p>
+                <p className="text-[11px] text-gray-500 mt-0.5 truncate">{stat.label} · {stat.sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Filter tabs */}
       <div className="flex gap-1 mb-5 border-b border-gray-200 overflow-x-auto">
@@ -505,6 +598,22 @@ export default function Proposals() {
                     <h3 className="text-sm font-bold text-gray-900">{p.business_name}</h3>
                     {p.contact_name && <span className="text-xs text-gray-400">· {p.contact_name}</span>}
                     <StatusBadge status={p.status} />
+                    {p.status === 'sent' && (() => {
+                      const age = daysSince(p.created_at)
+                      const expired = isExpired(p)
+                      const color = expired ? '#ef4444' : age >= 5 ? '#d97706' : age >= 3 ? '#f59e0b' : '#6b7280'
+                      return (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                          style={{ background: `${color}18`, color }}>
+                          {expired ? 'EXPIRED' : `${age}d ago`}
+                        </span>
+                      )
+                    })()}
+                    {p.reminder_count > 0 && (
+                      <span className="text-[10px] text-gray-400 flex items-center gap-0.5">
+                        <Bell size={9} /> {p.reminder_count} reminder{p.reminder_count > 1 ? 's' : ''} sent
+                      </span>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mb-2">
                     <span>{p.video_length} video</span>
@@ -515,8 +624,9 @@ export default function Proposals() {
                     <span>{p.timeline_days} days</span>
                   </div>
                   {p.valid_until && (
-                    <p className="text-[11px] text-gray-400">
-                      Valid until {new Date(p.valid_until).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    <p className={`text-[11px] ${p.status === 'sent' && isExpired(p) ? 'text-red-500 font-semibold' : 'text-gray-400'}`}>
+                      {p.status === 'sent' && isExpired(p) ? '⚠ Expired · ' : 'Valid until '}
+                      {new Date(p.valid_until).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
                   )}
                   {p.paid_at && (
@@ -543,6 +653,19 @@ export default function Proposals() {
                     style={{ background: '#25d366' }}>
                     <MessageSquare size={11} /> Send via WhatsApp
                   </a>
+
+                  {p.status === 'sent' && (
+                    <button
+                      onClick={() => sendReminder(p)}
+                      disabled={reminding === p.id}
+                      title={p.email ? 'Send follow-up email' : 'Open WhatsApp follow-up'}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-amber-200 text-amber-700 hover:bg-amber-50 transition-all disabled:opacity-50">
+                      {reminding === p.id
+                        ? <Loader2 size={11} className="animate-spin" />
+                        : <Bell size={11} />}
+                      {p.email ? 'Send Reminder' : 'WhatsApp Reminder'}
+                    </button>
+                  )}
 
                   {p.status !== 'paid' && (
                     <button onClick={() => markPaid(p.id)}

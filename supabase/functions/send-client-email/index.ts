@@ -44,6 +44,7 @@ type EmailType =
   | "revision_requested_admin"
   | "video_delivered"
   | "balance_paid_admin"
+  | "proposal_reminder"
 
 interface EmailPayload {
   type: EmailType
@@ -61,6 +62,7 @@ interface EmailPayload {
   timelineDays?: number
   deliverableLabel?: string
   deliverableUrl?: string
+  validUntil?: string
 }
 
 function buildEmail(p: EmailPayload): { subject: string; html: string } {
@@ -167,6 +169,26 @@ function buildEmail(p: EmailPayload): { subject: string; html: string } {
           ${p.balanceDue ? `<p>Once you've reviewed the video, please complete your final payment of <strong>KES ${p.balanceDue.toLocaleString("en-KE")}</strong> via the link above. Payment can be made instantly via M-Pesa.</p>` : ""}
           <p>Happy with the result? Let us know on WhatsApp — we'd love to hear your feedback!</p>
           <div class="cta"><a href="https://wa.me/254751822556" class="wa">Share Your Feedback</a></div>
+        `),
+      }
+    }
+
+    case "proposal_reminder": {
+      const link = `${APP_URL}/proposal/${p.proposalToken}`
+      const daysLeft = p.validUntil
+        ? Math.max(0, Math.ceil((new Date(p.validUntil).getTime() - Date.now()) / 86400000))
+        : null
+      return {
+        subject: `Reminder: your Nia Media proposal expires soon — ${p.businessName}`,
+        html: base(`
+          <h1>Just a quick reminder, ${first}!</h1>
+          <p>We sent you a video commercial proposal for <strong>${p.businessName}</strong> a few days ago — we just wanted to make sure you had a chance to review it.</p>
+          ${daysLeft !== null ? `<div class="box"><div class="box-row"><span class="box-label">Proposal expires in</span><span class="box-value" style="color:#d97706">${daysLeft === 0 ? 'Today' : `${daysLeft} day${daysLeft !== 1 ? 's' : ''}`}</span></div></div>` : ''}
+          <p>Click below to view your proposal, accept it, and pay your deposit to lock in your production slot.</p>
+          <div class="cta"><a href="${link}" class="btn">View My Proposal →</a></div>
+          <p style="text-align:center;font-size:13px;color:#888">Or paste this link:<br><a href="${link}" style="color:#8b5cf6;word-break:break-all">${link}</a></p>
+          <p>Questions? Reply to this email or message us on WhatsApp — we're happy to adjust anything in the proposal.</p>
+          <div class="cta"><a href="https://wa.me/254751822556" class="wa">WhatsApp Us</a></div>
         `),
       }
     }
