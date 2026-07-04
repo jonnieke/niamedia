@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import Logo from "../components/ui/Logo";
+import Logo from "../components/ui/Logo"
+import { trackEvent } from '../lib/analytics'
 import {
   ArrowRight,
   Bot,
@@ -229,7 +230,7 @@ export default function Home() {
                 Request a Video Commercial <ArrowRight size={18} />
               </Link>{" "}
               <button
-                onClick={() => setShowAssistant(true)}
+                onClick={() => { trackEvent('nia_assistant_open', { cta_location: 'home_page' }); setShowAssistant(true) }}
                 className="inline-flex items-center gap-3 rounded-xl border border-white/45 bg-white/[.03] px-7 py-4 text-[15px] font-bold"
               >
                 <MessageSquare size={20} /> Talk to Nia Assistant
@@ -487,7 +488,7 @@ export default function Home() {
               <Send size={12} className="float-right text-purple-400" />
             </div>
             <button
-              onClick={() => setShowAssistant(true)}
+              onClick={() => { trackEvent('nia_assistant_open', { cta_location: 'home_page' }); setShowAssistant(true) }}
               className="mx-auto mt-3 inline-flex items-center gap-2 rounded-lg px-7 py-2.5 text-xs font-bold text-white"
               style={{ background: gradient }}
             >

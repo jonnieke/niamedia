@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom'
 import { CalendarDays, Clock3, Video, MessageSquare, Sparkles, ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react'
 import PublicHeader from '../components/layout/PublicHeader'
 import { PRIMARY_VIDEO_CTA } from '../lib/cta'
+import { trackEvent } from '../lib/analytics'
 import { getBookingUrl, getCalBookingTarget, type BookingService } from '../lib/booking'
 
 export default function BookMeeting() {
@@ -112,6 +113,7 @@ export default function BookMeeting() {
             <div className="aspect-[4/5] md:aspect-[3/4] lg:aspect-[4/5] bg-gray-50">
               {bookingReady && calTarget ? (
                 <iframe
+                  onLoad={() => trackEvent('booking_widget_loaded', { booking_service: service, booking_event: copy.eventName })}
                   src={bookingUrl}
                   title={`Book ${copy.eventName} with Nia Media`}
                   className="h-full w-full border-0 bg-white"
@@ -134,9 +136,4 @@ export default function BookMeeting() {
     </div>
   )
 }
-
-
-
-
-
 

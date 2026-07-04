@@ -1,8 +1,9 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { AuthProvider, useAuth } from './lib/AuthContext'
 import RouteSeo from './components/RouteSeo'
+import { initAnalytics, trackPageView } from './lib/analytics'
 
 const Home = lazy(() => import('./pages/Home'))
 const Login = lazy(() => import('./pages/Login'))
@@ -87,6 +88,19 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   return user?.role === 'admin' ? <>{children}</> : <Navigate to="/dashboard" replace />
 }
 
+function AnalyticsTracker() {
+  const location = useLocation()
+
+  useEffect(() => {
+    initAnalytics()
+  }, [])
+
+  useEffect(() => {
+    trackPageView(`${location.pathname}${location.search}`)
+  }, [location.pathname, location.search])
+
+  return null
+}
 function AppRoutes() {
   return (
     <>
@@ -166,6 +180,7 @@ export default function App() {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
+        <AnalyticsTracker />
         <AppRoutes />
       </AuthProvider>
     </BrowserRouter>

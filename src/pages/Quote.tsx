@@ -7,12 +7,13 @@ import {
 import PublicHeader from '../components/layout/PublicHeader'
 import { supabase } from '../lib/supabase'
 import { SECONDARY_NIA_CTA } from '../lib/cta'
+import { trackEvent } from '../lib/analytics'
 
-/* ── Pricing logic ──────────────────────────────────────────────── */
+/* â”€â”€ Pricing logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const LENGTHS = [
-  { id: '15s', label: '15 seconds', desc: 'Quick hook — TikTok, Reels, Stories', min: 3500,  max: 5000  },
-  { id: '30s', label: '30 seconds', desc: 'Standard commercial — all platforms',  min: 5000,  max: 8000  },
-  { id: '60s', label: '60 seconds', desc: 'Campaign film — full story arc',        min: 7500,  max: 15000 },
+  { id: '15s', label: '15 seconds', desc: 'Quick hook â€” TikTok, Reels, Stories', min: 3500,  max: 5000  },
+  { id: '30s', label: '30 seconds', desc: 'Standard commercial â€” all platforms',  min: 5000,  max: 8000  },
+  { id: '60s', label: '60 seconds', desc: 'Campaign film â€” full story arc',        min: 7500,  max: 15000 },
   { id: '90s', label: '90 seconds', desc: 'Extended brand story',                  min: 12000, max: 20000 },
   { id: '3m+', label: '3 min+',     desc: 'Infomercial / mini-documentary',        min: 25000, max: 60000 },
 ]
@@ -33,7 +34,7 @@ const INDUSTRIES = [
 ]
 
 const RUSH = [
-  { id: 'standard', label: 'Standard',   desc: '3–5 business days', mult: 1.0 },
+  { id: 'standard', label: 'Standard',   desc: '3â€“5 business days', mult: 1.0 },
   { id: '48h',      label: '48-hr rush', desc: '+25% fee',           mult: 1.25 },
   { id: '24h',      label: '24-hr rush', desc: '+50% fee',           mult: 1.5 },
 ]
@@ -56,7 +57,7 @@ function calcPrice(
   }
 }
 
-/* ── Sub-components ─────────────────────────────────────────────── */
+/* â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function StepBar({ step }: { step: number }) {
   const steps = ['Video Spec', 'Your Details', 'Confirmed']
   return (
@@ -98,7 +99,7 @@ function PricePanel({ min, max, length, rush, platforms, poster, subtitles }: {
       <div className="mb-6">
         <p className="text-4xl font-extrabold text-white">
           KES {min.toLocaleString()}
-          <span className="text-2xl text-purple-300"> – {max.toLocaleString()}</span>
+          <span className="text-2xl text-purple-300"> â€“ {max.toLocaleString()}</span>
         </p>
         <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Final quote confirmed after brief review</p>
       </div>
@@ -137,25 +138,25 @@ function PricePanel({ min, max, length, rush, platforms, poster, subtitles }: {
       <div className="mt-5 pt-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
         <p className="text-[10px] font-bold tracking-widest mb-2" style={{ color: 'rgba(196,181,253,0.45)' }}>TRUSTED BY</p>
         <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.35)' }}>
-          Onfon Media · NCBA · PesaFlix · Ndovu Group · Shekel Coin
+          Onfon Media Â· NCBA Â· PesaFlix Â· Ndovu Group Â· Shekel Coin
         </p>
       </div>
     </div>
   )
 }
 
-/* ── Main ───────────────────────────────────────────────────────── */
+/* â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export default function Quote() {
   const [step, setStep] = useState(0)
 
-  // Step 0 — video spec
+  // Step 0 â€” video spec
   const [length, setLength]     = useState('30s')
   const [platforms, setPlatforms] = useState<string[]>(['instagram', 'tiktok'])
   const [rush, setRush]         = useState('standard')
   const [poster, setPoster]     = useState(true)
   const [subtitles, setSubtitles] = useState(false)
 
-  // Step 1 — contact
+  // Step 1 â€” contact
   const [bizName, setBizName]   = useState('')
   const [contactName, setContactName] = useState('')
   const [phone, setPhone]       = useState('')
@@ -192,19 +193,20 @@ export default function Quote() {
       status:           'new',
     })
     setSubmitting(false)
-    if (dbErr) { setError('Something went wrong. Please try again or WhatsApp us directly.'); return }
+    if (dbErr) { trackEvent('quote_submit_failed', { reason: 'db_error' }); setError('Something went wrong. Please try again or WhatsApp us directly.'); return }
     supabase.rpc('notify_admins', {
       p_type: 'action',
-      p_title: `New quote — ${bizName.trim()}`,
-      p_body: `${length} video · ${platforms.join(', ')} · KES ${price.min.toLocaleString()}–${price.max.toLocaleString()}`,
+      p_title: `New quote â€” ${bizName.trim()}`,
+      p_body: `${length} video Â· ${platforms.join(', ')} Â· KES ${price.min.toLocaleString()}â€“${price.max.toLocaleString()}`,
       p_action_url: '/admin',
     })
+    trackEvent('quote_submit_success', { video_length: length, platform_count: platforms.length, rush, poster, subtitles });
     setStep(2)
   }
 
   /* WhatsApp pre-fill for the prospect to message Nia Media */
   const waMessage = encodeURIComponent(
-    `Hi Nia Media, I need a video commercial.\n\nBusiness: ${bizName}\nLength: ${LENGTHS.find(l => l.id === length)?.label}\nPlatforms: ${platforms.join(', ')}\nDelivery: ${RUSH.find(r => r.id === rush)?.label}\nBudget range: KES ${price.min.toLocaleString()} – ${price.max.toLocaleString()}\n\nWhat I'm promoting: ${brief || 'Will share details'}\n\nContact: ${phone}`
+    `Hi Nia Media, I need a video commercial.\n\nBusiness: ${bizName}\nLength: ${LENGTHS.find(l => l.id === length)?.label}\nPlatforms: ${platforms.join(', ')}\nDelivery: ${RUSH.find(r => r.id === rush)?.label}\nBudget range: KES ${price.min.toLocaleString()} â€“ ${price.max.toLocaleString()}\n\nWhat I'm promoting: ${brief || 'Will share details'}\n\nContact: ${phone}`
   )
 
   return (
@@ -217,19 +219,19 @@ export default function Quote() {
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5"
             style={{ background: 'rgba(124,58,237,0.18)', border: '1px solid rgba(167,139,250,0.35)' }}>
             <Film size={12} style={{ color: '#a78bfa' }} />
-            <span className="text-xs font-bold tracking-widest" style={{ color: '#c4b5fd' }}>VIDEO COMMERCIAL — INSTANT QUOTE</span>
+            <span className="text-xs font-bold tracking-widest" style={{ color: '#c4b5fd' }}>VIDEO COMMERCIAL â€” INSTANT QUOTE</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-3">
             How much does your video cost?
           </h1>
           <p className="text-base max-w-lg mx-auto" style={{ color: 'rgba(255,255,255,0.55)' }}>
-            Pick your spec below and get an instant price estimate — no account, no calls, no waiting.
+            Pick your spec below and get an instant price estimate â€” no account, no calls, no waiting.
           </p>
 
           {/* Social proof pills */}
           <div className="flex flex-wrap justify-center gap-4 mt-6">
             {[
-              { icon: Clock, text: '3–5 day delivery' },
+              { icon: Clock, text: '3â€“5 day delivery' },
               { icon: Star, text: '8+ brands served' },
               { icon: Zap, text: 'AI script included' },
             ].map(({ icon: Icon, text }) => (
@@ -247,7 +249,7 @@ export default function Quote() {
         {step < 2 && <StepBar step={step} />}
 
         {step === 2 ? (
-          /* ── Success ──────────────────────────────────────────── */
+          /* â”€â”€ Success â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
           <div className="max-w-lg mx-auto text-center py-8">
             <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
               style={{ background: 'rgba(16,185,129,0.12)', border: '2px solid rgba(16,185,129,0.3)' }}>
@@ -266,7 +268,7 @@ export default function Quote() {
             </a>
 
             <p className="text-xs text-gray-400 mb-8">
-              Opens WhatsApp with your brief pre-filled — just tap Send.
+              Opens WhatsApp with your brief pre-filled â€” just tap Send.
             </p>
 
             <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto">
@@ -284,7 +286,7 @@ export default function Quote() {
         ) : (
           <div className="grid lg:grid-cols-[1fr_320px] gap-8">
 
-            {/* ── Left: form steps ────────────────────────────── */}
+            {/* â”€â”€ Left: form steps â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             <div>
 
               {step === 0 && (
@@ -384,7 +386,7 @@ export default function Quote() {
                   <button onClick={() => setStep(1)}
                     className="w-full flex items-center justify-center gap-2 py-4 rounded-xl text-sm font-bold text-white transition-all"
                     style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
-                    Continue — Enter Your Details <ArrowRight size={15} />
+                    Continue â€” Enter Your Details <ArrowRight size={15} />
                   </button>
                 </div>
               )}
@@ -481,7 +483,7 @@ export default function Quote() {
                     <button onClick={submit} disabled={submitting}
                       className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-60"
                       style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
-                      {submitting ? 'Submitting...' : <><MessageSquare size={15} /> Send My Brief — Get Quoted</>}
+                      {submitting ? 'Submitting...' : <><MessageSquare size={15} /> Send My Brief â€” Get Quoted</>}
                     </button>
                   </div>
 
@@ -492,7 +494,7 @@ export default function Quote() {
               )}
             </div>
 
-            {/* ── Right: live price panel ──────────────────────── */}
+            {/* â”€â”€ Right: live price panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             <PricePanel
               min={price.min} max={price.max}
               length={length} rush={rush} platforms={platforms}
