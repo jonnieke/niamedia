@@ -22,6 +22,7 @@ create table if not exists public.invoices (
   created_at timestamptz default now()
 );
 alter table public.invoices enable row level security;
+drop policy if exists "invoices_owner" on public.invoices;
 create policy "invoices_owner" on public.invoices for all using (user_id = auth.uid());
 
 -- Auto-generate invoice number per user
@@ -44,6 +45,7 @@ create table if not exists public.video_jobs (
   updated_at timestamptz default now()
 );
 alter table public.video_jobs enable row level security;
+drop policy if exists "video_jobs_owner" on public.video_jobs;
 create policy "video_jobs_owner" on public.video_jobs for all using (user_id = auth.uid());
 
 -- Stage history / approvals
@@ -57,6 +59,7 @@ create table if not exists public.video_job_stages (
   created_at timestamptz default now()
 );
 alter table public.video_job_stages enable row level security;
+drop policy if exists "video_stages_owner" on public.video_job_stages;
 create policy "video_stages_owner" on public.video_job_stages for all
   using (job_id in (select id from public.video_jobs where user_id = auth.uid()));
 
@@ -78,4 +81,5 @@ create table if not exists public.campaign_results (
   created_at timestamptz default now()
 );
 alter table public.campaign_results enable row level security;
+drop policy if exists "campaign_results_owner" on public.campaign_results;
 create policy "campaign_results_owner" on public.campaign_results for all using (user_id = auth.uid());

@@ -1,5 +1,5 @@
 -- Phase 22: Public Portfolio
-create table public.portfolio_items (
+create table if not exists public.portfolio_items (
   id            uuid primary key default gen_random_uuid(),
   created_at    timestamptz default now(),
 
@@ -19,12 +19,14 @@ create table public.portfolio_items (
 alter table public.portfolio_items enable row level security;
 
 -- Public can read published items
+drop policy if exists "portfolio_public_select" on public.portfolio_items;
 create policy "portfolio_public_select"
   on public.portfolio_items for select
   to anon, authenticated
   using (published = true);
 
 -- Admins can do everything
+drop policy if exists "portfolio_admin_all" on public.portfolio_items;
 create policy "portfolio_admin_all"
   on public.portfolio_items for all
   to authenticated

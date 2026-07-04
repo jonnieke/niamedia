@@ -14,6 +14,7 @@ create table if not exists public.social_connections (
   unique(user_id, platform, page_id)
 );
 alter table public.social_connections enable row level security;
+drop policy if exists "Users manage own connections" on public.social_connections;
 create policy "Users manage own connections" on public.social_connections
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create index if not exists social_connections_user_idx on public.social_connections (user_id);
@@ -36,6 +37,7 @@ create table if not exists public.scheduled_posts (
   created_at timestamptz not null default now()
 );
 alter table public.scheduled_posts enable row level security;
+drop policy if exists "Users manage own scheduled posts" on public.scheduled_posts;
 create policy "Users manage own scheduled posts" on public.scheduled_posts
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create index if not exists scheduled_posts_user_idx on public.scheduled_posts (user_id);
@@ -61,6 +63,7 @@ create table if not exists public.whatsapp_conversations (
   unique(user_id, lead_phone)
 );
 alter table public.whatsapp_conversations enable row level security;
+drop policy if exists "Users manage own conversations" on public.whatsapp_conversations;
 create policy "Users manage own conversations" on public.whatsapp_conversations
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create index if not exists whatsapp_conv_user_idx on public.whatsapp_conversations (user_id, last_message_at desc);
@@ -81,8 +84,10 @@ create table if not exists public.client_portals (
   created_at timestamptz not null default now()
 );
 alter table public.client_portals enable row level security;
+drop policy if exists "Owners manage own portals" on public.client_portals;
 create policy "Owners manage own portals" on public.client_portals
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "Anyone can view active portals" on public.client_portals;
 create policy "Anyone can view active portals" on public.client_portals
   for select using (is_active = true);
 create index if not exists client_portals_user_idx on public.client_portals (user_id);
@@ -97,12 +102,14 @@ create table if not exists public.portal_campaigns (
   unique(portal_id, campaign_id)
 );
 alter table public.portal_campaigns enable row level security;
+drop policy if exists "Portal owner manages campaign links" on public.portal_campaigns;
 create policy "Portal owner manages campaign links" on public.portal_campaigns
   for all using (
     exists (select 1 from public.client_portals p where p.id = portal_id and p.user_id = auth.uid())
   ) with check (
     exists (select 1 from public.client_portals p where p.id = portal_id and p.user_id = auth.uid())
   );
+drop policy if exists "Anyone can view portal campaign links" on public.portal_campaigns;
 create policy "Anyone can view portal campaign links" on public.portal_campaigns
   for select using (true);
 
@@ -116,17 +123,29 @@ create table if not exists public.portal_comments (
   created_at timestamptz not null default now()
 );
 alter table public.portal_comments enable row level security;
+drop policy if exists "Portal owner reads comments" on public.portal_comments;
 create policy "Portal owner reads comments" on public.portal_comments
   for select using (
     exists (select 1 from public.client_portals p where p.id = portal_id and p.user_id = auth.uid())
   );
+drop policy if exists "Anyone can post a comment" on public.portal_comments;
 create policy "Anyone can post a comment" on public.portal_comments
   for insert with check (true);
+drop policy if exists "Anyone can read portal comments" on public.portal_comments;
 create policy "Anyone can read portal comments" on public.portal_comments
   for select using (true);
 create index if not exists portal_comments_portal_idx on public.portal_comments (portal_id, created_at desc);
 
 -- pg_cron: publish scheduled social posts every 15 minutes
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    perform cron.unschedule('publish-scheduled-posts');
+  end if;
+exception when others then null;
+end;
+$$;
+
 do $$
 begin
   if exists (select 1 from pg_extension where extname = 'pg_cron') then

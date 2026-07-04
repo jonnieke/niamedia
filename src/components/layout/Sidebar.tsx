@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Plus, FolderOpen, Palette, Settings,
   ShieldCheck, LogOut, Zap, X, Video, Lightbulb,
   Receipt, Users, Gift, CalendarDays, UserPlus,
-  MessageSquare, Link2, FileText, Film, TrendingUp, ChevronDown,
+  MessageSquare, Link2, FileText, Film, TrendingUp, ChevronDown, RefreshCw,
 } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -30,6 +30,7 @@ const moreNav = [
   { to: '/portals',       icon: Link2,        label: 'Client Portals' },
   { to: '/proposals',     icon: Zap,          label: 'Proposals' },
   { to: '/production',   icon: Film,         label: 'Production' },
+  { to: '/retainers',   icon: RefreshCw,    label: 'Retainers' },
   { to: '/invoices',      icon: FileText,     label: 'Invoices' },
   { to: '/video-pipeline',icon: Film,         label: 'Video Pipeline' },
   { to: '/roi-tracker',   icon: TrendingUp,   label: 'ROI Tracker' },

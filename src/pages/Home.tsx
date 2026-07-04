@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import Logo from "../components/ui/Logo";
 import {
   ArrowRight,
@@ -9,12 +9,16 @@ import {
   Clock,
   Copy,
   Film,
+  Maximize2,
   MessageSquare,
   Music,
+  Play,
+  Send,
   ShoppingBag,
   Sparkles,
   Star,
   Target,
+  Volume2,
 } from "lucide-react";
 
 const NiaAgent = lazy(() => import("../components/NiaAgent"));
@@ -22,16 +26,23 @@ const NiaAgent = lazy(() => import("../components/NiaAgent"));
 export default function Home() {
   const [showAssistant, setShowAssistant] = useState(false);
   const [params] = useSearchParams();
+  const location = useLocation();
   useEffect(() => {
     if (params.get("assistant") === "1") setShowAssistant(true);
   }, [params]);
+  useEffect(() => {
+    if (!location.hash) return;
+    requestAnimationFrame(() => {
+      document.querySelector(location.hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [location.hash]);
   const packages = [
     {
       title: "Quick Promo",
-      price: "KES 3,500 – 5,000",
+      price: "KES 3,500 - 5,000",
       intro: "Perfect for simple offers and quick promotions.",
       features: [
-        "15–20 sec video",
+        "15-20 sec video",
         "Basic script",
         "AI visuals & music",
         "9:16 vertical format",
@@ -43,7 +54,7 @@ export default function Home() {
     },
     {
       title: "Social Commercial",
-      price: "KES 7,500 – 12,000",
+      price: "KES 7,500 - 12,000",
       intro: "Best for social media ads that get attention.",
       features: [
         "30 sec video",
@@ -60,10 +71,10 @@ export default function Home() {
     },
     {
       title: "Brand Campaign Video",
-      price: "KES 15,000 – 25,000",
+      price: "KES 15,000 - 25,000",
       intro: "Ideal for brands and serious marketing campaigns.",
       features: [
-        "45–60 sec video",
+        "45-60 sec video",
         "Campaign strategy",
         "Voiceover & music",
         "Multiple formats",
@@ -76,15 +87,15 @@ export default function Home() {
     },
     {
       title: "Premium Commercial",
-      price: "KES 35,000 – 60,000",
+      price: "KES 35,000 - 60,000",
       intro: "For businesses that want the very best.",
       features: [
-        "60–90 sec video",
+        "60-90 sec video",
         "Full concept development",
         "Advanced script & scenes",
         "Multi-platform versions",
         "Campaign copy pack",
-        "3–4 revisions",
+        "3-4 revisions",
         "Strategy call",
       ],
       color: "#8c21b7",
@@ -125,7 +136,7 @@ export default function Home() {
   ];
   const featureBadges = [
     [Film, "Video ads from", "KES 3,500"],
-    [Clock, "24–72 hour", "delivery"],
+    [Clock, "24-72 hour", "delivery"],
     [Sparkles, "AI-assisted", "production"],
     [Target, "Human creative", "direction"],
     [Star, "Ready for all", "social platforms"],
@@ -166,7 +177,7 @@ export default function Home() {
           <nav className="hidden items-center gap-9 text-[13px] font-medium text-white/90 xl:flex">
             {" "}
             <Link to="/">Home</Link>
-            <Link to="/request-video">Video Commercials?</Link>
+            <Link to="/quote">Video Commercials</Link>
             <Link to="/pricing">Pricing</Link>{" "}
             <a href="#how-it-works">How It Works</a>
             <Link to="/portfolio">Portfolio</Link>
@@ -181,7 +192,7 @@ export default function Home() {
               Login
             </Link>
             <Link
-              to="/book?service=video"
+              to="/quote"
               className="rounded-xl px-5 py-3 text-sm font-bold"
               style={{ background: gradient }}
             >
@@ -204,14 +215,14 @@ export default function Home() {
             </h1>{" "}
             <p className="mt-5 max-w-[575px] text-[16px] leading-[1.55] text-white/90">
               Nia Media helps SMEs create professional, AI-assisted video ads
-              fast. From idea to final video — scripts, voiceover, music,
+              fast. From idea to final video - scripts, voiceover, music,
               captions and more. Ready for WhatsApp, Instagram, TikTok, Facebook
               and YouTube.
             </p>{" "}
             <div className="mt-7 flex flex-wrap gap-4">
               {" "}
               <Link
-                to="/book?service=video"
+                to="/quote"
                 className="inline-flex items-center gap-3 rounded-xl px-7 py-4 text-[15px] font-bold text-white shadow-lg"
                 style={{ background: gradient }}
               >
@@ -229,7 +240,7 @@ export default function Home() {
             {" "}
             <img
               src="/images/nia-cafe-owner.png"
-              alt="Kenyan café business owner"
+              alt="Kenyan cafe business owner"
               className="absolute inset-0 h-full w-full object-cover"
             />{" "}
             <div className="absolute left-[7%] top-[13%] max-w-[44%]">
@@ -248,26 +259,27 @@ export default function Home() {
                 <span className="text-fuchsia-400">to you.</span>
               </p>{" "}
               <p className="mt-7 rotate-[-4deg] text-[clamp(12px,1.2vw,19px)] italic leading-none">
-                Let’s create
+                Let's create
                 <br />
                 your next
                 <br />
-                big ad! <span className="text-3xl text-fuchsia-400">?</span>
+                big ad! <ArrowRight size={30} className="inline -rotate-45 text-fuchsia-400" />
               </p>{" "}
             </div>{" "}
-            <button
-              aria-label="Play showcase video"
+            <div
+              aria-hidden="true"
               className="absolute left-[51%] top-1/2 grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-[3px] border-white text-white"
             >
-              <span className="ml-1 text-4xl">?</span>
-            </button>{" "}
+              <Play size={34} className="ml-1" fill="currentColor" />
+            </div>{" "}
             <div className="absolute inset-x-0 bottom-0 flex h-11 items-center gap-3 bg-black/80 px-5 text-[10px]">
-              <span>?</span>
+              <Play size={12} fill="currentColor" />
               <span>0:00 / 0:30</span>
               <div className="h-1 flex-1 rounded bg-white/70">
                 <div className="h-full w-[58%] bg-gradient-to-r from-pink-500 to-purple-500" />
               </div>
-              <span>?</span>
+              <Volume2 size={12} />
+              <Maximize2 size={12} />
             </div>{" "}
           </div>{" "}
         </div>{" "}
@@ -352,7 +364,7 @@ export default function Home() {
           </div>
           <div className="mt-5 text-center">
             <Link
-              to="/request-video"
+              to="/quote"
               className="inline-flex items-center gap-3 rounded-xl px-7 py-3 text-sm font-bold text-white shadow-lg"
               style={{ background: "linear-gradient(90deg,#4f46e5,#d946ef)" }}
             >
@@ -361,7 +373,7 @@ export default function Home() {
           </div>
         </div>{" "}
       </section>{" "}
-      <section className="bg-white px-6 py-8">
+      <section id="services" className="bg-white px-6 py-8">
         <div className="mx-auto max-w-[1380px]">
           <h2 className="mb-5 text-center text-[30px] font-black text-[#111329]">
             Popular Video Packages
@@ -458,7 +470,7 @@ export default function Home() {
               </span>
               <span>
                 <b className="block text-xs">Chat with Nia</b>
-                <small className="text-[9px] text-emerald-300">? Online</small>
+                <small className="flex items-center gap-1 text-[9px] text-emerald-300"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Online</small>
               </span>
             </div>
             <div className="flex-1 space-y-3 py-4">
@@ -472,7 +484,7 @@ export default function Home() {
             </div>
             <div className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-[10px] text-white/35">
               Type your message...{" "}
-              <span className="float-right text-purple-400">?</span>
+              <Send size={12} className="float-right text-purple-400" />
             </div>
             <button
               onClick={() => setShowAssistant(true)}
@@ -488,7 +500,7 @@ export default function Home() {
         <Suspense
           fallback={
             <div className="fixed inset-0 z-[90] grid place-items-center bg-black/60 text-white">
-              Loading Nia…
+              Loading Nia...
             </div>
           }
         >

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Send, Upload, Loader2, CheckCircle2, Film, Clock } from 'lucide-react'
+import { Send, Upload, Loader2, CheckCircle2, Film, Clock, Sparkles } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import CreativeAssistant, { CreativeAssistantButton } from '../components/CreativeAssistant'
 import { supabase } from '../lib/supabase'
@@ -164,22 +164,22 @@ export default function VideoRequest() {
         <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-emerald-700">Fast-track video brief</p>
-            <p className="text-sm text-emerald-900">Already know what you need? Skip ideation and book a meeting with us for a tailored quote.</p>
+            <p className="text-sm text-emerald-900">Already know what you need? Request the commercial now or talk to Nia first if you want help shaping the idea.</p>
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={() => navigate(getBookingPath('video', { priority: 'urgent' }))} className="px-3 py-2 rounded-xl text-xs font-semibold border border-emerald-200 text-emerald-800 bg-white">Book meeting</button>
-            <button type="button" onClick={() => navigate('/video-journey')} className="px-3 py-2 rounded-xl text-xs font-semibold text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>Need ideas first</button>
+            <button type="button" onClick={() => navigate(getBookingPath('video', { priority: 'urgent' }))} className="px-3 py-2 rounded-xl text-xs font-semibold border border-emerald-200 text-emerald-800 bg-white">Request a Video Commercial</button>
+            <button type="button" onClick={() => navigate('/?assistant=1')} className="px-3 py-2 rounded-xl text-xs font-semibold text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>Talk to Nia</button>
           </div>
         </div>
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Film size={18} className="text-purple-600" />
-              <h1 className="text-2xl font-bold text-gray-900">Request Video Production</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Request a Video Commercial</h1>
             </div>
             <p className="text-sm text-gray-500">Fill in the details below and Nia Media will produce your video. We'll confirm scope, timeline, and payment before starting.</p>
           </div>
-          <CreativeAssistantButton onClick={() => setShowNia(true)} label="Open Nia" />
+          <CreativeAssistantButton onClick={() => setShowNia(true)} label="Talk to Nia" />
         </div>
       </div>
 
@@ -348,8 +348,8 @@ export default function VideoRequest() {
               <div className="rounded-xl bg-white/5 px-3 py-2">Add-ons: {estimate.addons.length ? estimate.addons.join(', ') : 'None selected yet'}</div>
             </div>
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-              <button type="button" onClick={() => navigate(getBookingPath('video'))} className="flex-1 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-gray-900">Book a meeting</button>
-              <button type="button" onClick={() => navigate('/video-journey')} className="flex-1 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white">Explore ideas first</button>
+              <button type="button" onClick={() => navigate(getBookingPath('video'))} className="flex-1 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-gray-900">Request a Video Commercial</button>
+              <button type="button" onClick={() => navigate('/?assistant=1')} className="flex-1 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white">Talk to Nia</button>
             </div>
           </div>
           <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
@@ -387,7 +387,7 @@ export default function VideoRequest() {
           <button onClick={handleSubmit} disabled={submitting}
             className="w-full py-3.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
             style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 4px 20px rgba(124,58,237,0.3)' }}>
-            {submitting ? <><Loader2 size={15} className="animate-spin" /> Submitting...</> : <><Send size={15} /> Submit Video Request</>}
+            {submitting ? <><Loader2 size={15} className="animate-spin" /> Submitting...</> : <><Sparkles size={15} /> Request a Video Commercial</>}
           </button>
           <p className="text-center text-xs text-gray-400">We'll confirm scope and payment before production begins.</p>
         </div>

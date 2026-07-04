@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { CalendarDays, Clock3, Video, MessageSquare, Sparkles, ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react'
 import PublicHeader from '../components/layout/PublicHeader'
+import { PRIMARY_VIDEO_CTA } from '../lib/cta'
 import { getBookingUrl, getCalBookingTarget, type BookingService } from '../lib/booking'
 
 export default function BookMeeting() {
@@ -84,8 +85,8 @@ export default function BookMeeting() {
             </div>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/request-video" className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
-                Request a Video Commercial <ArrowRight size={14} />
+              <Link to={PRIMARY_VIDEO_CTA.href} className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
+                {PRIMARY_VIDEO_CTA.label} <ArrowRight size={14} />
               </Link>
               <Link to="/?assistant=1" className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold border border-gray-200 bg-white text-gray-700">
                 Talk to Nia
@@ -133,6 +134,8 @@ export default function BookMeeting() {
     </div>
   )
 }
+
+
 
 
 

@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import PublicHeader from '../components/layout/PublicHeader'
 import { getBookingPath } from '../lib/booking'
+import { PRIMARY_VIDEO_CTA, SECONDARY_NIA_CTA } from '../lib/cta'
 
 const INDUSTRIES = ['Real Estate', 'Hospitality', 'Education', 'Fintech', 'Restaurant', 'Travel', 'Retail', 'Health', 'Events', 'Professional Services', 'Other']
 const TIMELINES = ['ASAP (rush)', '1–2 weeks', '2–4 weeks', '1–2 months', 'Flexible']

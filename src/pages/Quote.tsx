@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import PublicHeader from '../components/layout/PublicHeader'
 import { supabase } from '../lib/supabase'
+import { SECONDARY_NIA_CTA } from '../lib/cta'
 
 /* ── Pricing logic ──────────────────────────────────────────────── */
 const LENGTHS = [
@@ -269,14 +270,14 @@ export default function Quote() {
             </p>
 
             <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto">
-              <Link to="/pricing"
-                className="flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 border border-gray-200 hover:bg-gray-50 transition-all">
-                View Pricing
-              </Link>
-              <Link to="/register"
+              <Link to="/book?service=video"
                 className="flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl text-sm font-semibold text-white transition-all"
                 style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
-                Create Account <ArrowRight size={13} />
+                Book a Creative Call <ArrowRight size={13} />
+              </Link>
+              <Link to={SECONDARY_NIA_CTA.href}
+                className="flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 border border-gray-200 hover:bg-gray-50 transition-all">
+                {SECONDARY_NIA_CTA.label}
               </Link>
             </div>
           </div>

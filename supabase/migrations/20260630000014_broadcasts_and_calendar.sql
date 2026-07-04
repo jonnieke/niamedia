@@ -13,6 +13,7 @@ create table if not exists public.broadcasts (
   sent_at timestamptz
 );
 alter table public.broadcasts enable row level security;
+drop policy if exists "Users manage own broadcasts" on public.broadcasts;
 create policy "Users manage own broadcasts" on public.broadcasts
   for all using (auth.uid() = user_id);
 
@@ -27,6 +28,7 @@ create table if not exists public.broadcast_recipients (
   sent_at timestamptz
 );
 alter table public.broadcast_recipients enable row level security;
+drop policy if exists "Users read own broadcast recipients" on public.broadcast_recipients;
 create policy "Users read own broadcast recipients" on public.broadcast_recipients
   for select using (
     exists (select 1 from public.broadcasts b where b.id = broadcast_recipients.broadcast_id and b.user_id = auth.uid())
@@ -44,6 +46,7 @@ create table if not exists public.content_calendar (
   created_at timestamptz not null default now()
 );
 alter table public.content_calendar enable row level security;
+drop policy if exists "Users manage own calendar" on public.content_calendar;
 create policy "Users manage own calendar" on public.content_calendar
   for all using (auth.uid() = user_id);
 

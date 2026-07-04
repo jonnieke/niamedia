@@ -1,9 +1,9 @@
 -- Phase 19: Smart Proposal + Deposit Collection
-create table public.proposals (
+create table if not exists public.proposals (
   id                uuid primary key default gen_random_uuid(),
   created_at        timestamptz default now(),
   updated_at        timestamptz default now(),
-  token             text unique not null default encode(gen_random_bytes(16), 'hex'),
+  token             text unique not null default encode(extensions.gen_random_bytes(16), 'hex'),
 
   -- Link to quote request (optional)
   quote_request_id  uuid references public.quote_requests(id) on delete set null,
@@ -48,12 +48,14 @@ create table public.proposals (
 alter table public.proposals enable row level security;
 
 -- Anyone can view proposals (token-gated at app level)
+drop policy if exists "proposals_public_select" on public.proposals;
 create policy "proposals_public_select"
   on public.proposals for select
   to anon, authenticated
   using (true);
 
 -- Anon clients can respond (accept/decline/paid only)
+drop policy if exists "proposals_client_update" on public.proposals;
 create policy "proposals_client_update"
   on public.proposals for update
   to anon
@@ -61,6 +63,7 @@ create policy "proposals_client_update"
   with check (status in ('accepted', 'declined', 'paid'));
 
 -- Authenticated admins can insert
+drop policy if exists "proposals_admin_insert" on public.proposals;
 create policy "proposals_admin_insert"
   on public.proposals for insert
   to authenticated
@@ -69,12 +72,14 @@ create policy "proposals_admin_insert"
   );
 
 -- Authenticated admins can update anything
+drop policy if exists "proposals_admin_update" on public.proposals;
 create policy "proposals_admin_update"
   on public.proposals for update
   to authenticated
   using (true);
 
 -- Admins can delete
+drop policy if exists "proposals_admin_delete" on public.proposals;
 create policy "proposals_admin_delete"
   on public.proposals for delete
   to authenticated

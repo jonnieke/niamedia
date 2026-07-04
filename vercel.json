@@ -1,3 +1,11 @@
 {
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "www.niamedia.co.ke" }],
+      "destination": "https://niamedia.co.ke/$1",
+      "permanent": true
+    }
+  ],
   "rewrites": [{ "source": "/(.*)", "destination": "/" }]
 }

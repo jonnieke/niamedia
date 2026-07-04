@@ -13,14 +13,17 @@ create table if not exists public.notifications (
 alter table public.notifications enable row level security;
 
 -- Users can only see and update their own notifications
+drop policy if exists "own_read" on public.notifications;
 create policy "own_read" on public.notifications
   for select using (auth.uid() = user_id);
 
+drop policy if exists "own_update" on public.notifications;
 create policy "own_update" on public.notifications
   for update using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
 -- Service role inserts (edge functions)
+drop policy if exists "service_insert" on public.notifications;
 create policy "service_insert" on public.notifications
   for insert with check (true);
 

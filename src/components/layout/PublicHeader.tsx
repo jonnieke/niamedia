@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, X, Film } from 'lucide-react'
+import { Menu, X, Sparkles } from 'lucide-react'
 import Logo from '../ui/Logo'
+import { PRIMARY_VIDEO_CTA, SECONDARY_NIA_CTA } from '../../lib/cta'
 
 const navItems = [
-  { label: 'How It Works', href: '#how-it-works' },
-  { label: 'Services', href: '#services' },
+  { label: 'How It Works', href: '/#how-it-works' },
+  { label: 'Services', href: '/#services' },
   { label: 'Portfolio', href: '/portfolio' },
   { label: 'Pricing', href: '/pricing' },
 ]
@@ -53,18 +54,18 @@ export default function PublicHeader() {
           <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900 font-semibold transition-colors px-3 py-2">
             Login
           </Link>
-          <Link to="/quote"
+          <Link to={SECONDARY_NIA_CTA.href}
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all"
             style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)', color: '#7c3aed' }}>
-            <Film size={13} /> Get a Quote
+            <Sparkles size={13} /> {SECONDARY_NIA_CTA.label}
           </Link>
-          <Link to="/register" className="btn-primary px-5 py-2 text-sm">
-            Get Started Free
+          <Link to={PRIMARY_VIDEO_CTA.href} className="btn-primary px-5 py-2 text-sm">
+            {PRIMARY_VIDEO_CTA.label}
           </Link>
         </div>
 
         {/* Mobile toggle */}
-        <button className="md:hidden p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+        <button aria-label="Toggle navigation" aria-expanded={open} className="md:hidden p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors"
           onClick={() => setOpen(!open)}>
           {open ? <X size={20} /> : <Menu size={20} />}
         </button>
@@ -88,15 +89,13 @@ export default function PublicHeader() {
             )
           ))}
           <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
-            <Link to="/quote" onClick={() => setOpen(false)}
+            <Link to={SECONDARY_NIA_CTA.href} onClick={() => setOpen(false)}
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-bold"
               style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)', color: '#7c3aed' }}>
-              <Film size={13} /> Get a Video Quote
+              <Sparkles size={13} /> {SECONDARY_NIA_CTA.label}
             </Link>
-            <div className="flex gap-3">
-              <Link to="/login" className="btn-secondary flex-1 text-center text-sm" onClick={() => setOpen(false)}>Login</Link>
-              <Link to="/register" className="btn-primary flex-1 text-center text-sm" onClick={() => setOpen(false)}>Get Started</Link>
-            </div>
+            <Link to={PRIMARY_VIDEO_CTA.href} className="btn-primary flex-1 text-center text-sm" onClick={() => setOpen(false)}>{PRIMARY_VIDEO_CTA.label}</Link>
+            <Link to="/login" className="btn-secondary flex-1 text-center text-sm" onClick={() => setOpen(false)}>Login</Link>
           </div>
         </div>
       )}

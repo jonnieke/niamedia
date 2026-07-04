@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { AuthProvider, useAuth } from './lib/AuthContext'
+import RouteSeo from './components/RouteSeo'
 
 const Home = lazy(() => import('./pages/Home'))
 const Login = lazy(() => import('./pages/Login'))
@@ -57,6 +58,9 @@ const BriefView = lazy(() => import('./pages/BriefView'))
 const Portfolio = lazy(() => import('./pages/Portfolio'))
 const Production = lazy(() => import('./pages/Production'))
 const DeliveryView = lazy(() => import('./pages/DeliveryView'))
+const Retainers = lazy(() => import('./pages/Retainers'))
+const ClientOnboarding = lazy(() => import('./pages/ClientOnboarding'))
+const AdminAnalytics = lazy(() => import('./pages/AdminAnalytics'))
 
 function RouteLoader() {
   return (
@@ -85,8 +89,10 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   return (
-    <Suspense fallback={<RouteLoader />}>
-      <Routes>
+    <>
+      <RouteSeo />
+      <Suspense fallback={<RouteLoader />}>
+        <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -99,6 +105,7 @@ function AppRoutes() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/payment/callback" element={<PaymentCallback />} />
         <Route path="/quote" element={<Quote />} />
+        <Route path="/start" element={<ClientOnboarding />} />
         <Route path="/proposal/:token" element={<ProposalView />} />
         <Route path="/brief/:token" element={<BriefView />} />
         <Route path="/portfolio" element={<Portfolio />} />
@@ -142,13 +149,16 @@ function AppRoutes() {
         <Route path="/roi-tracker" element={<ProtectedRoute><ROITracker /></ProtectedRoute>} />
         <Route path="/proposals" element={<ProtectedRoute><Proposals /></ProtectedRoute>} />
         <Route path="/production" element={<ProtectedRoute><Production /></ProtectedRoute>} />
+        <Route path="/retainers" element={<ProtectedRoute><Retainers /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
         <Route path="/admin/voices" element={<ProtectedRoute><AdminRoute><AdminVoices /></AdminRoute></ProtectedRoute>} />
+        <Route path="/admin/analytics" element={<ProtectedRoute><AdminRoute><AdminAnalytics /></AdminRoute></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Suspense>
+        </Routes>
+      </Suspense>
+    </>
   )
 }
 

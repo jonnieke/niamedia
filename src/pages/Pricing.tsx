@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { CheckCircle2, Zap, Film, ChevronDown, ChevronUp } from 'lucide-react'
+import { CheckCircle2, Zap, Film, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
 import PublicHeader from '../components/layout/PublicHeader'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
+import { PRIMARY_VIDEO_CTA, SECONDARY_NIA_CTA } from '../lib/cta'
 
 const CHECK = () => <CheckCircle2 size={13} className="text-purple-500 shrink-0 mt-0.5" />
 
@@ -152,7 +153,7 @@ export default function Pricing() {
               <ul className="space-y-1.5 flex-1">
                 {p.features.map(f => <li key={f} className="flex items-start gap-2 text-xs text-gray-600"><CHECK />{f}</li>)}
               </ul>
-              <Link to="/package-request" className="mt-4 block text-center py-2 rounded-xl text-xs font-semibold border border-gray-200 text-gray-700 hover:border-blue-300 hover:text-blue-700 transition-all">Request Package</Link>
+              <Link to={SECONDARY_NIA_CTA.href} className="mt-4 block text-center py-2 rounded-xl text-xs font-semibold border border-gray-200 text-gray-700 hover:border-blue-300 hover:text-blue-700 transition-all">{SECONDARY_NIA_CTA.label}</Link>
             </div>
           ))}
         </div>
@@ -170,7 +171,7 @@ export default function Pricing() {
               <p className="text-xs text-gray-500">See the price ladder from 15s promos to 3+ minute infomercials, then book a meeting when the brief is ready.</p>
             </div>
           </div>
-          <Link to="/book?service=video" className="inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-semibold text-white" style={{ background: 'linear-gradient(135deg, #059669, #0891b2)' }}>Book a consultation</Link>
+          <Link to={PRIMARY_VIDEO_CTA.href} className="inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-semibold text-white" style={{ background: 'linear-gradient(135deg, #059669, #0891b2)' }}>{PRIMARY_VIDEO_CTA.label}</Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           {[
@@ -186,7 +187,7 @@ export default function Pricing() {
               <ul className="space-y-2 flex-1">
                 {p.features.map(f => <li key={f} className="flex items-start gap-2 text-xs text-gray-600"><CHECK />{f}</li>)}
               </ul>
-              <Link to="/request-video" className="mt-4 block text-center py-2.5 rounded-xl text-sm font-semibold text-white transition-all" style={{ background: 'linear-gradient(135deg, #059669, #0891b2)' }}>Request This Video</Link>
+              <Link to={PRIMARY_VIDEO_CTA.href} className="mt-4 block text-center py-2.5 rounded-xl text-sm font-semibold text-white transition-all" style={{ background: 'linear-gradient(135deg, #059669, #0891b2)' }}>{PRIMARY_VIDEO_CTA.label}</Link>
             </div>
           ))}
         </div>

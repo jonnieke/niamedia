@@ -30,12 +30,14 @@ create table if not exists public.quote_requests (
 alter table public.quote_requests enable row level security;
 
 -- Anyone (anon or signed-in) can submit a quote
+drop policy if exists "Public can insert quote_requests" on public.quote_requests;
 create policy "Public can insert quote_requests"
   on public.quote_requests for insert
   to anon, authenticated
   with check (true);
 
 -- Only admins can read quotes
+drop policy if exists "Admins can view quote_requests" on public.quote_requests;
 create policy "Admins can view quote_requests"
   on public.quote_requests for select
   to authenticated
@@ -47,6 +49,7 @@ create policy "Admins can view quote_requests"
   );
 
 -- Only admins can update status / notes
+drop policy if exists "Admins can update quote_requests" on public.quote_requests;
 create policy "Admins can update quote_requests"
   on public.quote_requests for update
   to authenticated

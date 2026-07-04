@@ -4,7 +4,7 @@ import {
   Film, Music, Upload, Eye, RefreshCw, CheckCircle, Clock,
   AlertCircle, Loader2, Radio, Mic, Phone, Mail, Inbox,
   Zap, Plus, CreditCard, Search, MessageSquare, Image, Star,
-  Trash2, ExternalLink,
+  Trash2, ExternalLink, BarChart3,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
@@ -634,6 +634,16 @@ export default function Admin() {
   const [portfolioForm, setPortfolioForm] = useState({ title: '', type: 'video', client_name: '', industry: '', description: '', thumbnail_url: '', video_url: '', tags: '', featured: false, published: true })
   const [portfolioSaving, setPortfolioSaving] = useState(false)
 
+  // Client Intakes
+  const [intakes, setIntakes] = useState<{
+    id: string; business_name: string; contact_name: string; phone: string
+    email: string | null; industry: string | null; video_length: string
+    platforms: string[]; what_to_promote: string; target_audience: string | null
+    offer_hook: string | null; call_to_action: string | null; tone: string | null
+    budget_range: string | null; timeline: string | null; extra_notes: string | null
+    status: string; admin_notes: string | null; created_at: string
+  }[]>([])
+
   // Testimonials
   const [testimonials, setTestimonials] = useState<{
     id: string; business_name: string; contact_name: string | null
@@ -671,6 +681,8 @@ export default function Admin() {
       .then(({ data }) => { if (data) setPortfolioItems(data as typeof portfolioItems) })
     supabase.from('testimonials').select('*').order('created_at', { ascending: false })
       .then(({ data }) => { if (data) setTestimonials(data as typeof testimonials) })
+    supabase.from('client_intakes').select('*').order('created_at', { ascending: false })
+      .then(({ data }) => { if (data) setIntakes(data as typeof intakes) })
   }, [])
 
   const updateVideoRequestStatus = async (id: string, status: VideoRequestStatus) => {
@@ -714,7 +726,7 @@ export default function Admin() {
   const totalRevenue = audioRevenue + creditRevenue
 
   const newQuotes = quoteRequests.filter(q => q.status === 'new').length
-  const tabs = ['Overview', 'Leads', 'Audio Orders', 'Projects', 'Credits', 'Users', 'Video Requests', 'Quote Requests', 'Analytics', 'Portfolio', 'Testimonials']
+  const tabs = ['Overview', 'Leads', 'Audio Orders', 'Projects', 'Credits', 'Users', 'Video Requests', 'Quote Requests', 'Analytics', 'Portfolio', 'Testimonials', 'Intakes']
 
   const stats = [
     { label: 'New Leads', value: newLeads, icon: Inbox, sub: `${leads.length} total`, color: 'text-amber-400' },
@@ -732,10 +744,16 @@ export default function Admin() {
           <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">Admin Only</span>
         </div>
         <p className="text-sm text-gray-500">Manage users, audio orders, and production projects.</p>
-        <a href="/admin/voices"
-          className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl text-xs font-semibold text-purple-300 border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 transition-all">
-          <Mic size={13} /> Voice Clone Studio →
-        </a>
+        <div className="flex flex-wrap gap-2 mt-3">
+          <a href="/admin/voices"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-purple-300 border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 transition-all">
+            <Mic size={13} /> Voice Clone Studio →
+          </a>
+          <a href="/admin/analytics"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-blue-300 border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 transition-all">
+            <BarChart3 size={13} /> Revenue Analytics →
+          </a>
+        </div>
       </div>
 
       {/* Action-needed banner */}
@@ -1680,6 +1698,82 @@ export default function Admin() {
                             className="px-3 py-1.5 rounded-lg text-xs text-red-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all">
                             <Trash2 size={13} />
                           </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Client Intakes */}
+          {tab === 11 && (
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <p className="text-sm text-gray-500">{intakes.length} intake{intakes.length !== 1 ? 's' : ''} submitted · {intakes.filter(i => i.status === 'new').length} new</p>
+              </div>
+              {intakes.length === 0 ? (
+                <p className="text-center text-gray-400 py-16 text-sm">No intakes yet. Share <strong>niamedia.co.ke/start</strong> to get leads.</p>
+              ) : (
+                <div className="space-y-3">
+                  {intakes.map(intake => (
+                    <div key={intake.id} className="bg-white rounded-2xl border border-gray-200 p-5">
+                      <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <h3 className="text-sm font-bold text-gray-900">{intake.business_name}</h3>
+                            <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                              intake.status === 'new' ? 'bg-amber-50 text-amber-700' :
+                              intake.status === 'converted' ? 'bg-green-50 text-green-700' :
+                              intake.status === 'reviewed' ? 'bg-blue-50 text-blue-700' :
+                              'bg-gray-100 text-gray-500'
+                            }`}>{intake.status}</span>
+                            <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-purple-50 text-purple-700">{intake.video_length}</span>
+                          </div>
+                          <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-500 mb-2">
+                            <span>{intake.contact_name}</span>
+                            <span>{intake.phone}</span>
+                            {intake.email && <span>{intake.email}</span>}
+                            {intake.industry && <span>{intake.industry}</span>}
+                            <span>{new Date(intake.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                          </div>
+                          {intake.platforms?.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {intake.platforms.map(p => (
+                                <span key={p} className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-gray-100 text-gray-600">{p}</span>
+                              ))}
+                            </div>
+                          )}
+                          <p className="text-xs text-gray-600 line-clamp-2">{intake.what_to_promote}</p>
+                          {intake.target_audience && <p className="text-xs text-gray-400 mt-0.5"><span className="font-semibold">Audience:</span> {intake.target_audience}</p>}
+                          {intake.offer_hook && <p className="text-xs text-gray-400 mt-0.5"><span className="font-semibold">Offer:</span> {intake.offer_hook}</p>}
+                          <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-gray-400 mt-1.5">
+                            {intake.tone && <span>Tone: {intake.tone}</span>}
+                            {intake.budget_range && <span>Budget: {intake.budget_range}</span>}
+                            {intake.timeline && <span>Timeline: {intake.timeline}</span>}
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2 shrink-0">
+                          <a href={`https://wa.me/${intake.phone.replace(/\D/g,'').replace(/^0/,'254')}?text=${encodeURIComponent(`Hi ${intake.contact_name.split(' ')[0]}! We've received your project brief for ${intake.business_name}. We're putting together a custom proposal and will send it to you shortly. — Nia Media`)}`}
+                            target="_blank" rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white"
+                            style={{ background: '#25d366' }}>
+                            WhatsApp
+                          </a>
+                          <select
+                            value={intake.status}
+                            onChange={async e => {
+                              const status = e.target.value
+                              await supabase.from('client_intakes').update({ status }).eq('id', intake.id)
+                              setIntakes(prev => prev.map(x => x.id === intake.id ? { ...x, status } : x))
+                            }}
+                            className="px-2 py-1.5 rounded-lg text-xs border border-gray-200 bg-white text-gray-600">
+                            <option value="new">New</option>
+                            <option value="reviewed">Reviewed</option>
+                            <option value="converted">Converted</option>
+                            <option value="declined">Declined</option>
+                          </select>
                         </div>
                       </div>
                     </div>

@@ -16,14 +16,17 @@ create table if not exists public.testimonials (
 alter table public.testimonials enable row level security;
 
 -- Public read: only approved testimonials
+drop policy if exists "public_read_approved" on public.testimonials;
 create policy "public_read_approved" on public.testimonials
   for select using (approved = true);
 
 -- Anyone can insert (client submits from delivery page)
+drop policy if exists "client_insert" on public.testimonials;
 create policy "client_insert" on public.testimonials
   for insert with check (true);
 
 -- Admin: full access
+drop policy if exists "admin_all" on public.testimonials;
 create policy "admin_all" on public.testimonials
   for all using (
     exists (

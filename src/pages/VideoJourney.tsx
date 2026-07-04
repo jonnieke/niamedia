@@ -8,6 +8,7 @@ import {
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
 import { getBookingPath } from '../lib/booking'
+import { PRIMARY_VIDEO_CTA, SECONDARY_NIA_CTA } from '../lib/cta'
 import { useAuth } from '../lib/AuthContext'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -825,7 +826,11 @@ export default function VideoJourney() {
           <button onClick={() => navigate(getBookingPath('video'))}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white border border-transparent"
             style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
-            Book meeting
+            {PRIMARY_VIDEO_CTA.label}
+          </button>
+          <button onClick={() => navigate('/?assistant=1')}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-gray-700 border border-gray-200 bg-white hover:border-gray-300 transition-all">
+            {SECONDARY_NIA_CTA.label}
           </button>
         </div>
       </div>

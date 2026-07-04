@@ -2,7 +2,7 @@
   "name": "Nia Media — AI Advertising",
   "short_name": "Nia Media",
   "description": "AI-powered advertising campaigns for growing East African businesses. Generate professional copy, video scripts, and WhatsApp ads in 60 seconds.",
-  "start_url": "/dashboard",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a14",
   "theme_color": "#8b5cf6",
@@ -55,3 +55,4 @@
     }
   ]
 }
+

@@ -83,7 +83,7 @@ export default function Portfolio() {
             Video commercials that<br />drive real results
           </h1>
           <p className="text-gray-400 text-base max-w-xl mx-auto mb-8">
-            Trusted by 1,000+ SMEs across East Africa — from fintech startups to national brands.
+            Trusted by Kenyan SMEs and growing brands — from fintech startups to established businesses.
           </p>
           <Link to="/quote"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-white transition-all"
