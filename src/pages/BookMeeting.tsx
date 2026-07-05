@@ -66,9 +66,6 @@ export default function BookMeeting() {
             </div>
             <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight max-w-2xl">{copy.title}</h1>
             <p className="mt-4 text-base md:text-lg text-gray-600 max-w-xl leading-relaxed">{copy.description}</p>
-            <div className="mt-4 inline-flex items-center rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-600">
-              Recommended Cal event name: <span className="ml-1 text-gray-900">{copy.eventName}</span>
-            </div>
 
             <div className="mt-8 grid sm:grid-cols-2 gap-3 max-w-2xl">
               {[
@@ -91,7 +88,7 @@ export default function BookMeeting() {
               <Link to={PRIMARY_VIDEO_CTA.href} className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
                 {primaryCtaLabel} <ArrowRight size={14} />
               </Link>
-              <Link to={service === 'urgent' ? '/?assistant=1' : '/?assistant=1'} className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold border border-gray-200 bg-white text-gray-700">
+              <Link to="/?assistant=1" className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold border border-gray-200 bg-white text-gray-700">
                 {secondaryCtaLabel}
               </Link>
             </div>
@@ -109,8 +106,8 @@ export default function BookMeeting() {
 
           <section className="rounded-3xl border border-gray-200 bg-white shadow-2xl overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-blue-50">
-              <p className="text-xs font-bold uppercase tracking-widest text-purple-700">Nia booking desk</p>
-              <p className="text-sm text-gray-600 mt-1">{bookingReady ? 'The Cal booking widget is embedded directly in your branded page.' : 'Set a public Cal.com event link such as https://cal.com/your-team/30min in VITE_CAL_BOOKING_URL or the service-specific booking env vars.'}</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-purple-700">Pick a time</p>
+              <p className="text-sm text-gray-600 mt-1">Choose a slot below — you'll get a confirmation with the meeting link right away.</p>
             </div>
             <div className="aspect-[4/5] md:aspect-[3/4] lg:aspect-[4/5] bg-gray-50">
               {bookingReady && calTarget ? (
@@ -126,11 +123,32 @@ export default function BookMeeting() {
                 <div className="h-full flex items-center justify-center p-8 text-center">
                   <div className="max-w-sm">
                     <CheckCircle2 size={28} className="text-purple-500 mx-auto mb-3" />
-                    <p className="text-lg font-bold text-gray-900">Branded booking is ready</p>
-                    <p className="text-sm text-gray-500 mt-2 leading-relaxed">Add a public Cal.com event URL in <code className="px-1 py-0.5 rounded bg-gray-100">VITE_CAL_BOOKING_URL</code> or a service-specific booking env var and your branded scheduler appears here instantly.</p>
+                    <p className="text-lg font-bold text-gray-900">Booking is a message away</p>
+                    <p className="text-sm text-gray-500 mt-2 leading-relaxed">Our calendar is being updated — message us on WhatsApp and we'll set the call up directly.</p>
+                    <a href={`https://wa.me/254751822556?text=${encodeURIComponent(`Hi, I'd like to book a ${copy.eventName.toLowerCase()} call.`)}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white"
+                      style={{ background: '#25d366' }}>
+                      <MessageSquare size={14} /> Book via WhatsApp
+                    </a>
                   </div>
                 </div>
               )}
+            </div>
+            {/* Fallback strip — always visible, in case the embed fails to load */}
+            <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between gap-3 flex-wrap">
+              <p className="text-xs text-gray-500">Calendar not loading?</p>
+              <div className="flex items-center gap-3">
+                <a href={bookingUrl} target="_blank" rel="noopener noreferrer"
+                  className="text-xs font-bold text-purple-700 hover:underline">
+                  Open booking page →
+                </a>
+                <a href={`https://wa.me/254751822556?text=${encodeURIComponent(`Hi, I'd like to book a ${copy.eventName.toLowerCase()} call.`)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="text-xs font-bold text-emerald-600 hover:underline">
+                  WhatsApp us instead →
+                </a>
+              </div>
             </div>
           </section>
         </div>
