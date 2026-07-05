@@ -22,13 +22,11 @@ import {
 
   Film,
 
-  Maximize2,
 
   MessageSquare,
 
   Music,
 
-  Play,
 
   Send,
 
@@ -40,7 +38,6 @@ import {
 
   Target,
 
-  Volume2,
 
 } from "lucide-react";
 
@@ -517,25 +514,16 @@ export default function Home() {
                 big ad! <ArrowRight size={30} className="inline -rotate-45 text-fuchsia-400" />
               </p>{" "}
             </div>{" "}
-            <div
-              aria-hidden="true"
-              className="absolute left-[51%] top-1/2 grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-[3px] border-white text-white"
-            >
-              <Play size={34} className="ml-1" fill="currentColor" />
-            </div>{" "}
-            <div className="absolute inset-x-0 bottom-0 flex h-11 items-center gap-3 bg-black/80 px-5 text-[10px]">
-              <Play size={12} fill="currentColor" />
-              <span>0:00 / 0:30</span>
-              <div className="h-1 flex-1 rounded bg-white/70">
-                <div className="h-full w-[58%] bg-gradient-to-r from-pink-500 to-purple-500" />
+            <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-gradient-to-t from-black/75 via-black/25 to-transparent px-5 py-4 text-white">
+              <div className="max-w-[56%]">
+                <p className="text-[10px] uppercase tracking-[0.3em] text-white/60">Campaign concept</p>
+                <p className="mt-1 text-[13px] font-semibold text-white/90">A polished preview of what your next commercial can feel like.</p>
               </div>
-              <Volume2 size={12} />
-              <Maximize2 size={12} />
-            </div>{" "}
-          </div>{" "}
-        </div>{" "}
-        <div className="relative mx-auto mt-5 grid max-w-[1380px] grid-cols-2 gap-y-4 px-6 sm:grid-cols-3 lg:grid-cols-6 lg:px-10">
-          {" "}
+              <div className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/85 backdrop-blur-sm">
+                AI-assisted creative
+              </div>
+            </div>
+          </div> {" "}
           {featureBadges.map(([Icon, a, b]) => (
             <div
               key={a}
@@ -761,4 +749,6 @@ export default function Home() {
     </div>
   );
 }
+
+
 

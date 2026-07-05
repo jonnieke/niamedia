@@ -77,14 +77,15 @@ function JoinRedirect() {
   const location = useLocation()
   return <Navigate to={`/register${location.search}`} replace />
 }
-
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, loading } = useAuth()
+  if (loading) return <RouteLoader />
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
+  if (loading) return <RouteLoader />
   return user?.role === 'admin' ? <>{children}</> : <Navigate to="/dashboard" replace />
 }
 
@@ -186,3 +187,4 @@ export default function App() {
     </BrowserRouter>
   )
 }
+

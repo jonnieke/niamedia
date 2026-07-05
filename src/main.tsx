@@ -13,7 +13,18 @@ createRoot(document.getElementById('root')!).render(
 )
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => { /* non-fatal */ })
-  })
+  if (import.meta.env.PROD) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => { /* non-fatal */ })
+    })
+  } else {
+    void navigator.serviceWorker.getRegistrations().then(registrations => {
+      registrations.forEach(registration => { void registration.unregister() })
+    }).catch(() => { /* non-fatal */ })
+
+    if ('caches' in window) {
+      void caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key)))).catch(() => { /* non-fatal */ })
+    }
+  }
 }
+

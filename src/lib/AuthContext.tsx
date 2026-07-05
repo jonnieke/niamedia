@@ -1,4 +1,4 @@
-﻿import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { supabase } from './supabase'
 
 interface AuthUser {
@@ -16,6 +16,7 @@ interface AuthContextType {
   logout: () => Promise<void>
   refreshProfile: () => Promise<void>
   isAuthenticated: boolean
+  loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -29,7 +30,7 @@ async function fetchProfile(userId: string, fallbackEmail?: string, fallbackName
   if (!error && data) {
     return { id: data.id, email: data.email, name: data.name, role: data.role as 'user' | 'admin', avatar_url: data.avatar_url ?? undefined }
   }
-  // Table missing or RLS error — fall back to auth metadata so app stays usable
+  // Table missing or RLS error - fall back to auth metadata so app stays usable
   if (fallbackEmail) {
     return { id: userId, email: fallbackEmail, name: fallbackName || fallbackEmail.split('@')[0], role: 'user' }
   }
@@ -51,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         const u = session.user
         const profile = await fetchProfile(u.id, u.email, u.user_metadata?.name)
@@ -95,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { needsConfirmation: false, userId: data.user.id }
     }
 
-    // Email confirmation required — user.id is available even without a session
+    // Email confirmation required - user.id is available even without a session
     return { needsConfirmation: true, userId: data.user?.id }
   }
 
@@ -110,16 +111,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut()
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#f1f5f9' }}>
-        <div className="w-8 h-8 rounded-full border-2 border-purple-500/30 border-t-purple-500 animate-spin" />
-      </div>
-    )
-  }
-
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, refreshProfile, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, register, logout, refreshProfile, isAuthenticated: !!user, loading }}>
       {children}
     </AuthContext.Provider>
   )
@@ -130,4 +123,3 @@ export function useAuth() {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider')
   return ctx
 }
-
