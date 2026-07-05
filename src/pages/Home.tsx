@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+﻿import { lazy, Suspense, useEffect, useState } from "react";
 
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 
@@ -524,21 +524,23 @@ export default function Home() {
               </div>
             </div>
           </div> {" "}
-          {featureBadges.map(([Icon, a, b]) => (
-            <div
-              key={a}
-              className="flex items-center gap-3 text-[11px] leading-tight text-white/85"
-            >
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-purple-500/15 text-purple-300">
-                <Icon size={19} />
-              </span>
-              <span>
-                {a}
-                <br />
-                <b>{b}</b>
-              </span>
-            </div>
-          ))}{" "}
+          <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+            {featureBadges.map(([Icon, a, b]) => (
+              <div
+                key={a}
+                className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-[11px] leading-tight text-white/85 backdrop-blur-sm"
+              >
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-purple-500/15 text-purple-300">
+                  <Icon size={19} />
+                </span>
+                <span className="min-w-0">
+                  {a}
+                  <br />
+                  <b>{b}</b>
+                </span>
+              </div>
+            ))}
+          </div>
         </div>{" "}
       </section>{" "}
       <div className="relative z-10 mx-auto -mt-10 max-w-[1380px] px-5">
@@ -546,24 +548,24 @@ export default function Home() {
           <p className="mb-4 text-center text-base font-bold text-[#121329]">
             Trusted by real Kenyan businesses
           </p>
-          <div className="flex items-center justify-between gap-6 overflow-x-auto pb-1">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {trustedBusinesses.map((business) => (
               <div
                 key={business.name}
-                className="flex shrink-0 items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3"
+                className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3"
               >
-                <span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#111329] text-[11px] font-black tracking-[.15em] text-white">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#111329] text-[11px] font-black tracking-[.15em] text-white">
                   {business.initials}
                 </span>
-                <span className="leading-none">
-                  <b className="block text-[13px] text-[#111329]">{business.name}</b>
-                  <small className="text-[9px] uppercase tracking-[.2em] text-slate-500">
+                <span className="min-w-0 leading-none">
+                  <b className="block truncate text-[13px] text-[#111329]">{business.name}</b>
+                  <small className="block truncate text-[9px] uppercase tracking-[.2em] text-slate-500">
                     {business.label}
                   </small>
                 </span>
               </div>
             ))}
-            <span className="shrink-0 text-xs text-slate-500">and more trusted clients</span>
+            <span className="col-span-full text-center text-xs text-slate-500 lg:col-span-6">and more trusted clients</span>
           </div>
         </div>
       </div>{" "}
@@ -576,17 +578,18 @@ export default function Home() {
           <h2 className="mb-5 text-center text-[32px] font-black text-[#111329]">
             How It Works
           </h2>
-          <div className="grid gap-7 md:grid-cols-5">
-            {" "}
+          <div className="grid gap-4 md:grid-cols-5">
             {steps.map(({ icon: Icon, color, title, desc }, i) => (
-              <div key={title} className="relative text-center">
+              <div key={title} className="relative rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm">
                 {i < 4 && (
-                  <div className="absolute left-[70%] top-14 hidden w-[60%] border-t-2 border-dashed border-slate-300 md:block" />
+                  <div className="absolute right-[-18px] top-9 hidden w-[26px] border-t-2 border-dashed border-slate-300 md:block" />
                 )}
-                <div className="relative mx-auto mb-3 grid h-[100px] w-[100px] place-items-center rounded-full border border-slate-200 bg-white shadow-sm">
-                  <Icon size={43} style={{ color }} />
+                <div className="mb-3 flex items-center gap-3">
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white shadow-sm" style={{ border: `1px solid ${color}22` }}>
+                    <Icon size={22} style={{ color }} />
+                  </div>
                   <span
-                    className="absolute -bottom-2 left-0 grid h-6 w-6 place-items-center rounded-full text-xs font-black text-white"
+                    className="grid h-6 w-6 place-items-center rounded-full text-[11px] font-black text-white"
                     style={{ background: color }}
                   >
                     {i + 1}
@@ -595,11 +598,11 @@ export default function Home() {
                 <h3 className="text-sm font-extrabold text-[#111329]">
                   {title}
                 </h3>
-                <p className="mx-auto mt-2 max-w-[190px] text-[12px] leading-[1.45] text-slate-600">
+                <p className="mt-2 text-[12px] leading-[1.45] text-slate-600">
                   {desc}
                 </p>
               </div>
-            ))}{" "}
+            ))}
           </div>
           <div className="mt-5 text-center">
             <Link
