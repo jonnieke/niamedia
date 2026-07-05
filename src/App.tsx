@@ -5,7 +5,7 @@ import { AuthProvider, useAuth } from './lib/AuthContext'
 import RouteSeo from './components/RouteSeo'
 import { initAnalytics, trackPageView } from './lib/analytics'
 
-const Home = lazy(() => import('./pages/Home'))
+import Home from './pages/Home'
 const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
@@ -187,4 +187,3 @@ export default function App() {
     </BrowserRouter>
   )
 }
-
