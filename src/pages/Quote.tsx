@@ -442,6 +442,14 @@ export default function Quote() {
   const refineBrief = useCallback(async () => {
     const currentBrief = brief.trim()
     setError('')
+
+    // Nia needs something to work with — otherwise the AI returns a
+    // "tell me about your business" reply straight into the brief field.
+    if (currentBrief.length < 12 && !(bizName.trim() && industry)) {
+      setError('Give Nia something to work with first — fill in your business name and industry above, or type a sentence about what you\'re promoting.')
+      return
+    }
+
     setRefining(true)
 
     const prompt = currentBrief
@@ -449,7 +457,7 @@ export default function Quote() {
       : `Write a strong quote brief for a video commercial. Return only the improved brief in plain text, with no questions, no bullet points, and no intro. ${briefContext}.`
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('chat-agent', {
+      const invocation = supabase.functions.invoke('chat-agent', {
         body: {
           messages: [{ role: 'user', content: prompt }],
           voiceEnabled: false,
@@ -463,9 +471,20 @@ export default function Quote() {
           },
         },
       })
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 30000))
+      const { data, error: fnError } = await Promise.race([invocation, timeout])
 
       const reply = typeof data?.reply === 'string' ? data.reply.trim() : ''
       if (fnError || !reply) throw new Error(fnError?.message || 'AI assist unavailable')
+
+      // If the model asks for more info instead of writing the brief,
+      // don't overwrite the user's field with it.
+      if (/^(i can't|i cannot|i need|i'm sorry|sorry|to write)/i.test(reply) || /without knowing/i.test(reply)) {
+        setError('Nia needs a bit more detail — add what you\'re promoting or your offer, then try again.')
+        return
+      }
+
       setBrief(reply)
       trackEvent('nia_assistant_refine_success', {
         cta_location: 'quote_details',
@@ -474,7 +493,7 @@ export default function Quote() {
       })
     } catch (err) {
       console.error('Quote brief refinement failed:', err)
-      setError('Nia Assist could not refine the brief right now. Please try again in a moment.')
+      setError('Nia Assist could not refine the brief right now. Please try again in a moment — or just write it in your own words, that works too.')
       trackEvent('nia_assistant_refine_failed', { cta_location: 'quote_details' })
     } finally {
       setRefining(false)
@@ -482,94 +501,86 @@ export default function Quote() {
   }, [brief, briefContext, bizName, industry, length, platforms, rush, supportingFiles])
 
   const submit = async () => {
-
     if (!bizName.trim() || !phone.trim()) { setError('Business name and phone number are required.'); return }
 
     setError('')
-
     setSubmitting(true)
 
-    const attachmentNotes: string[] = []
-    for (const item of supportingFiles) {
-      try {
-        const safeName = item.file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
-        const uniqueId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`
-        const path = `quote-requests/${uniqueId}-${safeName}`
-        const { error: uploadErr } = await supabase.storage.from('brand-assets').upload(path, item.file, {
-          upsert: false,
-          contentType: item.file.type || 'application/octet-stream',
-        })
+    // Everything below is wrapped so an unexpected throw (network drop,
+    // storage hiccup) can never leave the button stuck on "Submitting...".
+    try {
+      const attachmentNotes: string[] = []
+      for (const item of supportingFiles) {
+        try {
+          const safeName = item.file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+          const uniqueId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+          const path = `quote-requests/${uniqueId}-${safeName}`
+          const { error: uploadErr } = await supabase.storage.from('brand-assets').upload(path, item.file, {
+            upsert: false,
+            contentType: item.file.type || 'application/octet-stream',
+          })
 
-        if (uploadErr) {
+          if (uploadErr) {
+            attachmentNotes.push(`${item.file.name} (attached file)`)
+            continue
+          }
+
+          const { data } = supabase.storage.from('brand-assets').getPublicUrl(path)
+          attachmentNotes.push(`${item.file.name}: ${data.publicUrl}`)
+        } catch {
           attachmentNotes.push(`${item.file.name} (attached file)`)
-          continue
         }
-
-        const { data } = supabase.storage.from('brand-assets').getPublicUrl(path)
-        attachmentNotes.push(`${item.file.name}: ${data.publicUrl}`)
-      } catch {
-        attachmentNotes.push(`${item.file.name} (attached file)`)
       }
+
+      const supportingText = attachmentNotes.length
+        ? `\n\nSupporting files:\n${attachmentNotes.map(note => `- ${note}`).join('\n')}`
+        : ''
+
+      const whatToPromote = `${brief.trim() || 'Will share details'}${supportingText}`
+
+      const { error: dbErr } = await supabase.from('quote_requests').insert({
+        business_name:    bizName.trim(),
+        contact_name:     contactName.trim() || null,
+        phone:            phone.trim(),
+        email:            email.trim() || null,
+        industry:         industry || null,
+        video_length:     length,
+        platforms,
+        what_to_promote:  whatToPromote || null,
+        delivery_speed:   rush,
+        include_poster:   poster,
+        include_subtitles: subtitles,
+        price_min:        price.min,
+        price_max:        price.max,
+        status:           'new',
+      })
+
+      if (dbErr) {
+        console.error('Quote submit failed:', dbErr)
+        trackEvent('quote_submit_failed', { reason: 'db_error' })
+        setError('Something went wrong. Please try again or WhatsApp us directly.')
+        return
+      }
+
+      // Best-effort side effects — never allowed to block the success screen
+      try {
+        void supabase.rpc('notify_admins', {
+          p_type: 'action',
+          p_title: `New quote - ${bizName.trim()}`,
+          p_body: `${length} video - ${platforms.join(', ')} - KES ${price.min.toLocaleString()}-${price.max.toLocaleString()}`,
+          p_action_url: '/admin',
+        })
+        trackEvent('quote_submit_success', { video_length: length, platform_count: platforms.length, rush, poster, subtitles, attachment_count: supportingFiles.length })
+      } catch {}
+
+      setStep(2)
+    } catch (err) {
+      console.error('Quote submit failed:', err)
+      trackEvent('quote_submit_failed', { reason: 'unexpected_error' })
+      setError('Something went wrong. Please try again or WhatsApp us directly.')
+    } finally {
+      setSubmitting(false)
     }
-
-    const supportingText = attachmentNotes.length
-      ? `\n\nSupporting files:\n${attachmentNotes.map(note => `- ${note}`).join('\n')}`
-      : ''
-
-    const whatToPromote = `${brief.trim() || 'Will share details'}${supportingText}`
-
-    const { error: dbErr } = await supabase.from('quote_requests').insert({
-
-      business_name:    bizName.trim(),
-
-      contact_name:     contactName.trim() || null,
-
-      phone:            phone.trim(),
-
-      email:            email.trim() || null,
-
-      industry:         industry || null,
-
-      video_length:     length,
-
-      platforms,
-
-      what_to_promote:  whatToPromote || null,
-
-      delivery_speed:   rush,
-
-      include_poster:   poster,
-
-      include_subtitles: subtitles,
-
-      price_min:        price.min,
-
-      price_max:        price.max,
-
-      status:           'new',
-
-    })
-
-    setSubmitting(false)
-
-    if (dbErr) { trackEvent('quote_submit_failed', { reason: 'db_error' }); setError('Something went wrong. Please try again or WhatsApp us directly.'); return }
-
-    supabase.rpc('notify_admins', {
-
-      p_type: 'action',
-
-      p_title: `New quote - ${bizName.trim()}`,
-
-      p_body: `${length} video - ${platforms.join(', ')} - KES ${price.min.toLocaleString()}-${price.max.toLocaleString()}`,
-
-      p_action_url: '/admin',
-
-    })
-
-    trackEvent('quote_submit_success', { video_length: length, platform_count: platforms.length, rush, poster, subtitles, attachment_count: supportingFiles.length });
-
-    setStep(2)
-
   }
 
   /* WhatsApp pre-fill for the prospect to message Nia Media */
@@ -1121,6 +1132,12 @@ export default function Quote() {
                       </div>
 
                       {listeningText && <p className="mt-2 text-xs text-sky-600">Voice note: {listeningText}</p>}
+
+                      {refining && (
+                        <p className="mt-2 flex items-center gap-1.5 text-xs text-purple-600 font-medium">
+                          <Loader2 size={12} className="animate-spin" /> Nia is writing your brief — takes 10–20 seconds…
+                        </p>
+                      )}
 
                       {supportingFiles.length > 0 && (
                         <div className="mt-3 flex flex-wrap gap-2">
