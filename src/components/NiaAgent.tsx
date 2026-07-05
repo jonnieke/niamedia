@@ -148,9 +148,10 @@ function Avatar({ state }: { state: AgentState }) {
 /* --- Main component ------------------------------------------- */
 interface NiaAgentProps {
   onClose: () => void
+  initialPrompt?: string
 }
 
-export default function NiaAgent({ onClose }: NiaAgentProps) {
+export default function NiaAgent({ onClose, initialPrompt }: NiaAgentProps) {
   const { user } = useAuth()
   const navigate = useNavigate()
   const isGuest = !user
@@ -167,6 +168,7 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
   const [guestStarted, setGuestStarted] = useState(false)
   const [guestExpired, setGuestExpired] = useState(false)
   const [suggestedAction, setSuggestedAction] = useState<SuggestedAction | null>(null)
+  const autoPromptedRef = useRef(false)
   const [brandContext, setBrandContext] = useState<{
     businessName?: string
     industry?: string
@@ -650,6 +652,14 @@ export default function NiaAgent({ onClose }: NiaAgentProps) {
       setAgentState('idle')
     }
   }, [messages, agentState, guestExpired, isGuest, guestStarted, voiceMode, speechSupported, brandContext, playAudio])
+
+
+  useEffect(() => {
+    const prompt = initialPrompt?.trim()
+    if (!prompt || autoPromptedRef.current) return
+    autoPromptedRef.current = true
+    void sendMessage(prompt)
+  }, [initialPrompt, sendMessage])
 
   /* -- Voice recognition -- */
   const scheduleFinalSend = useCallback((finalText: string) => {

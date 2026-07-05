@@ -1,45 +1,24 @@
-import { useState, useMemo } from 'react'
-
-
+import { lazy, Suspense, useState, useMemo } from 'react'
 
 import { Link } from 'react-router-dom'
 
-
-
 import {
-
-
 
   Film, CheckCircle2, ArrowRight, Clock, Zap,
 
-
-
   Phone, Building2, MessageSquare, ChevronRight, Star,
-
-
 
 } from 'lucide-react'
 
-
-
 import PublicHeader from '../components/layout/PublicHeader'
-
-
 
 import { supabase } from '../lib/supabase'
 
-
-
 import { SECONDARY_NIA_CTA } from '../lib/cta'
-
-
 
 import { trackEvent } from '../lib/analytics'
 
-
-
-
-
+const NiaAgent = lazy(() => import('../components/NiaAgent'))
 
 
 /* Pricing logic */
@@ -656,6 +635,8 @@ export default function Quote() {
 
   const [brief, setBrief]       = useState('')
 
+  const [showNiaAssist, setShowNiaAssist] = useState(false)
+
 
 
 
@@ -675,6 +656,10 @@ export default function Quote() {
 
 
   const price = useMemo(() => calcPrice(length, platforms, rush, subtitles), [length, platforms, rush, subtitles])
+
+  const niaAssistPrompt = brief.trim()
+    ? `Please improve this quote brief for a video commercial. Business: ${bizName || 'Unknown'}. Industry: ${industry || 'Not set'}. Video length: ${LENGTHS.find(l => l.id === length)?.label || 'Not set'}. Platforms: ${platforms.length ? platforms.join(', ') : 'Not set'}. Delivery: ${RUSH.find(r => r.id === rush)?.label || 'Not set'}. Current brief: ${brief.trim()}`
+    : `Help me write a strong video commercial brief. Ask me the most important questions one by one, then turn my answer into a clear, high-converting brief.`
 
 
 
@@ -1896,6 +1881,14 @@ export default function Quote() {
 
                     <p className="text-xs text-gray-400 mt-1">The more detail you give, the sharper your quote and faster we can start.</p>
 
+                    <button
+                      type="button"
+                      onClick={() => { trackEvent("nia_assistant_open", { cta_location: "quote_details" }); setShowNiaAssist(true) }}
+                      className="mt-3 inline-flex items-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-2 text-xs font-semibold text-purple-700 transition-colors hover:bg-purple-100"
+                    >
+                      <MessageSquare size={14} /> Improve with Nia Assist
+                    </button>
+
 
 
                   </div>
@@ -2034,14 +2027,21 @@ export default function Quote() {
 
 
 
+
+      {showNiaAssist && (
+        <Suspense fallback={null}>
+          <NiaAgent onClose={() => setShowNiaAssist(false)} initialPrompt={niaAssistPrompt} />
+        </Suspense>
+      )}
     </div>
 
 
 
+
+
+
+
   )
-
-
-
 }
 
 
