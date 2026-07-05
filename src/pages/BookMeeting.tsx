@@ -38,9 +38,9 @@ export default function BookMeeting() {
     if (service === 'urgent') {
       return {
         eyebrow: 'Fast-track booking',
-        title: 'Book a fast-track call with the Nia team',
-        description: 'For same-day or rush briefs, skip ideation and jump straight into scope, timeline, and pricing.',
-        eventName: 'Fast-Track Call',
+        title: 'Book a rush call with the Nia team',
+        description: 'For same-day or rush briefs, skip ideation, confirm scope, and get a clear timeline and price fast.',
+        eventName: 'Rush Call',
       }
     }
     return {
@@ -52,6 +52,8 @@ export default function BookMeeting() {
   }, [service])
 
   const bookingReady = Boolean(calTarget)
+  const primaryCtaLabel = service === 'urgent' ? 'Confirm Rush Call' : PRIMARY_VIDEO_CTA.label
+  const secondaryCtaLabel = 'Talk to Nia'
 
   return (
     <div className="min-h-screen" style={{ background: 'radial-gradient(circle at top, #f5f3ff 0%, #eef2ff 32%, #f8fafc 100%)' }}>
@@ -87,10 +89,10 @@ export default function BookMeeting() {
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to={PRIMARY_VIDEO_CTA.href} className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
-                {PRIMARY_VIDEO_CTA.label} <ArrowRight size={14} />
+                {primaryCtaLabel} <ArrowRight size={14} />
               </Link>
-              <Link to="/?assistant=1" className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold border border-gray-200 bg-white text-gray-700">
-                Talk to Nia
+              <Link to={service === 'urgent' ? '/?assistant=1' : '/?assistant=1'} className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold border border-gray-200 bg-white text-gray-700">
+                {secondaryCtaLabel}
               </Link>
             </div>
 
@@ -124,8 +126,8 @@ export default function BookMeeting() {
                 <div className="h-full flex items-center justify-center p-8 text-center">
                   <div className="max-w-sm">
                     <CheckCircle2 size={28} className="text-purple-500 mx-auto mb-3" />
-                    <p className="text-lg font-bold text-gray-900">Booking page almost ready</p>
-                    <p className="text-sm text-gray-500 mt-2 leading-relaxed">Add a public Cal.com event URL in <code className="px-1 py-0.5 rounded bg-gray-100">VITE_CAL_BOOKING_URL</code> or the service-specific booking env vars and this embedded scheduler will appear here with the Nia branding around it.</p>
+                    <p className="text-lg font-bold text-gray-900">Branded booking is ready</p>
+                    <p className="text-sm text-gray-500 mt-2 leading-relaxed">Add a public Cal.com event URL in <code className="px-1 py-0.5 rounded bg-gray-100">VITE_CAL_BOOKING_URL</code> or a service-specific booking env var and your branded scheduler appears here instantly.</p>
                   </div>
                 </div>
               )}

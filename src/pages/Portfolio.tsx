@@ -119,20 +119,36 @@ export default function Portfolio() {
           {loading ? (
             <div className="flex items-center justify-center py-24">
               <Loader2 size={24} className="animate-spin text-purple-500" />
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-24">
-              <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-                style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.15)' }}>
-                <Film size={24} style={{ color: '#7c3aed' }} />
+            </div>          ) : (
+            <div className="space-y-6 pb-16">
+              <div className="rounded-3xl border border-purple-100 bg-gradient-to-r from-purple-50 via-white to-pink-50 p-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-purple-500">Selected work</p>
+                    <h2 className="mt-2 text-2xl font-extrabold text-gray-900">Real client work, curated for launch</h2>
+                    <p className="mt-2 max-w-2xl text-sm text-gray-600">We’re preparing the public media library, but these are the businesses already in our orbit: Ndovu Group, PesaFlix, Shekel Coin, Onfon Media, Adiel Media, and NCBA Junior Account.</p>
+                  </div>
+                  <Link to="/quote" className="inline-flex items-center gap-2 self-start rounded-xl px-5 py-3 text-sm font-bold text-white" style={{ background: '#7c3aed' }}>
+                    Request a Similar Video <ArrowRight size={15} />
+                  </Link>
+                </div>
               </div>
-              <p className="text-gray-500 text-sm">Portfolio coming soon.</p>
-              <p className="text-gray-400 text-xs mt-1">We're uploading our latest work.</p>
-              <Link to="/quote" className="inline-block mt-4 text-sm font-semibold text-purple-600 hover:underline">
-                Get your video commercial â†’
-              </Link>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {CLIENTS.map((client, index) => (
+                  <div key={client} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+                    <p className="text-xs font-bold uppercase tracking-widest text-purple-400">{index === 0 ? 'Featured client' : 'Client proof'}</p>
+                    <p className="mt-2 text-base font-bold text-gray-900">{client}</p>
+                    <p className="mt-1 text-sm text-gray-500">Strategy, commercial direction, and campaign-ready creative support.</p>
+                  </div>
+                ))}
+              </div>
+              <div className="text-center">
+                <Link to="/quote" className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white" style={{ background: '#7c3aed' }}>
+                  Build something like this <ArrowRight size={15} />
+                </Link>
+              </div>
             </div>
-          ) : (
+          )}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 pb-16">
               {filtered.map(item => {
                 const meta = TYPE_META[item.type] ?? TYPE_META.video
@@ -198,7 +214,6 @@ export default function Portfolio() {
                 )
               })}
             </div>
-          )}
         </div>
 
         {/* Testimonials */}
@@ -313,4 +328,7 @@ export default function Portfolio() {
     </div>
   )
 }
+
+
+
 

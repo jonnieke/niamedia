@@ -1,241 +1,491 @@
 import { lazy, Suspense, useEffect, useState } from "react";
+
 import { Link, useLocation, useSearchParams } from "react-router-dom";
+
 import Logo from "../components/ui/Logo"
+
 import { trackEvent } from '../lib/analytics'
+
 import {
+
   ArrowRight,
+
   Bot,
+
   Check,
+
   CheckCircle2,
+
   Clock,
+
   Copy,
+
   Film,
+
   Maximize2,
+
   MessageSquare,
+
   Music,
+
   Play,
+
   Send,
+
   ShoppingBag,
+
   Sparkles,
+
   Star,
+
   Target,
+
   Volume2,
+
 } from "lucide-react";
+
+
 
 const NiaAgent = lazy(() => import("../components/NiaAgent"));
 
+
+
 export default function Home() {
+
   const [showAssistant, setShowAssistant] = useState(false);
+
   const [params] = useSearchParams();
+
   const location = useLocation();
+
   useEffect(() => {
+
     if (params.get("assistant") === "1") setShowAssistant(true);
+
   }, [params]);
+
   useEffect(() => {
+
     if (!location.hash) return;
+
     requestAnimationFrame(() => {
+
       document.querySelector(location.hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+
     });
+
   }, [location.hash]);
+
   const packages = [
+
     {
+
       title: "Quick Promo",
+
       price: "KES 3,500 - 5,000",
+
       intro: "Perfect for simple offers and quick promotions.",
+
       features: [
+
         "15-20 sec video",
+
         "Basic script",
+
         "AI visuals & music",
+
         "9:16 vertical format",
+
         "1 revision",
+
         "WhatsApp caption",
+
       ],
+
       color: "#11996a",
+
       bg: "#f1fbf7",
+
     },
+
     {
+
       title: "Social Commercial",
+
       price: "KES 7,500 - 12,000",
+
       intro: "Best for social media ads that get attention.",
+
       features: [
+
         "30 sec video",
+
         "Creative concept",
+
         "Voiceover & music",
+
         "Captions & subtitles",
+
         "9:16 & 1:1 formats",
+
         "2 revisions",
+
         "Social captions",
+
       ],
+
       color: "#2949df",
+
       bg: "#f2f5ff",
+
       popular: true,
+
     },
+
     {
+
       title: "Brand Campaign Video",
+
       price: "KES 15,000 - 25,000",
+
       intro: "Ideal for brands and serious marketing campaigns.",
+
       features: [
+
         "45-60 sec video",
+
         "Campaign strategy",
+
         "Voiceover & music",
+
         "Multiple formats",
+
         "Poster copy & messages",
+
         "3 revisions",
+
         "Human creative direction",
+
       ],
+
       color: "#f47613",
+
       bg: "#fff8ef",
+
     },
+
     {
+
       title: "Premium Commercial",
+
       price: "KES 35,000 - 60,000",
+
       intro: "For businesses that want the very best.",
+
       features: [
+
         "60-90 sec video",
+
         "Full concept development",
+
         "Advanced script & scenes",
+
         "Multi-platform versions",
+
         "Campaign copy pack",
+
         "3-4 revisions",
+
         "Strategy call",
+
       ],
+
       color: "#8c21b7",
+
       bg: "#faf4ff",
+
     },
+
   ];
+
   const steps = [
+
     {
+
       icon: Copy,
+
       title: "Submit Your Brief",
+
       desc: "Tell us about your business, offer, target audience and preferred style.",
+
       color: "#7c3aed",
+
     },
+
     {
+
       icon: Bot,
+
       title: "Nia Sharpens the Idea",
+
       desc: "Our AI assistant helps you create a strong hook, script and video concept.",
+
       color: "#3347e8",
+
     },
+
     {
+
       icon: ShoppingBag,
+
       title: "Choose Your Package",
+
       desc: "Pick the package that fits your goals, budget and timeline.",
+
       color: "#ec4899",
+
     },
+
     {
+
       icon: Film,
+
       title: "We Produce the Video",
+
       desc: "AI-assisted production with human creative direction brings your video to life.",
+
       color: "#f97316",
+
     },
+
     {
+
       icon: CheckCircle2,
+
       title: "Review & Publish",
+
       desc: "Review, request changes and publish your ad with confidence.",
+
       color: "#22a447",
+
     },
+
   ];
+
   const featureBadges = [
+
     [Film, "Video ads from", "KES 3,500"],
+
     [Clock, "24-72 hour", "delivery"],
+
     [Sparkles, "AI-assisted", "production"],
+
     [Target, "Human creative", "direction"],
+
     [Star, "Ready for all", "social platforms"],
+
     [Music, "Scripts, voiceover,", "music, captions"],
+
   ] as const;
+
   const niaFeatures = [
+
     "Campaign ideas",
+
     "Instagram & TikTok captions",
+
     "Video scripts",
+
     "Poster copy",
+
     "Hooks & concepts",
+
     "Creative direction",
+
     "WhatsApp messages",
+
     "Package recommendations",
+
   ];
+
   const trustedBusinesses = [
+
     { initials: "NG", name: "Ndovu Group", label: "Corporate" },
+
     { initials: "PF", name: "PesaFlix", label: "Fintech" },
+
     { initials: "SC", name: "Shekel Coin", label: "Web3" },
+
     { initials: "OM", name: "Onfon Media", label: "Media" },
+
     { initials: "AM", name: "Adiel Media", label: "Agency" },
+
     { initials: "NC", name: "NCBA", label: "Banking" },
+
   ];
+
   const gradient =
+
     "linear-gradient(100deg,#ff5f65 0%,#ec4899 48%,#8b32ff 100%)";
 
+
+
   return (
+
     <div className="min-h-screen overflow-x-hidden bg-white">
+
       {" "}
+
       <section className="relative overflow-hidden bg-[#03040d] pb-20 text-white">
+
         {" "}
+
         <div className="absolute -bottom-44 left-1/2 h-96 w-[80%] -translate-x-1/2 bg-purple-700/25 blur-[100px]" />{" "}
+
         <header className="relative z-20 mx-auto flex h-[84px] max-w-[1450px] items-center justify-between px-5 lg:px-10">
+
           {" "}
+
           <Link to="/">
+
             <Logo size="lg" />
+
           </Link>{" "}
+
           <nav className="hidden items-center gap-9 text-[13px] font-medium text-white/90 xl:flex">
+
             {" "}
+
             <Link to="/">Home</Link>
+
             <Link to="/quote">Video Commercials</Link>
+
             <Link to="/pricing">Pricing</Link>{" "}
+
             <a href="#how-it-works">How It Works</a>
+
             <Link to="/portfolio">Portfolio</Link>
+
             <a href="#industries">Industries</a>
+
             <a href="#about">About Us</a>{" "}
+
           </nav>{" "}
+
           <div className="flex items-center gap-3">
+
             <Link
+
               to="/login"
+
               className="hidden rounded-xl border border-white/40 px-6 py-3 text-sm font-semibold sm:block"
+
             >
+
               Login
+
             </Link>
+
             <Link
+
               to="/quote"
+
               className="rounded-xl px-5 py-3 text-sm font-bold"
+
               style={{ background: gradient }}
+
             >
+
               Request a Video
+
             </Link>
+
           </div>{" "}
+
         </header>{" "}
+
         <div className="relative mx-auto grid max-w-[1380px] gap-10 px-6 pb-3 pt-9 lg:grid-cols-[.93fr_1.07fr] lg:px-10">
+
           {" "}
+
           <div className="flex flex-col justify-center">
+
             {" "}
+
             <h1 className="text-[clamp(43px,4.4vw,69px)] font-black leading-[1.05] tracking-[-.045em] text-white">
+
               Affordable AI
+
               <br />
+
               <span className="bg-gradient-to-r from-violet-500 to-pink-500 bg-clip-text text-transparent">
+
                 Video Commercials
+
               </span>
+
               <br />
+
               for Your Business
+
             </h1>{" "}
+
             <p className="mt-5 max-w-[575px] text-[16px] leading-[1.55] text-white/90">
+
               Nia Media helps SMEs create professional, AI-assisted video ads
+
               fast. From idea to final video - scripts, voiceover, music,
+
               captions and more. Ready for WhatsApp, Instagram, TikTok, Facebook
+
               and YouTube.
+
             </p>{" "}
+
             <div className="mt-7 flex flex-wrap gap-4">
+
               {" "}
+
               <Link
+
                 to="/quote"
+
                 className="inline-flex items-center gap-3 rounded-xl px-7 py-4 text-[15px] font-bold text-white shadow-lg"
+
                 style={{ background: gradient }}
+
               >
+
                 Request a Video Commercial <ArrowRight size={18} />
+
               </Link>{" "}
+
               <button
+
                 onClick={() => { trackEvent('nia_assistant_open', { cta_location: 'home_page' }); setShowAssistant(true) }}
+
                 className="inline-flex items-center gap-3 rounded-xl border border-white/45 bg-white/[.03] px-7 py-4 text-[15px] font-bold"
+
               >
+
                 <MessageSquare size={20} /> Talk to Nia Assistant
+
               </button>{" "}
+
             </div>{" "}
+
+            <div className="mt-4 flex flex-wrap items-center gap-3 text-[14px] text-white/75">
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
+                Need it fast? Skip ideation and book a rush call.
+              </span>
+              <Link
+                to="/book?priority=urgent"
+                className="inline-flex items-center gap-2 font-semibold text-fuchsia-200 underline decoration-fuchsia-300/60 underline-offset-4 transition-colors hover:text-white"
+              >
+                Fast-track booking <ArrowRight size={16} />
+              </Link>
+            </div>{" "}
+
           </div>{" "}
           <div className="relative aspect-[1.34/1] overflow-hidden rounded-[22px] border border-white/35 bg-black shadow-2xl">
             {" "}
