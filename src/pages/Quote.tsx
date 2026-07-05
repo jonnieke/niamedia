@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useMemo } from 'react'
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Link } from 'react-router-dom'
 
@@ -6,7 +6,7 @@ import {
 
   Film, CheckCircle2, ArrowRight, Clock, Zap,
 
-  Phone, Building2, MessageSquare, ChevronRight, Star,
+  Phone, Building2, MessageSquare, ChevronRight, Star, Mic, Loader2, Paperclip, Sparkles, Trash2,
 
 } from 'lucide-react'
 
@@ -17,9 +17,6 @@ import { supabase } from '../lib/supabase'
 import { SECONDARY_NIA_CTA } from '../lib/cta'
 
 import { trackEvent } from '../lib/analytics'
-
-const NiaAgent = lazy(() => import('../components/NiaAgent'))
-
 
 /* Pricing logic */
 
@@ -633,38 +630,33 @@ export default function Quote() {
 
 
 
-  const [brief, setBrief]       = useState('')
+  const [brief, setBrief] = useState('')
+  const [supportingFiles, setSupportingFiles] = useState<{ id: string; file: File }[]>([])
+  const [isListening, setIsListening] = useState(false)
+  const [listeningText, setListeningText] = useState('')
+  const [speechSupported, setSpeechSupported] = useState(false)
+  const [refining, setRefining] = useState(false)
 
-  const [showNiaAssist, setShowNiaAssist] = useState(false)
-
-
-
-
-
-
+  const recognitionRef = useRef<any>(null)
+  const transcriptRef = useRef('')
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const [submitting, setSubmitting] = useState(false)
 
-
-
-  const [error, setError]       = useState('')
-
-
-
-
-
-
+  const [error, setError] = useState('')
 
   const price = useMemo(() => calcPrice(length, platforms, rush, subtitles), [length, platforms, rush, subtitles])
 
-  const niaAssistPrompt = brief.trim()
-    ? `Please improve this quote brief for a video commercial. Business: ${bizName || 'Unknown'}. Industry: ${industry || 'Not set'}. Video length: ${LENGTHS.find(l => l.id === length)?.label || 'Not set'}. Platforms: ${platforms.length ? platforms.join(', ') : 'Not set'}. Delivery: ${RUSH.find(r => r.id === rush)?.label || 'Not set'}. Current brief: ${brief.trim()}`
-    : `Help me write a strong video commercial brief. Ask me the most important questions one by one, then turn my answer into a clear, high-converting brief.`
-
-
-
-
-
+  useEffect(() => {
+    setSpeechSupported(typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window))
+    return () => {
+      try {
+        recognitionRef.current?.stop?.()
+      } catch {
+        // ignore cleanup errors
+      }
+    }
+  }, [])
 
 
   const togglePlatform = (id: string) =>
@@ -675,9 +667,152 @@ export default function Quote() {
 
 
 
+  const briefContext = useMemo(() => {
+    const lengthLabel = LENGTHS.find(l => l.id === length)?.label || 'Not set'
+    const deliveryLabel = RUSH.find(r => r.id === rush)?.label || 'Not set'
+    const fileNames = supportingFiles.map(({ file }) => file.name)
+    return [
+      `Business: ${bizName || 'Unknown'}`,
+      `Industry: ${industry || 'Not set'}`,
+      `Video length: ${lengthLabel}`,
+      `Platforms: ${platforms.length ? platforms.join(', ') : 'Not set'}`,
+      `Delivery: ${deliveryLabel}`,
+      `Supporting files: ${fileNames.length ? fileNames.join(', ') : 'None'}`,
+    ].join('\n')
+  }, [bizName, industry, length, platforms, rush, supportingFiles])
 
+  const appendBrief = useCallback((text: string) => {
+    const cleaned = text.trim()
+    if (!cleaned) return
+    setBrief(prev => {
+      const base = prev.trim()
+      if (!base) return cleaned
+      return `${base.replace(/\s+$/, '')} ${cleaned}`
+    })
+  }, [])
 
+  const handleSupportingFiles = useCallback((fileList: FileList | null) => {
+    if (!fileList?.length) return
+    const next = Array.from(fileList).map(file => ({ id: `${file.name}-${file.lastModified}-${file.size}`, file }))
+    setSupportingFiles(prev => {
+      const seen = new Set(prev.map(item => item.id))
+      return [...prev, ...next.filter(item => !seen.has(item.id))]
+    })
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }, [])
 
+  const removeSupportingFile = useCallback((id: string) => {
+    setSupportingFiles(prev => prev.filter(item => item.id !== id))
+  }, [])
+
+  const stopListening = useCallback(() => {
+    try {
+      recognitionRef.current?.stop?.()
+    } catch {
+      // ignore stop errors
+    }
+    recognitionRef.current = null
+    transcriptRef.current = ''
+    setListeningText('')
+    setIsListening(false)
+  }, [])
+
+  const startListening = useCallback(() => {
+    if (!speechSupported || isListening) return
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SR) return
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const recognition: any = new SR()
+    recognition.continuous = false
+    recognition.interimResults = true
+    recognition.lang = 'en-US'
+
+    transcriptRef.current = ''
+    setListeningText('')
+    setIsListening(true)
+
+    recognition.onresult = (event: any) => {
+      let interim = ''
+      let final = ''
+      for (const result of Array.from(event.results) as any[]) {
+        const transcript = result[0]?.transcript ?? ''
+        if (result.isFinal) final += transcript
+        else interim += transcript
+      }
+      const cleanedFinal = final.trim()
+      transcriptRef.current = cleanedFinal || transcriptRef.current
+      setListeningText((interim || cleanedFinal).trim())
+    }
+
+    recognition.onend = () => {
+      const transcript = transcriptRef.current.trim()
+      if (transcript) appendBrief(transcript)
+      recognitionRef.current = null
+      transcriptRef.current = ''
+      setListeningText('')
+      setIsListening(false)
+    }
+
+    recognition.onerror = () => {
+      recognitionRef.current = null
+      transcriptRef.current = ''
+      setListeningText('')
+      setIsListening(false)
+    }
+
+    recognitionRef.current = recognition
+    recognition.start()
+  }, [appendBrief, isListening, speechSupported])
+
+  const handleMicClick = useCallback(() => {
+    if (isListening) stopListening()
+    else startListening()
+  }, [isListening, startListening, stopListening])
+
+  const refineBrief = useCallback(async () => {
+    const currentBrief = brief.trim()
+    setError('')
+    setRefining(true)
+
+    const prompt = currentBrief
+      ? `Rewrite this quote brief for a video commercial so it is clearer, sharper, and more conversion-focused. Return only the improved brief in plain text, with no questions, no bullet points, and no intro. ${briefContext}. Current brief: ${currentBrief}`
+      : `Write a strong quote brief for a video commercial. Return only the improved brief in plain text, with no questions, no bullet points, and no intro. ${briefContext}.`
+
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('chat-agent', {
+        body: {
+          messages: [{ role: 'user', content: prompt }],
+          voiceEnabled: false,
+          userContext: {
+            businessName: bizName || undefined,
+            industry: industry || undefined,
+            videoLength: LENGTHS.find(l => l.id === length)?.label || undefined,
+            platforms,
+            deliverySpeed: RUSH.find(r => r.id === rush)?.label || undefined,
+            attachments: supportingFiles.map(({ file }) => file.name),
+          },
+        },
+      })
+
+      const reply = typeof data?.reply === 'string' ? data.reply.trim() : ''
+      if (fnError || !reply) throw new Error(fnError?.message || 'AI assist unavailable')
+      setBrief(reply)
+      trackEvent('nia_assistant_refine_success', {
+        cta_location: 'quote_details',
+        had_existing_brief: Boolean(currentBrief),
+        attachment_count: supportingFiles.length,
+      })
+    } catch (err) {
+      console.error('Quote brief refinement failed:', err)
+      setError('Nia Assist could not refine the brief right now. Please try again in a moment.')
+      trackEvent('nia_assistant_refine_failed', { cta_location: 'quote_details' })
+    } finally {
+      setRefining(false)
+    }
+  }, [brief, briefContext, bizName, industry, length, platforms, rush, supportingFiles])
 
   const submit = async () => {
 
@@ -694,6 +829,35 @@ export default function Quote() {
     setSubmitting(true)
 
 
+
+    const attachmentNotes: string[] = []
+    for (const item of supportingFiles) {
+      try {
+        const safeName = item.file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+        const uniqueId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+        const path = `quote-requests/${uniqueId}-${safeName}`
+        const { error: uploadErr } = await supabase.storage.from('brand-assets').upload(path, item.file, {
+          upsert: false,
+          contentType: item.file.type || 'application/octet-stream',
+        })
+
+        if (uploadErr) {
+          attachmentNotes.push(`${item.file.name} (attached file)`)
+          continue
+        }
+
+        const { data } = supabase.storage.from('brand-assets').getPublicUrl(path)
+        attachmentNotes.push(`${item.file.name}: ${data.publicUrl}`)
+      } catch {
+        attachmentNotes.push(`${item.file.name} (attached file)`)
+      }
+    }
+
+    const supportingText = attachmentNotes.length
+      ? `\n\nSupporting files:\n${attachmentNotes.map(note => `- ${note}`).join('\n')}`
+      : ''
+
+    const whatToPromote = `${brief.trim() || 'Will share details'}${supportingText}`
 
     const { error: dbErr } = await supabase.from('quote_requests').insert({
 
@@ -727,7 +891,7 @@ export default function Quote() {
 
 
 
-      what_to_promote:  brief.trim() || null,
+      what_to_promote:  whatToPromote || null,
 
 
 
@@ -791,7 +955,7 @@ export default function Quote() {
 
 
 
-    trackEvent('quote_submit_success', { video_length: length, platform_count: platforms.length, rush, poster, subtitles });
+    trackEvent('quote_submit_success', { video_length: length, platform_count: platforms.length, rush, poster, subtitles, attachment_count: supportingFiles.length });
 
 
 
@@ -803,10 +967,6 @@ export default function Quote() {
 
 
 
-
-
-
-
   /* WhatsApp pre-fill for the prospect to message Nia Media */
 
 
@@ -815,7 +975,7 @@ export default function Quote() {
 
 
 
-    `Hi Nia Media, I need a video commercial.\n\nBusiness: ${bizName}\nLength: ${LENGTHS.find(l => l.id === length)?.label}\nPlatforms: ${platforms.join(', ')}\nDelivery: ${RUSH.find(r => r.id === rush)?.label}\nBudget range: KES ${price.min.toLocaleString()} - ${price.max.toLocaleString()}\n\nWhat I am promoting: ${brief || 'Will share details'}\n\nContact: ${phone}`
+    `Hi Nia Media, I need a video commercial.\n\nBusiness: ${bizName}\nLength: ${LENGTHS.find(l => l.id === length)?.label}\nPlatforms: ${platforms.join(', ')}\nDelivery: ${RUSH.find(r => r.id === rush)?.label}\nBudget range: KES ${price.min.toLocaleString()} - ${price.max.toLocaleString()}\n\nSupporting files: ${supportingFiles.length ? supportingFiles.map(({ file }) => file.name).join(', ') : 'None'}\n\nWhat I am promoting: ${brief || 'Will share details'}\n\nContact: ${phone}`
 
 
 
@@ -1855,50 +2015,90 @@ export default function Quote() {
 
 
 
-                    <textarea
 
 
 
-                      rows={3}
+                    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+
+                      <textarea
+                        rows={4}
+                        className="w-full resize-none border-0 p-0 text-sm leading-6 text-gray-800 focus:outline-none focus:ring-0"
+                        placeholder="e.g. 2BR apartments in Westlands from KES 6.5M. Target: young professionals. Key message: own your dream home."
+                        value={brief} onChange={e => setBrief(e.target.value)}
+                      />
+
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleMicClick}
+                          disabled={!speechSupported}
+                          className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-700 transition-colors hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <Mic size={14} /> {isListening ? 'Listening...' : 'Add voice note'}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={refineBrief}
+                          disabled={refining}
+                          className="inline-flex items-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-semibold text-purple-700 transition-colors hover:bg-purple-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {refining ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                          {brief.trim() ? 'Refine with Nia Assist' : 'Draft with Nia Assist'}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+                        >
+                          <Paperclip size={14} /> Attach files
+                        </button>
+
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          multiple
+                          accept="image/*,application/pdf,.doc,.docx,.txt,.ppt,.pptx"
+                          onChange={e => handleSupportingFiles(e.target.files)}
+                          className="hidden"
+                        />
+                      </div>
+
+                      {listeningText && <p className="mt-2 text-xs text-sky-600">Voice note: {listeningText}</p>}
+
+                      {supportingFiles.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {supportingFiles.map(item => (
+                            <div
+                              key={item.id}
+                              className="inline-flex max-w-full items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-600"
+                            >
+                              <span className="truncate max-w-[220px]">{item.file.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => removeSupportingFile(item.id)}
+                                className="text-gray-400 transition-colors hover:text-red-500"
+                                aria-label={`Remove ${item.file.name}`}
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <p className="mt-3 text-xs text-gray-400">The more detail you give, the sharper your quote and faster we can start.</p>
+                    </div>
 
 
 
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors resize-none"
 
 
-
-                      placeholder="e.g. 2BR apartments in Westlands from KES 6.5M. Target: young professionals. Key message: own your dream home."
-
-
-
-                      value={brief} onChange={e => setBrief(e.target.value)}
-
-
-
-                    />
-
-
-
-                    <p className="text-xs text-gray-400 mt-1">The more detail you give, the sharper your quote and faster we can start.</p>
-
-                    <button
-                      type="button"
-                      onClick={() => { trackEvent("nia_assistant_open", { cta_location: "quote_details" }); setShowNiaAssist(true) }}
-                      className="mt-3 inline-flex items-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-2 text-xs font-semibold text-purple-700 transition-colors hover:bg-purple-100"
-                    >
-                      <MessageSquare size={14} /> Improve with Nia Assist
-                    </button>
 
 
 
                   </div>
-
-
-
-
-
-
-
                   {error && (
 
 
@@ -2028,11 +2228,6 @@ export default function Quote() {
 
 
 
-      {showNiaAssist && (
-        <Suspense fallback={null}>
-          <NiaAgent onClose={() => setShowNiaAssist(false)} initialPrompt={niaAssistPrompt} />
-        </Suspense>
-      )}
     </div>
 
 
@@ -2043,6 +2238,15 @@ export default function Quote() {
 
   )
 }
+
+
+
+
+
+
+
+
+
 
 
 
