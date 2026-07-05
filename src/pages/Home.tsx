@@ -1,4 +1,4 @@
-﻿import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 
@@ -524,19 +524,18 @@ export default function Home() {
               </div>
             </div>
           </div> {" "}
-          <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6 xl:auto-rows-fr">
             {featureBadges.map(([Icon, a, b]) => (
               <div
                 key={a}
-                className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-[11px] leading-tight text-white/85 backdrop-blur-sm"
+                className="flex h-full min-h-[108px] flex-col justify-between gap-4 rounded-3xl border border-white/10 bg-white/5 px-4 py-4 text-[11px] leading-tight text-white/85 backdrop-blur-sm"
               >
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-purple-500/15 text-purple-300">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-purple-500/15 text-purple-300">
                   <Icon size={19} />
                 </span>
-                <span className="min-w-0">
-                  {a}
-                  <br />
-                  <b>{b}</b>
+                <span className="min-w-0 space-y-1">
+                  <span className="block text-[10px] uppercase tracking-[0.24em] text-white/50">{a}</span>
+                  <b className="block text-[13px] leading-snug text-white">{b}</b>
                 </span>
               </div>
             ))}
