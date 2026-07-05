@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
-import { Download, Sparkles, ImageIcon, Loader2 } from 'lucide-react'
+import { Download, Sparkles, ImageIcon, Loader2, Lock, Check } from 'lucide-react'
 import { useAuth } from '../lib/AuthContext'
+import { supabase } from '../lib/supabase'
 import BuyCreditsModal from './BuyCreditsModal'
 import { CampaignFormData, GeneratedContent } from '../types'
 
@@ -53,8 +54,42 @@ interface DrawOptions {
   whatsappNumber?: string
 }
 
-/* ── Pure-canvas poster renderer (no AI image dependency) ─────── */
-function drawPoster(canvas: HTMLCanvasElement, opts: DrawOptions) {
+/* Cover-fit an image onto the canvas */
+function drawCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, W: number, H: number) {
+  const scale = Math.max(W / img.width, H / img.height)
+  const w = img.width * scale
+  const h = img.height * scale
+  ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h)
+}
+
+/* Gradient fallback while the AI background loads (or if it fails) */
+function drawFallbackBg(ctx: CanvasRenderingContext2D, style: Style, W: number, H: number) {
+  if (style === 'bold') {
+    ctx.fillStyle = '#09090b'
+    ctx.fillRect(0, 0, W, H)
+    const r1 = ctx.createRadialGradient(W, 0, 0, W, 0, W * 0.75)
+    r1.addColorStop(0, 'rgba(124,58,237,0.55)')
+    r1.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = r1
+    ctx.fillRect(0, 0, W, H)
+  } else if (style === 'minimal') {
+    const bg = ctx.createLinearGradient(0, 0, 0, H)
+    bg.addColorStop(0, '#292524')
+    bg.addColorStop(1, '#44403c')
+    ctx.fillStyle = bg
+    ctx.fillRect(0, 0, W, H)
+  } else {
+    const bg = ctx.createLinearGradient(W * 0.1, 0, W * 0.9, H)
+    bg.addColorStop(0, '#3b0764')
+    bg.addColorStop(0.5, '#1e3a8a')
+    bg.addColorStop(1, '#065f46')
+    ctx.fillStyle = bg
+    ctx.fillRect(0, 0, W, H)
+  }
+}
+
+/* ── Poster renderer: AI photo background + campaign copy ──────── */
+function drawPoster(canvas: HTMLCanvasElement, opts: DrawOptions, bg: HTMLImageElement | null) {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
   const W = canvas.width   // 768
@@ -62,157 +97,82 @@ function drawPoster(canvas: HTMLCanvasElement, opts: DrawOptions) {
 
   ctx.clearRect(0, 0, W, H)
 
-  /* ── Backgrounds ── */
-  if (opts.style === 'bold') {
-    ctx.fillStyle = '#09090b'
-    ctx.fillRect(0, 0, W, H)
-
-    // Purple radial top-right
-    const r1 = ctx.createRadialGradient(W, 0, 0, W, 0, W * 0.75)
-    r1.addColorStop(0, 'rgba(124,58,237,0.55)')
-    r1.addColorStop(0.5, 'rgba(109,40,217,0.15)')
-    r1.addColorStop(1, 'rgba(0,0,0,0)')
-    ctx.fillStyle = r1
-    ctx.fillRect(0, 0, W, H)
-
-    // Blue radial bottom-left
-    const r2 = ctx.createRadialGradient(0, H, 0, 0, H, W * 0.65)
-    r2.addColorStop(0, 'rgba(37,99,235,0.40)')
-    r2.addColorStop(1, 'rgba(0,0,0,0)')
-    ctx.fillStyle = r2
-    ctx.fillRect(0, 0, W, H)
-
-    // Subtle dot grid
-    ctx.fillStyle = 'rgba(255,255,255,0.035)'
-    for (let x = 24; x < W; x += 48) {
-      for (let y = 24; y < H; y += 48) {
-        ctx.beginPath(); ctx.arc(x, y, 1.2, 0, Math.PI * 2); ctx.fill()
-      }
-    }
-
-    // Diagonal accent line cluster top-right
-    ctx.save()
-    ctx.strokeStyle = 'rgba(167,139,250,0.12)'
-    ctx.lineWidth = 1
-    for (let i = 0; i < 6; i++) {
-      const offset = i * 22
-      ctx.beginPath(); ctx.moveTo(W - 160 + offset, 0); ctx.lineTo(W + offset, 160); ctx.stroke()
-    }
-    ctx.restore()
-
-  } else if (opts.style === 'minimal') {
-    ctx.fillStyle = '#fafafa'
-    ctx.fillRect(0, 0, W, H)
-
-    // Soft purple wash top
-    const topWash = ctx.createLinearGradient(0, 0, 0, 260)
-    topWash.addColorStop(0, 'rgba(124,58,237,0.07)')
-    topWash.addColorStop(1, 'rgba(124,58,237,0)')
-    ctx.fillStyle = topWash
-    ctx.fillRect(0, 0, W, 260)
-
-    // Left accent bar
-    const leftBar = ctx.createLinearGradient(0, 0, 0, H)
-    leftBar.addColorStop(0, '#7c3aed')
-    leftBar.addColorStop(0.55, '#2563eb')
-    leftBar.addColorStop(1, 'rgba(37,99,235,0.15)')
-    ctx.fillStyle = leftBar
-    ctx.fillRect(0, 0, 9, H)
-
-    // Bottom light band
-    const bottomBand = ctx.createLinearGradient(0, H - 140, 0, H)
-    bottomBand.addColorStop(0, 'rgba(124,58,237,0)')
-    bottomBand.addColorStop(1, 'rgba(124,58,237,0.06)')
-    ctx.fillStyle = bottomBand
-    ctx.fillRect(0, H - 140, W, 140)
-
+  /* ── Background: AI image or gradient fallback ── */
+  if (bg) {
+    drawCover(ctx, bg, W, H)
   } else {
-    // Vibrant
-    const bg = ctx.createLinearGradient(W * 0.1, 0, W * 0.9, H)
-    bg.addColorStop(0, '#3b0764')
-    bg.addColorStop(0.38, '#1e3a8a')
-    bg.addColorStop(0.72, '#065f46')
-    bg.addColorStop(1, '#1e1b4b')
-    ctx.fillStyle = bg
-    ctx.fillRect(0, 0, W, H)
-
-    // Soft radial centre highlight
-    const hl = ctx.createRadialGradient(W / 2, H * 0.28, 0, W / 2, H * 0.28, W * 0.6)
-    hl.addColorStop(0, 'rgba(255,255,255,0.14)')
-    hl.addColorStop(1, 'rgba(255,255,255,0)')
-    ctx.fillStyle = hl
-    ctx.fillRect(0, 0, W, H)
-
-    // Diagonal texture lines
-    ctx.save()
-    ctx.strokeStyle = 'rgba(255,255,255,0.045)'
-    ctx.lineWidth = 1.5
-    for (let i = -H; i < W + H; i += 44) {
-      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + H, H); ctx.stroke()
-    }
-    ctx.restore()
+    drawFallbackBg(ctx, opts.style, W, H)
   }
 
-  /* ── Text colour palette per style ── */
-  const dark = opts.style === 'minimal'
-  const headlineColor = dark ? '#0f172a' : '#ffffff'
-  const subColor = dark ? 'rgba(71,85,105,0.9)' : 'rgba(255,255,255,0.78)'
-  const offerColor = opts.style === 'vibrant' ? '#fbbf24' : opts.style === 'minimal' ? '#7c3aed' : '#fbbf24'
+  /* ── Legibility scrims (always over photo) ── */
+  const top = ctx.createLinearGradient(0, 0, 0, H * 0.32)
+  top.addColorStop(0, 'rgba(0,0,0,0.72)')
+  top.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = top
+  ctx.fillRect(0, 0, W, H * 0.32)
+
+  const bottom = ctx.createLinearGradient(0, H * 0.45, 0, H)
+  bottom.addColorStop(0, 'rgba(0,0,0,0)')
+  bottom.addColorStop(0.55, 'rgba(0,0,0,0.55)')
+  bottom.addColorStop(1, 'rgba(0,0,0,0.85)')
+  ctx.fillStyle = bottom
+  ctx.fillRect(0, H * 0.45, W, H * 0.55)
+
+  /* ── Per-style accent ── */
+  const accent = opts.style === 'vibrant' ? '#fbbf24' : opts.style === 'minimal' ? '#e7e5e4' : '#a78bfa'
 
   /* ── Business name ── */
-  ctx.fillStyle = dark ? '#7c3aed' : 'rgba(255,255,255,0.85)'
+  ctx.fillStyle = 'rgba(255,255,255,0.92)'
   ctx.font = `700 15px Inter, -apple-system, sans-serif`
   ctx.textAlign = 'left'
   ctx.fillText(opts.businessName.toUpperCase(), 36, 52)
 
-  // niamedia badge top-right
-  ctx.fillStyle = dark ? 'rgba(124,58,237,0.4)' : 'rgba(255,255,255,0.35)'
+  ctx.fillStyle = 'rgba(255,255,255,0.4)'
   ctx.font = `400 11px Inter, sans-serif`
   ctx.textAlign = 'right'
   ctx.fillText('niamedia.co.ke', W - 36, 52)
   ctx.textAlign = 'left'
 
-  // Thin separator line under header
-  ctx.strokeStyle = dark ? 'rgba(124,58,237,0.18)' : 'rgba(255,255,255,0.12)'
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)'
   ctx.lineWidth = 1
   ctx.beginPath(); ctx.moveTo(36, 68); ctx.lineTo(W - 36, 68); ctx.stroke()
 
   /* ── Offer pill ── */
-  const hasOffer = opts.offerText?.trim()
-  let textY = H - 280
+  const offerLine = (opts.offerText ?? '').split('\n')[0].replace(/^[•\-\s]+/, '').trim()
+  const offer = offerLine.length > 60 ? `${offerLine.slice(0, 57).trimEnd()}…` : offerLine
+  let textY = H - 300
 
-  if (hasOffer) {
-    ctx.font = `700 12px Inter, sans-serif`
-    const pillText = opts.offerText.toUpperCase()
-    const pillW = Math.min(ctx.measureText(pillText).width + 32, W - 72)
-    const pillH = 30
+  if (offer) {
+    ctx.font = `700 13px Inter, sans-serif`
+    const pillText = offer.toUpperCase()
+    const pillW = Math.min(ctx.measureText(pillText).width + 36, W - 72)
+    const pillH = 32
 
-    ctx.fillStyle = offerColor + '22'
-    roundRect(ctx, 36, textY - 22, pillW, pillH, 15)
+    ctx.fillStyle = opts.style === 'minimal' ? 'rgba(255,255,255,0.92)' : '#fbbf24'
+    roundRect(ctx, 36, textY - 22, pillW, pillH, 16)
     ctx.fill()
-    ctx.strokeStyle = offerColor + '70'
-    ctx.lineWidth = 1
-    roundRect(ctx, 36, textY - 22, pillW, pillH, 15)
-    ctx.stroke()
 
-    ctx.fillStyle = offerColor
-    ctx.fillText(pillText, 52, textY + 2)
-    textY += 52
+    ctx.fillStyle = '#451a03'
+    ctx.fillText(pillText, 54, textY)
+    textY += 56
   }
 
   /* ── Headline ── */
-  ctx.fillStyle = headlineColor
+  ctx.fillStyle = '#ffffff'
   const hSize = opts.headline.length > 50 ? 38 : opts.headline.length > 35 ? 44 : 52
   ctx.font = `800 ${hSize}px Inter, -apple-system, sans-serif`
+  ctx.shadowColor = 'rgba(0,0,0,0.55)'
+  ctx.shadowBlur = 14
   const finalY = wrapText(ctx, opts.headline, 36, textY, W - 72, hSize + 10)
+  ctx.shadowBlur = 0
 
   /* ── Subheadline ── */
-  ctx.fillStyle = subColor
+  ctx.fillStyle = 'rgba(255,255,255,0.85)'
   ctx.font = `400 19px Inter, -apple-system, sans-serif`
   wrapText(ctx, opts.subheadline, 36, finalY + 22, W - 72, 28)
 
   /* ── CTA button ── */
-  const btnY = H - 100
+  const btnY = H - 104
   const btnH = 52
   ctx.font = `700 16px Inter, sans-serif`
   const btnW = Math.min(ctx.measureText(opts.cta).width + 64, 310)
@@ -220,7 +180,7 @@ function drawPoster(canvas: HTMLCanvasElement, opts: DrawOptions) {
   if (opts.style === 'vibrant') {
     ctx.fillStyle = '#fbbf24'
   } else if (opts.style === 'minimal') {
-    ctx.fillStyle = '#7c3aed'
+    ctx.fillStyle = '#ffffff'
   } else {
     const btnGrad = ctx.createLinearGradient(36, 0, 36 + btnW, 0)
     btnGrad.addColorStop(0, '#7c3aed')
@@ -230,23 +190,27 @@ function drawPoster(canvas: HTMLCanvasElement, opts: DrawOptions) {
   roundRect(ctx, 36, btnY, btnW, btnH, 26)
   ctx.fill()
 
-  ctx.fillStyle = opts.style === 'vibrant' ? '#1e1b4b' : '#ffffff'
+  ctx.fillStyle = opts.style === 'bold' ? '#ffffff' : '#1c1917'
   ctx.textAlign = 'center'
   ctx.fillText(opts.cta, 36 + btnW / 2, btnY + 32)
   ctx.textAlign = 'left'
 
   /* ── WhatsApp number ── */
   if (opts.whatsappNumber) {
-    ctx.fillStyle = dark ? 'rgba(71,85,105,0.7)' : 'rgba(255,255,255,0.5)'
+    ctx.fillStyle = 'rgba(255,255,255,0.6)'
     ctx.font = `400 13px Inter, sans-serif`
-    ctx.fillText(`wa.me/${opts.whatsappNumber.replace(/\D/g, '')}`, 36, H - 36)
+    ctx.fillText(`wa.me/${opts.whatsappNumber.replace(/\D/g, '')}`, 36, H - 30)
   }
+
+  /* ── Accent corner mark ── */
+  ctx.fillStyle = accent
+  ctx.fillRect(0, 0, 6, 96)
 
   /* ── Watermark ── */
   if (opts.watermark) {
     ctx.save()
     ctx.globalAlpha = 0.18
-    ctx.fillStyle = dark ? '#000' : '#fff'
+    ctx.fillStyle = '#fff'
     ctx.font = `700 26px Inter, sans-serif`
     ctx.translate(W / 2, H / 2)
     ctx.rotate(-Math.PI / 6)
@@ -265,12 +229,103 @@ const STYLES: { id: Style; label: string; desc: string }[] = [
   { id: 'vibrant', label: 'Vibrant', desc: 'Bold colour' },
 ]
 
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = src
+  })
+}
+
 export default function PosterCanvas({ form, content }: Props) {
   const { user } = useAuth()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [activeStyle, setActiveStyle] = useState<Style>('bold')
   const [downloading, setDownloading] = useState(false)
   const [showBuyModal, setShowBuyModal] = useState(false)
+  const [bgImages, setBgImages] = useState<Partial<Record<Style, HTMLImageElement>>>({})
+  const [previewLoading, setPreviewLoading] = useState(true)
+  const [unlocking, setUnlocking] = useState(false)
+  const [unlocked, setUnlocked] = useState(false)
+  const [unlockError, setUnlockError] = useState('')
+
+  const posterContext = {
+    industry: form.industry,
+    business_name: form.business_name,
+    product_name: form.product_name,
+    location: form.location,
+    offer: form.offer,
+    tone: form.tone,
+    target_audience: form.target_audience,
+    design_direction: content.posterCopy.designDirection,
+  }
+
+  /* Free AI background preview (bold style) on mount */
+  useEffect(() => {
+    let cancelled = false
+    const run = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-poster`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY as string}`,
+          },
+          body: JSON.stringify(posterContext),
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        if (data?.images?.bold && !cancelled) {
+          const img = await loadImage(data.images.bold)
+          if (!cancelled) setBgImages(prev => ({ ...prev, bold: img }))
+        }
+      } catch {} finally {
+        if (!cancelled) setPreviewLoading(false)
+      }
+    }
+    run()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  /* Unlock: 1 credit → 3 high-res AI styles */
+  const unlockStyles = async () => {
+    if (unlocking) return
+    setUnlocking(true); setUnlockError('')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { setUnlockError('Please sign in again to unlock.'); return }
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-poster`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ ...posterContext, unlock: true }),
+      })
+      if (res.status === 402) { setShowBuyModal(true); return }
+      if (!res.ok) throw new Error('unlock failed')
+      const data = await res.json()
+      const entries = await Promise.all(
+        (['bold', 'minimal', 'vibrant'] as Style[])
+          .filter(s => data?.images?.[s])
+          .map(async s => [s, await loadImage(data.images[s])] as const)
+      )
+      setBgImages(prev => {
+        const next = { ...prev }
+        for (const [s, img] of entries) next[s] = img
+        return next
+      })
+      setUnlocked(true)
+    } catch {
+      setUnlockError('Could not unlock — please try again.')
+    } finally {
+      setUnlocking(false)
+    }
+  }
 
   const opts: DrawOptions = {
     style: activeStyle,
@@ -283,11 +338,13 @@ export default function PosterCanvas({ form, content }: Props) {
     whatsappNumber: form.whatsapp_number,
   }
 
+  const activeBg = bgImages[activeStyle] ?? null
+
   const draw = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    document.fonts.ready.then(() => drawPoster(canvas, opts))
-  }, [activeStyle, opts.headline, opts.subheadline, opts.offerText, opts.cta, opts.businessName, opts.watermark, opts.whatsappNumber]) // eslint-disable-line react-hooks/exhaustive-deps
+    document.fonts.ready.then(() => drawPoster(canvas, opts, activeBg))
+  }, [activeStyle, activeBg, opts.headline, opts.subheadline, opts.offerText, opts.cta, opts.businessName, opts.watermark, opts.whatsappNumber]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { draw() }, [draw])
 
@@ -315,20 +372,32 @@ export default function PosterCanvas({ form, content }: Props) {
             width={768} height={1024}
             style={{ width: '100%', height: 'auto', display: 'block' }}
           />
+          {previewLoading && !activeBg && (
+            <div className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold text-white"
+              style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}>
+              <Loader2 size={11} className="animate-spin" /> AI scene loading…
+            </div>
+          )}
         </div>
 
         {/* Style picker */}
         <div className="flex gap-2">
-          {STYLES.map(s => (
-            <button key={s.id} onClick={() => setActiveStyle(s.id)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-all ${
-                activeStyle === s.id
-                  ? 'border-purple-500 bg-purple-500/10 text-purple-700'
-                  : 'border-gray-200 text-gray-500 hover:border-gray-300'
-              }`}>
-              {s.label}
-            </button>
-          ))}
+          {STYLES.map(s => {
+            const hasAiBg = !!bgImages[s.id]
+            return (
+              <button key={s.id} onClick={() => setActiveStyle(s.id)}
+                className={`relative px-4 py-2 rounded-xl text-xs font-semibold border transition-all ${
+                  activeStyle === s.id
+                    ? 'border-purple-500 bg-purple-500/10 text-purple-700'
+                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                }`}>
+                {s.label}
+                {hasAiBg
+                  ? <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center"><Check size={9} className="text-white" /></span>
+                  : !unlocked && <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-gray-300 flex items-center justify-center"><Lock size={8} className="text-white" /></span>}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -337,17 +406,38 @@ export default function PosterCanvas({ form, content }: Props) {
         <div className="card-glow p-5">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles size={14} className="text-purple-500" />
-            <p className="text-sm font-bold text-gray-900">Your Poster</p>
+            <p className="text-sm font-bold text-gray-900">AI Poster Studio</p>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed mb-4">
-            Instant professional poster with your campaign copy. Switch styles, then download as PNG — ready for WhatsApp Status, Instagram, or print.
+            A real AI-generated scene for your business with your campaign copy composed on top — ready for WhatsApp Status, Instagram, or print.
           </p>
+
+          {!unlocked && (
+            <button
+              onClick={unlockStyles}
+              disabled={unlocking}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 mb-2"
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
+              {unlocking
+                ? <><Loader2 size={14} className="animate-spin" /> Generating 3 styles…</>
+                : <><Sparkles size={14} /> Unlock 3 HD Styles — 1 credit</>}
+            </button>
+          )}
+          {unlocked && (
+            <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200">
+              <Check size={13} className="text-emerald-600 shrink-0" />
+              <p className="text-xs font-semibold text-emerald-700">3 HD styles unlocked — switch above</p>
+            </div>
+          )}
+          {unlockError && <p className="text-xs text-red-500 mb-2">{unlockError}</p>}
 
           <button
             onClick={downloadPoster}
             disabled={downloading}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
+            className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 ${
+              unlocked ? 'text-white' : 'text-purple-700 border border-purple-200 bg-purple-50'
+            }`}
+            style={unlocked ? { background: 'linear-gradient(135deg, #7c3aed, #2563eb)' } : undefined}>
             {downloading
               ? <><Loader2 size={14} className="animate-spin" /> Saving…</>
               : <><Download size={14} /> Download PNG</>}
@@ -390,7 +480,11 @@ export default function PosterCanvas({ form, content }: Props) {
         <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 border border-amber-100">
           <ImageIcon size={13} className="text-amber-500 mt-0.5 shrink-0" />
           <p className="text-[11px] text-amber-700 leading-relaxed">
-            For professional print or large-format display, send the design direction above to a graphic designer.
+            Need large-format print or a custom layout? Our design team can take this further —{' '}
+            <a href="https://wa.me/254751822556?text=Hi%2C%20I%20need%20a%20professional%20print%20version%20of%20my%20poster"
+              target="_blank" rel="noopener noreferrer" className="font-bold underline">
+              WhatsApp us
+            </a>.
           </p>
         </div>
       </div>

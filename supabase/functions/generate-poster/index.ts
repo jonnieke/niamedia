@@ -79,11 +79,21 @@ serve(async (req) => {
     const body = await req.json()
     const {
       industry, business_name, product_name, location, offer, tone, target_audience, design_direction,
-      style = 'bold', unlock = false,
+      style = 'bold', unlock = false, raw_prompt,
     } = body
 
     const GEMINI_KEY = Deno.env.get('GEMINI_API_KEY')
     if (!GEMINI_KEY) throw new Error('GEMINI_API_KEY not configured')
+
+    // Raw prompt mode — used by the site hero; bypasses the poster template
+    // (which forbids people) so scenes can show real Kenyan business life.
+    if (raw_prompt && typeof raw_prompt === 'string') {
+      const rawBase64 = await geminiImage(GEMINI_KEY, raw_prompt.slice(0, 1200))
+      const imageData = await compressToJpeg(rawBase64, 960, 80)
+      return new Response(JSON.stringify({ images: { hero: imageData } }), {
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      })
+    }
 
     const ctx = { industry: industry ?? business_name ?? 'Professional Services', business_name, product_name, location, offer, tone, target_audience, design_direction }
 

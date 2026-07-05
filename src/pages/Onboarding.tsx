@@ -45,12 +45,21 @@ const SERVICES = [
 
 const STEPS = ['Welcome', 'Your Business', 'First Goal']
 
+function readDemoCtx(): { businessName?: string; industry?: string } {
+  try {
+    const raw = localStorage.getItem('nia_demo_ctx')
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return {}
+}
+
 export default function Onboarding() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const demoCtx = readDemoCtx()
   const [step, setStep] = useState(0)
-  const [businessName, setBusinessName] = useState('')
-  const [industry, setIndustry] = useState('')
+  const [businessName, setBusinessName] = useState(demoCtx.businessName ?? '')
+  const [industry, setIndustry] = useState(demoCtx.industry ?? '')
   const [chosenService, setChosenService] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -64,6 +73,7 @@ export default function Onboarding() {
       await supabase.from('brand_kits').upsert({
         user_id: user.id,
         business_name: businessName,
+        ...(industry ? { industry } : {}),
       }, { onConflict: 'user_id' })
     }
     localStorage.setItem('onboarded', '1')
@@ -130,7 +140,9 @@ export default function Onboarding() {
                 You're in{user?.name ? `, ${user.name.split(' ')[0]}` : ''}! 🎉
               </h1>
               <p className="text-gray-500 mb-8 leading-relaxed max-w-sm mx-auto">
-                Set up takes 60 seconds. Then every campaign, script, and brief Nia creates will be personalised to your business.
+                {demoCtx.businessName
+                  ? `We saved what you built for ${demoCtx.businessName} — confirm two details and your free credit unlocks the full kit.`
+                  : 'Set up takes 60 seconds. Then every campaign, script, and brief Nia creates will be personalised to your business.'}
               </p>
 
               {/* Feature cards */}
@@ -189,7 +201,7 @@ export default function Onboarding() {
                 <div>
                   <label className="label">What industry are you in? *</label>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {INDUSTRIES.map(ind => (
+                    {(industry && !INDUSTRIES.includes(industry) ? [industry, ...INDUSTRIES] : INDUSTRIES).map(ind => (
                       <button key={ind} type="button" onClick={() => setIndustry(ind)}
                         className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
                           industry === ind

@@ -72,6 +72,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [credits, setCredits] = useState<number | null>(null)
   const [hasBrandKit, setHasBrandKit] = useState(false)
+  const [campaignCount, setCampaignCount] = useState(0)
   const [recentCampaigns, setRecentCampaigns] = useState<RecentCampaign[]>([])
   const [recentIdeas, setRecentIdeas] = useState<RecentIdea[]>([])
   const [leadSummary, setLeadSummary] = useState<LeadSummary>({ total: 0, new: 0, interested: 0, converted: 0, pipelineValue: 0, wonValue: 0, conversionRate: 0 })
@@ -85,7 +86,7 @@ export default function Dashboard() {
     Promise.all([
       supabase.from('profiles').select('credits').eq('id', user.id).single(),
       supabase.from('brand_kits').select('user_id').eq('user_id', user.id).maybeSingle(),
-      supabase.from('campaigns').select('id, title, type, created_at, metadata').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20),
+      supabase.from('campaigns').select('id, title, type, created_at, metadata', { count: 'exact' }).eq('user_id', user.id).order('created_at', { ascending: false }).limit(20),
       supabase.from('ideas').select('id, title, industry, status, favorite').eq('user_id', user.id).order('favorite', { ascending: false }).order('created_at', { ascending: false }).limit(5),
       supabase.from('leads').select('status, estimated_value, campaign_id').eq('user_id', user.id),
       supabase.from('video_requests').select('status').eq('user_id', user.id),
@@ -94,6 +95,7 @@ export default function Dashboard() {
       setCredits(profileRes.data?.credits ?? null)
       setHasBrandKit(Boolean(brandKitRes.data))
       const campaigns = (campaignsRes.data ?? []) as (RecentCampaign & { metadata?: Record<string, unknown> })[]
+      setCampaignCount(campaignsRes.count ?? campaigns.length)
       setRecentCampaigns(campaigns.slice(0, 5))
 
       // Aggregate share stats + leads per campaign
@@ -160,15 +162,23 @@ export default function Dashboard() {
     () => localStorage.getItem('onboarding_dismissed') !== '1'
   )
 
-  const nextAction = !hasBrandKit
-    ? { label: 'Add Brand Kit', desc: 'Teach Nia how your business should sound before you generate.', to: '/brand-kit' }
-    : recentIdeas.length === 0
-      ? { label: 'Save your first idea', desc: 'Use Nia to sharpen an idea before you build a campaign.', to: '/ideas' }
-      : recentCampaigns.length === 0
-        ? { label: 'Generate your first campaign', desc: 'Turn one promising idea into a full campaign kit.', to: '/new-campaign' }
-        : requestSummary.total === 0
-          ? { label: 'Request poster or video production', desc: 'Turn your best campaign into polished execution assets.', to: '/request-video' }
-          : { label: 'Review your latest campaigns', desc: 'Refine, export, and turn more outputs into leads.', to: '/campaigns' }
+  // Visitor who built an ad kit in the homepage demo but hasn't generated
+  // their first campaign yet — finishing that kit beats every other action.
+  const demoCtxBusiness = (() => {
+    try { return JSON.parse(localStorage.getItem('nia_demo_ctx') ?? '{}').businessName ?? '' } catch { return '' }
+  })()
+
+  const nextAction = recentCampaigns.length === 0 && demoCtxBusiness
+    ? { label: `Finish your free ad kit for ${demoCtxBusiness}`, desc: 'Your free credit unlocks the full campaign + HD poster in 3 styles.', to: '/new-campaign' }
+    : !hasBrandKit
+      ? { label: 'Add Brand Kit', desc: 'Teach Nia how your business should sound before you generate.', to: '/brand-kit' }
+      : recentIdeas.length === 0
+        ? { label: 'Save your first idea', desc: 'Use Nia to sharpen an idea before you build a campaign.', to: '/ideas' }
+        : recentCampaigns.length === 0
+          ? { label: 'Generate your first campaign', desc: 'Turn one promising idea into a full campaign kit.', to: '/new-campaign' }
+          : requestSummary.total === 0
+            ? { label: 'Request poster or video production', desc: 'Turn your best campaign into polished execution assets.', to: '/request-video' }
+            : { label: 'Review your latest campaigns', desc: 'Refine, export, and turn more outputs into leads.', to: '/campaigns' }
 
   return (
     <DashboardLayout>
@@ -241,7 +251,7 @@ export default function Dashboard() {
         <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
           {[
             { icon: Zap, label: 'Credit balance', value: credits === null ? '...' : String(credits), sub: 'Campaign generation fuel', color: '#7c3aed', bg: '#ede9fe' },
-            { icon: FolderOpen, label: 'Campaigns', value: String(recentCampaigns.length), sub: 'Recent campaign history', color: '#2563eb', bg: '#dbeafe' },
+            { icon: FolderOpen, label: 'Campaigns', value: String(campaignCount), sub: 'Total campaigns generated', color: '#2563eb', bg: '#dbeafe' },
             { icon: Lightbulb, label: 'Saved ideas', value: String(recentIdeas.length), sub: 'Promising concepts to build from', color: '#d97706', bg: '#ffedd5' },
             { icon: BarChart2, label: 'Leads tracked', value: String(leadSummary.total), sub: `${leadSummary.converted} converted so far`, color: '#059669', bg: '#d1fae5' },
           ].map(card => (

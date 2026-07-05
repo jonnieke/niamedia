@@ -264,6 +264,9 @@ export default function NewCampaign() {
     ]).then(([brand, camps]) => {
       const b = brand.data
       const pastCampaigns = (camps.data ?? []).map(c => ({ id: c.id, title: c.business_name, created_at: c.created_at }))
+      // Product typed in the homepage demo carries into the first campaign
+      let demoProduct = ''
+      try { demoProduct = JSON.parse(localStorage.getItem('nia_demo_ctx') ?? '{}').product ?? '' } catch {}
       if (b) {
         setForm(prev => ({
           ...prev,
@@ -273,6 +276,7 @@ export default function NewCampaign() {
           target_audience: prev.target_audience || b.target_customer || '',
           whatsapp_number: prev.whatsapp_number || b.whatsapp_number || '',
           business_url: prev.business_url || b.website_url || '',
+          product_name: prev.product_name || demoProduct,
         }))
       }
       setReturning({ filled: !!b, pastCampaigns })

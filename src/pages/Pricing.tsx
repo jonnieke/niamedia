@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { CheckCircle2, Zap, Film, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
+import { CheckCircle2, Zap, Film, ChevronDown, ChevronUp } from 'lucide-react'
 import PublicHeader from '../components/layout/PublicHeader'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
-import { PRIMARY_VIDEO_CTA, SECONDARY_NIA_CTA } from '../lib/cta'
+import { PRIMARY_VIDEO_CTA } from '../lib/cta'
 
 const CHECK = () => <CheckCircle2 size={13} className="text-purple-500 shrink-0 mt-0.5" />
 
@@ -14,7 +14,7 @@ const faqs = [
   { q: 'How long does video production take?', a: 'Standard: 3–5 business days. 48-hour rush: available at +25%. 24-hour rush: +50%. Timelines depend on asset availability and scope.' },
   { q: 'Can I buy credits without a subscription?', a: 'Yes. You can buy a single campaign credit for KES 500 and generate one full campaign including captions, script, poster copy, and WhatsApp copy.' },
   { q: 'What platforms are supported?', a: 'Instagram, Facebook, TikTok, YouTube, WhatsApp, LinkedIn — all covered in every campaign generation.' },
-  { q: 'Is there a free tier?', a: 'Yes. You can preview the AI output from the homepage without an account. After signing up, you get one free campaign to try the full platform.' },
+  { q: 'Is there a free tier?', a: 'Yes. You can generate a demo campaign and poster preview from the homepage without an account. After signing up, your free credit unlocks one full campaign kit including the HD poster in 3 styles.' },
 ]
 
 export default function Pricing() {
@@ -64,7 +64,7 @@ export default function Pricing() {
         <div className="rounded-2xl border border-gray-200 bg-white p-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Trusted by</p>
-            <p className="text-sm text-gray-700 mt-1">Ndovu Group, Pesaflix, Shekel Coin, Onfon Media, Adiel Media, and NCBA Junior account.</p>
+            <p className="text-sm text-gray-700 mt-1">Ndovu Group, PesaFlix, Shekel Coin, Onfon Media, Adiel Media, and NCBA Junior Account.</p>
           </div>
           <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-gray-600">
             <span className="px-3 py-1.5 rounded-full bg-gray-100">Campaign ideas</span>
@@ -153,7 +153,7 @@ export default function Pricing() {
               <ul className="space-y-1.5 flex-1">
                 {p.features.map(f => <li key={f} className="flex items-start gap-2 text-xs text-gray-600"><CHECK />{f}</li>)}
               </ul>
-              <Link to={SECONDARY_NIA_CTA.href} className="mt-4 block text-center py-2 rounded-xl text-xs font-semibold border border-gray-200 text-gray-700 hover:border-blue-300 hover:text-blue-700 transition-all">{SECONDARY_NIA_CTA.label}</Link>
+              <Link to="/package-request" className="mt-4 block text-center py-2 rounded-xl text-xs font-semibold border border-gray-200 text-gray-700 hover:border-blue-300 hover:text-blue-700 transition-all">Request This Package</Link>
             </div>
           ))}
         </div>
@@ -175,7 +175,7 @@ export default function Pricing() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           {[
-            { label: 'Quick Promo Video', price: 'KES 3,500 – 5,000', tag: '15s or 30s', features: ['Fast-cut commercial', 'AI visuals + voiceover', 'Social media ready', '2 revision rounds', 'Certificate of AI Origin'] },
+            { label: 'Quick Promo Video', price: 'KES 3,500 – 8,000', tag: '15s – 30s', features: ['Fast-cut commercial', 'AI visuals + voiceover', 'Social media ready', '2 revision rounds', 'Certificate of AI Origin'] },
             { label: 'Campaign Video', price: 'KES 7,500 – 15,000', tag: 'Up to 60s', features: ['Multi-scene commercial', 'Custom music bed', '3 visual style options', '2 revision rounds', 'Certificate of AI Origin'], popular: true },
             { label: 'Premium Brand Video', price: 'KES 25,000 – 60,000', tag: '2–5 minutes', features: ['Documentary or brand film', 'Full pre-production workflow', 'Avatar & narration selection', 'Afro-fusion score', 'Certificate of AI Origin'] },
           ].map(p => (
@@ -211,7 +211,7 @@ export default function Pricing() {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: 'Turn into a poster', price: 'from KES 300' },
+            { label: 'HD poster (3 AI styles)', price: 'KES 500 (1 credit)' },
             { label: 'Human polish / rewrite', price: 'KES 500' },
             { label: 'Campaign setup support', price: 'from KES 2,000' },
             { label: 'Turn into a short video', price: 'from KES 3,500' },
@@ -225,7 +225,7 @@ export default function Pricing() {
       </section>
 
       {/* FAQ */}
-      <section className="max-w-2xl mx-auto px-4 mb-20">
+      <section className="max-w-2xl mx-auto px-4 mb-16">
         <h2 className="text-xl font-extrabold text-gray-900 mb-6 text-center">Frequently asked questions</h2>
         <div className="space-y-2">
           {faqs.map((faq, i) => (
@@ -237,6 +237,27 @@ export default function Pricing() {
               {openFaq === i && <div className="px-5 pb-4 text-sm text-gray-500 leading-relaxed">{faq.a}</div>}
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* WhatsApp CTA */}
+      <section className="max-w-2xl mx-auto px-4 pb-20 text-center">
+        <div className="rounded-2xl border border-gray-200 bg-white p-8">
+          <h2 className="text-lg font-extrabold text-gray-900 mb-2">Not sure which option fits?</h2>
+          <p className="text-sm text-gray-500 mb-5">Tell us what you're promoting and your budget — we'll recommend the right package in minutes.</p>
+          <div className="flex flex-wrap gap-3 justify-center">
+            <a href="https://wa.me/254751822556?text=Hi%2C%20I%20was%20looking%20at%20your%20pricing%20page%20—%20which%20package%20fits%20my%20business%3F"
+              target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white"
+              style={{ background: '#25d366' }}>
+              WhatsApp Us
+            </a>
+            <Link to="/quote"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white"
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
+              Get an Instant Quote
+            </Link>
+          </div>
         </div>
       </section>
     </div>

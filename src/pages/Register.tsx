@@ -44,11 +44,23 @@ function Divider() {
   )
 }
 
+function readDemoCtx(): { businessName: string; industry: string; product: string } | null {
+  try {
+    const raw = localStorage.getItem('nia_demo_ctx')
+    if (!raw) return null
+    const ctx = JSON.parse(raw)
+    // Only greet with the kit if the demo run is recent (7 days)
+    if (!ctx.businessName || Date.now() - (ctx.ts ?? 0) > 7 * 24 * 60 * 60 * 1000) return null
+    return ctx
+  } catch { return null }
+}
+
 export default function Register() {
   const { register } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const refCode = searchParams.get('ref')
+  const demoCtx = readDemoCtx()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -145,12 +157,18 @@ export default function Register() {
       <div className="w-full max-w-sm relative z-10">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex justify-center mb-6"><Logo size="md" /></Link>
-          <h1 className="text-2xl font-bold text-gray-900">Create your account</h1>
-          <p className="text-sm text-gray-500 mt-1">Start creating campaigns in minutes</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {demoCtx ? 'Claim your free ad kit' : 'Create your account'}
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {demoCtx ? `Your campaign for ${demoCtx.businessName} is saved and waiting` : 'Start creating campaigns in minutes'}
+          </p>
           <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full"
             style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)' }}>
             <CheckCircle2 size={13} className="text-purple-500" />
-            <span className="text-xs font-semibold text-purple-700">First campaign is on us — no card needed</span>
+            <span className="text-xs font-semibold text-purple-700">
+              {demoCtx ? 'Free credit inside — full campaign + poster in 3 styles' : 'First campaign is on us — no card needed'}
+            </span>
           </div>
         </div>
 

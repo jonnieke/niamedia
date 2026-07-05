@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
 const SITE_URL = 'https://niamedia.co.ke'
-const DEFAULT_IMAGE = `${SITE_URL}/images/nia-cafe-owner.png`
+const DEFAULT_IMAGE = `${SITE_URL}/images/og-image.jpg`
 
 const PUBLIC_ROUTES: Record<string, { title: string; description: string }> = {
   '/': {
@@ -20,10 +20,6 @@ const PUBLIC_ROUTES: Record<string, { title: string; description: string }> = {
   '/portfolio': {
     title: 'Video Commercial Portfolio | Nia Media Kenya',
     description: 'Explore video commercials, campaign creative, and promotional work produced for Kenyan businesses and growing African brands.',
-  },
-  '/start': {
-    title: 'Start Your Video Project | Nia Media',
-    description: 'Submit your business video brief and receive a custom production proposal from Nia Media.',
   },
   '/package-request': {
     title: 'Request a Creative Package | Nia Media',
