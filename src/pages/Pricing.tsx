@@ -1,20 +1,27 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { CheckCircle2, Zap, Film, ChevronDown, ChevronUp } from 'lucide-react'
+import { CheckCircle2, Zap, Film, Users, ChevronDown, ChevronUp, Music } from 'lucide-react'
 import PublicHeader from '../components/layout/PublicHeader'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
-import { PRIMARY_VIDEO_CTA } from '../lib/cta'
 
-const CHECK = () => <CheckCircle2 size={13} className="text-purple-500 shrink-0 mt-0.5" />
+const WHATSAPP_URL = 'https://wa.me/254751822556?text=Hi%2C%20I%20was%20looking%20at%20your%20pricing%20—%20which%20option%20fits%20my%20business%3F'
+
+const VIDEO_LADDER = [
+  { label: '15 seconds', use: 'TikTok, Reels, Stories', price: '3,500 – 5,000' },
+  { label: '30 seconds', use: 'Standard commercial', price: '5,000 – 8,000' },
+  { label: '60 seconds', use: 'Campaign film', price: '7,500 – 15,000' },
+  { label: '90 seconds', use: 'Extended brand story', price: '12,000 – 20,000' },
+  { label: '3 min+', use: 'Infomercial / documentary', price: '25,000 – 60,000' },
+]
 
 const faqs = [
-  { q: 'What is the difference between DIY and Managed?', a: 'DIY means you use the platform to generate your own campaign copy, posters, scripts, and WhatsApp messages. Managed means Nia Media\'s team reviews, packages, and polishes your campaigns for you — you still get AI-generated content, but with human quality control.' },
-  { q: 'Do I own the content?', a: 'Yes — 100%. All AI-generated content transfers to you fully. For custom videos, a Certificate of AI Origin is issued.' },
-  { q: 'How long does video production take?', a: 'Standard: 3–5 business days. 48-hour rush: available at +25%. 24-hour rush: +50%. Timelines depend on asset availability and scope.' },
-  { q: 'Can I buy credits without a subscription?', a: 'Yes. You can buy a single campaign credit for KES 500 and generate one full campaign including captions, script, poster copy, and WhatsApp copy.' },
-  { q: 'What platforms are supported?', a: 'Instagram, Facebook, TikTok, YouTube, WhatsApp, LinkedIn — all covered in every campaign generation.' },
+  { q: 'What do I actually get for one credit?', a: 'One full campaign kit: social captions for every platform, a video script, WhatsApp broadcast copy, poster copy, a 7-day content calendar — plus the HD promotional poster in 3 AI-designed styles.' },
   { q: 'Is there a free tier?', a: 'Yes. You can generate a demo campaign and poster preview from the homepage without an account. After signing up, your free credit unlocks one full campaign kit including the HD poster in 3 styles.' },
+  { q: 'How long does video production take?', a: 'Standard: 3–5 business days. 48-hour rush: +25%. 24-hour rush: +50%. Timelines depend on asset availability and scope.' },
+  { q: 'Do I own the content?', a: 'Yes — 100%. All content transfers to you fully on delivery. For custom videos, a Certificate of AI Origin is issued.' },
+  { q: 'What is Managed Marketing?', a: 'Our team plans, produces, and delivers your campaigns every month — posters, videos, and copy with human quality control. Packages start at KES 15,000/month; one-off campaign kits from KES 5,000.' },
+  { q: 'How do I pay?', a: 'M-Pesa, Visa, or Mastercard through PesaPal secure checkout. For video production you pay a deposit to start and the balance on delivery.' },
 ]
 
 export default function Pricing() {
@@ -51,176 +58,150 @@ export default function Pricing() {
       )}
 
       {/* Hero */}
-      <section className="py-16 text-center px-4">
-        <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
-          Simple, transparent pricing
+      <section className="pt-16 pb-10 text-center px-4">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4 mt-6">
+          Three ways to work with us
         </h1>
         <p className="text-gray-500 max-w-xl mx-auto text-sm md:text-base">
-          Buy campaign credits, explore ideas, or jump straight into a managed quote for video production.
+          Start free, pay per video, or let our team run your marketing. M-Pesa accepted on everything.
         </p>
       </section>
 
-      <div className="max-w-5xl mx-auto px-4 mb-10">
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Trusted by</p>
-            <p className="text-sm text-gray-700 mt-1">Ndovu Group, PesaFlix, Shekel Coin, Onfon Media, Adiel Media, and NCBA Junior Account.</p>
-          </div>
-          <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-gray-600">
-            <span className="px-3 py-1.5 rounded-full bg-gray-100">Campaign ideas</span>
-            <span className="px-3 py-1.5 rounded-full bg-gray-100">Video production</span>
-            <span className="px-3 py-1.5 rounded-full bg-gray-100">Voiceovers</span>
-            <span className="px-3 py-1.5 rounded-full bg-gray-100">Posters & jingles</span>
-          </div>
-        </div>
-      </div>
+      {/* The three paths */}
+      <section className="max-w-5xl mx-auto px-4 mb-14">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
-      {/* DIY Platform */}
-      <section className="max-w-5xl mx-auto px-4 mb-16">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="p-2 rounded-xl" style={{ background: 'rgba(124,58,237,0.08)' }}>
-            <Zap size={16} className="text-purple-600" />
+          {/* AI Campaigns */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-7 flex flex-col">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#ede9fe' }}>
+              <Zap size={20} className="text-purple-600" />
+            </div>
+            <h2 className="text-lg font-extrabold text-gray-900 mb-1">AI Campaigns</h2>
+            <p className="text-xs text-gray-500 mb-4">Generate your own ads, posters & WhatsApp copy — instantly.</p>
+            <div className="mb-5">
+              <span className="text-3xl font-extrabold text-gray-900">KES 500</span>
+              <span className="text-sm text-gray-400"> / campaign</span>
+              <p className="text-xs text-emerald-600 font-semibold mt-1">First campaign + HD poster free</p>
+            </div>
+            <ul className="space-y-2.5 flex-1 mb-6">
+              {[
+                'Captions, scripts & WhatsApp copy',
+                'HD poster in 3 AI styles',
+                '7-day content calendar',
+                'English or Kiswahili',
+                'Going monthly? KES 2,500/mo for 15 campaigns',
+              ].map(f => (
+                <li key={f} className="flex items-start gap-2 text-xs text-gray-600">
+                  <CheckCircle2 size={13} className="text-purple-500 shrink-0 mt-0.5" />{f}
+                </li>
+              ))}
+            </ul>
+            <Link to="/register" className="block text-center py-3 rounded-xl text-sm font-bold text-white"
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
+              Start Free
+            </Link>
           </div>
-          <div>
-            <h2 className="text-lg font-extrabold text-gray-900">Campaign Studio Plans</h2>
-            <p className="text-xs text-gray-500">Generate campaigns, posters, scripts, and WhatsApp copy yourself — instantly.</p>
+
+          {/* Video Production — highlighted */}
+          <div className="bg-white rounded-2xl border border-emerald-300 ring-1 ring-emerald-200 p-7 flex flex-col relative">
+            <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-bold text-white"
+              style={{ background: 'linear-gradient(135deg, #059669, #0891b2)' }}>
+              MOST POPULAR
+            </span>
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#d1fae5' }}>
+              <Film size={20} className="text-emerald-600" />
+            </div>
+            <h2 className="text-lg font-extrabold text-gray-900 mb-1">Video Production</h2>
+            <p className="text-xs text-gray-500 mb-4">A professional commercial for your business, produced by us.</p>
+            <div className="mb-5">
+              <span className="text-3xl font-extrabold text-gray-900">KES 3,500</span>
+              <span className="text-sm text-gray-400"> +</span>
+              <p className="text-xs text-gray-400 mt-1">Instant price by length below</p>
+            </div>
+            <ul className="space-y-2.5 flex-1 mb-6">
+              {[
+                '15 seconds to 3+ minutes',
+                'AI visuals, voiceover & music',
+                '2 revision rounds included',
+                'Campaign copy included free',
+                'Full rights on delivery',
+              ].map(f => (
+                <li key={f} className="flex items-start gap-2 text-xs text-gray-600">
+                  <CheckCircle2 size={13} className="text-emerald-500 shrink-0 mt-0.5" />{f}
+                </li>
+              ))}
+            </ul>
+            <Link to="/quote" className="block text-center py-3 rounded-xl text-sm font-bold text-white"
+              style={{ background: 'linear-gradient(135deg, #059669, #0891b2)' }}>
+              Get an Instant Quote
+            </Link>
+          </div>
+
+          {/* Managed Marketing */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-7 flex flex-col">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#dbeafe' }}>
+              <Users size={20} className="text-blue-600" />
+            </div>
+            <h2 className="text-lg font-extrabold text-gray-900 mb-1">Managed Marketing</h2>
+            <p className="text-xs text-gray-500 mb-4">Our team runs your campaigns every month — you run your business.</p>
+            <div className="mb-5">
+              <span className="text-3xl font-extrabold text-gray-900">KES 15,000</span>
+              <span className="text-sm text-gray-400"> / month</span>
+              <p className="text-xs text-gray-400 mt-1">One-off campaign kits from KES 5,000</p>
+            </div>
+            <ul className="space-y-2.5 flex-1 mb-6">
+              {[
+                'Monthly campaigns, posters & videos',
+                'Human creative direction',
+                'Monthly planning call & report',
+                'Scales to KES 60,000/mo full service',
+              ].map(f => (
+                <li key={f} className="flex items-start gap-2 text-xs text-gray-600">
+                  <CheckCircle2 size={13} className="text-blue-500 shrink-0 mt-0.5" />{f}
+                </li>
+              ))}
+            </ul>
+            <Link to="/package-request" className="block text-center py-3 rounded-xl text-sm font-bold border border-blue-200 text-blue-700 hover:bg-blue-50 transition-all">
+              Request a Package
+            </Link>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { label: 'Free Preview', price: 'KES 0', period: '', features: ['1 demo campaign (homepage)', 'See AI output before signing up', 'No credit card required'], cta: 'Try Free Demo', href: '/#demo', highlight: false },
-            { label: 'Campaign Credits', price: 'KES 500', period: '/ credit', features: ['Full campaign kit per credit', 'WhatsApp broadcast + status', '7-day calendar + follow-ups', '5 credits KES 2,000 · 12 for 4,000'], cta: 'Buy Credits', href: '/register', highlight: false },
-            { label: 'Starter Monthly', price: 'KES 999', period: '/month', features: ['5 campaigns/month', '1 brand kit', 'WhatsApp + social content', 'Basic exports'], cta: 'Start Starter', href: '/register', highlight: false },
-          ].map(p => (
-            <div key={p.label} className="bg-white rounded-2xl border border-gray-200 p-6 flex flex-col">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">{p.label}</p>
-              <div className="flex items-end gap-1 mb-1">
-                <span className="text-2xl font-extrabold text-gray-900">{p.price}</span>
-                {p.period && <span className="text-sm text-gray-400 mb-0.5">{p.period}</span>}
-              </div>
-              <ul className="space-y-2 my-4 flex-1">
-                {p.features.map(f => <li key={f} className="flex items-start gap-2 text-xs text-gray-600"><CHECK />{f}</li>)}
-              </ul>
-              <Link to={p.href} className="mt-auto block text-center py-2.5 rounded-xl text-sm font-semibold border border-gray-200 text-gray-700 hover:border-purple-300 hover:text-purple-700 transition-all">{p.cta}</Link>
-            </div>
-          ))}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-          {[
-            { label: 'Growth Monthly', price: 'KES 2,500', period: '/month', features: ['15 campaigns/month', 'Ideas Bank + Nia Assistant', '7-day calendars + follow-ups', 'Brand Kit (3 brands)', 'Priority generation'], popular: true },
-            { label: 'Business Monthly', price: 'KES 5,000', period: '/month', features: ['40 campaigns/month', '5 brand kits', 'Team access (up to 3 users)', 'Poster export + priority support', 'Extra campaigns KES 150 each'], popular: false },
-          ].map(p => (
-            <div key={p.label} className={`bg-white rounded-2xl border p-6 flex flex-col ${p.popular ? 'border-purple-300 ring-1 ring-purple-200' : 'border-gray-200'}`}>
-              {p.popular && <span className="inline-flex self-start px-2.5 py-1 rounded-full text-[10px] font-bold tracking-widest mb-3" style={{ background: 'rgba(124,58,237,0.08)', color: '#7c3aed' }}>MOST POPULAR</span>}
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">{p.label}</p>
-              <div className="flex items-end gap-1 mb-1">
-                <span className="text-2xl font-extrabold text-gray-900">{p.price}</span>
-                <span className="text-sm text-gray-400 mb-0.5">{p.period}</span>
-              </div>
-              <ul className="space-y-2 my-4 flex-1">
-                {p.features.map(f => <li key={f} className="flex items-start gap-2 text-xs text-gray-600"><CHECK />{f}</li>)}
-              </ul>
-              <Link to="/register" className="mt-auto block text-center py-2.5 rounded-xl text-sm font-semibold text-white transition-all" style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>Get Started</Link>
-            </div>
-          ))}
+
+        {/* Audio one-liner */}
+        <div className="mt-5 flex items-center justify-center gap-2 text-xs text-gray-500">
+          <Music size={13} className="text-emerald-600" />
+          Also: jingles & professional voice overs from <strong className="text-gray-700">KES 1,500</strong> —
+          <Link to="/register" className="font-semibold text-purple-700 hover:underline">order in Audio Studio</Link>
         </div>
       </section>
 
-      {/* Managed Campaigns */}
-      <section className="max-w-5xl mx-auto px-4 mb-16">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="p-2 rounded-xl" style={{ background: 'rgba(37,99,235,0.08)' }}>
-            <Zap size={16} className="text-blue-600" />
-          </div>
-          <div>
-            <h2 className="text-lg font-extrabold text-gray-900">Managed Campaigns</h2>
-            <p className="text-xs text-gray-500">Nia Media's team reviews, packages, and delivers polished campaign kits for you.</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { label: 'Done-for-You Starter', price: 'KES 5,000', period: 'one-time', features: ['1 full campaign kit', '2 poster concepts', 'WhatsApp message pack', 'Human review'] },
-            { label: 'Managed Growth', price: 'KES 15,000', period: '/month', features: ['4 campaigns/month', '4 posters', '4 short video scripts', 'Monthly planning call'] },
-            { label: 'Managed Business', price: 'KES 30,000', period: '/month', features: ['8 campaigns/month', '8 posters', '2 short videos or reels', 'Competitor tracking + monthly report'] },
-            { label: 'Premium Managed', price: 'KES 60,000', period: '/month', features: ['Full campaign support', 'Video/audio creative direction', 'Priority production', 'Monthly strategy report'] },
-          ].map(p => (
-            <div key={p.label} className="bg-white rounded-2xl border border-gray-200 p-5 flex flex-col">
-              <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1">{p.label}</p>
-              <div className="flex items-end gap-1 mb-1">
-                <span className="text-xl font-extrabold text-gray-900">{p.price}</span>
-              </div>
-              <p className="text-[11px] text-gray-400 mb-3">{p.period}</p>
-              <ul className="space-y-1.5 flex-1">
-                {p.features.map(f => <li key={f} className="flex items-start gap-2 text-xs text-gray-600"><CHECK />{f}</li>)}
-              </ul>
-              <Link to="/package-request" className="mt-4 block text-center py-2 rounded-xl text-xs font-semibold border border-gray-200 text-gray-700 hover:border-blue-300 hover:text-blue-700 transition-all">Request This Package</Link>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Custom Videos */}
-      <section className="max-w-5xl mx-auto px-4 mb-16">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl" style={{ background: 'rgba(5,150,105,0.08)' }}>
-              <Film size={16} className="text-emerald-600" />
-            </div>
+      {/* Video price ladder */}
+      <section className="max-w-3xl mx-auto px-4 mb-16">
+        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap">
             <div>
-              <h2 className="text-lg font-extrabold text-gray-900">Custom Video Production</h2>
-              <p className="text-xs text-gray-500">See the price ladder from 15s promos to 3+ minute infomercials, then book a meeting when the brief is ready.</p>
+              <h2 className="text-base font-bold text-gray-900">Video pricing by length</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Final price depends on platforms, delivery speed & add-ons</p>
             </div>
+            <Link to="/quote" className="text-xs font-bold text-emerald-700 hover:underline">Price my exact video →</Link>
           </div>
-          <Link to={PRIMARY_VIDEO_CTA.href} className="inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-semibold text-white" style={{ background: 'linear-gradient(135deg, #059669, #0891b2)' }}>{PRIMARY_VIDEO_CTA.label}</Link>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          {[
-            { label: 'Quick Promo Video', price: 'KES 3,500 – 8,000', tag: '15s – 30s', features: ['Fast-cut commercial', 'AI visuals + voiceover', 'Social media ready', '2 revision rounds', 'Certificate of AI Origin'] },
-            { label: 'Campaign Video', price: 'KES 7,500 – 15,000', tag: 'Up to 60s', features: ['Multi-scene commercial', 'Custom music bed', '3 visual style options', '2 revision rounds', 'Certificate of AI Origin'], popular: true },
-            { label: 'Premium Brand Video', price: 'KES 25,000 – 60,000', tag: '2–5 minutes', features: ['Documentary or brand film', 'Full pre-production workflow', 'Avatar & narration selection', 'Afro-fusion score', 'Certificate of AI Origin'] },
-          ].map(p => (
-            <div key={p.label} className={`bg-white rounded-2xl border p-6 flex flex-col ${(p as { popular?: boolean }).popular ? 'border-emerald-300 ring-1 ring-emerald-200' : 'border-gray-200'}`}>
-              {(p as { popular?: boolean }).popular && <span className="inline-flex self-start px-2.5 py-1 rounded-full text-[10px] font-bold tracking-widest mb-3" style={{ background: 'rgba(5,150,105,0.08)', color: '#059669' }}>MOST POPULAR</span>}
-              <span className="inline-flex self-start px-2 py-0.5 rounded-md text-[10px] font-bold bg-gray-100 text-gray-500 mb-2">{p.tag}</span>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">{p.label}</p>
-              <p className="text-xl font-extrabold text-gray-900 mb-3">{p.price}</p>
-              <ul className="space-y-2 flex-1">
-                {p.features.map(f => <li key={f} className="flex items-start gap-2 text-xs text-gray-600"><CHECK />{f}</li>)}
-              </ul>
-              <Link to={PRIMARY_VIDEO_CTA.href} className="mt-4 block text-center py-2.5 rounded-xl text-sm font-semibold text-white transition-all" style={{ background: 'linear-gradient(135deg, #059669, #0891b2)' }}>{PRIMARY_VIDEO_CTA.label}</Link>
-            </div>
-          ))}
-        </div>
-        <div className="bg-gray-50 rounded-xl border border-gray-200 px-5 py-3 flex flex-wrap gap-6 text-xs text-gray-500">
-          <span><strong className="text-gray-700">Standard delivery</strong> — 3 to 5 business days, included</span>
-          <span><strong className="text-orange-600">48-hour rush</strong> — +25% on video price</span>
-          <span><strong className="text-red-600">24-hour rush</strong> — +50% on video price</span>
-        </div>
-      </section>
-
-      {/* Production add-ons */}
-      <section className="max-w-5xl mx-auto px-4 mb-16">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="p-2 rounded-xl" style={{ background: 'rgba(217,119,6,0.08)' }}>
-            <Zap size={16} className="text-amber-600" />
+          <div className="divide-y divide-gray-100">
+            {VIDEO_LADDER.map(({ label, use, price }) => (
+              <div key={label} className="flex items-center justify-between px-6 py-3.5">
+                <div>
+                  <p className="text-sm font-bold text-gray-900">{label}</p>
+                  <p className="text-xs text-gray-400">{use}</p>
+                </div>
+                <span className="text-sm font-bold text-gray-800 whitespace-nowrap">KES {price}</span>
+              </div>
+            ))}
           </div>
-          <div>
-            <h2 className="text-lg font-extrabold text-gray-900">Add-ons after you generate</h2>
-            <p className="text-xs text-gray-500">Turn any campaign into finished assets — add these on demand.</p>
+          <div className="px-6 py-3.5 bg-gray-50 flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-500">
+            <span><strong className="text-gray-700">Standard</strong> 3–5 business days</span>
+            <span><strong className="text-orange-600">48-hr rush</strong> +25%</span>
+            <span><strong className="text-red-600">24-hr rush</strong> +50%</span>
+            <span><strong className="text-gray-700">Subtitles</strong> +KES 500</span>
           </div>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { label: 'HD poster (3 AI styles)', price: 'KES 500 (1 credit)' },
-            { label: 'Human polish / rewrite', price: 'KES 500' },
-            { label: 'Campaign setup support', price: 'from KES 2,000' },
-            { label: 'Turn into a short video', price: 'from KES 3,500' },
-          ].map(a => (
-            <div key={a.label} className="bg-white rounded-xl border border-gray-200 p-4">
-              <p className="text-sm font-semibold text-gray-900 leading-tight mb-1">{a.label}</p>
-              <p className="text-xs font-bold text-amber-600">{a.price}</p>
-            </div>
-          ))}
         </div>
       </section>
 
@@ -244,10 +225,9 @@ export default function Pricing() {
       <section className="max-w-2xl mx-auto px-4 pb-20 text-center">
         <div className="rounded-2xl border border-gray-200 bg-white p-8">
           <h2 className="text-lg font-extrabold text-gray-900 mb-2">Not sure which option fits?</h2>
-          <p className="text-sm text-gray-500 mb-5">Tell us what you're promoting and your budget — we'll recommend the right package in minutes.</p>
+          <p className="text-sm text-gray-500 mb-5">Tell us what you're promoting and your budget — we'll recommend the right one in minutes.</p>
           <div className="flex flex-wrap gap-3 justify-center">
-            <a href="https://wa.me/254751822556?text=Hi%2C%20I%20was%20looking%20at%20your%20pricing%20page%20—%20which%20package%20fits%20my%20business%3F"
-              target="_blank" rel="noopener noreferrer"
+            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white"
               style={{ background: '#25d366' }}>
               WhatsApp Us
@@ -263,5 +243,3 @@ export default function Pricing() {
     </div>
   )
 }
-
-
