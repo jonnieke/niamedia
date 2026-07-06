@@ -13,7 +13,7 @@ const FORMATS = ['9:16 (Vertical)', '1:1 (Square)', '16:9 (Landscape)']
 const PLATFORMS = ['WhatsApp', 'TikTok', 'Instagram', 'Facebook', 'YouTube']
 const LANGUAGES = ['English', 'Kiswahili', 'Sheng', 'Other']
 const MUSIC_STYLES = ['Afrobeat', 'Afro-pop', 'Corporate / Ambient', 'Gospel / Worship', 'Hip-hop', 'Classical', 'No music']
-const BUDGET_RANGES = ['KES 3,500 ? 5,000', 'KES 7,500 ? 15,000', 'KES 25,000 ? 60,000', 'KES 60,000+', 'Not sure yet']
+const BUDGET_RANGES = ['KES 3,500 – 5,000', 'KES 7,500 – 15,000', 'KES 25,000 – 60,000', 'KES 60,000+', 'Not sure yet']
 
 interface LocationState {
   form?: { business_name?: string; industry?: string; product_name?: string }
@@ -83,8 +83,8 @@ export default function VideoRequest() {
     const fmt = (n: number) => `KES ${n.toLocaleString('en-KE')}`
     const voiceoverLabel = form.voiceoverMode === 'human' ? 'Human voiceover' : form.voiceoverMode === 'none' ? 'No voiceover' : 'AI voiceover'
     return {
-      title: `${base.label} ? ${voiceoverLabel}${selectedAddons.length ? ' ? with add-ons' : ''}`,
-      range: `${fmt(min)} ? ${fmt(max)}`,
+      title: `${base.label} – ${voiceoverLabel}${selectedAddons.length ? ' – with add-ons' : ''}`,
+      range: `${fmt(min)} – ${fmt(max)}`,
       lengthLabel: base.label,
       voiceoverLabel,
       addons: selectedAddons.map(key => key === 'needPoster' ? 'Poster pack' : key === 'needJingle' ? 'Jingle' : 'Subtitles'),
