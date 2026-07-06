@@ -30,6 +30,7 @@ const AUDIO_DURATIONS = ['15 seconds', '30 seconds', '60 seconds', '2 minutes', 
 const POST_FREQ = ['Once-off', '4–8 posts/month', '10–20 posts/month', '20+ posts/month']
 
 function SuccessScreen() {
+  const { isAuthenticated } = useAuth()
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
@@ -42,7 +43,6 @@ function SuccessScreen() {
       </p>
       <div className="flex flex-col gap-2 text-left max-w-sm mx-auto mb-8">
         {[
-          'Check your email for a confirmation',
           'WhatsApp response within 2–4 hours (business hours)',
           'No commitment until you approve a quote',
         ].map(s => (
@@ -51,8 +51,8 @@ function SuccessScreen() {
           </div>
         ))}
       </div>
-      <a href="/dashboard" className="btn-primary px-6 py-2.5 text-sm inline-flex items-center gap-2">
-        Back to Dashboard <ArrowRight size={14} />
+      <a href={isAuthenticated ? '/dashboard' : '/'} className="btn-primary px-6 py-2.5 text-sm inline-flex items-center gap-2">
+        {isAuthenticated ? 'Back to Dashboard' : 'Back to Homepage'} <ArrowRight size={14} />
       </a>
     </div>
   )
