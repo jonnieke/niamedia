@@ -259,11 +259,11 @@ export default function NewCampaign() {
   useEffect(() => {
     if (!user) return
     Promise.all([
-      supabase.from('brand_kits').select('business_name,industry,preferred_tone,target_customer,whatsapp_number,website_url').eq('user_id', user.id).maybeSingle(),
-      supabase.from('campaigns').select('id,business_name,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
+      supabase.from('brand_kits').select('business_name,industry,preferred_tone,target_customer,whatsapp,website').eq('user_id', user.id).maybeSingle(),
+      supabase.from('campaigns').select('id,title,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
     ]).then(([brand, camps]) => {
       const b = brand.data
-      const pastCampaigns = (camps.data ?? []).map(c => ({ id: c.id, title: c.business_name, created_at: c.created_at }))
+      const pastCampaigns = (camps.data ?? []).map(c => ({ id: c.id, title: c.title, created_at: c.created_at }))
       // Product typed in the homepage demo carries into the first campaign
       let demoProduct = ''
       try { demoProduct = JSON.parse(localStorage.getItem('nia_demo_ctx') ?? '{}').product ?? '' } catch {}
@@ -274,8 +274,8 @@ export default function NewCampaign() {
           industry: searchParams.get('industry') || prev.industry || b.industry || '',
           tone: searchParams.get('tone') || prev.tone || b.preferred_tone || 'Professional',
           target_audience: prev.target_audience || b.target_customer || '',
-          whatsapp_number: prev.whatsapp_number || b.whatsapp_number || '',
-          business_url: prev.business_url || b.website_url || '',
+          whatsapp_number: prev.whatsapp_number || b.whatsapp || '',
+          business_url: prev.business_url || b.website || '',
           product_name: prev.product_name || demoProduct,
         }))
       }
@@ -366,7 +366,7 @@ export default function NewCampaign() {
       if (!res.ok) throw new Error('Generation failed')
       const result = await res.json()
       clearInterval(ticker)
-      navigate('/campaign-results', { state: { campaign: result, form: enrichedForm } })
+      navigate('/campaign-results', { state: { content: result, form: enrichedForm } })
     } catch (e) {
       clearInterval(ticker)
       setError(e instanceof Error ? e.message : 'Generation failed')

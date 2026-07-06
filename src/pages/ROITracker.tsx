@@ -21,7 +21,7 @@ interface CampaignResult {
   campaign_title?: string
 }
 
-interface Campaign { id: string; business_name: string }
+interface Campaign { id: string; title: string }
 
 function fmt(n: number, prefix = 'KES ') {
   if (n >= 1000) return `${prefix}${(n / 1000).toFixed(1)}k`
@@ -71,10 +71,10 @@ export default function ROITracker() {
     setLoading(true)
     const [{ data: res }, { data: camps }] = await Promise.all([
       supabase.from('campaign_results').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-      supabase.from('campaigns').select('id,business_name').eq('user_id', user.id).order('created_at', { ascending: false }).limit(30),
+      supabase.from('campaigns').select('id,title').eq('user_id', user.id).order('created_at', { ascending: false }).limit(30),
     ])
     const campMap: Record<string, string> = {}
-    ;(camps ?? []).forEach((c: Campaign) => { campMap[c.id] = c.business_name })
+    ;(camps ?? []).forEach((c: Campaign) => { campMap[c.id] = c.title })
     setResults((res ?? []).map((r: CampaignResult) => ({ ...r, campaign_title: r.campaign_id ? campMap[r.campaign_id] : undefined })))
     setCampaigns((camps ?? []) as Campaign[])
     setLoading(false)
@@ -238,7 +238,7 @@ export default function ROITracker() {
                   <label className="label">Campaign</label>
                   <select className="input" value={form.campaign_id} onChange={e => setForm(f => ({ ...f, campaign_id: e.target.value }))}>
                     <option value="">— Select campaign (optional) —</option>
-                    {campaigns.map(c => <option key={c.id} value={c.id}>{c.business_name}</option>)}
+                    {campaigns.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                   </select>
                 </div>
                 <div className="col-span-2">

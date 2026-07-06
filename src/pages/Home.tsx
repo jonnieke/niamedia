@@ -529,7 +529,7 @@ export default function Home() {
             </h1>
 
             <p className="text-lg leading-relaxed mb-8 max-w-lg" style={{ color: 'rgba(255,255,255,0.75)' }}>
-              Professional video commercials for your shop, school, hotel, or service — from KES 3,500, delivered in as little as 48 hours. Start free: see your first campaign and promotional poster before you pay a shilling.
+              Professional video commercials for your shop, school, hotel, or service — from KES 3,500, delivered in 3–5 days (rush options from 48 hours). Start free: see your first campaign and promotional poster before you pay a shilling.
             </p>
 
             <div className="flex flex-wrap gap-3 mb-10">
@@ -554,7 +554,7 @@ export default function Home() {
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
               <span className="flex items-center gap-1.5"><Sparkles size={13} style={{ color: '#a78bfa' }} /> First campaign + poster free</span>
               <span className="flex items-center gap-1.5"><Smartphone size={13} style={{ color: '#34d399' }} /> M-Pesa accepted</span>
-              <span className="flex items-center gap-1.5"><Clock size={13} style={{ color: '#fbbf24' }} /> Delivery from 48 hours</span>
+              <span className="flex items-center gap-1.5"><Clock size={13} style={{ color: '#fbbf24' }} /> 3–5 day delivery (rush available)</span>
             </div>
           </div>
         </div>
@@ -758,7 +758,7 @@ export default function Home() {
             </a>
           </div>
           <p className="text-xs mt-6" style={{ color: 'rgba(255,255,255,0.3)' }}>
-            From KES 3,500 · M-Pesa accepted · Delivery from 48 hours
+            From KES 3,500 · M-Pesa accepted · 3–5 day delivery (rush from 48h)
           </p>
         </div>
       </section>

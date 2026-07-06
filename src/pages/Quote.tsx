@@ -453,8 +453,8 @@ export default function Quote() {
     setRefining(true)
 
     const prompt = currentBrief
-      ? `Rewrite this quote brief for a video commercial so it is clearer, sharper, and more conversion-focused. Return only the improved brief in plain text, with no questions, no bullet points, and no intro. ${briefContext}. Current brief: ${currentBrief}`
-      : `Write a strong quote brief for a video commercial. Return only the improved brief in plain text, with no questions, no bullet points, and no intro. ${briefContext}.`
+      ? `Rewrite this quote brief for a video commercial so it is clearer, sharper, and more conversion-focused. Return only the improved brief as plain prose sentences — no markdown, no asterisks, no headers, no bullet points, and no intro. ${briefContext}. Current brief: ${currentBrief}`
+      : `Write a strong quote brief for a video commercial. Return only the improved brief as plain prose sentences — no markdown, no asterisks, no headers, no bullet points, and no intro. ${briefContext}.`
 
     try {
       const invocation = supabase.functions.invoke('chat-agent', {
@@ -475,15 +475,21 @@ export default function Quote() {
         setTimeout(() => reject(new Error('timeout')), 30000))
       const { data, error: fnError } = await Promise.race([invocation, timeout])
 
-      const reply = typeof data?.reply === 'string' ? data.reply.trim() : ''
-      if (fnError || !reply) throw new Error(fnError?.message || 'AI assist unavailable')
+      const rawReply = typeof data?.reply === 'string' ? data.reply.trim() : ''
+      if (fnError || !rawReply) throw new Error(fnError?.message || 'AI assist unavailable')
 
       // If the model asks for more info instead of writing the brief,
       // don't overwrite the user's field with it.
-      if (/^(i can't|i cannot|i need|i'm sorry|sorry|to write)/i.test(reply) || /without knowing/i.test(reply)) {
+      if (/^(i can't|i cannot|i need|i'm sorry|sorry|to write)/i.test(rawReply) || /without knowing/i.test(rawReply)) {
         setError('Nia needs a bit more detail — add what you\'re promoting or your offer, then try again.')
         return
       }
+
+      // Strip stray markdown the model may add — this field is plain text.
+      const reply = rawReply
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/^#{1,6}\s+/gm, '')
+        .replace(/^[-*]\s+/gm, '')
 
       setBrief(reply)
       trackEvent('nia_assistant_refine_success', {

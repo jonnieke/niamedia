@@ -85,13 +85,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw new Error(error.message)
 
     // If email confirmation is disabled, session is returned immediately
+    // (the on_auth_user_created DB trigger creates the profiles row)
     if (data.session && data.user) {
-      await supabase.from('profiles').upsert({
-        id: data.user.id,
-        name,
-        email,
-        role: 'user',
-      })
       setUser({ id: data.user.id, email, name, role: 'user' })
       return { needsConfirmation: false, userId: data.user.id }
     }

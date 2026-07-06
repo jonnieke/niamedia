@@ -161,7 +161,7 @@ export default function Calendar() {
   const [connections, setConnections] = useState<SocialConn[]>([])
   const [scheduleItem, setScheduleItem] = useState<CalItem | null>(null)
   const [scheduleFromCampaign, setScheduleFromCampaign] = useState(false)
-  const [campaigns, setCampaigns] = useState<{ id: string; business_name: string }[]>([])
+  const [campaigns, setCampaigns] = useState<{ id: string; title: string }[]>([])
   const [selectedCampaign, setSelectedCampaign] = useState('')
   const [scheduleGenerating, setScheduleGenerating] = useState(false)
 
@@ -187,9 +187,9 @@ export default function Calendar() {
 
   useEffect(() => {
     if (!user) return
-    supabase.from('campaigns').select('id,business_name').eq('user_id', user.id)
+    supabase.from('campaigns').select('id,title').eq('user_id', user.id)
       .order('created_at', { ascending: false }).limit(20)
-      .then(({ data }) => setCampaigns((data ?? []) as { id: string; business_name: string; platforms: string[] }[]))
+      .then(({ data }) => setCampaigns((data ?? []) as { id: string; title: string }[]))
   }, [user])
 
   const generateFromCampaign = async () => {
@@ -474,7 +474,7 @@ export default function Calendar() {
                 <label className="label">Campaign</label>
                 <select className="input" value={selectedCampaign} onChange={e => setSelectedCampaign(e.target.value)}>
                   <option value="">Select campaign…</option>
-                  {campaigns.map(c => <option key={c.id} value={c.id}>{c.business_name}</option>)}
+                  {campaigns.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                 </select>
               </div>
             </div>

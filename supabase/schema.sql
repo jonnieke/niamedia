@@ -51,6 +51,24 @@ create policy "Users can update their own profile"
 create policy "Admins can view all profiles"
   on public.profiles for select using (public.is_admin());
 
+-- Prevent privilege escalation: RLS "using (auth.uid() = id)" alone lets a
+-- user PATCH their own role column via the REST API. A trigger is required
+-- because a plain "with check" cannot compare the row's old and new values.
+create or replace function public.prevent_role_self_escalation()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.role is distinct from old.role and not public.is_admin() then
+    raise exception 'Only admins can change role';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_profiles_role_change on public.profiles;
+create trigger on_profiles_role_change
+  before update on public.profiles
+  for each row execute procedure public.prevent_role_self_escalation();
+
 -- ─── BRAND KITS ─────────────────────────────────────────────
 create table if not exists public.brand_kits (
   id                   uuid primary key default uuid_generate_v4(),
