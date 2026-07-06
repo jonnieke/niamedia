@@ -6,6 +6,7 @@ import CreativeAssistant, { CreativeAssistantButton } from '../components/Creati
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import { getBookingPath } from '../lib/booking'
+import { trackEvent } from '../lib/analytics'
 
 const INDUSTRIES = ['Real Estate', 'Hospitality', 'Education', 'Fintech / SACCO', 'Restaurant', 'Travel', 'Retail', 'Health & Wellness', 'Events', 'Professional Services', 'Faith & Community', 'Other']
 const LENGTHS = ['15 seconds', '30 seconds', '60 seconds', '90 seconds', '3+ minutes (Infomercial)']
@@ -117,7 +118,15 @@ export default function VideoRequest() {
       status: 'new',
     })
     setSubmitting(false)
-    if (dbErr) { setError('Failed to submit. Please try again.'); return }
+    if (dbErr) {
+      setError('Failed to submit. Please try again.')
+      trackEvent('video_request_submit_failed', { reason: 'db_error' })
+      return
+    }
+    trackEvent('video_request_submit_success', {
+      length: form.length, delivery_speed: form.delivery_speed, budget_range: form.budget_range,
+      voiceover_mode: form.voiceoverMode, industry: form.industry,
+    })
 
     // Fire-and-forget: confirmation email to user + admin SMS
     supabase.functions.invoke('notify-video-request', {

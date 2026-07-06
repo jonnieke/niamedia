@@ -7,6 +7,7 @@ import {
   Copy, Check, Music, Sparkles, Clock, Loader2, Languages,
   Image as ImageIcon, ChevronDown, Shield, Smartphone,
 } from 'lucide-react'
+import { trackEvent } from '../lib/analytics'
 
 const NiaAgent = lazy(() => import('../components/NiaAgent'))
 
@@ -155,6 +156,7 @@ function CampaignOutputDemo() {
       const data = await res.json()
       if (data.error) throw new Error(data.error)
       setOutput(data as DemoOutput); setActiveTab('poster')
+      trackEvent('demo_generate_success', { industry, language })
       // Hand the visitor's context to Register/Onboarding so signup continues
       // the journey instead of asking for the same details again.
       try {
@@ -166,6 +168,7 @@ function CampaignOutputDemo() {
     } catch {
       clearInterval(stepTimer)
       setError('Generation failed — please try again in a moment.')
+      trackEvent('demo_generate_failed', { industry })
     } finally {
       setLoading(false)
     }

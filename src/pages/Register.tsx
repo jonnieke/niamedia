@@ -4,6 +4,7 @@ import { Eye, EyeOff, ArrowRight, CheckCircle2, Mail, Loader2, Gift } from 'luci
 import Logo from '../components/ui/Logo'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
+import { trackEvent } from '../lib/analytics'
 
 function GoogleButton() {
   const [loading, setLoading] = useState(false)
@@ -110,6 +111,7 @@ export default function Register() {
       const { needsConfirmation: confirm, userId } = await register(name, email, password)
       if (userId) void triggerWelcomeEmail(userId)
       if (userId && refCode) void captureReferral(userId, refCode)
+      trackEvent('registration_success', { needs_confirmation: confirm, has_referral: Boolean(refCode) })
       if (confirm) {
         setNeedsConfirmation(true)
       } else {
@@ -117,6 +119,7 @@ export default function Register() {
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      trackEvent('registration_failed', {})
     } finally {
       setLoading(false)
     }

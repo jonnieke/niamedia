@@ -9,6 +9,7 @@ import DashboardLayout from '../components/layout/DashboardLayout'
 import { CampaignFormData } from '../types'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
+import { trackEvent } from '../lib/analytics'
 
 /* ── Constants ───────────────────────────────────────────────── */
 const INDUSTRIES = ['Real Estate','Hospitality','Education','Fintech / SACCO','Restaurant','Travel','Retail','Health & Wellness','Events','Professional Services','Faith & Community','Other']
@@ -368,10 +369,12 @@ export default function NewCampaign() {
       if (!res.ok) throw new Error('Generation failed')
       const result = await res.json()
       clearInterval(ticker)
+      trackEvent('campaign_generate_success', { industry: form.industry, objective: form.objective, platform_count: form.platforms.length })
       navigate('/campaign-results', { state: { content: result, form: enrichedForm } })
     } catch (e) {
       clearInterval(ticker)
       setError(e instanceof Error ? e.message : 'Generation failed')
+      trackEvent('campaign_generate_failed', { industry: form.industry })
       setGenerating(false); setGenStep(0)
     }
   }

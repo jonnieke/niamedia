@@ -4,6 +4,7 @@ import { ArrowRight, Check, Zap, Film, Music, ChevronLeft, Sparkles, Target, Clo
 import Logo from '../components/ui/Logo'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
+import { trackEvent } from '../lib/analytics'
 
 const INDUSTRIES = [
   'Real Estate', 'Hospitality', 'Education', 'Fintech / SACCO', 'Restaurant',
@@ -78,6 +79,7 @@ export default function Onboarding() {
     }
     localStorage.setItem('onboarded', '1')
     setSaving(false)
+    trackEvent('onboarding_completed', { industry: industry || undefined, chosen_service: chosenService || undefined })
     const service = SERVICES.find(s => s.id === chosenService)
     navigate(service?.to ?? '/dashboard')
   }
