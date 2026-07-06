@@ -78,8 +78,11 @@ function JoinRedirect() {
 }
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth()
+  const location = useLocation()
   if (loading) return <RouteLoader />
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
+  if (isAuthenticated) return <>{children}</>
+  const redirect = encodeURIComponent(`${location.pathname}${location.search}`)
+  return <Navigate to={`/login?redirect=${redirect}`} replace />
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {

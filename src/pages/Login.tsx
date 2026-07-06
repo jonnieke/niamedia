@@ -1,18 +1,25 @@
 ﻿import { useState, FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react'
 import Logo from '../components/ui/Logo'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
 
-function GoogleButton() {
+// Only ever redirect to a same-site path — never an absolute/external URL.
+function safeRedirect(raw: string | null): string {
+  if (!raw) return '/dashboard'
+  if (!raw.startsWith('/') || raw.startsWith('//')) return '/dashboard'
+  return raw
+}
+
+function GoogleButton({ redirect }: { redirect: string }) {
   const [loading, setLoading] = useState(false)
 
   const handleClick = async () => {
     setLoading(true)
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+      options: { redirectTo: `${window.location.origin}${redirect}` },
     })
   }
 
@@ -47,6 +54,8 @@ function Divider() {
 export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const redirect = safeRedirect(searchParams.get('redirect'))
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
@@ -59,7 +68,7 @@ export default function Login() {
     setLoading(true)
     try {
       await login(email, password)
-      navigate('/dashboard')
+      navigate(redirect)
     } catch {
       setError('Invalid credentials. Please try again.')
     } finally {
@@ -88,7 +97,7 @@ export default function Login() {
             </div>
           )}
 
-          <GoogleButton />
+          <GoogleButton redirect={redirect} />
           <Divider />
 
           <form onSubmit={handleSubmit} className="space-y-4">

@@ -285,8 +285,10 @@ export default function NewCampaign() {
 
   /* Pre-fill from template URL params */
   useEffect(() => {
+    const industry = searchParams.get('industry')
     const objective = searchParams.get('objective')
     const tone = searchParams.get('tone')
+    if (industry) update({ industry })
     if (objective) update({ objective })
     if (tone) update({ tone })
   }, [])
