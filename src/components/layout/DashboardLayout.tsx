@@ -310,8 +310,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </header>
 
           {/* Page content */}
+          {/* pb-28 keeps the last content clear of the fixed Nia/WhatsApp
+              buttons anchored bottom-6 in the corners below. */}
           <main className="flex-1 overflow-y-auto">
-            <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
+            <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-8 pb-28 sm:pb-8">
               {children}
             </div>
           </main>
