@@ -266,9 +266,26 @@ function PricePanel({ min, max, length, rush, platforms, poster, subtitles }: {
 
 /* Main */
 
+const SUCCESS_KEY = 'nia_quote_submitted'
+const SUCCESS_TTL_MS = 2 * 60 * 60 * 1000 // 2 hours
+
+// Restores the success screen after a browser Back/refresh instead of
+// silently dropping the customer back to a blank step-0 form.
+function readStoredSuccess(): { bizName: string; waMessage: string } | null {
+  if (typeof window === 'undefined') return null
+  if (!window.location.search.includes('submitted=1')) return null
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem(SUCCESS_KEY) ?? 'null')
+    if (!parsed?.ts || Date.now() - parsed.ts > SUCCESS_TTL_MS) return null
+    if (!parsed.bizName || !parsed.waMessage) return null
+    return { bizName: parsed.bizName, waMessage: parsed.waMessage }
+  } catch { return null }
+}
+
 export default function Quote() {
 
-  const [step, setStep] = useState(0)
+  const [successData, setSuccessData] = useState(() => readStoredSuccess())
+  const [step, setStep] = useState(() => (readStoredSuccess() ? 2 : 0))
 
   // Step 0 - video spec
 
@@ -579,6 +596,14 @@ export default function Quote() {
         trackEvent('quote_submit_success', { video_length: length, platform_count: platforms.length, rush, poster, subtitles, attachment_count: supportingFiles.length })
       } catch {}
 
+      // Persist so a browser Back or refresh restores the confirmation
+      // instead of dropping the customer back to a blank form.
+      const submitted = { bizName: bizName.trim(), waMessage, ts: Date.now() }
+      try {
+        sessionStorage.setItem(SUCCESS_KEY, JSON.stringify(submitted))
+        window.history.replaceState(null, '', '/quote?submitted=1')
+      } catch {}
+      setSuccessData(submitted)
       setStep(2)
     } catch (err) {
       console.error('Quote submit failed:', err)
@@ -685,11 +710,11 @@ export default function Quote() {
 
             <p className="text-gray-500 mb-8 leading-relaxed">
 
-              We have your brief, <strong className="text-gray-900">{bizName}</strong>. Send us the WhatsApp below and we will confirm your quote and timeline within 2 hours.
+              We have your brief, <strong className="text-gray-900">{successData?.bizName ?? bizName}</strong>. Send us the WhatsApp below and we will confirm your quote and timeline within 2 hours.
 
             </p>
 
-            <a href={`https://wa.me/254751822556?text=${waMessage}`}
+            <a href={`https://wa.me/254751822556?text=${successData?.waMessage ?? waMessage}`}
 
               target="_blank" rel="noopener noreferrer"
 
