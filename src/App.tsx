@@ -24,7 +24,6 @@ const ConceptStudio = lazy(() => import('./pages/ConceptStudio'))
 const VideoJourney = lazy(() => import('./pages/VideoJourney'))
 const PreProduction = lazy(() => import('./pages/PreProduction'))
 const Projects = lazy(() => import('./pages/Projects'))
-const ProjectReview = lazy(() => import('./pages/ProjectReview'))
 const AudioStudio = lazy(() => import('./pages/AudioStudio'))
 const Assets = lazy(() => import('./pages/Assets'))
 const Analytics = lazy(() => import('./pages/Analytics'))
@@ -148,7 +147,7 @@ function AppRoutes() {
         <Route path="/video-journey" element={<ProtectedRoute><VideoJourney /></ProtectedRoute>} />
         <Route path="/preproduction" element={<ProtectedRoute><PreProduction /></ProtectedRoute>} />
         <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
-        <Route path="/projects/:id/review" element={<ProtectedRoute><ProjectReview /></ProtectedRoute>} />
+        <Route path="/projects/:id/review" element={<Navigate to="/projects" replace />} />
         <Route path="/audio-studio" element={<ProtectedRoute><AudioStudio /></ProtectedRoute>} />
         <Route path="/assets" element={<ProtectedRoute><Assets /></ProtectedRoute>} />
         <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
