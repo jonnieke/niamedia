@@ -6,6 +6,7 @@ import {
   ArrowRight, Zap, Film, MessageSquare, CheckCircle2, Star,
   Copy, Check, Music, Sparkles, Clock, Loader2, Languages,
   Image as ImageIcon, ChevronDown, Shield, Smartphone,
+  Radio, BarChart3, Palette, Send,
 } from 'lucide-react'
 import { trackEvent } from '../lib/analytics'
 
@@ -464,6 +465,86 @@ const FAQS = [
   },
 ]
 
+function FreeAuditForm() {
+  const [name, setName] = useState('')
+  const [businessName, setBusinessName] = useState('')
+  const [whatsapp, setWhatsapp] = useState('')
+  const [siteLink, setSiteLink] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState('')
+
+  const canSubmit = name.trim().length >= 2 && businessName.trim().length >= 2 && whatsapp.trim().length >= 7
+
+  const handleSubmit = async () => {
+    if (!canSubmit || submitting) return
+    setSubmitting(true)
+    setError('')
+    try {
+      const { supabase } = await import('../lib/supabase')
+      const { error: dbErr } = await supabase.from('audit_requests').insert({
+        name: name.trim(),
+        business_name: businessName.trim(),
+        whatsapp_number: whatsapp.trim(),
+        website_or_social: siteLink.trim() || null,
+      })
+      if (dbErr) throw dbErr
+
+      void supabase.functions.invoke('notify-admin', {
+        body: {
+          type: 'new_lead',
+          title: `Free audit request — ${name.trim()}`,
+          business: businessName.trim(),
+          phone: whatsapp.trim(),
+          service: 'Free video/website audit',
+        },
+      }).catch(() => {})
+
+      trackEvent('audit_request_submit_success', {})
+      setSubmitted(true)
+    } catch {
+      setError('Something went wrong. Please try again or message us on WhatsApp.')
+      trackEvent('audit_request_submit_failed', {})
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (submitted) {
+    return (
+      <div className="max-w-md mx-auto text-center rounded-2xl p-8" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
+        <CheckCircle2 size={32} className="mx-auto mb-3" style={{ color: '#34d399' }} />
+        <p className="text-white font-bold mb-1">Request received!</p>
+        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+          Our team will review your current online presence and reach out on WhatsApp within 24 hours with your free audit.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-md mx-auto text-left rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
+      <div className="space-y-3">
+        <input className="input w-full" placeholder="Your name" value={name} onChange={e => setName(e.target.value)}
+          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} />
+        <input className="input w-full" placeholder="Business name" value={businessName} onChange={e => setBusinessName(e.target.value)}
+          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} />
+        <input className="input w-full" placeholder="WhatsApp number" value={whatsapp} onChange={e => setWhatsapp(e.target.value)}
+          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} />
+        <input className="input w-full" placeholder="Website or social media link (optional)" value={siteLink} onChange={e => setSiteLink(e.target.value)}
+          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }} />
+        {error && <p className="text-xs text-red-400">{error}</p>}
+        <button onClick={handleSubmit} disabled={!canSubmit || submitting}
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold text-white disabled:opacity-40"
+          style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
+          {submitting ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+          {submitting ? 'Sending...' : 'Get My Free Audit'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false)
   return (
@@ -502,7 +583,7 @@ export default function Home() {
         {/* Hero image backdrop */}
         <div className="absolute inset-0">
           {heroImg ? (
-            <img src={heroImg} alt="A Kenyan business owner being filmed for a video commercial on a Nairobi street"
+            <img src={heroImg} alt="Nairobi business owner being filmed for a promotional video commercial outside her shop"
               className="w-full h-full object-cover" style={{ opacity: 0.55 }} />
           ) : (
             <div className="w-full h-full animate-pulse"
@@ -525,21 +606,21 @@ export default function Home() {
 
             <h1 className="font-extrabold leading-[1.05] tracking-tight mb-6 text-white"
               style={{ fontSize: 'clamp(36px, 5.5vw, 58px)' }}>
-              Your business deserves<br />
+              Stop Paying for<br />
               <span style={{ background: 'linear-gradient(90deg, #fbbf24 0%, #f97316 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                to be seen.
+                "Views." Start Paying for Customers.
               </span>
             </h1>
 
-            <p className="text-lg leading-relaxed mb-8 max-w-lg" style={{ color: 'rgba(255,255,255,0.75)' }}>
-              Professional video commercials for your shop, school, hotel, or service — from KES 3,500, delivered in 3–5 days (rush options from 48 hours). Start free: see your first campaign and promotional poster before you pay a shilling.
-            </p>
+            <h2 className="text-lg leading-relaxed mb-4 max-w-lg font-normal" style={{ color: 'rgba(255,255,255,0.75)' }}>
+              Nia Media builds high-converting video campaigns, sales funnels, and brand systems that turn online attention into M-Pesa transactions for Kenyan SMEs.
+            </h2>
 
-            <div className="flex flex-wrap gap-3 mb-10">
-              <button onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
+            <div className="flex flex-wrap gap-3 mb-4">
+              <button onClick={() => document.getElementById('free-audit')?.scrollIntoView({ behavior: 'smooth' })}
                 className="flex items-center gap-2 px-7 py-4 rounded-xl text-sm font-bold text-white transition-all"
                 style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 4px 24px rgba(124,58,237,0.5)' }}>
-                <Sparkles size={15} /> Create My Free Ad Kit
+                <Sparkles size={15} /> Get Your Free Video Strategy
               </button>
               <Link to="/quote"
                 className="flex items-center gap-2 px-6 py-4 rounded-xl text-sm font-bold text-white transition-all"
@@ -552,6 +633,10 @@ export default function Home() {
                 <MessageSquare size={15} /> WhatsApp
               </a>
             </div>
+
+            <p className="text-sm mb-8" style={{ color: 'rgba(255,255,255,0.55)' }}>
+              No expensive TV budgets. Built for the modern Kenyan business.
+            </p>
 
             {/* Honest trust line */}
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
@@ -573,40 +658,55 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── SERVICES (compact) ───────────────────────────────── */}
+      {/* ── PROBLEM / AGITATION ──────────────────────────────── */}
+      <section className="py-16 px-6" style={{ background: '#f8fafc' }}>
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-4">
+            A Great Video on a Broken Website Won't Make You Money.
+          </h2>
+          <p className="text-base text-gray-600 leading-relaxed">
+            You don't just need a videographer. You need a complete system. Most local businesses waste thousands of shillings filming content, only to send that traffic to a chaotic WhatsApp inbox or a confusing website. We fix the whole pipeline.
+          </p>
+        </div>
+      </section>
+
+      {/* ── SERVICES ──────────────────────────────────────────── */}
       <section id="services" className="py-20 px-6" style={{ background: '#ffffff' }}>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3">What we make for you</h2>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3">The Complete System</h2>
             <p className="text-gray-500 max-w-lg mx-auto">Everything a business needs to show up professionally — produced by creatives, accelerated by AI.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-5">
+          <div className="grid md:grid-cols-2 gap-5">
             {[
               {
                 icon: Film, color: '#7c3aed', bg: '#ede9fe',
-                title: 'Video Commercials', price: 'From KES 3,500',
-                desc: '15-second promos to 3-minute brand films, optimised for TikTok, Instagram, WhatsApp, and TV.',
+                title: '1. The "Video + Funnel" System',
+                desc: 'We don’t just hand you an MP4 file. We shoot high-retention short-form video and build a dedicated, high-converting landing page for your offer. When a customer watches your video, they land on a professional site designed to close the sale immediately.',
                 to: '/quote', cta: 'Get a quote',
               },
               {
-                icon: ImageIcon, color: '#2563eb', bg: '#dbeafe',
-                title: 'Posters & Campaigns', price: 'From KES 500',
-                desc: 'Promo posters plus AI-written captions, WhatsApp broadcasts, and ad copy — in English or Kiswahili.',
+                icon: Palette, color: '#2563eb', bg: '#dbeafe',
+                title: '2. The 48-Hour SME Brand Refresh',
+                desc: 'Your business should look as good as your product. Before we shoot, we upgrade your visual identity. You get a complete brand kit — color palettes, typography, and professional layouts — so your new video lives in a premium digital environment.',
                 to: '#demo', cta: 'Try it free', anchor: true,
               },
               {
-                icon: Music, color: '#059669', bg: '#d1fae5',
-                title: 'Jingles & Voice Overs', price: 'From KES 1,500',
-                desc: 'Radio-ready jingles and professional African voice overs for your ads and IVR.',
-                to: '/register', cta: 'Order audio',
+                icon: Radio, color: '#059669', bg: '#d1fae5',
+                title: '3. Unmatched Distribution (Vybecall & Ads)',
+                desc: 'We put your business where your competitors aren’t. Beyond Instagram and TikTok, we optimise your video content for Safaricom’s Vybecall — putting your pitch directly on your customer’s screen the moment their phone rings.',
+                to: '/quote', cta: 'Get a quote',
               },
-            ].map(({ icon: Icon, color, bg, title, price, desc, to, cta, anchor }) => (
+              {
+                icon: BarChart3, color: '#d97706', bg: '#fef3c7',
+                title: '4. ROI & Analytics Reporting',
+                desc: 'No more guessing if your marketing is working. We provide automated, beautifully branded monthly reports showing exactly how many views, clicks, and leads your video funnel generated.',
+                to: '/register', cta: 'Learn more',
+              },
+            ].map(({ icon: Icon, color, bg, title, desc, to, cta, anchor }) => (
               <div key={title} className="rounded-2xl border border-gray-200 bg-white p-7 hover:shadow-lg transition-all flex flex-col">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: bg }}>
-                    <Icon size={22} style={{ color }} />
-                  </div>
-                  <span className="text-xs font-bold px-2.5 py-1 rounded-lg" style={{ background: bg, color }}>{price}</span>
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ background: bg }}>
+                  <Icon size={22} style={{ color }} />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed mb-6 flex-1">{desc}</p>
@@ -697,22 +797,29 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── TESTIMONIAL ──────────────────────────────────────── */}
+      {/* ── SOCIAL PROOF ──────────────────────────────────────── */}
       <section className="py-16 px-6" style={{ background: '#ffffff' }}>
         <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-8">Built for Kenyan Businesses Ready to Scale</h2>
           <div className="flex gap-1 justify-center mb-5">
             {[1,2,3,4,5].map(i => <Star key={i} size={16} fill="#f59e0b" style={{ color: '#f59e0b' }} />)}
           </div>
           <blockquote className="text-xl md:text-2xl font-semibold text-gray-900 leading-relaxed mb-6">
             "Nia Media helps us launch campaigns faster and get more results. It's like having a creative team on autopilot."
           </blockquote>
-          <div className="flex items-center gap-3 justify-center">
+          <div className="flex items-center gap-3 justify-center mb-10">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white"
               style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>B</div>
             <div className="text-left">
               <p className="text-sm font-bold text-gray-900">Brian M.</p>
               <p className="text-xs text-gray-400">Co-founder, PesaSure Fintech</p>
             </div>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
+            <span className="text-xs font-bold tracking-widest text-gray-400">TRUSTED BY</span>
+            {['NCBA', 'Onfon Media', 'PesaFlix', 'Ndovu Group', 'Somo Smart', 'Adiel Media'].map(name => (
+              <span key={name} className="text-sm font-bold text-gray-500">{name}</span>
+            ))}
           </div>
         </div>
       </section>
@@ -736,32 +843,26 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── FINAL CTA ────────────────────────────────────────── */}
-      <section className="py-20 px-6 relative overflow-hidden" style={{ background: '#0a0612' }}>
+      {/* ── FINAL PUSH: LEAD CAPTURE ──────────────────────────── */}
+      <section id="free-audit" className="py-20 px-6 relative overflow-hidden" style={{ background: '#0a0612' }}>
         <div className="absolute inset-0 pointer-events-none">
           <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 600, height: 300, background: 'radial-gradient(ellipse, rgba(124,58,237,0.3) 0%, transparent 65%)' }} />
         </div>
         <div className="max-w-2xl mx-auto text-center relative z-10">
           <h2 className="font-extrabold text-white mb-4" style={{ fontSize: 'clamp(30px, 4.5vw, 44px)', lineHeight: 1.15 }}>
-            Ready to put your business on screen?
+            Ready to Upgrade Your Digital Storefront?
           </h2>
-          <p className="text-base mb-8" style={{ color: 'rgba(255,255,255,0.55)' }}>
-            Get your price in 60 seconds — no account, no phone call, no obligation.
+          <p className="text-base mb-8 max-w-lg mx-auto" style={{ color: 'rgba(255,255,255,0.55)' }}>
+            Enter your details below and we will send you a free, custom audit of your current online video presence and show you exactly where you are losing money.
           </p>
-          <div className="flex flex-wrap gap-3 justify-center">
-            <Link to="/quote"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl text-base font-bold text-white"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 6px 32px rgba(124,58,237,0.5)' }}>
-              Get an Instant Quote <ArrowRight size={16} />
-            </Link>
-            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-7 py-4 rounded-xl text-base font-bold text-white"
-              style={{ background: '#25d366' }}>
-              <MessageSquare size={16} /> WhatsApp Us
-            </a>
-          </div>
-          <p className="text-xs mt-6" style={{ color: 'rgba(255,255,255,0.3)' }}>
-            From KES 3,500 · M-Pesa accepted · 3–5 day delivery (rush from 48h)
+
+          <FreeAuditForm />
+
+          <p className="text-xs mt-8" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            Prefer to talk now?{' '}
+            <Link to="/quote" className="font-bold" style={{ color: 'rgba(255,255,255,0.55)' }}>Get an instant quote</Link>
+            {' '}or{' '}
+            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="font-bold" style={{ color: '#34d399' }}>WhatsApp us</a>.
           </p>
         </div>
       </section>
