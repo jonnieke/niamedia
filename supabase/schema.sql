@@ -57,7 +57,9 @@ create policy "Admins can view all profiles"
 create or replace function public.prevent_role_self_escalation()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  if new.role is distinct from old.role and not public.is_admin() then
+  -- auth.uid() is null for trusted direct-SQL/service-role sessions
+  -- (migrations, SQL editor) — only gate actual end-user requests.
+  if new.role is distinct from old.role and auth.uid() is not null and not public.is_admin() then
     raise exception 'Only admins can change role';
   end if;
   return new;
