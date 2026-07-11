@@ -1,6 +1,7 @@
 import Anthropic from "npm:@anthropic-ai/sdk"
 import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
 import { createClient } from "npm:@supabase/supabase-js@2"
+import { requireUser, unauthorized, checkRateLimit, rateLimited } from "../_shared/authGuard.ts"
 
 const INDUSTRIES = ["Real Estate","Hospitality","Education","Fintech / SACCO","Restaurant","Travel","Retail","Health & Wellness","Events","Professional Services","Faith & Community","Other"]
 const OBJECTIVES = ["Get leads","Sell product","Promote offer","Increase bookings","Launch product","Grow social media","Drive WhatsApp enquiries"]
@@ -15,17 +16,20 @@ Deno.serve(async (req: Request) => {
     const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY")! })
     const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!)
 
-    const { message, currentForm, step, userId } = await req.json()
+    const user = await requireUser(req, db)
+    if (!user) return unauthorized(corsHeaders)
+    if (!(await checkRateLimit(db, `nia_wizard:${user.id}`, 40))) return rateLimited(corsHeaders)
 
-    // Load brand kit context if available
+    const { message, currentForm, step } = await req.json()
+
+    // Load brand kit context for the authenticated caller only — never trust
+    // a client-supplied userId, or anyone could read another user's brand kit.
     let brandContext = ""
-    if (userId) {
-      const { data: brand } = await db.from("brand_kits")
-        .select("business_name, industry, brand_voice, target_customer, preferred_tone")
-        .eq("user_id", userId).single()
-      if (brand) {
-        brandContext = `\nKnown brand context: ${JSON.stringify(brand)}`
-      }
+    const { data: brand } = await db.from("brand_kits")
+      .select("business_name, industry, brand_voice, target_customer, preferred_tone")
+      .eq("user_id", user.id).single()
+    if (brand) {
+      brandContext = `\nKnown brand context: ${JSON.stringify(brand)}`
     }
 
     const systemPrompt = `You are Nia, a warm and sharp marketing advisor helping a business owner fill in their campaign brief.

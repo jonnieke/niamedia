@@ -1,4 +1,5 @@
 import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
+import { serviceClient, requireUser, unauthorized, checkRateLimit, rateLimited } from "../_shared/authGuard.ts"
 import Anthropic from "npm:@anthropic-ai/sdk"
 
 const SCENE_COUNTS: Record<string, number> = {
@@ -32,6 +33,11 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const supabase = serviceClient()
+    const user = await requireUser(req, supabase)
+    if (!user) return unauthorized(corsHeaders)
+    if (!(await checkRateLimit(supabase, `generate_concept:${user.id}`, 30))) return rateLimited(corsHeaders)
+
     const { brief, format } = await req.json()
     const sceneCount = SCENE_COUNTS[format] ?? 4
 

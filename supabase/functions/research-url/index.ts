@@ -1,9 +1,15 @@
 import Anthropic from "npm:@anthropic-ai/sdk"
 import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
+import { serviceClient, requireUser, unauthorized, checkRateLimit, rateLimited } from "../_shared/authGuard.ts"
 
 Deno.serve(async (req) => {
   const cors = corsHeadersFor(req)
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors })
+
+  const supabase = serviceClient()
+  const user = await requireUser(req, supabase)
+  if (!user) return unauthorized(cors)
+  if (!(await checkRateLimit(supabase, `research_url:${user.id}`, 20))) return rateLimited(cors)
 
   const { url } = await req.json().catch(() => ({}))
   if (!url || typeof url !== "string") {

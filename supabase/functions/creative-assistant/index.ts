@@ -1,4 +1,5 @@
 import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
+import { serviceClient, requireUser, unauthorized, checkRateLimit, rateLimited } from "../_shared/authGuard.ts"
 import Anthropic from "npm:@anthropic-ai/sdk"
 
 const SYSTEM_PROMPT = `You are Nia Creative Assistant, a Kenyan creative director, campaign strategist, copywriter, video producer, and SME marketing advisor. You help business owners turn rough ideas into clear campaigns. You are practical, warm, sharp, locally aware, and commercially focused. You do not give generic content. You ask useful questions only when necessary, but you can also propose strong ideas quickly. Your goal is to help the user move from idea to campaign execution.
@@ -16,6 +17,11 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors })
 
   try {
+    const supabase = serviceClient()
+    const user = await requireUser(req, supabase)
+    if (!user) return unauthorized(cors)
+    if (!(await checkRateLimit(supabase, `creative_assistant:${user.id}`, 40))) return rateLimited(cors)
+
     const { messages, brandContext } = await req.json() as {
       messages: { role: "user" | "assistant"; content: string }[]
       brandContext?: string
@@ -23,6 +29,11 @@ Deno.serve(async (req) => {
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: "no_messages" }), {
+        status: 400, headers: { ...cors, "Content-Type": "application/json" },
+      })
+    }
+    if (messages.length > 40) {
+      return new Response(JSON.stringify({ error: "conversation_too_long" }), {
         status: 400, headers: { ...cors, "Content-Type": "application/json" },
       })
     }

@@ -1,6 +1,7 @@
 import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
 import { createClient } from "npm:@supabase/supabase-js@2"
 import { notifyAdmins } from "../_shared/notify.ts"
+import { requireUser, unauthorized, checkRateLimit, rateLimited } from "../_shared/authGuard.ts"
 
 Deno.serve(async (req) => {
   const corsHeaders = corsHeadersFor(req)
@@ -13,13 +14,16 @@ Deno.serve(async (req) => {
     })
   }
 
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  )
+  const user = await requireUser(req, supabase)
+  if (!user) return unauthorized(corsHeaders)
+  if (!(await checkRateLimit(supabase, `generate_video_brief:${user.id}`, 30))) return rateLimited(corsHeaders)
+
   try {
     const { briefId } = await req.json()
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    )
 
     const { data: brief } = await supabase
       .from("video_briefs")

@@ -1,4 +1,5 @@
 import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
+import { serviceClient, requireUser, unauthorized, checkRateLimit, rateLimited } from "../_shared/authGuard.ts"
 Deno.serve(async (req) => {
   const corsHeaders = corsHeadersFor(req)
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
@@ -9,6 +10,11 @@ Deno.serve(async (req) => {
       status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
     })
   }
+
+  const supabase = serviceClient()
+  const user = await requireUser(req, supabase)
+  if (!user) return unauthorized(corsHeaders)
+  if (!(await checkRateLimit(supabase, `generate_brief:${user.id}`, 30))) return rateLimited(corsHeaders)
 
   try {
     const { business, description, targetAudience, audioType, packageLabel, mood, platforms, existing } = await req.json()

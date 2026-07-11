@@ -1,4 +1,5 @@
 import { corsHeaders as corsHeadersFor } from "../_shared/cors.ts"
+import { serviceClient, requireUser, checkRateLimit, rateLimited, getClientIp } from "../_shared/authGuard.ts"
 import Anthropic from "npm:@anthropic-ai/sdk"
 
 const NIA_SYSTEM_PROMPT = `You are Nia, a sharp and warm AI marketing advisor built into Nia Media — East Africa's AI-powered creative production platform based in Nairobi, Kenya.
@@ -153,7 +154,26 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const supabase = serviceClient()
+    // Stays anonymous-friendly (public homepage widget + Quote page use it
+    // pre-signup) but every caller — logged in or not — is rate-limited.
+    const user = await requireUser(req, supabase)
+    const rateLimitKey = user ? `chat_agent_user:${user.id}` : `chat_agent_ip:${getClientIp(req)}`
+    const rateLimit = user ? 60 : 30
+    if (!(await checkRateLimit(supabase, rateLimitKey, rateLimit))) return rateLimited(corsHeaders)
+
     const { messages, voiceEnabled, userContext } = await req.json() as RequestBody
+
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return new Response(JSON.stringify({ error: "no_messages" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      })
+    }
+    if (messages.length > 40) {
+      return new Response(JSON.stringify({ error: "conversation_too_long" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      })
+    }
 
     const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") })
 
