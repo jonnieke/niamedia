@@ -51,6 +51,7 @@ const VISUAL_STYLES = [
     badge: 'Popular for Retail & Products',
     tag: 'Live-Action',
     icon: Film,
+    image: '/images/styles/style-cinematic.jpg',
   },
   {
     id: 'motion_2d',
@@ -59,6 +60,7 @@ const VISUAL_STYLES = [
     badge: 'Best for Tech, SACCOs & Apps',
     tag: '2D Animation',
     icon: Zap,
+    image: '/images/styles/style-motion-2d.jpg',
   },
   {
     id: '3d_stylized',
@@ -67,6 +69,7 @@ const VISUAL_STYLES = [
     badge: 'Modern & Eye-Catching',
     tag: '3D Stylized',
     icon: Sparkles,
+    image: '/images/styles/style-3d-stylized.jpg',
   },
   {
     id: 'hyper_ai',
@@ -75,6 +78,7 @@ const VISUAL_STYLES = [
     badge: 'Film-Grade Aesthetics',
     tag: 'Hyper AI',
     icon: Star,
+    image: '/images/styles/style-hyper-ai.jpg',
   },
 ]
 
@@ -1147,7 +1151,7 @@ export default function Quote() {
                   </div>
 
                   {/* Visual Style Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {VISUAL_STYLES.map(s => {
                       const Icon = s.icon
                       const selected = visualStyle === s.id
@@ -1155,35 +1159,56 @@ export default function Quote() {
                         <div
                           key={s.id}
                           onClick={() => setVisualStyle(s.id)}
-                          className={`p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                          className={`rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between overflow-hidden group ${
                             selected
-                              ? 'border-purple-600 bg-purple-50/60 shadow-md ring-2 ring-purple-100'
-                              : 'border-gray-200 hover:border-gray-300 bg-white'
+                              ? 'border-purple-600 bg-purple-50/50 shadow-md ring-2 ring-purple-200'
+                              : 'border-gray-200 hover:border-gray-300 bg-white hover:shadow-sm'
                           }`}
                         >
-                          <div>
-                            <div className="flex items-center justify-between mb-2">
-                              <div
-                                className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                                  selected ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600'
-                                }`}
-                              >
-                                <Icon size={18} />
-                              </div>
-                              <span className="text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-md bg-gray-100 text-gray-600">
+                          {/* Image preview banner */}
+                          <div className="relative h-44 w-full overflow-hidden bg-gray-900">
+                            <img
+                              src={s.image}
+                              alt={s.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              loading="lazy"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                            <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                              <span className="text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white border border-white/20">
+                                {s.tag}
+                              </span>
+                            </div>
+                            <div className="absolute top-3 right-3">
+                              <span className="text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-md bg-purple-600/90 backdrop-blur-md text-white shadow-sm">
                                 {s.badge}
                               </span>
                             </div>
-                            <h3 className="font-extrabold text-sm text-gray-900 mb-1">{s.title}</h3>
-                            <p className="text-xs text-gray-500 leading-relaxed">{s.desc}</p>
-                          </div>
-                          <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
-                            <span className="text-[11px] font-semibold text-purple-700">Standard Tier</span>
                             {selected && (
-                              <span className="inline-flex items-center gap-1 font-bold text-purple-700">
-                                <Check size={14} /> Active Style
-                              </span>
+                              <div className="absolute bottom-3 right-3 flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-purple-600 text-white shadow-lg">
+                                <Check size={13} /> Selected Style
+                              </div>
                             )}
+                          </div>
+
+                          <div className="p-4 flex flex-col flex-1 justify-between">
+                            <div>
+                              <h3 className="font-extrabold text-sm text-gray-900 mb-1 flex items-center gap-2">
+                                <span className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
+                                  selected ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600'
+                                }`}>
+                                  <Icon size={14} />
+                                </span>
+                                {s.title}
+                              </h3>
+                              <p className="text-xs text-gray-500 leading-relaxed mt-1.5">{s.desc}</p>
+                            </div>
+                            <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
+                              <span className="text-[11px] font-semibold text-purple-700">Studio Grade</span>
+                              <span className={`text-[11px] font-medium ${selected ? 'text-purple-700 font-bold' : 'text-gray-400'}`}>
+                                {selected ? 'Active selection' : 'Click to select'}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       )
@@ -1548,9 +1573,18 @@ export default function Quote() {
                             Edit
                           </button>
                         </div>
-                        <p className="font-bold text-gray-900">{LENGTHS.find(l => l.id === length)?.label} Commercial</p>
-                        <p className="text-gray-500">Style: {VISUAL_STYLES.find(s => s.id === visualStyle)?.tag}</p>
-                        <p className="text-gray-500">Timeline: {RUSH.find(r => r.id === rush)?.label}</p>
+                        <div className="flex items-start gap-3 mt-1.5">
+                          <img
+                            src={VISUAL_STYLES.find(s => s.id === visualStyle)?.image}
+                            alt={visualStyle}
+                            className="w-14 h-10 object-cover rounded-lg border border-gray-200 shrink-0"
+                          />
+                          <div>
+                            <p className="font-bold text-gray-900">{LENGTHS.find(l => l.id === length)?.label} Commercial</p>
+                            <p className="text-gray-500">Style: {VISUAL_STYLES.find(s => s.id === visualStyle)?.tag}</p>
+                            <p className="text-gray-500">Timeline: {RUSH.find(r => r.id === rush)?.label}</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
