@@ -457,11 +457,11 @@ const FAQS = [
   },
   {
     q: 'What exactly do I get when the video is delivered?',
-    a: 'You receive the final video optimised for your chosen platforms (TikTok, Instagram, WhatsApp, Facebook, YouTube), with full exclusive rights. Add-ons include matching promo posters, subtitles, and AI-generated campaign copy for launching it.',
+    a: 'You receive the final video optimised for your chosen platforms (TikTok, Instagram, WhatsApp, Facebook, YouTube), with full exclusive commercial broadcast rights. Add-ons include matching promo posters and subtitles.',
   },
   {
-    q: 'Can you also write the ads and captions to promote the video?',
-    a: 'Yes — every project can include AI-powered campaign copy: social captions, WhatsApp broadcast messages, and poster copy in English or Kiswahili. You can try the campaign generator free on this page.',
+    q: 'Can you also provide matching promotional posters?',
+    a: 'Yes — every video project can include high-resolution promotional posters formatted for social media feeds, WhatsApp stories, and print-ready flyers in multiple design styles.',
   },
 ]
 
@@ -613,7 +613,7 @@ export default function Home() {
             </h1>
 
             <h2 className="text-lg leading-relaxed mb-4 max-w-lg font-normal" style={{ color: 'rgba(255,255,255,0.75)' }}>
-              Nia Media builds high-converting video campaigns, sales funnels, and brand systems that turn online attention into M-Pesa transactions for Kenyan SMEs.
+              Nia Media produces high-converting commercial videos and promotional posters that showcase your products and attract customers across Kenya.
             </h2>
 
             <div className="flex flex-wrap gap-3 mb-4">
@@ -640,7 +640,7 @@ export default function Home() {
 
             {/* Honest trust line */}
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
-              <span className="flex items-center gap-1.5"><Sparkles size={13} style={{ color: '#a78bfa' }} /> First campaign + poster free</span>
+              <span className="flex items-center gap-1.5"><Sparkles size={13} style={{ color: '#a78bfa' }} /> First video brief + poster free</span>
               <span className="flex items-center gap-1.5"><Smartphone size={13} style={{ color: '#34d399' }} /> M-Pesa accepted</span>
               <span className="flex items-center gap-1.5"><Clock size={13} style={{ color: '#fbbf24' }} /> 3–5 day delivery (rush available)</span>
             </div>
@@ -662,10 +662,10 @@ export default function Home() {
       <section className="py-16 px-6" style={{ background: '#f8fafc' }}>
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-4">
-            A Great Video on a Broken Website Won't Make You Money.
+            Studio-Grade Videos & Posters Without Agency Overhead.
           </h2>
           <p className="text-base text-gray-600 leading-relaxed">
-            You don't just need a videographer. You need a complete system. Most local businesses waste thousands of shillings filming content, only to send that traffic to a chaotic WhatsApp inbox or a confusing website. We fix the whole pipeline.
+            Most businesses struggle with low-quality phone clips or traditional production agencies charging hundreds of thousands of shillings. We deliver broadcast-quality commercial videos and eye-catching promotional posters with rapid turnaround and transparent pricing.
           </p>
         </div>
       </section>
@@ -674,34 +674,34 @@ export default function Home() {
       <section id="services" className="py-20 px-6" style={{ background: '#ffffff' }}>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3">The Complete System</h2>
-            <p className="text-gray-500 max-w-lg mx-auto">Everything a business needs to show up professionally — produced by creatives, accelerated by AI.</p>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3">What We Produce For You</h2>
+            <p className="text-gray-500 max-w-lg mx-auto">Everything you need to launch professional visual assets — crafted by creative directors, delivered in days.</p>
           </div>
           <div className="grid md:grid-cols-2 gap-5">
             {[
               {
                 icon: Film, color: '#7c3aed', bg: '#ede9fe',
-                title: '1. The "Video + Funnel" System',
-                desc: 'We don’t just hand you an MP4 file. We shoot high-retention short-form video and build a dedicated, high-converting landing page for your offer. When a customer watches your video, they land on a professional site designed to close the sale immediately.',
-                to: '/quote', cta: 'Get a quote',
+                title: '1. Commercial Video Production',
+                desc: 'Cinematic 15-second to 90-second commercial videos formatted for TikTok, Instagram Reels, Facebook, YouTube, and WhatsApp Status. Built with strong hooks and clear calls to action.',
+                to: '/quote', cta: 'Get an instant quote',
               },
               {
-                icon: Palette, color: '#2563eb', bg: '#dbeafe',
-                title: '2. The 48-Hour SME Brand Refresh',
-                desc: 'Your business should look as good as your product. Before we shoot, we upgrade your visual identity. You get a complete brand kit — color palettes, typography, and professional layouts — so your new video lives in a premium digital environment.',
-                to: '#demo', cta: 'Try it free', anchor: true,
+                icon: ImageIcon, color: '#2563eb', bg: '#dbeafe',
+                title: '2. Branded Promotional Posters',
+                desc: 'Eye-catching graphic posters tailored for social media feeds, WhatsApp broadcasts, and print flyers. Highlight your promotional offers with clean typography and high-resolution visuals.',
+                to: '#demo', cta: 'Try poster generator', anchor: true,
               },
               {
-                icon: Radio, color: '#059669', bg: '#d1fae5',
-                title: '3. Unmatched Distribution (Vybecall & Ads)',
-                desc: 'We put your business where your competitors aren’t. Beyond Instagram and TikTok, we optimise your video content for Safaricom’s Vybecall — putting your pitch directly on your customer’s screen the moment their phone rings.',
-                to: '/quote', cta: 'Get a quote',
+                icon: Music, color: '#059669', bg: '#d1fae5',
+                title: '3. Voiceovers & Sound Design',
+                desc: 'Authentic Kenyan English and Swahili voiceovers paired with studio-quality background audio and jingles. Professional sound engineering that commands attention on any device.',
+                to: '/audio-studio', cta: 'Visit Audio Studio',
               },
               {
-                icon: BarChart3, color: '#d97706', bg: '#fef3c7',
-                title: '4. ROI & Analytics Reporting',
-                desc: 'No more guessing if your marketing is working. We provide automated, beautifully branded monthly reports showing exactly how many views, clicks, and leads your video funnel generated.',
-                to: '/register', cta: 'Learn more',
+                icon: Shield, color: '#d97706', bg: '#fef3c7',
+                title: '4. Clean 4K Master & Full Rights',
+                desc: 'Review watermarked preview cuts with your team. Once approved and the milestone balance is cleared, download your clean 4K broadcast masters with 100% commercial usage rights.',
+                to: '/portfolio', cta: 'View portfolio',
               },
             ].map(({ icon: Icon, color, bg, title, desc, to, cta, anchor }) => (
               <div key={title} className="rounded-2xl border border-gray-200 bg-white p-7 hover:shadow-lg transition-all flex flex-col">

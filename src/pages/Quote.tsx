@@ -207,7 +207,7 @@ function PricePanel({ min, max, length, rush, platforms, poster, subtitles }: {
 
           <CheckCircle2 size={12} className="text-emerald-400 shrink-0" />
 
-          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>Campaign copy included free</span>
+          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>Branded promo poster included</span>
 
         </div>
 

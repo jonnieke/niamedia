@@ -28,7 +28,7 @@ interface SuggestedAction {
 type AgentState = 'idle' | 'listening' | 'thinking' | 'speaking'
 
 const GUEST_LIMIT = 30
-const OPENING_LINE = "Hey! I'm Nia, your AI marketing advisor. Tell me - what kind of business are you running?"
+const OPENING_LINE = "Hey! I'm Nia, your video & poster creative advisor. Tell me — what kind of business or commercial are you planning?"
 
 /* --- Waveform animation (CSS injected once) ------------------- */
 const WAVE_STYLE = `

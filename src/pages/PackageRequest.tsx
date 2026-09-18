@@ -17,10 +17,10 @@ const BUDGETS = ['Under KES 5,000', 'KES 5,000–15,000', 'KES 15,000–30,000',
 type Service = 'campaign' | 'video' | 'audio' | 'multi'
 
 const SERVICES: { id: Service; icon: typeof Zap; label: string; desc: string; color: string }[] = [
-  { id: 'campaign', icon: Zap,    label: 'Campaign Copy',    desc: 'AI captions, scripts, WhatsApp ads', color: '#8b5cf6' },
-  { id: 'video',    icon: Film,   label: 'Video Production', desc: 'Human creative + AI-generated film', color: '#3b82f6' },
-  { id: 'audio',    icon: Music,  label: 'Audio Studio',     desc: 'Jingle, voice over, or radio spot',  color: '#10b981' },
-  { id: 'multi',    icon: Layers, label: 'Multi-Service',    desc: 'I need a mix — let\'s talk',         color: '#f59e0b' },
+  { id: 'video',    icon: Film,   label: 'Video Commercials',  desc: '15s to 90s+ broadcast-ready commercial videos', color: '#3b82f6' },
+  { id: 'campaign', icon: Zap,    label: 'Promotional Posters', desc: 'Branded social media & print graphic posters', color: '#8b5cf6' },
+  { id: 'audio',    icon: Music,  label: 'Audio & Voiceovers', desc: 'Jingle, voice over, or sound design',          color: '#10b981' },
+  { id: 'multi',    icon: Layers, label: 'Video + Poster Pack', desc: 'Combined monthly creative production package', color: '#f59e0b' },
 ]
 
 const PLATFORMS = ['Facebook', 'Instagram', 'TikTok', 'YouTube', 'WhatsApp', 'LinkedIn', 'X (Twitter)', 'Website']

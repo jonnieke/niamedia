@@ -6,8 +6,8 @@ const DEFAULT_IMAGE = `${SITE_URL}/images/og-image.jpg`
 
 const PUBLIC_ROUTES: Record<string, { title: string; description: string }> = {
   '/': {
-    title: 'Nia Media | Video Marketing & Sales Funnels for Kenyan SMEs',
-    description: 'We help Kenyan SMEs get more customers with high-converting video campaigns, landing pages, and premium branding. Stop paying for views, start getting leads.',
+    title: 'Nia Media | Commercial Videos & Promotional Posters for Kenyan Businesses',
+    description: 'Studio-grade commercial video production and branded promotional posters for Kenyan businesses. Showcase your products and convert viewers with broadcast-quality creative assets.',
   },
   '/pricing': {
     title: 'Video Commercial Pricing in Kenya | Nia Media',
