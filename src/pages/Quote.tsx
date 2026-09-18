@@ -1,26 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-
 import { Link } from 'react-router-dom'
-
 import {
-
   Film, CheckCircle2, ArrowRight, Clock, Zap,
-
   Phone, Building2, MessageSquare, ChevronRight, Star, Mic, Loader2, Paperclip, Sparkles, Trash2, Lock, FileText,
-
+  Sliders, Palette, Volume2, ShieldCheck, Check, Edit3, ArrowLeft, RefreshCw, Layers
 } from 'lucide-react'
-
 import PublicHeader from '../components/layout/PublicHeader'
-
 import { supabase } from '../lib/supabase'
-
 import { SECONDARY_NIA_CTA } from '../lib/cta'
-
 import { trackEvent } from '../lib/analytics'
 import MarketSurveyModal from '../components/MarketSurveyModal'
-import QuotationPrintModal from '../components/QuotationPrintModal'
+import QuotationPrintModal, { QuotationData } from '../components/QuotationPrintModal'
 
-/* Pricing logic */
+/* Pricing Constants & Logic */
 
 const LENGTHS = [
   { id: '15s', label: '15 seconds', desc: 'Quick hook - TikTok, Reels, Stories', price: 5000 },
@@ -31,12 +23,12 @@ const LENGTHS = [
 ]
 
 const PLATFORMS = [
-  { id: 'tiktok',    label: 'TikTok' },
-  { id: 'instagram', label: 'Instagram' },
-  { id: 'facebook',  label: 'Facebook' },
-  { id: 'whatsapp',  label: 'WhatsApp' },
-  { id: 'youtube',   label: 'YouTube' },
-  { id: 'linkedin',  label: 'LinkedIn' },
+  { id: 'tiktok',    label: 'TikTok',    desc: 'Vertical 9:16' },
+  { id: 'instagram', label: 'Instagram', desc: 'Reels & Feed' },
+  { id: 'facebook',  label: 'Facebook',  desc: 'Feed & Video' },
+  { id: 'whatsapp',  label: 'WhatsApp',  desc: 'Status & Broadcast' },
+  { id: 'youtube',   label: 'YouTube',   desc: 'Horizontal 16:9 / Shorts' },
+  { id: 'linkedin',  label: 'LinkedIn',  desc: 'Corporate Feed' },
 ]
 
 const INDUSTRIES = [
@@ -47,8 +39,49 @@ const INDUSTRIES = [
 
 const RUSH = [
   { id: 'standard', label: 'Standard',   desc: '3-5 business days', mult: 1.0 },
-  { id: '48h',      label: '48-hr rush', desc: '+25% fee',           mult: 1.25 },
-  { id: '24h',      label: '24-hr rush', desc: '+50% fee',           mult: 1.5 },
+  { id: '48h',      label: '48-hr rush', desc: '+25% expedite fee', mult: 1.25 },
+  { id: '24h',      label: '24-hr rush', desc: '+50% expedite fee', mult: 1.5 },
+]
+
+const VISUAL_STYLES = [
+  {
+    id: 'cinematic',
+    title: 'Live-Action / Cinematic Commercial',
+    desc: 'Real Kenyan talent, real location footage, product close-ups, crisp cinematography.',
+    badge: 'Popular for Retail & Products',
+    tag: 'Live-Action',
+    icon: Film,
+  },
+  {
+    id: 'motion_2d',
+    title: '2D Motion Graphics & Kinetic Typography',
+    desc: 'Bold animated vectors, dynamic kinetic text, energetic transitions, high engagement.',
+    badge: 'Best for Tech, SACCOs & Apps',
+    tag: '2D Animation',
+    icon: Zap,
+  },
+  {
+    id: '3d_stylized',
+    title: 'Semi-Realistic / Stylized 3D Commercial',
+    desc: 'Sleek 3D product renders, stylized illustrative elements, futuristic aesthetic.',
+    badge: 'Modern & Eye-Catching',
+    tag: '3D Stylized',
+    icon: Sparkles,
+  },
+  {
+    id: 'hyper_ai',
+    title: 'Hyper-Realistic AI Cinematic Commercial',
+    desc: 'Photorealistic film-grade AI scenes, cinematic scale, high-end global aesthetic.',
+    badge: 'Film-Grade Aesthetics',
+    tag: 'Hyper AI',
+    icon: Star,
+  },
+]
+
+const VOICE_TONES = [
+  { id: 'en_ke', label: 'Kenyan English', desc: 'Warm, clear, and professional' },
+  { id: 'sw_ke', label: 'Kiswahili', desc: 'Authentic and culturally grounded' },
+  { id: 'sheng', label: 'Urban / Sheng', desc: 'High-energy youth and street appeal' },
 ]
 
 function calcPrice(
@@ -71,188 +104,163 @@ function calcPrice(
   }
 }
 
-/* Sub-components */
+/* Step Bar Sub-Component */
 
-function StepBar({ step }: { step: number }) {
-
-  const steps = ['Video Spec', 'Your Details', 'Confirmed']
+function StepBar({ step, onStepClick }: { step: number; onStepClick: (step: number) => void }) {
+  const steps = [
+    { label: 'Details', short: '1. Details' },
+    { label: 'Scope', short: '2. Scope' },
+    { label: 'Style', short: '3. Style' },
+    { label: 'Brief', short: '4. Brief' },
+    { label: 'Review', short: '5. Review' },
+  ]
 
   return (
+    <div className="flex items-center justify-between mb-8 overflow-x-auto pb-2">
+      {steps.map((s, i) => {
+        const isPassed = i < step
+        const isCurrent = i === step
+        const isClickable = i <= step
 
-    <div className="flex items-center gap-0 mb-10">
+        return (
+          <div key={s.label} className="flex items-center">
+            <button
+              type="button"
+              onClick={() => isClickable && onStepClick(i)}
+              disabled={!isClickable}
+              className={`flex items-center gap-2 group transition-all ${isClickable ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
+            >
+              <div
+                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                  isPassed
+                    ? 'bg-emerald-500 text-white group-hover:bg-emerald-600'
+                    : isCurrent
+                    ? 'bg-purple-600 text-white ring-4 ring-purple-100 shadow-md'
+                    : 'bg-gray-200 text-gray-400'
+                }`}
+              >
+                {isPassed ? <Check size={14} /> : i + 1}
+              </div>
+              <span
+                className={`text-xs sm:text-sm font-semibold whitespace-nowrap ${
+                  isCurrent ? 'text-purple-900 font-bold' : isPassed ? 'text-gray-700' : 'text-gray-400'
+                }`}
+              >
+                <span className="sm:hidden">{s.short}</span>
+                <span className="hidden sm:inline">{s.label}</span>
+              </span>
+            </button>
 
-      {steps.map((label, i) => (
-
-        <div key={label} className="flex items-center">
-
-          <div className="flex items-center gap-2">
-
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-
-              i < step ? 'bg-emerald-500 text-white' :
-
-              i === step ? 'bg-purple-600 text-white' :
-
-              'bg-gray-100 text-gray-400'
-
-            }`}>
-
-              {i < step ? <CheckCircle2 size={14} /> : i + 1}
-
-            </div>
-
-            <span className={`text-sm font-semibold hidden sm:block ${
-
-              i === step ? 'text-gray-900' : 'text-gray-400'
-
-            }`}>{label}</span>
-
+            {i < steps.length - 1 && (
+              <div className="w-5 sm:w-8 h-0.5 mx-2 bg-gray-200" />
+            )}
           </div>
-
-          {i < steps.length - 1 && (
-
-            <ChevronRight size={14} className="mx-3 text-gray-300" />
-
-          )}
-
-        </div>
-
-      ))}
-
+        )
+      })}
     </div>
-
   )
-
 }
 
-function PricePanel({ min, max, length, rush, platforms, poster, subtitles }: {
+/* Sticky Price Panel */
 
-  min: number; max: number; length: string; rush: string; platforms: string[]; poster: boolean; subtitles: boolean
-
+function PricePanel({
+  max,
+  length,
+  rush,
+  platforms,
+  subtitles,
+  visualStyle,
+}: {
+  max: number
+  length: string
+  rush: string
+  platforms: string[]
+  subtitles: boolean
+  visualStyle: string
 }) {
-
   const rushLabel = RUSH.find(r => r.id === rush)?.label ?? 'Standard'
-
   const lengthLabel = LENGTHS.find(l => l.id === length)?.label ?? '30 seconds'
+  const styleLabel = VISUAL_STYLES.find(s => s.id === visualStyle)?.tag ?? 'Live-Action'
 
   return (
-
-    <div className="rounded-2xl p-6 sticky top-24"
-
-      style={{ background: 'linear-gradient(145deg, #0d0025, #160040)', border: '1px solid rgba(167,139,250,0.25)' }}>
-
-      <p className="text-xs font-bold tracking-widest mb-4" style={{ color: 'rgba(196,181,253,0.6)' }}>STANDARD ESTIMATE</p>
-
-      <div className="mb-6">
-
-        <p className="text-4xl font-extrabold text-white">
-
-          KES {max.toLocaleString()}
-
-        </p>
-
-        <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Standard transparent price · Final brief confirmed within 2 hrs</p>
-
+    <div
+      className="rounded-2xl p-6 sticky top-24 shadow-xl border"
+      style={{
+        background: 'linear-gradient(145deg, #09031a 0%, #150833 100%)',
+        borderColor: 'rgba(167,139,250,0.3)',
+      }}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[10px] font-extrabold uppercase tracking-widest text-purple-300">STANDARD ESTIMATE</p>
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-200 border border-purple-400/30">
+          70/30 Model
+        </span>
       </div>
 
-      <div className="space-y-2.5 mb-6">
+      <div className="mb-5">
+        <p className="text-3xl font-black text-white">KES {max.toLocaleString()}</p>
+        <p className="text-[11px] mt-1 text-purple-200/60">Transparent pricing · 2 revision rounds included</p>
+      </div>
 
+      <div className="space-y-2 mb-5 pb-5 border-b border-white/10 text-xs">
         {[
-
           { label: 'Video length', val: lengthLabel },
-
-          { label: 'Delivery',     val: rushLabel },
-
-          { label: 'Platforms',    val: platforms.length > 0 ? platforms.map(p => PLATFORMS.find(pl => pl.id === p)?.label).join(', ') : 'Not selected' },
-
-          { label: 'Poster',       val: poster ? 'Included' : 'Not included' },
-
-          { label: 'Subtitles',    val: subtitles ? 'Included (+KES 500)' : 'Not included' },
-
+          { label: 'Visual style', val: styleLabel },
+          { label: 'Delivery', val: rushLabel },
+          {
+            label: 'Platforms',
+            val: platforms.length > 0 ? platforms.map(p => PLATFORMS.find(pl => pl.id === p)?.label || p).join(', ') : 'Not selected',
+          },
+          { label: 'Promo poster', val: 'Included Free' },
+          { label: 'Subtitles', val: subtitles ? 'Included (+KES 500)' : 'None' },
         ].map(({ label, val }) => (
-
           <div key={label} className="flex items-start justify-between gap-3">
-
-            <span className="text-xs shrink-0" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</span>
-
-            <span className="text-xs text-right font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>{val}</span>
-
+            <span className="text-purple-200/60 shrink-0">{label}</span>
+            <span className="text-right font-medium text-white/90">{val}</span>
           </div>
-
         ))}
-
       </div>
 
-      {/* 70% / 30% Milestone terms */}
-      <div className="border-t pt-4 mb-3" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-        <p className="text-[10px] font-bold tracking-widest uppercase mb-2" style={{ color: 'rgba(196,181,253,0.7)' }}>MILESTONE PAYMENT TERMS</p>
-        <div className="rounded-xl p-3 space-y-1.5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="flex items-center justify-between text-xs">
-            <span style={{ color: 'rgba(255,255,255,0.6)' }}>70% Deposit to Start:</span>
-            <span className="font-extrabold text-emerald-400">KES {Math.round(max * 0.7).toLocaleString()}</span>
-          </div>
-          <div className="flex items-center justify-between text-xs">
-            <span style={{ color: 'rgba(255,255,255,0.6)' }}>30% Balance on Delivery:</span>
-            <span className="font-semibold text-white">KES {Math.round(max * 0.3).toLocaleString()}</span>
-          </div>
+      {/* Milestone Terms */}
+      <div className="rounded-xl p-3 bg-white/5 border border-white/10 space-y-1.5 mb-4 text-xs">
+        <div className="flex items-center justify-between">
+          <span className="text-purple-200/70">70% Deposit to Start:</span>
+          <span className="font-extrabold text-emerald-400">KES {Math.round(max * 0.7).toLocaleString()}</span>
         </div>
-        <p className="text-[10px] mt-2 leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          🔒 Pay 70% deposit via M-Pesa or Card to begin. Balance payable only after you review and approve the watermarked video cut.
-        </p>
+        <div className="flex items-center justify-between">
+          <span className="text-purple-200/70">30% Balance on Delivery:</span>
+          <span className="font-semibold text-white">KES {Math.round(max * 0.3).toLocaleString()}</span>
+        </div>
       </div>
 
-      <div className="border-t pt-4" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-
-        <div className="flex items-center gap-2 mb-3">
-
-          <CheckCircle2 size={12} className="text-emerald-400 shrink-0" />
-
-          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>Branded promo poster included</span>
-
-        </div>
-
-        <div className="flex items-center gap-2 mb-3">
-
-          <CheckCircle2 size={12} className="text-emerald-400 shrink-0" />
-
-          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>AI-generated script before filming</span>
-
-        </div>
-
+      <div className="space-y-2 text-[11px] text-purple-200/60 border-t border-white/10 pt-4">
         <div className="flex items-center gap-2">
-
           <CheckCircle2 size={12} className="text-emerald-400 shrink-0" />
-
-          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>2 revision rounds included</span>
-
+          <span>Branded promo poster included free</span>
         </div>
-
+        <div className="flex items-center gap-2">
+          <CheckCircle2 size={12} className="text-emerald-400 shrink-0" />
+          <span>AI-generated script before filming</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <CheckCircle2 size={12} className="text-emerald-400 shrink-0" />
+          <span>Full commercial broadcast rights</span>
+        </div>
       </div>
 
-      {/* Trust strip */}
-
-      <div className="mt-5 pt-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-
-        <p className="text-[10px] font-bold tracking-widest mb-2" style={{ color: 'rgba(196,181,253,0.45)' }}>TRUSTED BY</p>
-
-        <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.35)' }}>
-
-          Onfon Media - Treasured Artifacts - PesaFlix - Ndovu Group - Shekel Coin
-
-        </p>
-
+      <div className="mt-5 pt-4 border-t border-white/10 text-center">
+        <p className="text-[10px] font-bold tracking-widest text-purple-200/40 uppercase mb-1">TRUSTED CLIENTS</p>
+        <p className="text-[11px] text-purple-200/50">Treasured Artifacts · Onfon · PesaFlix · Ndovu</p>
       </div>
-
     </div>
-
   )
-
 }
 
-/* Main */
+/* Session Storage Helper */
 
 const SUCCESS_KEY = 'nia_quote_submitted'
 const SUCCESS_TTL_MS = 2 * 60 * 60 * 1000 // 2 hours
+
 interface StoredSuccess {
   bizName: string
   waMessage: string
@@ -266,8 +274,6 @@ interface StoredSuccess {
   ts: number
 }
 
-// Restores the success screen after a browser Back/refresh or PesaPal redirect instead of
-// silently dropping the customer back to a blank step-0 form.
 function readStoredSuccess(): StoredSuccess | null {
   if (typeof window === 'undefined') return null
   const isSubmitted = window.location.search.includes('submitted=1')
@@ -281,46 +287,48 @@ function readStoredSuccess(): StoredSuccess | null {
       parsed.isPaid = true
     }
     return parsed
-  } catch { return null }
+  } catch {
+    return null
+  }
 }
 
+/* Main Component */
+
 export default function Quote() {
-
   const [successData, setSuccessData] = useState(() => readStoredSuccess())
-  const [step, setStep] = useState(() => (readStoredSuccess() ? 2 : 0))
+  // Step 0: Contacts, 1: Scope, 2: Style, 3: Brief, 4: Live Adjuster Review, 5: Confirmed
+  const [step, setStep] = useState(() => (readStoredSuccess() ? 5 : 0))
 
-  // Step 0 - video spec
-
-  const [length, setLength]     = useState('30s')
-
-  const [platforms, setPlatforms] = useState<string[]>(['instagram', 'tiktok'])
-
-  const [rush, setRush]         = useState('standard')
-
-  const [poster, setPoster]     = useState(true)
-
-  const [subtitles, setSubtitles] = useState(false)
-
-  // Step 1 - contact (pre-filled from the homepage demo when available)
+  // Step 0 - Contact Details
   const demoCtx = (() => {
     try {
       const ctx = JSON.parse(localStorage.getItem('nia_demo_ctx') ?? '{}')
       return typeof ctx === 'object' && ctx !== null ? ctx : {}
-    } catch { return {} }
+    } catch {
+      return {}
+    }
   })()
 
-  const [bizName, setBizName]   = useState<string>(demoCtx.businessName ?? '')
-
+  const [bizName, setBizName] = useState<string>(demoCtx.businessName ?? '')
   const [contactName, setContactName] = useState('')
-
-  const [phone, setPhone]       = useState('')
-
-  const [email, setEmail]       = useState('')
-
+  const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
   const [industry, setIndustry] = useState<string>(
     INDUSTRIES.includes(demoCtx.industry) ? demoCtx.industry : ''
   )
 
+  // Step 1 - Video Scope & Formats
+  const [length, setLength] = useState('30s')
+  const [platforms, setPlatforms] = useState<string[]>(['instagram', 'tiktok'])
+  const [rush, setRush] = useState('standard')
+
+  // Step 2 - Creative Style & Add-ons
+  const [visualStyle, setVisualStyle] = useState('cinematic')
+  const [voiceTone, setVoiceTone] = useState('en_ke')
+  const [poster] = useState(true)
+  const [subtitles, setSubtitles] = useState(false)
+
+  // Step 3 - Brief & Media
   const [brief, setBrief] = useState<string>(demoCtx.product ? `Promoting: ${demoCtx.product}` : '')
   const [supportingFiles, setSupportingFiles] = useState<{ id: string; file: File }[]>([])
   const [isListening, setIsListening] = useState(false)
@@ -333,7 +341,6 @@ export default function Quote() {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const [submitting, setSubmitting] = useState(false)
-
   const [error, setError] = useState('')
   const [showSurvey, setShowSurvey] = useState(false)
   const [showQuotationModal, setShowQuotationModal] = useState(false)
@@ -342,8 +349,11 @@ export default function Quote() {
   const [portalToken, setPortalToken] = useState<string | null>(null)
   const [portalChecking, setPortalChecking] = useState(false)
 
+  const price = useMemo(() => calcPrice(length, platforms, rush, subtitles), [length, platforms, rush, subtitles])
+
   const isDepositPaid = Boolean(successData?.isPaid || (typeof window !== 'undefined' && window.location.search.includes('paid=true')))
 
+  // Auto-lookup project when deposit is cleared
   useEffect(() => {
     if (!isDepositPaid) return
 
@@ -380,8 +390,244 @@ export default function Quote() {
     void findProject()
   }, [isDepositPaid, successData?.email, successData?.bizName, email, bizName])
 
-  const price = useMemo(() => calcPrice(length, platforms, rush, subtitles), [length, platforms, rush, subtitles])
+  // Speech recognition setup
+  useEffect(() => {
+    setSpeechSupported(typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window))
+    return () => {
+      try {
+        recognitionRef.current?.stop?.()
+      } catch {}
+    }
+  }, [])
 
+  const togglePlatform = (id: string) => {
+    setPlatforms(prev => (prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]))
+  }
+
+  const handleSupportingFiles = (incoming: FileList | null) => {
+    if (!incoming) return
+    const next = Array.from(incoming).map(file => ({
+      id: `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      file,
+    }))
+    setSupportingFiles(prev => [...prev, ...next])
+  }
+
+  const removeSupportingFile = (id: string) => {
+    setSupportingFiles(prev => prev.filter(item => item.id !== id))
+  }
+
+  const handleMicClick = () => {
+    if (!speechSupported) return
+    if (isListening) {
+      try {
+        recognitionRef.current?.stop?.()
+      } catch {}
+      setIsListening(false)
+      return
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) return
+
+    const recognition = new SpeechRecognition()
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.lang = 'en-KE'
+    transcriptRef.current = ''
+
+    recognition.onresult = (event: any) => {
+      let full = ''
+      for (let i = 0; i < event.results.length; i++) {
+        full += event.results[i][0].transcript
+      }
+      transcriptRef.current = full
+      setListeningText(full)
+    }
+
+    recognition.onend = () => {
+      setIsListening(false)
+      if (transcriptRef.current.trim()) {
+        setBrief(prev => (prev ? `${prev.trim()}\n${transcriptRef.current.trim()}` : transcriptRef.current.trim()))
+        setListeningText('')
+        transcriptRef.current = ''
+      }
+    }
+
+    recognition.onerror = () => {
+      setIsListening(false)
+      setListeningText('')
+    }
+
+    recognitionRef.current = recognition
+    recognition.start()
+    setIsListening(true)
+  }
+
+  const refineBrief = useCallback(async () => {
+    const currentBrief = brief.trim()
+    const lengthLabel = LENGTHS.find(l => l.id === length)?.label || '30s'
+    const styleLabel = VISUAL_STYLES.find(s => s.id === visualStyle)?.title || 'Live-Action'
+
+    setRefining(true)
+    setError('')
+    try {
+      const promptText = currentBrief
+        ? `Refine this commercial video brief for ${bizName || 'a business'} in ${industry || 'general industry'} into a sharp, conversion-oriented video brief. Duration: ${lengthLabel}. Style: ${styleLabel}. Draft: ${currentBrief}. Return only the improved brief prose without headers or markdown.`
+        : `Write a compelling commercial video brief for ${bizName || 'a business'} in ${industry || 'general industry'}. Duration: ${lengthLabel}. Style: ${styleLabel}. Return only the brief prose without markdown.`
+
+      const { data, error: fnErr } = await supabase.functions.invoke('assistant', {
+        body: { prompt: promptText },
+      })
+      if (fnErr) throw fnErr
+
+      const reply = data?.reply || data?.message || ''
+      if (reply.trim()) {
+        setBrief(reply.trim())
+      }
+    } catch {
+      setError('AI assistant is temporarily busy. You can continue writing your brief manually.')
+    } finally {
+      setRefining(false)
+    }
+  }, [brief, bizName, industry, length, visualStyle])
+
+  // Navigation handlers
+  const goToScope = () => {
+    if (!bizName.trim()) {
+      setError('Please enter your business name.')
+      return
+    }
+    if (!phone.trim()) {
+      setError('Please enter your WhatsApp phone number.')
+      return
+    }
+    setError('')
+    setStep(1)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  // Submission handler
+  const submit = async () => {
+    if (!bizName.trim() || !phone.trim()) {
+      setError('Business name and phone number are required.')
+      setStep(0)
+      return
+    }
+
+    setError('')
+    setSubmitting(true)
+
+    try {
+      const attachmentNotes: string[] = []
+      for (const item of supportingFiles) {
+        try {
+          const safeName = item.file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+          const uniqueId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+          const path = `quote-requests/${uniqueId}-${safeName}`
+          const { error: uploadErr } = await supabase.storage.from('brand-assets').upload(path, item.file, {
+            upsert: false,
+            contentType: item.file.type || 'application/octet-stream',
+          })
+
+          if (uploadErr) {
+            attachmentNotes.push(`${item.file.name} (attached file)`)
+            continue
+          }
+
+          const { data } = supabase.storage.from('brand-assets').getPublicUrl(path)
+          attachmentNotes.push(`${item.file.name}: ${data.publicUrl}`)
+        } catch {
+          attachmentNotes.push(`${item.file.name} (attached file)`)
+        }
+      }
+
+      const supportingText = attachmentNotes.length
+        ? `\n\nSupporting files:\n${attachmentNotes.map(note => `- ${note}`).join('\n')}`
+        : ''
+
+      const selectedStyleObj = VISUAL_STYLES.find(s => s.id === visualStyle)
+      const selectedVoiceObj = VOICE_TONES.find(v => v.id === voiceTone)
+      const styleSpec = `[Visual Style: ${selectedStyleObj?.title || 'Live-Action'}]\n[Voiceover: ${selectedVoiceObj?.label || 'Kenyan English'}]\n\n`
+      const whatToPromote = `${styleSpec}${brief.trim() || 'Will share brief details on WhatsApp'}${supportingText}`
+
+      const generatedQuoteId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `q_${Date.now()}`
+
+      const { error: dbErr } = await supabase.from('quote_requests').insert({
+        id: generatedQuoteId,
+        business_name: bizName.trim(),
+        contact_name: contactName.trim() || null,
+        phone: phone.trim(),
+        email: email.trim() || null,
+        industry: industry || null,
+        video_length: length,
+        platforms,
+        what_to_promote: whatToPromote,
+        delivery_speed: rush,
+        include_poster: poster,
+        include_subtitles: subtitles,
+        price_min: price.min,
+        price_max: price.max,
+        status: 'new',
+      })
+
+      if (dbErr) {
+        console.error('Quote submit failed:', dbErr)
+        trackEvent('quote_submit_failed', { reason: 'db_error' })
+        setError('Something went wrong. Please try again or message us on WhatsApp.')
+        return
+      }
+
+      // Best-effort admin notification
+      try {
+        void supabase.rpc('notify_admins', {
+          p_type: 'action',
+          p_title: `New quote - ${bizName.trim()}`,
+          p_body: `${length} video (${selectedStyleObj?.tag}) - KES ${price.total.toLocaleString()} - WhatsApp: ${phone.trim()}`,
+          p_action_url: '/admin',
+        })
+        trackEvent('quote_submit_success', {
+          video_length: length,
+          platform_count: platforms.length,
+          rush,
+          poster,
+          subtitles,
+          visual_style: visualStyle,
+          attachment_count: supportingFiles.length,
+        })
+      } catch {}
+
+      const lengthLabel = LENGTHS.find(l => l.id === length)?.label || length
+      const depositAmount = Math.round(price.total * 0.7)
+      const submittedPayload: StoredSuccess = {
+        bizName: bizName.trim(),
+        waMessage,
+        quoteId: generatedQuoteId,
+        depositAmount,
+        totalPrice: price.total,
+        email: email.trim(),
+        phone: phone.trim(),
+        lengthLabel,
+        ts: Date.now(),
+      }
+
+      try {
+        sessionStorage.setItem(SUCCESS_KEY, JSON.stringify(submittedPayload))
+        window.history.replaceState(null, '', '/quote?submitted=1')
+      } catch {}
+
+      setSuccessData(submittedPayload)
+      setStep(5) // Step 5 is Confirmed Screen
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (err) {
+      console.error('Quote submit failed:', err)
+      setError('Something went wrong submitting your quote. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  // PesaPal 70% Deposit Checkout
   const handlePayDeposit = async () => {
     setPesapalLoading(true)
     setPesapalError('')
@@ -417,528 +663,218 @@ export default function Quote() {
     }
   }
 
-  useEffect(() => {
-    setSpeechSupported(typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window))
-    return () => {
-      try {
-        recognitionRef.current?.stop?.()
-      } catch {
-        // ignore cleanup errors
-      }
-    }
-  }, [])
-
-  const togglePlatform = (id: string) =>
-
-    setPlatforms(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id])
-
-  const briefContext = useMemo(() => {
-    const lengthLabel = LENGTHS.find(l => l.id === length)?.label || 'Not set'
-    const deliveryLabel = RUSH.find(r => r.id === rush)?.label || 'Not set'
-    const fileNames = supportingFiles.map(({ file }) => file.name)
-    return [
-      `Business: ${bizName || 'Unknown'}`,
-      `Industry: ${industry || 'Not set'}`,
-      `Video length: ${lengthLabel}`,
-      `Platforms: ${platforms.length ? platforms.join(', ') : 'Not set'}`,
-      `Delivery: ${deliveryLabel}`,
-      `Supporting files: ${fileNames.length ? fileNames.join(', ') : 'None'}`,
-    ].join('\n')
-  }, [bizName, industry, length, platforms, rush, supportingFiles])
-
-  const appendBrief = useCallback((text: string) => {
-    const cleaned = text.trim()
-    if (!cleaned) return
-    setBrief(prev => {
-      const base = prev.trim()
-      if (!base) return cleaned
-      return `${base.replace(/\s+$/, '')} ${cleaned}`
-    })
-  }, [])
-
-  const handleSupportingFiles = useCallback((fileList: FileList | null) => {
-    if (!fileList?.length) return
-    const next = Array.from(fileList).map(file => ({ id: `${file.name}-${file.lastModified}-${file.size}`, file }))
-    setSupportingFiles(prev => {
-      const seen = new Set(prev.map(item => item.id))
-      return [...prev, ...next.filter(item => !seen.has(item.id))]
-    })
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }, [])
-
-  const removeSupportingFile = useCallback((id: string) => {
-    setSupportingFiles(prev => prev.filter(item => item.id !== id))
-  }, [])
-
-  const stopListening = useCallback(() => {
-    try {
-      recognitionRef.current?.stop?.()
-    } catch {
-      // ignore stop errors
-    }
-    recognitionRef.current = null
-    transcriptRef.current = ''
-    setListeningText('')
-    setIsListening(false)
-  }, [])
-
-  const startListening = useCallback(() => {
-    if (!speechSupported || isListening) return
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    if (!SR) return
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const recognition: any = new SR()
-    recognition.continuous = false
-    recognition.interimResults = true
-    recognition.lang = 'en-US'
-
-    transcriptRef.current = ''
-    setListeningText('')
-    setIsListening(true)
-
-    recognition.onresult = (event: any) => {
-      let interim = ''
-      let final = ''
-      for (const result of Array.from(event.results) as any[]) {
-        const transcript = result[0]?.transcript ?? ''
-        if (result.isFinal) final += transcript
-        else interim += transcript
-      }
-      const cleanedFinal = final.trim()
-      transcriptRef.current = cleanedFinal || transcriptRef.current
-      setListeningText((interim || cleanedFinal).trim())
-    }
-
-    recognition.onend = () => {
-      const transcript = transcriptRef.current.trim()
-      if (transcript) appendBrief(transcript)
-      recognitionRef.current = null
-      transcriptRef.current = ''
-      setListeningText('')
-      setIsListening(false)
-    }
-
-    recognition.onerror = () => {
-      recognitionRef.current = null
-      transcriptRef.current = ''
-      setListeningText('')
-      setIsListening(false)
-    }
-
-    recognitionRef.current = recognition
-    recognition.start()
-  }, [appendBrief, isListening, speechSupported])
-
-  const handleMicClick = useCallback(() => {
-    if (isListening) stopListening()
-    else startListening()
-  }, [isListening, startListening, stopListening])
-
-  const refineBrief = useCallback(async () => {
-    const currentBrief = brief.trim()
-    setError('')
-
-    // Nia needs something to work with — otherwise the AI returns a
-    // "tell me about your business" reply straight into the brief field.
-    if (currentBrief.length < 12 && !(bizName.trim() && industry)) {
-      setError('Give Nia something to work with first — fill in your business name and industry above, or type a sentence about what you\'re promoting.')
-      return
-    }
-
-    setRefining(true)
-
-    const prompt = currentBrief
-      ? `Rewrite this quote brief for a video commercial so it is clearer, sharper, and more conversion-focused. Return only the improved brief as plain prose sentences — no markdown, no asterisks, no headers, no bullet points, and no intro. ${briefContext}. Current brief: ${currentBrief}`
-      : `Write a strong quote brief for a video commercial. Return only the improved brief as plain prose sentences — no markdown, no asterisks, no headers, no bullet points, and no intro. ${briefContext}.`
-
-    try {
-      const invocation = supabase.functions.invoke('chat-agent', {
-        body: {
-          messages: [{ role: 'user', content: prompt }],
-          voiceEnabled: false,
-          userContext: {
-            businessName: bizName || undefined,
-            industry: industry || undefined,
-            videoLength: LENGTHS.find(l => l.id === length)?.label || undefined,
-            platforms,
-            deliverySpeed: RUSH.find(r => r.id === rush)?.label || undefined,
-            attachments: supportingFiles.map(({ file }) => file.name),
-          },
-        },
-      })
-      const timeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('timeout')), 30000))
-      const { data, error: fnError } = await Promise.race([invocation, timeout])
-
-      const rawReply = typeof data?.reply === 'string' ? data.reply.trim() : ''
-      if (fnError || !rawReply) throw new Error(fnError?.message || 'AI assist unavailable')
-
-      // If the model asks for more info instead of writing the brief,
-      // don't overwrite the user's field with it.
-      if (/^(i can't|i cannot|i need|i'm sorry|sorry|to write)/i.test(rawReply) || /without knowing/i.test(rawReply)) {
-        setError('Nia needs a bit more detail — add what you\'re promoting or your offer, then try again.')
-        return
-      }
-
-      // Strip stray markdown the model may add — this field is plain text.
-      const reply = rawReply
-        .replace(/\*\*(.*?)\*\*/g, '$1')
-        .replace(/^#{1,6}\s+/gm, '')
-        .replace(/^[-*]\s+/gm, '')
-
-      setBrief(reply)
-      trackEvent('nia_assistant_refine_success', {
-        cta_location: 'quote_details',
-        had_existing_brief: Boolean(currentBrief),
-        attachment_count: supportingFiles.length,
-      })
-    } catch (err) {
-      console.error('Quote brief refinement failed:', err)
-      setError('Nia Assist could not refine the brief right now. Please try again in a moment — or just write it in your own words, that works too.')
-      trackEvent('nia_assistant_refine_failed', { cta_location: 'quote_details' })
-    } finally {
-      setRefining(false)
-    }
-  }, [brief, briefContext, bizName, industry, length, platforms, rush, supportingFiles])
-
-  const submit = async () => {
-    if (!bizName.trim() || !phone.trim()) { setError('Business name and phone number are required.'); return }
-
-    setError('')
-    setSubmitting(true)
-
-    // Everything below is wrapped so an unexpected throw (network drop,
-    // storage hiccup) can never leave the button stuck on "Submitting...".
-    try {
-      const attachmentNotes: string[] = []
-      for (const item of supportingFiles) {
-        try {
-          const safeName = item.file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
-          const uniqueId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`
-          const path = `quote-requests/${uniqueId}-${safeName}`
-          const { error: uploadErr } = await supabase.storage.from('brand-assets').upload(path, item.file, {
-            upsert: false,
-            contentType: item.file.type || 'application/octet-stream',
-          })
-
-          if (uploadErr) {
-            attachmentNotes.push(`${item.file.name} (attached file)`)
-            continue
-          }
-
-          const { data } = supabase.storage.from('brand-assets').getPublicUrl(path)
-          attachmentNotes.push(`${item.file.name}: ${data.publicUrl}`)
-        } catch {
-          attachmentNotes.push(`${item.file.name} (attached file)`)
-        }
-      }
-
-      const supportingText = attachmentNotes.length
-        ? `\n\nSupporting files:\n${attachmentNotes.map(note => `- ${note}`).join('\n')}`
-        : ''
-
-      const whatToPromote = `${brief.trim() || 'Will share details'}${supportingText}`
-
-      const generatedQuoteId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `q_${Date.now()}`
-
-      const { error: dbErr } = await supabase.from('quote_requests').insert({
-        id:               generatedQuoteId,
-        business_name:    bizName.trim(),
-        contact_name:     contactName.trim() || null,
-        phone:            phone.trim(),
-        email:            email.trim() || null,
-        industry:         industry || null,
-        video_length:     length,
-        platforms,
-        what_to_promote:  whatToPromote || null,
-        delivery_speed:   rush,
-        include_poster:   poster,
-        include_subtitles: subtitles,
-        price_min:        price.min,
-        price_max:        price.max,
-        status:           'new',
-      })
-
-      if (dbErr) {
-        console.error('Quote submit failed:', dbErr)
-        trackEvent('quote_submit_failed', { reason: 'db_error' })
-        setError('Something went wrong. Please try again or WhatsApp us directly.')
-        return
-      }
-
-      // Best-effort side effects — never allowed to block the success screen
-      try {
-        void supabase.rpc('notify_admins', {
-          p_type: 'action',
-          p_title: `New quote - ${bizName.trim()}`,
-          p_body: `${length} video - ${platforms.join(', ')} - KES ${price.total.toLocaleString()} (Standard)`,
-          p_action_url: '/admin',
-        })
-        trackEvent('quote_submit_success', { video_length: length, platform_count: platforms.length, rush, poster, subtitles, attachment_count: supportingFiles.length })
-      } catch {}
-
-      // Persist so a browser Back or refresh restores the confirmation
-      // instead of dropping the customer back to a blank form.
-      const lengthLabel = LENGTHS.find(l => l.id === length)?.label || length
-      const depositAmount = Math.round(price.total * 0.7)
-      const submitted: StoredSuccess = {
-        bizName: bizName.trim(),
-        waMessage,
-        quoteId: generatedQuoteId,
-        depositAmount,
-        totalPrice: price.total,
-        email: email.trim(),
-        phone: phone.trim(),
-        lengthLabel,
-        ts: Date.now()
-      }
-      try {
-        sessionStorage.setItem(SUCCESS_KEY, JSON.stringify(submitted))
-        window.history.replaceState(null, '', '/quote?submitted=1')
-      } catch {}
-      setSuccessData(submitted)
-      setStep(2)
-    } catch (err) {
-      console.error('Quote submit failed:', err)
-      trackEvent('quote_submit_failed', { reason: 'unexpected_error' })
-      setError('Something went wrong. Please try again or WhatsApp us directly.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  /* WhatsApp pre-fill for the prospect to message Nia Media */
-
+  // WhatsApp pre-fill message
   const waMessage = encodeURIComponent(
-
-    `Hi Nia Media, I need a video commercial.\n\nBusiness: ${bizName}\nLength: ${LENGTHS.find(l => l.id === length)?.label}\nPlatforms: ${platforms.join(', ')}\nDelivery: ${RUSH.find(r => r.id === rush)?.label}\nBudget: KES ${price.total.toLocaleString()} (Standard package)\n\nSupporting files: ${supportingFiles.length ? supportingFiles.map(({ file }) => file.name).join(', ') : 'None'}\n\nWhat I am promoting: ${brief || 'Will share details'}\n\nContact: ${phone}`
-
+    `Hi Nia Media, I need a commercial video.\n\nBusiness: ${bizName}\nScope: ${LENGTHS.find(l => l.id === length)?.label}\nStyle: ${VISUAL_STYLES.find(s => s.id === visualStyle)?.title}\nPlatforms: ${platforms.join(', ')}\nDelivery: ${RUSH.find(r => r.id === rush)?.label}\nEstimated Total: KES ${price.total.toLocaleString()} (70% deposit: KES ${Math.round(price.total * 0.7).toLocaleString()})\n\nWhat I am promoting: ${brief || 'Will share brief on WhatsApp'}\nContact: ${phone}`
   )
 
+  // Quotation PDF modal data
+  const quotationModalData = useMemo<QuotationData | null>(() => {
+    const bName = successData?.bizName || bizName || 'Valued Client'
+    const len = successData?.lengthLabel || LENGTHS.find(l => l.id === length)?.label || '30 seconds'
+    const total = successData?.totalPrice || price.total
+    const deposit = successData?.depositAmount || Math.round(total * 0.7)
+    const balance = total - deposit
+
+    return {
+      quoteId: successData?.quoteId,
+      businessName: bName,
+      contactName: contactName || undefined,
+      phone: phone || undefined,
+      email: successData?.email || email || undefined,
+      videoLength: len,
+      platforms: platforms.map(p => PLATFORMS.find(pl => pl.id === p)?.label || p),
+      deliverySpeed: rush,
+      visualStyle: VISUAL_STYLES.find(s => s.id === visualStyle)?.title,
+      standardPrice: total,
+      depositAmount: deposit,
+      balanceAmount: balance,
+      isPaid: Boolean(successData?.isPaid || isDepositPaid),
+    }
+  }, [successData, bizName, contactName, phone, email, length, platforms, rush, visualStyle, price.total, isDepositPaid])
+
   return (
-
     <div className="min-h-screen" style={{ background: '#f8fafc' }}>
-
       <PublicHeader />
 
-      {/* Hero band */}
-
+      {/* Hero Header */}
       <div className="pt-16" style={{ background: 'linear-gradient(145deg, #04000d 0%, #0b001f 55%, #040010 100%)' }}>
-
-        <div className="max-w-5xl mx-auto px-6 py-14 text-center">
-
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5"
-
-            style={{ background: 'rgba(124,58,237,0.18)', border: '1px solid rgba(167,139,250,0.35)' }}>
-
+        <div className="max-w-5xl mx-auto px-6 py-12 text-center">
+          <div
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-4"
+            style={{ background: 'rgba(124,58,237,0.18)', border: '1px solid rgba(167,139,250,0.35)' }}
+          >
             <Film size={12} style={{ color: '#a78bfa' }} />
-
-            <span className="text-xs font-bold tracking-widest" style={{ color: "#c4b5fd" }}>VIDEO COMMERCIAL - INSTANT QUOTE</span>
-
+            <span className="text-xs font-bold tracking-widest" style={{ color: '#c4b5fd' }}>
+              VIDEO COMMERCIAL CONFIGURATOR
+            </span>
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-3">
-
-            How much does your video cost?
-
+          <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-2">
+            Configure Your Commercial Video
           </h1>
-
-          <p className="text-base max-w-lg mx-auto" style={{ color: 'rgba(255,255,255,0.55)' }}>
-
-            Pick your spec below and get an instant price estimate - no account, no calls, no waiting.
-
+          <p className="text-sm md:text-base max-w-xl mx-auto text-purple-200/70">
+            Step through your requirements, select your visual style, and live-adjust your quote before submitting.
           </p>
-
-          {/* Social proof pills */}
-
-          <div className="flex flex-wrap justify-center gap-4 mt-6">
-
-            {[
-
-              { icon: Clock, text: '3-5 day delivery' },
-
-              { icon: Star, text: '8+ brands served' },
-
-              { icon: Zap, text: 'AI script included' },
-
-            ].map(({ icon: Icon, text }) => (
-
-              <div key={text} className="flex items-center gap-1.5">
-
-                <Icon size={12} style={{ color: 'rgba(196,181,253,0.7)' }} />
-
-                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>{text}</span>
-
-              </div>
-
-            ))}
-
-          </div>
-
         </div>
-
       </div>
 
-      {/* Form area */}
+      {/* Main Container */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+        {step < 5 && <StepBar step={step} onStepClick={s => setStep(s)} />}
 
-      <div className="max-w-5xl mx-auto px-6 py-12">
+        {error && (
+          <div className="mb-6 p-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold flex items-center justify-between">
+            <span>{error}</span>
+            <button onClick={() => setError('')} className="text-rose-500 hover:text-rose-700">✕</button>
+          </div>
+        )}
 
-        {step < 2 && <StepBar step={step} />}
+        {/* STEP 5: CONFIRMED & DEPOSIT LOCK-IN */}
+        {step === 5 ? (
+          <div className="max-w-lg mx-auto text-center py-6">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+              style={{
+                background: isDepositPaid ? 'rgba(16,185,129,0.1)' : 'rgba(124,58,237,0.1)',
+                border: isDepositPaid ? '2px solid rgba(16,185,129,0.3)' : '2px solid rgba(124,58,237,0.25)',
+              }}>
+              <CheckCircle2 size={32} className={isDepositPaid ? 'text-emerald-500' : 'text-purple-600'} />
+            </div>
 
-        {step === 2 ? (
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-1">
+              {isDepositPaid ? '🎉 70% Deposit Confirmed!' : 'Quote request received'}
+            </h2>
 
-          /* Success */
+            <p className="text-gray-500 mb-6 leading-relaxed text-sm">
+              {isDepositPaid ? (
+                <>Your production queue slot is locked in for <strong className="text-gray-900">{successData?.bizName ?? bizName}</strong>. Our creative team has started prep work on your commercial.</>
+              ) : (
+                <>We have your brief, <strong className="text-gray-900">{successData?.bizName ?? bizName}</strong>. You can lock in your production queue immediately with a 70% deposit or chat with our team on WhatsApp first.</>
+              )}
+            </p>
 
-          <div className="max-w-lg mx-auto text-center py-8">
-            <div>
-              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                style={{
-                  background: isDepositPaid ? 'rgba(16,185,129,0.1)' : 'rgba(124,58,237,0.1)',
-                  border: isDepositPaid ? '2px solid rgba(16,185,129,0.3)' : '2px solid rgba(124,58,237,0.25)',
-                }}>
-                <CheckCircle2 size={32} className={isDepositPaid ? 'text-emerald-500' : 'text-purple-600'} />
-              </div>
+            {/* Instant PesaPal 70% Deposit Checkout OR Cleared Milestone Portal */}
+            {isDepositPaid ? (
+              <div
+                className="max-w-md mx-auto mb-6 p-6 rounded-2xl text-left shadow-xl border relative overflow-hidden"
+                style={{ background: 'linear-gradient(145deg, #052e16 0%, #064e3b 50%, #022c22 100%)', borderColor: 'rgba(52,211,153,0.4)' }}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-300">Milestone Payment Verified</span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-400/20 text-emerald-200 border border-emerald-400/30">
+                    70% Deposit Cleared
+                  </span>
+                </div>
 
-              <h2 className="text-2xl font-extrabold text-gray-900 mb-1">
-                {isDepositPaid ? '🎉 70% Deposit Confirmed!' : 'Quote request received'}
-              </h2>
-
-                <p className="text-gray-500 mb-6 leading-relaxed text-sm">
-                  {isDepositPaid
-                    ? <>Your production queue slot is locked in for <strong className="text-gray-900">{successData?.bizName ?? bizName}</strong>. Our creative team has started prep work on your commercial.</>
-                    : <>We have your brief, <strong className="text-gray-900">{successData?.bizName ?? bizName}</strong>. You can lock in your production queue immediately with a 70% deposit or chat with our team on WhatsApp first.</>
-                  }
+                <h3 className="text-lg font-extrabold text-white mb-2">🎬 Live Production Assigned</h3>
+                <p className="text-xs text-emerald-100/80 leading-relaxed mb-4">
+                  Your commercial is in pre-production. Track scriptwriting, filming, and watermarked cuts in your dedicated client portal.
                 </p>
 
-                {/* Instant PesaPal 70% Deposit Checkout OR Cleared Milestone Portal */}
-                {isDepositPaid ? (
-                  <div className="max-w-md mx-auto mb-6 p-6 rounded-2xl text-left shadow-xl border relative overflow-hidden"
-                    style={{ background: 'linear-gradient(145deg, #052e16 0%, #064e3b 50%, #022c22 100%)', borderColor: 'rgba(52,211,153,0.4)' }}>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-300">Milestone Payment Verified</span>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-400/20 text-emerald-200 border border-emerald-400/30">
-                        70% Deposit Cleared
-                      </span>
-                    </div>
-
-                    <h3 className="text-lg font-extrabold text-white mb-2">🎬 Live Production Assigned</h3>
-                    <p className="text-xs text-emerald-100/80 leading-relaxed mb-4">
-                      Your commercial is in pre-production. Track scriptwriting, filming, and watermarked cuts in your dedicated client portal.
-                    </p>
-
-                    {portalToken ? (
-                      <Link
-                        to={`/delivery/${portalToken}`}
-                        className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-sm font-extrabold text-white shadow-lg transition-all hover:opacity-95 active:scale-[0.99] cursor-pointer mb-3"
-                        style={{ background: 'linear-gradient(135deg, #059669, #0284c7)' }}
-                      >
-                        <Film size={16} /> Open Live Video Production Portal →
-                      </Link>
-                    ) : portalChecking ? (
-                      <div className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-xs font-semibold text-emerald-100 bg-emerald-900/50 border border-emerald-500/30 mb-3">
-                        <Loader2 size={15} className="animate-spin text-emerald-300" />
-                        Connecting your live production tracking portal...
-                      </div>
-                    ) : (
-                      <Link
-                        to={`/delivery/demo`}
-                        className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-sm font-extrabold text-white shadow-lg transition-all hover:opacity-95 active:scale-[0.99] cursor-pointer mb-3"
-                        style={{ background: 'linear-gradient(135deg, #059669, #0284c7)' }}
-                      >
-                        <Film size={16} /> Open Production Portal →
-                      </Link>
-                    )}
-
-                    <div className="rounded-xl p-3 bg-black/25 border border-white/10 space-y-1.5 text-xs text-emerald-100/90">
-                      <div className="flex justify-between">
-                        <span>70% Deposit Cleared:</span>
-                        <span className="font-bold text-white">KES {(successData?.depositAmount || Math.round(price.total * 0.7)).toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>30% Balance on Delivery Approval:</span>
-                        <span className="font-bold text-emerald-300">KES {Math.round((successData?.totalPrice || price.total) * 0.3).toLocaleString()}</span>
-                      </div>
-                    </div>
+                {portalToken ? (
+                  <Link
+                    to={`/delivery/${portalToken}`}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-sm font-extrabold text-white shadow-lg transition-all hover:opacity-95 active:scale-[0.99] cursor-pointer mb-3"
+                    style={{ background: 'linear-gradient(135deg, #059669, #0284c7)' }}
+                  >
+                    <Film size={16} /> Open Live Video Production Portal →
+                  </Link>
+                ) : portalChecking ? (
+                  <div className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-xs font-semibold text-emerald-100 bg-emerald-900/50 border border-emerald-500/30 mb-3">
+                    <Loader2 size={15} className="animate-spin text-emerald-300" />
+                    Connecting your live production tracking portal...
                   </div>
                 ) : (
-                  <div className="max-w-md mx-auto mb-6 p-5 rounded-2xl text-left shadow-lg border relative overflow-hidden"
-                    style={{ background: 'linear-gradient(145deg, #09031a 0%, #150833 100%)', borderColor: 'rgba(124,58,237,0.35)' }}>
-                    
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400">Lock In Production Now</span>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                        70% Deposit Model
-                      </span>
-                    </div>
-
-                    <div className="flex items-baseline justify-between mb-2">
-                      <div>
-                        <p className="text-xs text-purple-200/70">70% Milestone Deposit to Start</p>
-                        <p className="text-2xl font-black text-white">
-                          KES {(successData?.depositAmount || Math.round(price.total * 0.7)).toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[11px] text-purple-200/50">Total Standard Price</p>
-                        <p className="text-sm font-semibold text-purple-200/80">
-                          KES {(successData?.totalPrice || price.total).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-
-                    <p className="text-[11px] text-purple-200/60 leading-relaxed mb-4">
-                      Pay securely via M-Pesa, Visa, or Mastercard. The 30% balance (KES {Math.round((successData?.totalPrice || price.total) * 0.3).toLocaleString()}) is only payable after you review and approve your watermarked video preview.
-                    </p>
-
-                    {pesapalError && (
-                      <p className="text-xs text-rose-300 mb-3 bg-rose-500/20 p-2.5 rounded-lg border border-rose-500/30">
-                        {pesapalError}
-                      </p>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={handlePayDeposit}
-                      disabled={pesapalLoading}
-                      className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-sm font-extrabold text-white shadow-md transition-all hover:opacity-95 active:scale-[0.99] disabled:opacity-60 cursor-pointer"
-                      style={{ background: 'linear-gradient(135deg, #059669, #0284c7)' }}
-                    >
-                      {pesapalLoading ? (
-                        <>
-                          <Loader2 size={16} className="animate-spin" />
-                          Connecting to PesaPal...
-                        </>
-                      ) : (
-                        <>
-                          <Lock size={15} />
-                          Pay 70% Deposit (KES {(successData?.depositAmount || Math.round(price.total * 0.7)).toLocaleString()})
-                        </>
-                      )}
-                    </button>
-
-                    <div className="flex items-center justify-center gap-2.5 mt-3 text-[10px] text-purple-200/50 font-medium">
-                      <span>🔒 M-Pesa</span>
-                      <span>•</span>
-                      <span>Visa</span>
-                      <span>•</span>
-                      <span>Mastercard</span>
-                      <span>•</span>
-                      <span>PesaPal Secure Checkout</span>
-                    </div>
-                  </div>
+                  <Link
+                    to={`/delivery/demo`}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-sm font-extrabold text-white shadow-lg transition-all hover:opacity-95 active:scale-[0.99] cursor-pointer mb-3"
+                    style={{ background: 'linear-gradient(135deg, #059669, #0284c7)' }}
+                  >
+                    <Film size={16} /> Open Production Portal →
+                  </Link>
                 )}
 
-                <div className="flex items-center gap-3 max-w-md mx-auto mb-4">
-                  <div className="h-px bg-gray-200 flex-1" />
-                  <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">or communicate via WhatsApp</span>
-                  <div className="h-px bg-gray-200 flex-1" />
+                <div className="rounded-xl p-3 bg-black/25 border border-white/10 space-y-1.5 text-xs text-emerald-100/90">
+                  <div className="flex justify-between">
+                    <span>70% Deposit Cleared:</span>
+                    <span className="font-bold text-white">KES {(successData?.depositAmount || Math.round(price.total * 0.7)).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>30% Balance on Delivery Approval:</span>
+                    <span className="font-bold text-emerald-300">KES {Math.round((successData?.totalPrice || price.total) * 0.3).toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
+            ) : (
+              <div
+                className="max-w-md mx-auto mb-6 p-5 rounded-2xl text-left shadow-lg border relative overflow-hidden"
+                style={{ background: 'linear-gradient(145deg, #09031a 0%, #150833 100%)', borderColor: 'rgba(124,58,237,0.35)' }}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400">Lock In Production Now</span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    70% Deposit Model
+                  </span>
+                </div>
 
-            {/* Official Quotation & Print Action */}
+                <div className="flex items-baseline justify-between mb-2">
+                  <div>
+                    <p className="text-xs text-purple-200/70">70% Milestone Deposit to Start</p>
+                    <p className="text-2xl font-black text-white">
+                      KES {(successData?.depositAmount || Math.round(price.total * 0.7)).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] text-purple-200/50">Total Standard Price</p>
+                    <p className="text-sm font-semibold text-purple-200/80">
+                      KES {(successData?.totalPrice || price.total).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-purple-200/60 leading-relaxed mb-4">
+                  Pay securely via M-Pesa, Visa, or Mastercard. The 30% balance (KES {Math.round((successData?.totalPrice || price.total) * 0.3).toLocaleString()}) is only payable after you review and approve your watermarked video preview.
+                </p>
+
+                {pesapalError && (
+                  <p className="text-xs text-rose-300 mb-3 bg-rose-500/20 p-2.5 rounded-lg border border-rose-500/30">
+                    {pesapalError}
+                  </p>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handlePayDeposit}
+                  disabled={pesapalLoading}
+                  className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-sm font-extrabold text-white shadow-md transition-all hover:opacity-95 active:scale-[0.99] disabled:opacity-60 cursor-pointer"
+                  style={{ background: 'linear-gradient(135deg, #059669, #0284c7)' }}
+                >
+                  {pesapalLoading ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Connecting to PesaPal...
+                    </>
+                  ) : (
+                    <>
+                      <Lock size={15} />
+                      Pay 70% Deposit (KES {(successData?.depositAmount || Math.round(price.total * 0.7)).toLocaleString()})
+                    </>
+                  )}
+                </button>
+
+                <div className="flex items-center justify-center gap-2.5 mt-3 text-[10px] text-purple-200/50 font-medium">
+                  <span>🔒 M-Pesa</span>
+                  <span>•</span>
+                  <span>Visa</span>
+                  <span>•</span>
+                  <span>Mastercard</span>
+                  <span>•</span>
+                  <span>PesaPal Secure Checkout</span>
+                </div>
+              </div>
+            )}
+
+            {/* Actions Bar */}
             <div className="max-w-md mx-auto mb-3">
               <button
                 type="button"
@@ -950,439 +886,417 @@ export default function Quote() {
               </button>
             </div>
 
-            <a href={`https://wa.me/254751822556?text=${successData?.waMessage ?? waMessage}`}
-
-              target="_blank" rel="noopener noreferrer"
-
+            <a
+              href={`https://wa.me/254751822556?text=${successData?.waMessage ?? waMessage}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2.5 w-full max-w-md mx-auto px-8 py-4 rounded-2xl text-sm font-bold text-white mb-4 transition-all"
-
-              style={{ background: '#25d366', boxShadow: '0 4px 20px rgba(37,211,102,0.35)' }}>
-
+              style={{ background: '#25d366', boxShadow: '0 4px 20px rgba(37,211,102,0.35)' }}
+            >
               <MessageSquare size={16} /> Send Brief on WhatsApp
-
             </a>
 
-            <p className="text-xs text-gray-400 mb-8">
-
-              Opens WhatsApp with your brief pre-filled - just tap Send.
-
-            </p>
-
-            {/* 70% Deposit Milestone info */}
-            <div className="max-w-md mx-auto mb-5 p-4 rounded-2xl border border-emerald-200 bg-emerald-50/70 text-left">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-bold text-emerald-950 uppercase tracking-wider">Milestone Terms</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-200/60 text-emerald-800">70% / 30% Milestone Model</span>
-              </div>
-              <p className="text-xs text-emerald-900 leading-relaxed">
-                Standard price is <strong>KES {price.total.toLocaleString()}</strong>. Your 70% deposit of <strong>KES {Math.round(price.total * 0.7).toLocaleString()}</strong> reserves your creative team and production schedule. Balance of <strong>KES {Math.round(price.total * 0.3).toLocaleString()} (30%)</strong> is paid upon delivery approval.
-              </p>
-            </div>
-
-            {/* Customer Survey Callout */}
-            <div className="max-w-md mx-auto mb-6 p-4 rounded-2xl border border-purple-200 bg-purple-50 flex items-center justify-between gap-3 text-left">
-              <div>
-                <p className="text-xs font-bold text-purple-950">Help us identify gaps in the market</p>
-                <p className="text-[11px] text-purple-700">Rate your experience and tell us what tools you need next.</p>
-              </div>
+            <div className="flex justify-center gap-3 mt-6">
               <button
                 type="button"
-                onClick={() => setShowSurvey(true)}
-                className="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold text-white shadow-sm hover:opacity-95 transition-all"
-                style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}
+                onClick={() => {
+                  sessionStorage.removeItem(SUCCESS_KEY)
+                  setSuccessData(null)
+                  setStep(0)
+                  window.history.replaceState(null, '', '/quote')
+                }}
+                className="text-xs text-gray-500 hover:text-purple-700 font-semibold transition-colors"
               >
-                ★ Rate & Survey
+                ← Configure another commercial video
               </button>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-md mx-auto">
-
-              <Link to="/book?service=video"
-
-                className="flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl text-sm font-semibold text-white transition-all"
-
-                style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
-
-                Book a Creative Call <ArrowRight size={13} />
-
-              </Link>
-
-              <Link to="/book?priority=urgent"
-
-                className="flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl text-sm font-semibold text-fuchsia-700 border border-fuchsia-200 bg-fuchsia-50 hover:bg-fuchsia-100 transition-all">
-
-                Fast-track Booking <ArrowRight size={13} />
-
-              </Link>
-
-              <Link to={SECONDARY_NIA_CTA.href}
-
-                className="flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 border border-gray-200 hover:bg-gray-50 transition-all">
-
-                {SECONDARY_NIA_CTA.label}
-
-              </Link>
-
-            </div>
-
-            {/* What happens next (ported from the retired /start page) */}
-            <div className="mt-10 grid grid-cols-3 gap-3 max-w-md mx-auto">
-              {['Brief reviewed', 'Quote confirmed on WhatsApp', 'Production starts'].map((s, i) => (
-                <div key={s} className="text-center">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-1.5 text-xs font-bold"
-                    style={{ background: i === 0 ? '#7c3aed' : '#e5e7eb', color: i === 0 ? '#fff' : '#9ca3af' }}>
-                    {i + 1}
-                  </div>
-                  <p className="text-[11px] font-semibold text-gray-500 leading-tight">{s}</p>
-                </div>
-              ))}
-            </div>
-
           </div>
-
         ) : (
-
           <div className="grid lg:grid-cols-[1fr_320px] gap-8">
-
-            {/* Left: form steps */}
-
+            {/* Left Column: Multi-Step Interactive Form */}
             <div>
-
+              {/* STEP 0: Business & Contact Identity */}
               {step === 0 && (
-
-                <div className="space-y-8">
-
-                  {/* Video length */}
-
+                <div className="space-y-6">
                   <div>
-
-                    <h2 className="text-base font-bold text-gray-900 mb-4">Video length</h2>
-
-                    <div className="space-y-2.5">
-
-                      {LENGTHS.map(l => (
-
-                        <button type="button" key={l.id} onClick={() => setLength(l.id)}
-
-                          className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border text-left transition-all"
-
-                          style={{
-
-                            borderColor: length === l.id ? '#7c3aed' : '#e5e7eb',
-
-                            background: length === l.id ? '#faf5ff' : '#fff',
-
-                          }}>
-
-                          <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all"
-
-                            style={{ borderColor: length === l.id ? '#7c3aed' : '#d1d5db' }}>
-
-                            {length === l.id && <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#7c3aed' }} />}
-
-                          </div>
-
-                          <div className="flex-1">
-
-                            <p className="text-sm font-semibold text-gray-900">{l.label}</p>
-
-                            <p className="text-xs text-gray-500">{l.desc}</p>
-
-                          </div>
-
-                          <p className="text-xs font-bold shrink-0" style={{ color: length === l.id ? '#7c3aed' : '#6b7280' }}>
-                            KES {l.price.toLocaleString()}
-                          </p>
-
-                        </button>
-
-                      ))}
-
-                    </div>
-
+                    <h2 className="text-lg font-bold text-gray-900 mb-1">Step 1: Your Business & Contacts</h2>
+                    <p className="text-xs text-gray-500">
+                      Who should we address the official quotation and proposal to?
+                    </p>
                   </div>
 
-                  {/* Platforms */}
+                  <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm space-y-5">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                        Business Name *
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors"
+                        placeholder="e.g. Mama Pima Organics, Nairobi Haven Suites"
+                        value={bizName}
+                        onChange={e => setBizName(e.target.value)}
+                      />
+                    </div>
 
-                  <div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                          Contact Person Name
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors"
+                          placeholder="e.g. Sarah Wanjiru"
+                          value={contactName}
+                          onChange={e => setContactName(e.target.value)}
+                        />
+                      </div>
 
-                    <h2 className="text-base font-bold text-gray-900 mb-1">Target platforms</h2>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                          WhatsApp Phone Number *
+                        </label>
+                        <input
+                          type="tel"
+                          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors"
+                          placeholder="0712 345 678"
+                          value={phone}
+                          onChange={e => setPhone(e.target.value)}
+                        />
+                      </div>
+                    </div>
 
-                    <p className="text-xs text-gray-500 mb-3">Select all that apply. YouTube adds 15%, 3+ platforms adds 10%.</p>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                        Email Address (for PDF quotation & updates)
+                      </label>
+                      <input
+                        type="email"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors"
+                        placeholder="billing@yourbusiness.com"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                      />
+                    </div>
 
-                    <div className="flex flex-wrap gap-2">
-
-                      {PLATFORMS.map(p => {
-
-                        const active = platforms.includes(p.id)
-
-                        return (
-
-                          <button type="button" key={p.id} onClick={() => togglePlatform(p.id)}
-
-                            className="px-4 py-2 rounded-lg text-sm font-semibold border transition-all"
-
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                        Industry / Sector
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {INDUSTRIES.map(ind => (
+                          <button
+                            type="button"
+                            key={ind}
+                            onClick={() => setIndustry(industry === ind ? '' : ind)}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer"
                             style={{
-
-                              borderColor: active ? '#7c3aed' : '#e5e7eb',
-
-                              background: active ? '#ede9fe' : '#fff',
-
-                              color: active ? '#6d28d9' : '#374151',
-
-                            }}>
-
-                            {p.label}
-
+                              borderColor: industry === ind ? '#7c3aed' : '#e5e7eb',
+                              background: industry === ind ? '#ede9fe' : '#fff',
+                              color: industry === ind ? '#6d28d9' : '#374151',
+                            }}
+                          >
+                            {ind}
                           </button>
-
-                        )
-
-                      })}
-
+                        ))}
+                      </div>
                     </div>
-
                   </div>
 
-                  {/* Delivery speed */}
+                  <div className="flex items-center justify-end pt-2">
+                    <button
+                      type="button"
+                      onClick={goToScope}
+                      className="px-6 py-3.5 rounded-xl text-sm font-bold text-white shadow-md flex items-center gap-2 hover:opacity-95 transition-all cursor-pointer"
+                      style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}
+                    >
+                      Next: Video Scope & Duration <ArrowRight size={15} />
+                    </button>
+                  </div>
+                </div>
+              )}
 
+              {/* STEP 1: Video Scope, Duration & Formats */}
+              {step === 1 && (
+                <div className="space-y-6">
                   <div>
+                    <h2 className="text-lg font-bold text-gray-900 mb-1">Step 2: Video Scope, Duration & Formats</h2>
+                    <p className="text-xs text-gray-500">
+                      Choose the duration and delivery speed that fits your campaign goals.
+                    </p>
+                  </div>
 
-                    <h2 className="text-base font-bold text-gray-900 mb-3">Delivery speed</h2>
-
-                    <div className="grid grid-cols-3 gap-2.5">
-
-                      {RUSH.map(r => (
-
-                        <button type="button" key={r.id} onClick={() => setRush(r.id)}
-
-                          className="flex flex-col items-center px-3 py-3.5 rounded-xl border text-center transition-all"
-
-                          style={{
-
-                            borderColor: rush === r.id ? '#7c3aed' : '#e5e7eb',
-
-                            background: rush === r.id ? '#faf5ff' : '#fff',
-
-                          }}>
-
-                          <p className="text-sm font-bold" style={{ color: rush === r.id ? '#7c3aed' : '#111827' }}>{r.label}</p>
-
-                          <p className="text-[11px] text-gray-400 mt-0.5">{r.desc}</p>
-
-                        </button>
-
+                  {/* Duration Selector */}
+                  <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">
+                      Commercial Duration
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {LENGTHS.map(l => (
+                        <div
+                          key={l.id}
+                          onClick={() => setLength(l.id)}
+                          className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                            length === l.id
+                              ? 'border-purple-600 bg-purple-50/50 shadow-sm'
+                              : 'border-gray-200 hover:border-gray-300 bg-white'
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-extrabold text-sm text-gray-900">{l.label}</span>
+                              <span className="font-extrabold text-sm text-purple-700">KES {l.price.toLocaleString()}</span>
+                            </div>
+                            <p className="text-xs text-gray-500">{l.desc}</p>
+                          </div>
+                          {length === l.id && (
+                            <div className="mt-2 flex items-center gap-1 text-[11px] font-bold text-purple-700">
+                              <Check size={13} /> Selected
+                            </div>
+                          )}
+                        </div>
                       ))}
-
                     </div>
+                  </div>
 
+                  {/* Platforms & Aspect Ratios */}
+                  <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                      Target Formats & Channels
+                    </label>
+                    <p className="text-xs text-gray-500 mb-3">Select where you plan to post or run ads:</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {PLATFORMS.map(p => {
+                        const selected = platforms.includes(p.id)
+                        return (
+                          <div
+                            key={p.id}
+                            onClick={() => togglePlatform(p.id)}
+                            className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                              selected
+                                ? 'border-purple-600 bg-purple-50 text-purple-900 font-bold'
+                                : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-semibold">{p.label}</span>
+                              {selected && <Check size={13} className="text-purple-600 shrink-0" />}
+                            </div>
+                            <span className="text-[10px] text-gray-400 font-normal">{p.desc}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Turnaround Speed */}
+                  <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                      Production Timeline
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      {RUSH.map(r => (
+                        <div
+                          key={r.id}
+                          onClick={() => setRush(r.id)}
+                          className={`p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                            rush === r.id
+                              ? 'border-purple-600 bg-purple-50/50 shadow-sm'
+                              : 'border-gray-200 hover:border-gray-300 bg-white'
+                          }`}
+                        >
+                          <p className="font-bold text-xs text-gray-900">{r.label}</p>
+                          <p className="text-[11px] text-gray-500 mt-0.5">{r.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setStep(0)}
+                      className="px-5 py-3 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors flex items-center gap-1.5"
+                    >
+                      <ArrowLeft size={15} /> Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStep(2)
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                      className="px-6 py-3.5 rounded-xl text-sm font-bold text-white shadow-md flex items-center gap-2 hover:opacity-95 transition-all cursor-pointer"
+                      style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}
+                    >
+                      Next: Creative Style & Add-ons <ArrowRight size={15} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 2: Creative Visual Style & Add-ons */}
+              {step === 2 && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900 mb-1">Step 3: Creative Visual Style & Add-ons</h2>
+                    <p className="text-xs text-gray-500">
+                      Pick the aesthetic direction that fits your brand identity.
+                    </p>
+                  </div>
+
+                  {/* Visual Style Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    {VISUAL_STYLES.map(s => {
+                      const Icon = s.icon
+                      const selected = visualStyle === s.id
+                      return (
+                        <div
+                          key={s.id}
+                          onClick={() => setVisualStyle(s.id)}
+                          className={`p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                            selected
+                              ? 'border-purple-600 bg-purple-50/60 shadow-md ring-2 ring-purple-100'
+                              : 'border-gray-200 hover:border-gray-300 bg-white'
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <div
+                                className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                                  selected ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600'
+                                }`}
+                              >
+                                <Icon size={18} />
+                              </div>
+                              <span className="text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-md bg-gray-100 text-gray-600">
+                                {s.badge}
+                              </span>
+                            </div>
+                            <h3 className="font-extrabold text-sm text-gray-900 mb-1">{s.title}</h3>
+                            <p className="text-xs text-gray-500 leading-relaxed">{s.desc}</p>
+                          </div>
+                          <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
+                            <span className="text-[11px] font-semibold text-purple-700">Standard Tier</span>
+                            {selected && (
+                              <span className="inline-flex items-center gap-1 font-bold text-purple-700">
+                                <Check size={14} /> Active Style
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Voiceover Tone */}
+                  <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                      Voiceover Narration Tone
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      {VOICE_TONES.map(v => (
+                        <div
+                          key={v.id}
+                          onClick={() => setVoiceTone(v.id)}
+                          className={`p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                            voiceTone === v.id
+                              ? 'border-purple-600 bg-purple-50 text-purple-900'
+                              : 'border-gray-200 hover:border-gray-300 bg-white text-gray-700'
+                          }`}
+                        >
+                          <p className="text-xs font-bold">{v.label}</p>
+                          <p className="text-[10px] text-gray-500 mt-0.5">{v.desc}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Add-ons */}
-
-                  <div>
-
-                    <h2 className="text-base font-bold text-gray-900 mb-3">Add-ons</h2>
-
-                    <div className="space-y-2.5">
-
-                      {[
-
-                        { key: 'poster', label: 'Promo poster', desc: 'Print-ready + digital (A3, 1:1, 9:16)', val: poster, set: setPoster, price: 'Included free' },
-
-                        { key: 'subs',   label: 'Subtitles',    desc: 'Burned-in captions for silent viewing',  val: subtitles, set: setSubtitles, price: '+KES 500' },
-
-                      ].map(({ key, label, desc, val, set, price: addonPrice }) => (
-
-                        <button type="button" key={key} onClick={() => set(!val)}
-
-                          className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border text-left transition-all"
-
-                          style={{ borderColor: val ? '#059669' : '#e5e7eb', background: val ? '#f0fdf4' : '#fff' }}>
-
-                          <div className="w-5 h-5 rounded flex items-center justify-center shrink-0 transition-all"
-
-                            style={{ background: val ? '#059669' : '#f3f4f6', border: `2px solid ${val ? '#059669' : '#d1d5db'}` }}>
-
-                            {val && <CheckCircle2 size={11} className="text-white" />}
-
-                          </div>
-
-                          <div className="flex-1">
-
-                            <p className="text-sm font-semibold text-gray-900">{label}</p>
-
-                            <p className="text-xs text-gray-500">{desc}</p>
-
-                          </div>
-
-                          <p className="text-xs font-bold shrink-0" style={{ color: val ? '#059669' : '#6b7280' }}>{addonPrice}</p>
-
-                        </button>
-
-                      ))}
-
-                    </div>
-
-                  </div>
-
-                  <button type="button" onClick={() => setStep(1)}
-
-                    className="w-full flex items-center justify-center gap-2 py-4 rounded-xl text-sm font-bold text-white transition-all"
-
-                    style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
-
-                    Continue - Enter Your Details <ArrowRight size={15} />
-
-                  </button>
-
-                </div>
-
-              )}
-
-              {step === 1 && (
-
-                <div className="space-y-5">
-
-                  <div className="grid sm:grid-cols-2 gap-4">
-
-                    <div>
-
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">
-
-                        <Building2 size={10} className="inline mr-1" /> Business name *
-
-                      </label>
-
-                      <input
-
-                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors"
-
-                        placeholder="e.g. Sunrise Homes"
-
-                        value={bizName} onChange={e => setBizName(e.target.value)} autoFocus
-
-                      />
-
-                    </div>
-
-                    <div>
-
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">
-
-                        Your name
-
-                      </label>
-
-                      <input
-
-                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors"
-
-                        placeholder="e.g. Jane Wanjiru"
-
-                        value={contactName} onChange={e => setContactName(e.target.value)}
-
-                      />
-
-                    </div>
-
-                  </div>
-
-                  <div className="grid sm:grid-cols-2 gap-4">
-
-                    <div>
-
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">
-
-                        <Phone size={10} className="inline mr-1" /> WhatsApp number *
-
-                      </label>
-
-                      <input
-
-                        type="tel"
-
-                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors"
-
-                        placeholder="0712 345 678"
-
-                        value={phone} onChange={e => setPhone(e.target.value)}
-
-                      />
-
-                    </div>
-
-                    <div>
-
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">
-
-                        Email (optional)
-
-                      </label>
-
-                      <input
-
-                        type="email"
-
-                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors"
-
-                        placeholder="you@company.com"
-
-                        value={email} onChange={e => setEmail(e.target.value)}
-
-                      />
-
-                    </div>
-
-                  </div>
-
-                  <div>
-
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Industry</label>
-
-                    <div className="flex flex-wrap gap-2">
-
-                      {INDUSTRIES.map(ind => (
-
-                        <button type="button" key={ind} onClick={() => setIndustry(industry === ind ? '' : ind)}
-
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all"
-
-                          style={{
-
-                            borderColor: industry === ind ? '#7c3aed' : '#e5e7eb',
-
-                            background: industry === ind ? '#ede9fe' : '#fff',
-
-                            color: industry === ind ? '#6d28d9' : '#374151',
-
-                          }}>
-
-                          {ind}
-
-                        </button>
-
-                      ))}
-
-                    </div>
-
-                  </div>
-
-                  <div>
-
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">
-
-                      What are you promoting?
-
+                  <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm space-y-3">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                      Deliverable Add-ons
                     </label>
 
-                    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
+                      <div className="flex items-center gap-2.5">
+                        <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                        <div>
+                          <p className="text-xs font-bold text-gray-900">Branded Promotional Poster</p>
+                          <p className="text-[11px] text-gray-500">Matching social and print banner for your campaign</p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-extrabold text-emerald-600">INCLUDED FREE</span>
+                    </div>
 
+                    <div
+                      onClick={() => setSubtitles(!subtitles)}
+                      className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
+                        subtitles ? 'border-purple-500 bg-purple-50/50' : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={`w-4 h-4 rounded flex items-center justify-center border ${
+                            subtitles ? 'bg-purple-600 border-purple-600 text-white' : 'border-gray-300 bg-white'
+                          }`}
+                        >
+                          {subtitles && <Check size={12} />}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-900">Burned-in Subtitles + SRT Captions</p>
+                          <p className="text-[11px] text-gray-500">Essential for mobile viewers who scroll on mute</p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-bold text-purple-700">+KES 500</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setStep(1)}
+                      className="px-5 py-3 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors flex items-center gap-1.5"
+                    >
+                      <ArrowLeft size={15} /> Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStep(3)
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                      className="px-6 py-3.5 rounded-xl text-sm font-bold text-white shadow-md flex items-center gap-2 hover:opacity-95 transition-all cursor-pointer"
+                      style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}
+                    >
+                      Next: Promotion Brief & Media <ArrowRight size={15} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 3: Promotion Brief & Media Assets */}
+              {step === 3 && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900 mb-1">Step 4: Promotion Brief & Media Assets</h2>
+                    <p className="text-xs text-gray-500">
+                      Tell us what you are promoting or attach your logo and product photos.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                        What are you promoting?
+                      </label>
                       <textarea
                         rows={4}
-                        className="w-full resize-none border-0 p-0 text-sm leading-6 text-gray-800 focus:outline-none focus:ring-0"
-                        placeholder="e.g. 2BR apartments in Westlands from KES 6.5M. Target: young professionals. Key message: own your dream home."
-                        value={brief} onChange={e => setBrief(e.target.value)}
+                        className="w-full border border-gray-200 rounded-xl p-3.5 text-sm leading-relaxed text-gray-800 focus:outline-none focus:border-purple-400 transition-colors resize-none"
+                        placeholder="e.g. 2BR apartments in Kilimani starting from KES 8.5M. Key feature: flexible payment plan, ready title deed. Call to action: Book site visit."
+                        value={brief}
+                        onChange={e => setBrief(e.target.value)}
                       />
 
                       <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -1390,60 +1304,59 @@ export default function Quote() {
                           type="button"
                           onClick={handleMicClick}
                           disabled={!speechSupported}
-                          className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-700 transition-colors hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-700 transition-colors hover:bg-sky-100 disabled:opacity-50"
                         >
-                          <Mic size={14} /> {isListening ? 'Listening...' : 'Add voice note'}
+                          <Mic size={14} /> {isListening ? 'Listening...' : 'Record Voice Note'}
                         </button>
 
                         <button
                           type="button"
                           onClick={refineBrief}
                           disabled={refining}
-                          className="inline-flex items-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-semibold text-purple-700 transition-colors hover:bg-purple-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-semibold text-purple-700 transition-colors hover:bg-purple-100 disabled:opacity-50"
                         >
                           {refining ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                          {brief.trim() ? 'Refine with Nia Assist' : 'Draft with Nia Assist'}
+                          {brief.trim() ? 'Polish with Nia AI' : 'Draft with Nia AI'}
                         </button>
 
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50"
                         >
-                          <Paperclip size={14} /> Attach files
+                          <Paperclip size={14} /> Attach Assets / Logo
                         </button>
 
                         <input
                           ref={fileInputRef}
                           type="file"
                           multiple
-                          accept="image/*,application/pdf,.doc,.docx,.txt,.ppt,.pptx"
+                          accept="image/*,application/pdf,.doc,.docx,.txt"
                           onChange={e => handleSupportingFiles(e.target.files)}
                           className="hidden"
                         />
                       </div>
 
-                      {listeningText && <p className="mt-2 text-xs text-sky-600">Voice note: {listeningText}</p>}
-
+                      {listeningText && <p className="mt-2 text-xs text-sky-600 font-medium">Recording: {listeningText}</p>}
                       {refining && (
-                        <p className="mt-2 flex items-center gap-1.5 text-xs text-purple-600 font-medium">
-                          <Loader2 size={12} className="animate-spin" /> Nia is writing your brief — takes 10–20 seconds…
+                        <p className="mt-2 text-xs text-purple-600 font-medium flex items-center gap-1.5">
+                          <Loader2 size={12} className="animate-spin" /> Nia is refining your brief...
                         </p>
                       )}
 
                       {supportingFiles.length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-2">
+                        <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap gap-2">
                           {supportingFiles.map(item => (
                             <div
                               key={item.id}
-                              className="inline-flex max-w-full items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-600"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-xs text-gray-700"
                             >
-                              <span className="truncate max-w-[220px]">{item.file.name}</span>
+                              <Paperclip size={12} className="text-gray-400" />
+                              <span className="truncate max-w-[150px]">{item.file.name}</span>
                               <button
                                 type="button"
                                 onClick={() => removeSupportingFile(item.id)}
-                                className="text-gray-400 transition-colors hover:text-red-500"
-                                aria-label={`Remove ${item.file.name}`}
+                                className="text-gray-400 hover:text-red-500 ml-1"
                               >
                                 <Trash2 size={12} />
                               </button>
@@ -1451,91 +1364,283 @@ export default function Quote() {
                           ))}
                         </div>
                       )}
-
-                      <p className="mt-3 text-xs text-gray-400">The more detail you give, the sharper your quote and faster we can start.</p>
                     </div>
-
-                  </div>
-                  {error && (
-
-                    <p className="text-sm text-red-500 font-medium">{error}</p>
-
-                  )}
-
-                  <div className="flex gap-3 pt-2">
-
-                    <button type="button" onClick={() => setStep(0)}
-
-                      className="px-5 py-3.5 rounded-xl text-sm font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-all">
-
-                      Back
-
-                    </button>
-
-                    <button type="button" onClick={submit} disabled={submitting}
-
-                      className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-60"
-
-                      style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
-
-                      {submitting ? 'Submitting...' : <><MessageSquare size={15} /> Send My Brief - Get Quote</>}
-
-                    </button>
-
                   </div>
 
-                  <p className="text-center text-xs text-gray-400">
-
-                    No spam. Your details are only used to prepare and send your quote.
-
-                  </p>
-
+                  <div className="flex items-center justify-between pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setStep(2)}
+                      className="px-5 py-3 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors flex items-center gap-1.5"
+                    >
+                      <ArrowLeft size={15} /> Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStep(4)
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                      className="px-6 py-3.5 rounded-xl text-sm font-bold text-white shadow-md flex items-center gap-2 hover:opacity-95 transition-all cursor-pointer"
+                      style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}
+                    >
+                      Review Quote & Live Adjuster <ArrowRight size={15} />
+                    </button>
+                  </div>
                 </div>
-
               )}
 
+              {/* STEP 4: Interactive Quote Review & Live Adjuster */}
+              {step === 4 && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900 mb-1">Step 5: Review & Live Price Adjuster</h2>
+                    <p className="text-xs text-gray-500">
+                      Tweak any parameter below to watch your quote and deposit recalculate live before submitting.
+                    </p>
+                  </div>
+
+                  {/* Live Adjuster Controls */}
+                  <div className="rounded-2xl border-2 border-purple-300 bg-purple-50/40 p-6 shadow-sm space-y-5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Sliders size={18} className="text-purple-700" />
+                        <h3 className="font-extrabold text-sm text-purple-950">Interactive Live Adjuster</h3>
+                      </div>
+                      <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2.5 py-0.5 rounded-full uppercase">
+                        Instant Recalculation
+                      </span>
+                    </div>
+
+                    {/* Adjust Duration */}
+                    <div>
+                      <span className="block text-[11px] font-bold text-gray-600 uppercase tracking-wide mb-2">
+                        Adjust Duration:
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {LENGTHS.map(l => (
+                          <button
+                            key={l.id}
+                            type="button"
+                            onClick={() => setLength(l.id)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                              length === l.id
+                                ? 'bg-purple-600 border-purple-600 text-white shadow-sm'
+                                : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                            }`}
+                          >
+                            {l.id} (KES {l.price.toLocaleString()})
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Adjust Rush */}
+                    <div>
+                      <span className="block text-[11px] font-bold text-gray-600 uppercase tracking-wide mb-2">
+                        Adjust Timeline:
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {RUSH.map(r => (
+                          <button
+                            key={r.id}
+                            type="button"
+                            onClick={() => setRush(r.id)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                              rush === r.id
+                                ? 'bg-purple-600 border-purple-600 text-white shadow-sm'
+                                : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                            }`}
+                          >
+                            {r.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Adjust Subtitles */}
+                    <div>
+                      <span className="block text-[11px] font-bold text-gray-600 uppercase tracking-wide mb-2">
+                        Adjust Captions:
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSubtitles(false)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                            !subtitles
+                              ? 'bg-purple-600 border-purple-600 text-white shadow-sm'
+                              : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                          }`}
+                        >
+                          No Captions
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSubtitles(true)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                            subtitles
+                              ? 'bg-purple-600 border-purple-600 text-white shadow-sm'
+                              : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                          }`}
+                        >
+                          Burned-in Subtitles & SRT (+KES 500)
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Adjust Visual Style */}
+                    <div>
+                      <span className="block text-[11px] font-bold text-gray-600 uppercase tracking-wide mb-2">
+                        Adjust Visual Style:
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {VISUAL_STYLES.map(s => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => setVisualStyle(s.id)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                              visualStyle === s.id
+                                ? 'bg-purple-600 border-purple-600 text-white shadow-sm'
+                                : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                            }`}
+                          >
+                            {s.tag}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Summary & Client Details Card */}
+                  <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-gray-500">
+                        Quotation Breakdown
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowQuotationModal(true)}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-700 hover:text-purple-900 transition-colors"
+                      >
+                        <FileText size={14} /> View / Print PDF Quote
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-gray-400 font-medium">Business:</span>
+                          <button onClick={() => setStep(0)} className="text-purple-600 text-[11px] font-semibold hover:underline">
+                            Edit
+                          </button>
+                        </div>
+                        <p className="font-bold text-gray-900">{bizName}</p>
+                        <p className="text-gray-500">{contactName ? `${contactName} · ` : ''}{phone}</p>
+                        {email && <p className="text-gray-500">{email}</p>}
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-gray-400 font-medium">Production Scope:</span>
+                          <button onClick={() => setStep(1)} className="text-purple-600 text-[11px] font-semibold hover:underline">
+                            Edit
+                          </button>
+                        </div>
+                        <p className="font-bold text-gray-900">{LENGTHS.find(l => l.id === length)?.label} Commercial</p>
+                        <p className="text-gray-500">Style: {VISUAL_STYLES.find(s => s.id === visualStyle)?.tag}</p>
+                        <p className="text-gray-500">Timeline: {RUSH.find(r => r.id === rush)?.label}</p>
+                      </div>
+                    </div>
+
+                    {brief && (
+                      <div className="pt-3 border-t border-gray-100 text-xs">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-gray-400 font-medium">Promotion Brief:</span>
+                          <button onClick={() => setStep(3)} className="text-purple-600 text-[11px] font-semibold hover:underline">
+                            Edit
+                          </button>
+                        </div>
+                        <p className="text-gray-700 line-clamp-2 leading-relaxed italic">"{brief}"</p>
+                      </div>
+                    )}
+
+                    {/* Milestone Pricing Box */}
+                    <div className="rounded-xl p-4 bg-gray-50 border border-gray-200/80 space-y-2 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Total Standard Price:</span>
+                        <span className="text-base font-extrabold text-gray-900">KES {price.total.toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-emerald-700 font-bold">
+                        <span>70% Milestone Deposit to Start:</span>
+                        <span>KES {Math.round(price.total * 0.7).toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-gray-500">
+                        <span>30% Balance on Delivery Approval:</span>
+                        <span>KES {Math.round(price.total * 0.3).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setStep(3)}
+                      className="px-5 py-3 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors flex items-center gap-1.5"
+                    >
+                      <ArrowLeft size={15} /> Back to Brief
+                    </button>
+                    <button
+                      type="button"
+                      onClick={submit}
+                      disabled={submitting}
+                      className="px-7 py-3.5 rounded-xl text-sm font-extrabold text-white shadow-md flex items-center gap-2 hover:opacity-95 active:scale-[0.99] disabled:opacity-50 transition-all cursor-pointer"
+                      style={{ background: 'linear-gradient(135deg, #059669, #0284c7)' }}
+                    >
+                      {submitting ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" /> Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 size={16} /> Confirm Brief & Submit Quote →
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Right: live price panel */}
-
-            <PricePanel
-
-              min={price.min} max={price.max}
-
-              length={length} rush={rush} platforms={platforms}
-
-              poster={poster} subtitles={subtitles}
-
-            />
-
+            {/* Right Column: Sticky Live Price Panel */}
+            <div className="hidden lg:block">
+              <PricePanel
+                max={price.total}
+                length={length}
+                rush={rush}
+                platforms={platforms}
+                subtitles={subtitles}
+                visualStyle={visualStyle}
+              />
+            </div>
           </div>
-
         )}
-
       </div>
 
-      <MarketSurveyModal isOpen={showSurvey} onClose={() => setShowSurvey(false)} sourcePage="quote_success" />
-
+      {/* Official Quotation Modal */}
       <QuotationPrintModal
         isOpen={showQuotationModal}
         onClose={() => setShowQuotationModal(false)}
-        data={{
-          quoteId: successData?.quoteId,
-          businessName: successData?.bizName || bizName || 'Valued Client',
-          contactName: contactName,
-          phone: successData?.phone || phone,
-          email: successData?.email || email,
-          videoLength: successData?.lengthLabel || LENGTHS.find(l => l.id === length)?.label || '30s',
-          platforms,
-          deliverySpeed: rush,
-          standardPrice: successData?.totalPrice || price.total,
-          depositAmount: successData?.depositAmount || Math.round(price.total * 0.7),
-          balanceAmount: Math.round((successData?.totalPrice || price.total) * 0.3),
-          isPaid: Boolean(window.location.search.includes('paid=true') || successData?.isPaid),
-        }}
+        data={quotationModalData}
       />
 
+      {/* Market Survey Modal */}
+      <MarketSurveyModal
+        isOpen={showSurvey}
+        onClose={() => setShowSurvey(false)}
+        sourcePage="quote_success"
+      />
     </div>
-
   )
 }

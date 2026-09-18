@@ -10,6 +10,7 @@ export interface QuotationData {
   videoLength: string
   platforms?: string[] | string
   deliverySpeed?: string
+  visualStyle?: string
   standardPrice: number
   depositAmount: number
   balanceAmount: number
@@ -150,6 +151,7 @@ export default function QuotationPrintModal({ isOpen, onClose, data }: Quotation
               <p className="font-semibold text-gray-800">Format: <span className="font-bold text-purple-700">{data.videoLength} Commercial</span></p>
               <p className="text-gray-600">Target Platforms: {platformsList}</p>
               <p className="text-gray-600">Turnaround: {deliveryLabel}</p>
+              {data.visualStyle && <p className="text-gray-600">Style: <span className="font-semibold text-gray-800">{data.visualStyle}</span></p>}
             </div>
           </div>
 
