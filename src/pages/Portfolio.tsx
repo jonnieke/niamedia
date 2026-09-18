@@ -37,7 +37,7 @@ const FILTERS = ['All', 'Video', 'Poster', 'Campaign']
 
 const CLIENTS = [
   'Adiel Media', 'Somo Smart', 'Onfon Media', 'Onfon Mobile',
-  'Ndovu Group', 'NCBA', 'PesaFlix', 'Shekel Coin',
+  'Ndovu Group', 'Treasured Artifacts', 'PesaFlix', 'Shekel Coin',
 ]
 
 export default function Portfolio() {

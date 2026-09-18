@@ -38,7 +38,7 @@ const SERVICES = [
     color: '#059669',
     bg: '#d1fae5',
     label: 'Audio Studio',
-    desc: 'Jingles, voice overs, and radio spots — from KES 1,500.',
+    desc: 'Jingles, voice overs, and radio spots — KES 1,500 standard.',
     cta: 'Order audio',
     to: '/audio-studio',
   },

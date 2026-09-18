@@ -14,7 +14,7 @@ const FORMATS = ['9:16 (Vertical)', '1:1 (Square)', '16:9 (Landscape)']
 const PLATFORMS = ['WhatsApp', 'TikTok', 'Instagram', 'Facebook', 'YouTube']
 const LANGUAGES = ['English', 'Kiswahili', 'Sheng', 'Other']
 const MUSIC_STYLES = ['Afrobeat', 'Afro-pop', 'Corporate / Ambient', 'Gospel / Worship', 'Hip-hop', 'Classical', 'No music']
-const BUDGET_RANGES = ['KES 3,500 – 5,000', 'KES 7,500 – 15,000', 'KES 25,000 – 60,000', 'KES 60,000+', 'Not sure yet']
+const BUDGET_RANGES = ['KES 5,000 (15s standard)', 'KES 8,000 (30s standard)', 'KES 15,000 (60s standard)', 'KES 20,000 – 60,000 (Extended/Doc)', 'KES 60,000+', 'Not sure yet']
 
 interface LocationState {
   form?: { business_name?: string; industry?: string; product_name?: string }
@@ -195,9 +195,9 @@ export default function VideoRequest() {
       {/* Pricing guide */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
         {[
-          { label: 'Quick Promo Video', price: 'KES 3,500 – 5,000', note: '15s or 30s, fast turnaround' },
-          { label: 'Campaign Video', price: 'KES 7,500 – 15,000', note: 'Up to 60s, multiple scenes' },
-          { label: 'Premium Brand Video', price: 'KES 25,000 – 60,000', note: '2–5 min, full production' },
+          { label: 'Standard Promo Video', price: 'KES 5,000', note: '15s fast commercial turnaround' },
+          { label: 'Campaign Video', price: 'KES 15,000', note: 'Up to 60s, multiple scenes' },
+          { label: 'Premium Brand Video', price: 'KES 60,000', note: '2–5 min, full production' },
         ].map(p => (
           <div key={p.label} className="bg-white rounded-xl border border-gray-200 px-4 py-3">
             <p className="text-xs font-semibold text-gray-900">{p.label}</p>
@@ -303,7 +303,7 @@ export default function VideoRequest() {
                   <button key={o.key} type="button" onClick={() => set(o.key, !(form as unknown as Record<string, boolean>)[o.key])}
                     className={`rounded-xl border p-3 text-left transition-all ${(form as unknown as Record<string, boolean>)[o.key] ? 'border-amber-400 bg-amber-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
                     <p className="text-sm font-semibold text-gray-900">{o.label}</p>
-                    <p className="text-[11px] text-gray-500 mt-0.5">{o.key === 'needPoster' ? 'from KES 300' : o.key === 'needJingle' ? 'from KES 5,000' : 'from KES 1,000'}</p>
+                    <p className="text-[11px] text-gray-500 mt-0.5">{o.key === 'needPoster' ? 'KES 500' : o.key === 'needJingle' ? 'KES 5,000' : 'KES 1,000'}</p>
                   </button>
                 ))}
               </div>

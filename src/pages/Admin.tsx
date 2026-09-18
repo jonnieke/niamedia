@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Users, BarChart2, Package, TrendingUp, ShieldCheck,
   Film, Music, Upload, Eye, RefreshCw, CheckCircle, Clock,
@@ -650,6 +650,15 @@ export default function Admin() {
     industry: string | null; rating: number; body: string
     video_length: string | null; approved: boolean; featured: boolean; created_at: string
   }[]>([])
+
+  // Market Surveys
+  const [surveys, setSurveys] = useState<{
+    id: string; rating: number; primary_challenge: string | null
+    desired_services: string[]; budget_range: string | null
+    feedback_text: string | null; business_name: string | null
+    contact_name: string | null; email: string | null; phone: string | null
+    source_page: string; created_at: string
+  }[]>([])
   const [loading, setLoading] = useState(true)
   const [grantingCredit, setGrantingCredit] = useState<string | null>(null)
   const [grantAmounts, setGrantAmounts] = useState<Record<string, number>>({})
@@ -683,6 +692,8 @@ export default function Admin() {
       .then(({ data }) => { if (data) setTestimonials(data as typeof testimonials) })
     supabase.from('client_intakes').select('*').order('created_at', { ascending: false })
       .then(({ data }) => { if (data) setIntakes(data as typeof intakes) })
+    supabase.from('market_surveys').select('*').order('created_at', { ascending: false })
+      .then(({ data }) => { if (data) setSurveys(data as typeof surveys) })
   }, [])
 
   const updateVideoRequestStatus = async (id: string, status: VideoRequestStatus) => {
@@ -726,7 +737,7 @@ export default function Admin() {
   const totalRevenue = audioRevenue + creditRevenue
 
   const newQuotes = quoteRequests.filter(q => q.status === 'new').length
-  const tabs = ['Overview', 'Leads', 'Audio Orders', 'Projects', 'Credits', 'Users', 'Video Requests', 'Quote Requests', 'Analytics', 'Portfolio', 'Testimonials', 'Intakes']
+  const tabs = ['Overview', 'Leads', 'Audio Orders', 'Projects', 'Credits', 'Users', 'Video Requests', 'Quote Requests', 'Analytics', 'Portfolio', 'Testimonials', 'Intakes', 'Market Surveys']
 
   const stats = [
     { label: 'New Leads', value: newLeads, icon: Inbox, sub: `${leads.length} total`, color: 'text-amber-400' },
@@ -819,6 +830,9 @@ export default function Admin() {
             )}
             {t === 'Quote Requests' && newQuotes > 0 && (
               <span className="w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center bg-amber-500 text-white">{newQuotes}</span>
+            )}
+            {t === 'Market Surveys' && surveys.length > 0 && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/20 text-purple-400">{surveys.length}</span>
             )}
           </button>
         ))}
@@ -1829,6 +1843,173 @@ export default function Admin() {
               {users.length === 0 && (
                 <div className="py-16 text-center text-gray-600 text-sm">No users yet</div>
               )}
+            </div>
+          )}
+
+          {/* Market Surveys & Customer Gap Analysis */}
+          {tab === 12 && (
+            <div className="space-y-6">
+              {/* Summary Stats */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white rounded-2xl border border-gray-200 p-5">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Responses</p>
+                  <p className="text-2xl font-black text-gray-900 mt-1">{surveys.length}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Market discovery feedback</p>
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-200 p-5">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Average Rating</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-2xl font-black text-amber-500">
+                      {surveys.length > 0
+                        ? (surveys.reduce((acc, s) => acc + s.rating, 0) / surveys.length).toFixed(1)
+                        : '5.0'}
+                    </p>
+                    <div className="flex text-amber-400">
+                      {[1, 2, 3, 4, 5].map(st => (
+                        <Star key={st} size={14} className="fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5">Customer sentiment score</p>
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-200 p-5">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Top Bottleneck</p>
+                  <p className="text-sm font-bold text-purple-800 mt-1 truncate">
+                    {surveys.length > 0
+                      ? Object.entries(
+                          surveys.reduce<Record<string, number>>((acc, s) => {
+                            if (s.primary_challenge) acc[s.primary_challenge] = (acc[s.primary_challenge] || 0) + 1
+                            return acc
+                          }, {})
+                        ).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Affordable video'
+                      : 'Video production'}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">Most common SME pain point</p>
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-200 p-5">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Top Requested Service</p>
+                  <p className="text-sm font-bold text-emerald-700 mt-1 truncate">
+                    {surveys.length > 0
+                      ? Object.entries(
+                          surveys.reduce<Record<string, number>>((acc, s) => {
+                            (s.desired_services || []).forEach(svc => {
+                              acc[svc] = (acc[svc] || 0) + 1
+                            })
+                            return acc
+                          }, {})
+                        ).sort((a, b) => b[1] - a[1])[0]?.[0] || 'TikTok & Reels'
+                      : 'TikTok & Reels'}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">Highest untapped demand</p>
+                </div>
+              </div>
+
+              {/* Responses List */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold text-gray-900">All Market Feedback & Star Ratings</h3>
+                  <a
+                    href="/survey"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-semibold text-purple-600 hover:text-purple-700 underline"
+                  >
+                    Open Public Survey Form ↗
+                  </a>
+                </div>
+
+                {surveys.length === 0 ? (
+                  <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+                    <Star size={32} className="text-gray-300 mx-auto mb-3" />
+                    <p className="text-sm font-bold text-gray-700 mb-1">No market surveys submitted yet</p>
+                    <p className="text-xs text-gray-500 max-w-sm mx-auto mb-4">
+                      Share <strong>niamedia.co.ke/survey</strong> with your leads, WhatsApp contacts, and social media followers to capture market gap insights.
+                    </p>
+                    <a
+                      href="/survey"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white shadow-sm"
+                      style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}
+                    >
+                      View Live Survey Page
+                    </a>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {surveys.map(s => (
+                      <div key={s.id} className="bg-white rounded-2xl border border-gray-200 p-5 transition-all hover:border-gray-300">
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-sm font-bold text-gray-900">
+                                {s.business_name || s.contact_name || 'Anonymous Business'}
+                              </span>
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">
+                                <Star size={10} className="fill-amber-400 text-amber-500" />
+                                {s.rating} / 5 Stars
+                              </span>
+                              {s.budget_range && (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700">
+                                  {s.budget_range}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-x-3 text-xs text-gray-500">
+                              {s.contact_name && <span>Contact: {s.contact_name}</span>}
+                              {s.email && <span>Email: {s.email}</span>}
+                              <span>{new Date(s.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                            </div>
+                          </div>
+
+                          {s.phone && (
+                            <a
+                              href={`https://wa.me/${s.phone.replace(/\D/g, '').replace(/^0/, '254')}?text=${encodeURIComponent(
+                                `Hi ${s.contact_name || s.business_name || 'there'}! Thank you for sharing your feedback on Nia Media. We saw you are looking for ${s.primary_challenge || 'marketing solutions'} — we would love to help!`
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-white shrink-0"
+                              style={{ background: '#25d366' }}
+                            >
+                              WhatsApp Contact
+                            </a>
+                          )}
+                        </div>
+
+                        {/* Bottleneck & Desired Services */}
+                        <div className="space-y-2 pt-2 border-t border-gray-100 text-xs">
+                          {s.primary_challenge && (
+                            <div>
+                              <span className="text-gray-400 font-medium mr-2">Primary Bottleneck:</span>
+                              <span className="inline-block px-2.5 py-0.5 rounded-lg font-bold bg-purple-50 text-purple-800">
+                                {s.primary_challenge}
+                              </span>
+                            </div>
+                          )}
+
+                          {s.desired_services && s.desired_services.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="text-gray-400 font-medium mr-1">Wanted Services:</span>
+                              {s.desired_services.map(svc => (
+                                <span key={svc} className="px-2 py-0.5 rounded-md font-medium bg-emerald-50 text-emerald-800 text-[11px]">
+                                  {svc}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {s.feedback_text && (
+                            <div className="mt-2 p-3 rounded-xl bg-gray-50 border border-gray-100 text-gray-700 italic">
+                              "{s.feedback_text}"
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </>

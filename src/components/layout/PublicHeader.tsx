@@ -9,6 +9,7 @@ const navItems = [
   { label: 'Services', href: '/#services' },
   { label: 'Portfolio', href: '/portfolio' },
   { label: 'Pricing', href: '/pricing' },
+  { label: 'Market Survey', href: '/survey' },
 ]
 
 export default function PublicHeader() {

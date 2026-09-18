@@ -8,11 +8,11 @@ import { supabase } from '../lib/supabase'
 const WHATSAPP_URL = 'https://wa.me/254751822556?text=Hi%2C%20I%20was%20looking%20at%20your%20pricing%20—%20which%20option%20fits%20my%20business%3F'
 
 const VIDEO_LADDER = [
-  { label: '15 seconds', use: 'TikTok, Reels, Stories', price: '3,500 – 5,000' },
-  { label: '30 seconds', use: 'Standard commercial', price: '5,000 – 8,000' },
-  { label: '60 seconds', use: 'Campaign film', price: '7,500 – 15,000' },
-  { label: '90 seconds', use: 'Extended brand story', price: '12,000 – 20,000' },
-  { label: '3 min+', use: 'Infomercial / documentary', price: '25,000 – 60,000' },
+  { label: '15 seconds', use: 'TikTok, Reels, Stories', price: '5,000' },
+  { label: '30 seconds', use: 'Standard commercial', price: '8,000' },
+  { label: '60 seconds', use: 'Campaign film', price: '15,000' },
+  { label: '90 seconds', use: 'Extended brand story', price: '20,000' },
+  { label: '3 min+', use: 'Infomercial / documentary', price: '60,000' },
 ]
 
 const faqs = [
@@ -114,9 +114,9 @@ export default function Pricing() {
             <h2 className="text-lg font-extrabold text-gray-900 mb-1">Video Production</h2>
             <p className="text-xs text-gray-500 mb-4">A professional commercial for your business, produced by us.</p>
             <div className="mb-5">
-              <span className="text-3xl font-extrabold text-gray-900">KES 3,500</span>
-              <span className="text-sm text-gray-400"> +</span>
-              <p className="text-xs text-gray-400 mt-1">Instant price by length below</p>
+              <span className="text-3xl font-extrabold text-gray-900">KES 5,000</span>
+              <span className="text-sm text-gray-400"> (15s Standard)</span>
+              <p className="text-xs text-gray-400 mt-1">Clear standard pricing by length below</p>
             </div>
             <ul className="space-y-2.5 flex-1 mb-6">
               {[

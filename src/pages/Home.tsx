@@ -431,17 +431,17 @@ function CampaignOutputDemo() {
 
 /* ─── Static content ───────────────────────────────────────────── */
 const VIDEO_PRICES = [
-  { label: '15 seconds', use: 'TikTok, Reels, Stories', price: 'from KES 3,500' },
-  { label: '30 seconds', use: 'Standard commercial — all platforms', price: 'from KES 5,000' },
-  { label: '60 seconds', use: 'Campaign film with full story arc', price: 'from KES 7,500' },
-  { label: '90 seconds', use: 'Extended brand story', price: 'from KES 12,000' },
-  { label: '3 min+', use: 'Infomercial / mini-documentary', price: 'from KES 25,000' },
+  { label: '15 seconds', use: 'TikTok, Reels, Stories', price: 'KES 5,000' },
+  { label: '30 seconds', use: 'Standard commercial — all platforms', price: 'KES 8,000' },
+  { label: '60 seconds', use: 'Campaign film with full story arc', price: 'KES 15,000' },
+  { label: '90 seconds', use: 'Extended brand story', price: 'KES 20,000' },
+  { label: '3 min+', use: 'Infomercial / mini-documentary', price: 'KES 60,000' },
 ]
 
 const FAQS = [
   {
     q: 'How much does a video commercial cost in Kenya?',
-    a: 'Our video commercials start at KES 3,500 for a 15-second promo and range up to KES 60,000 for 3-minute-plus infomercials. Use the instant quote tool to price your exact video — no account or phone call needed.',
+    a: 'Our standard video commercials start at KES 5,000 for a 15-second promo up to KES 60,000 for 3-minute-plus extended films. Use the instant quote tool to price your exact video with optional rush or add-ons — no account or phone call needed.',
   },
   {
     q: 'How fast can you deliver my video?',
@@ -651,7 +651,7 @@ export default function Home() {
         <div className="relative max-w-7xl mx-auto px-6 pb-8 z-10">
           <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
             <span className="text-xs font-bold tracking-widest" style={{ color: 'rgba(255,255,255,0.35)' }}>TRUSTED BY</span>
-            {['NCBA', 'Onfon Media', 'PesaFlix', 'Ndovu Group', 'Somo Smart', 'Adiel Media'].map(name => (
+            {['Treasured Artifacts', 'Onfon Media', 'PesaFlix', 'Ndovu Group', 'Somo Smart', 'Adiel Media'].map(name => (
               <span key={name} className="text-sm font-bold" style={{ color: 'rgba(255,255,255,0.5)' }}>{name}</span>
             ))}
           </div>
@@ -817,7 +817,7 @@ export default function Home() {
           </div>
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
             <span className="text-xs font-bold tracking-widest text-gray-400">TRUSTED BY</span>
-            {['NCBA', 'Onfon Media', 'PesaFlix', 'Ndovu Group', 'Somo Smart', 'Adiel Media'].map(name => (
+            {['Treasured Artifacts', 'Onfon Media', 'PesaFlix', 'Ndovu Group', 'Somo Smart', 'Adiel Media'].map(name => (
               <span key={name} className="text-sm font-bold text-gray-500">{name}</span>
             ))}
           </div>

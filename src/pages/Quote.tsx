@@ -21,85 +21,52 @@ import { trackEvent } from '../lib/analytics'
 /* Pricing logic */
 
 const LENGTHS = [
-
-  { id: '15s', label: '15 seconds', desc: 'Quick hook - TikTok, Reels, Stories', min: 3500,  max: 5000  },
-
-  { id: '30s', label: '30 seconds', desc: 'Standard commercial - all platforms',  min: 5000,  max: 8000  },
-
-  { id: '60s', label: '60 seconds', desc: 'Campaign film - full story arc',        min: 7500,  max: 15000 },
-
-  { id: '90s', label: '90 seconds', desc: 'Extended brand story',                  min: 12000, max: 20000 },
-
-  { id: '3m+', label: '3 min+',     desc: 'Infomercial / mini-documentary',        min: 25000, max: 60000 },
-
+  { id: '15s', label: '15 seconds', desc: 'Quick hook - TikTok, Reels, Stories', price: 5000 },
+  { id: '30s', label: '30 seconds', desc: 'Standard commercial - all platforms',  price: 8000 },
+  { id: '60s', label: '60 seconds', desc: 'Campaign film - full story arc',        price: 15000 },
+  { id: '90s', label: '90 seconds', desc: 'Extended brand story',                  price: 20000 },
+  { id: '3m+', label: '3 min+',     desc: 'Infomercial / mini-documentary',        price: 60000 },
 ]
 
 const PLATFORMS = [
-
   { id: 'tiktok',    label: 'TikTok' },
-
   { id: 'instagram', label: 'Instagram' },
-
   { id: 'facebook',  label: 'Facebook' },
-
   { id: 'whatsapp',  label: 'WhatsApp' },
-
   { id: 'youtube',   label: 'YouTube' },
-
   { id: 'linkedin',  label: 'LinkedIn' },
-
 ]
 
 const INDUSTRIES = [
-
   'Real Estate', 'Hospitality', 'Education', 'Fintech / SACCO',
-
   'Restaurant', 'Travel', 'Retail', 'Health & Wellness',
-
   'Events', 'Professional Services', 'Faith & Community', 'Other',
-
 ]
 
 const RUSH = [
-
   { id: 'standard', label: 'Standard',   desc: '3-5 business days', mult: 1.0 },
-
   { id: '48h',      label: '48-hr rush', desc: '+25% fee',           mult: 1.25 },
-
   { id: '24h',      label: '24-hr rush', desc: '+50% fee',           mult: 1.5 },
-
 ]
 
 function calcPrice(
-
   lengthId: string,
-
   platforms: string[],
-
   rush: string,
-
   subtitles: boolean,
-
-): { min: number; max: number } {
-
+): { min: number; max: number; total: number } {
   const base = LENGTHS.find(l => l.id === lengthId) ?? LENGTHS[1]
-
   const rushMult = RUSH.find(r => r.id === rush)?.mult ?? 1
-
   const platformMult = platforms.includes('youtube') ? 1.15 : 1
-
   const multiMult = platforms.length >= 3 ? 1.1 : 1
-
   const sub = subtitles ? 500 : 0
+  const total = Math.round(base.price * rushMult * platformMult * multiMult + sub)
 
   return {
-
-    min: Math.round(base.min * rushMult * platformMult * multiMult + sub),
-
-    max: Math.round(base.max * rushMult * platformMult * multiMult + sub),
-
+    min: total,
+    max: total,
+    total,
   }
-
 }
 
 /* Sub-components */
@@ -172,19 +139,17 @@ function PricePanel({ min, max, length, rush, platforms, poster, subtitles }: {
 
       style={{ background: 'linear-gradient(145deg, #0d0025, #160040)', border: '1px solid rgba(167,139,250,0.25)' }}>
 
-      <p className="text-xs font-bold tracking-widest mb-4" style={{ color: 'rgba(196,181,253,0.6)' }}>INSTANT ESTIMATE</p>
+      <p className="text-xs font-bold tracking-widest mb-4" style={{ color: 'rgba(196,181,253,0.6)' }}>STANDARD ESTIMATE</p>
 
       <div className="mb-6">
 
         <p className="text-4xl font-extrabold text-white">
 
-          KES {min.toLocaleString()}
-
-          <span className="text-2xl text-purple-300"> - {max.toLocaleString()}</span>
+          KES {max.toLocaleString()}
 
         </p>
 
-        <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Final quote confirmed after brief review</p>
+        <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Standard transparent price · Final brief confirmed within 2 hrs</p>
 
       </div>
 
@@ -252,7 +217,7 @@ function PricePanel({ min, max, length, rush, platforms, poster, subtitles }: {
 
         <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.35)' }}>
 
-          Onfon Media - NCBA Junior Account - PesaFlix - Ndovu Group - Shekel Coin
+          Onfon Media - Treasured Artifacts - PesaFlix - Ndovu Group - Shekel Coin
 
         </p>
 
@@ -590,7 +555,7 @@ export default function Quote() {
         void supabase.rpc('notify_admins', {
           p_type: 'action',
           p_title: `New quote - ${bizName.trim()}`,
-          p_body: `${length} video - ${platforms.join(', ')} - KES ${price.min.toLocaleString()}-${price.max.toLocaleString()}`,
+          p_body: `${length} video - ${platforms.join(', ')} - KES ${price.total.toLocaleString()} (Standard)`,
           p_action_url: '/admin',
         })
         trackEvent('quote_submit_success', { video_length: length, platform_count: platforms.length, rush, poster, subtitles, attachment_count: supportingFiles.length })
@@ -618,7 +583,7 @@ export default function Quote() {
 
   const waMessage = encodeURIComponent(
 
-    `Hi Nia Media, I need a video commercial.\n\nBusiness: ${bizName}\nLength: ${LENGTHS.find(l => l.id === length)?.label}\nPlatforms: ${platforms.join(', ')}\nDelivery: ${RUSH.find(r => r.id === rush)?.label}\nBudget range: KES ${price.min.toLocaleString()} - ${price.max.toLocaleString()}\n\nSupporting files: ${supportingFiles.length ? supportingFiles.map(({ file }) => file.name).join(', ') : 'None'}\n\nWhat I am promoting: ${brief || 'Will share details'}\n\nContact: ${phone}`
+    `Hi Nia Media, I need a video commercial.\n\nBusiness: ${bizName}\nLength: ${LENGTHS.find(l => l.id === length)?.label}\nPlatforms: ${platforms.join(', ')}\nDelivery: ${RUSH.find(r => r.id === rush)?.label}\nBudget: KES ${price.total.toLocaleString()} (Standard package)\n\nSupporting files: ${supportingFiles.length ? supportingFiles.map(({ file }) => file.name).join(', ') : 'None'}\n\nWhat I am promoting: ${brief || 'Will share details'}\n\nContact: ${phone}`
 
   )
 
@@ -828,9 +793,7 @@ export default function Quote() {
                           </div>
 
                           <p className="text-xs font-bold shrink-0" style={{ color: length === l.id ? '#7c3aed' : '#6b7280' }}>
-
-                            KES {l.min.toLocaleString()}+
-
+                            KES {l.price.toLocaleString()}
                           </p>
 
                         </button>

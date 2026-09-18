@@ -60,6 +60,7 @@ const Production = lazy(() => import('./pages/Production'))
 const DeliveryView = lazy(() => import('./pages/DeliveryView'))
 const Retainers = lazy(() => import('./pages/Retainers'))
 const AdminAnalytics = lazy(() => import('./pages/AdminAnalytics'))
+const Survey = lazy(() => import('./pages/Survey'))
 
 function RouteLoader() {
   return (
@@ -129,6 +130,7 @@ function AppRoutes() {
         <Route path="/delivery/:token" element={<DeliveryView />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/survey" element={<Survey />} />
         <Route path="/track/:token" element={<ShareTracker />} />
         <Route path="/review/:token" element={<ReviewPage />} />
         <Route path="/accept-invite/:token" element={<AcceptInvite />} />
