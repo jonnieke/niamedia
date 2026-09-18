@@ -21,7 +21,7 @@ const faqs = [
   { q: 'How long does video production take?', a: 'Standard: 3–5 business days. 48-hour rush: +25%. 24-hour rush: +50%. Timelines depend on asset availability and scope.' },
   { q: 'Do I own the content?', a: 'Yes — 100%. All content transfers to you fully on delivery. For custom videos, a Certificate of AI Origin is issued.' },
   { q: 'What is Managed Marketing?', a: 'Our team plans, produces, and delivers your campaigns every month — posters, videos, and copy with human quality control. Packages start at KES 15,000/month; one-off campaign kits from KES 5,000.' },
-  { q: 'How do I pay?', a: 'M-Pesa, Visa, or Mastercard through PesaPal secure checkout. For video production, you pay a 50% deposit to reserve your creative producer and start production, and the remaining 50% balance after you approve your watermarked video preview.' },
+  { q: 'How do I pay?', a: 'M-Pesa, Visa, or Mastercard through PesaPal secure checkout. For video production, you pay a 70% deposit to reserve your creative producer and start production, and the remaining 30% balance after you approve your watermarked video preview.' },
 ]
 
 export default function Pricing() {
@@ -122,7 +122,7 @@ export default function Pricing() {
               {[
                 '15 seconds to 3+ minutes',
                 'AI visuals, voiceover & music',
-                '50% deposit to start / 50% on delivery',
+                '70% deposit to start / 30% on delivery',
                 '2 revision rounds included',
                 'Full commercial rights on delivery',
               ].map(f => (

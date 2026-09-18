@@ -128,7 +128,7 @@ function CreateModal({
   const [finalPrice, setFinalPrice] = useState(
     editing?.final_price ?? (quote ? Math.round((quote.price_min + quote.price_max) / 2) : 8000)
   )
-  const [depositPercent, setDepositPercent] = useState(editing?.deposit_percent ?? 50)
+  const [depositPercent, setDepositPercent] = useState(editing?.deposit_percent ?? 70)
   const [timelineDays, setTimelineDays] = useState(editing?.timeline_days ?? 7)
   const [validUntil, setValidUntil] = useState(editing?.valid_until ?? validUntilDefault())
   const [adminNotes, setAdminNotes] = useState(editing?.admin_notes ?? '')

@@ -449,7 +449,7 @@ const FAQS = [
   },
   {
     q: 'Do you accept M-Pesa?',
-    a: 'Yes. We accept M-Pesa, Visa, and Mastercard through PesaPal secure checkout. You pay a deposit to start production and the balance on delivery.',
+    a: 'Yes. We accept M-Pesa, Visa, and Mastercard through PesaPal secure checkout. You pay a 70% deposit to start production and the 30% balance on delivery.',
   },
   {
     q: 'Do I need to visit a studio or arrange a shoot?',

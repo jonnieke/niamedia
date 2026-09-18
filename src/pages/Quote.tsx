@@ -182,21 +182,21 @@ function PricePanel({ min, max, length, rush, platforms, poster, subtitles }: {
 
       </div>
 
-      {/* 50% / 50% Milestone terms */}
+      {/* 70% / 30% Milestone terms */}
       <div className="border-t pt-4 mb-3" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
         <p className="text-[10px] font-bold tracking-widest uppercase mb-2" style={{ color: 'rgba(196,181,253,0.7)' }}>MILESTONE PAYMENT TERMS</p>
         <div className="rounded-xl p-3 space-y-1.5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <div className="flex items-center justify-between text-xs">
-            <span style={{ color: 'rgba(255,255,255,0.6)' }}>50% Deposit to Start:</span>
-            <span className="font-extrabold text-emerald-400">KES {Math.round(max / 2).toLocaleString()}</span>
+            <span style={{ color: 'rgba(255,255,255,0.6)' }}>70% Deposit to Start:</span>
+            <span className="font-extrabold text-emerald-400">KES {Math.round(max * 0.7).toLocaleString()}</span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span style={{ color: 'rgba(255,255,255,0.6)' }}>50% Balance on Delivery:</span>
-            <span className="font-semibold text-white">KES {Math.round(max / 2).toLocaleString()}</span>
+            <span style={{ color: 'rgba(255,255,255,0.6)' }}>30% Balance on Delivery:</span>
+            <span className="font-semibold text-white">KES {Math.round(max * 0.3).toLocaleString()}</span>
           </div>
         </div>
         <p className="text-[10px] mt-2 leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          🔒 Pay 50% deposit via M-Pesa or Card to begin. Balance payable only after you review and approve the watermarked video cut.
+          🔒 Pay 70% deposit via M-Pesa or Card to begin. Balance payable only after you review and approve the watermarked video cut.
         </p>
       </div>
 
@@ -717,14 +717,14 @@ export default function Quote() {
 
             </p>
 
-            {/* 50% Deposit Milestone info */}
+            {/* 70% Deposit Milestone info */}
             <div className="max-w-md mx-auto mb-5 p-4 rounded-2xl border border-emerald-200 bg-emerald-50/70 text-left">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-bold text-emerald-950 uppercase tracking-wider">Milestone Terms</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-200/60 text-emerald-800">50% / 50% Safe Model</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-200/60 text-emerald-800">70% / 30% Milestone Model</span>
               </div>
               <p className="text-xs text-emerald-900 leading-relaxed">
-                Standard price is <strong>KES {price.total.toLocaleString()}</strong>. Your 50% deposit of <strong>KES {Math.round(price.total / 2).toLocaleString()}</strong> reserves your creative team and production schedule. Balance is paid upon delivery approval.
+                Standard price is <strong>KES {price.total.toLocaleString()}</strong>. Your 70% deposit of <strong>KES {Math.round(price.total * 0.7).toLocaleString()}</strong> reserves your creative team and production schedule. Balance of <strong>KES {Math.round(price.total * 0.3).toLocaleString()} (30%)</strong> is paid upon delivery approval.
               </p>
             </div>
 
