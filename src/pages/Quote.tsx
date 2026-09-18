@@ -339,6 +339,46 @@ export default function Quote() {
   const [showQuotationModal, setShowQuotationModal] = useState(false)
   const [pesapalLoading, setPesapalLoading] = useState(false)
   const [pesapalError, setPesapalError] = useState('')
+  const [portalToken, setPortalToken] = useState<string | null>(null)
+  const [portalChecking, setPortalChecking] = useState(false)
+
+  const isDepositPaid = Boolean(successData?.isPaid || (typeof window !== 'undefined' && window.location.search.includes('paid=true')))
+
+  useEffect(() => {
+    if (!isDepositPaid) return
+
+    const clientEmail = successData?.email || email
+    const bName = successData?.bizName || bizName
+
+    setPortalChecking(true)
+    let attempts = 0
+    const maxAttempts = 12
+
+    const findProject = async () => {
+      attempts++
+      let query = supabase.from('projects').select('id, token, business_name, email, status')
+      if (clientEmail) {
+        query = query.eq('email', clientEmail)
+      } else if (bName) {
+        query = query.eq('business_name', bName)
+      }
+
+      const { data } = await query.order('created_at', { ascending: false }).limit(1).maybeSingle()
+      if (data?.token) {
+        setPortalToken(data.token)
+        setPortalChecking(false)
+        return
+      }
+
+      if (attempts < maxAttempts) {
+        setTimeout(findProject, 2000)
+      } else {
+        setPortalChecking(false)
+      }
+    }
+
+    void findProject()
+  }, [isDepositPaid, successData?.email, successData?.bizName, email, bizName])
 
   const price = useMemo(() => calcPrice(length, platforms, rush, subtitles), [length, platforms, rush, subtitles])
 
@@ -753,100 +793,143 @@ export default function Quote() {
           /* Success */
 
           <div className="max-w-lg mx-auto text-center py-8">
-
-            {window.location.search.includes('paid=true') || successData?.isPaid ? (
-              <div className="mb-6">
-                <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4"
-                  style={{ background: 'rgba(16,185,129,0.12)', border: '2px solid rgba(16,185,129,0.3)' }}>
-                  <CheckCircle2 size={36} className="text-emerald-500" />
-                </div>
-                <span className="inline-block px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 mb-3">
-                  🎉 70% Deposit Received via PesaPal
-                </span>
-                <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Production Slot Locked In!</h2>
-                <p className="text-gray-600 mb-6 leading-relaxed max-w-md mx-auto text-sm">
-                  Thank you, <strong className="text-gray-900">{successData?.bizName ?? bizName}</strong>! Your 70% deposit is confirmed and your creative producer has been scheduled.
-                </p>
+            <div>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                style={{
+                  background: isDepositPaid ? 'rgba(16,185,129,0.1)' : 'rgba(124,58,237,0.1)',
+                  border: isDepositPaid ? '2px solid rgba(16,185,129,0.3)' : '2px solid rgba(124,58,237,0.25)',
+                }}>
+                <CheckCircle2 size={32} className={isDepositPaid ? 'text-emerald-500' : 'text-purple-600'} />
               </div>
-            ) : (
-              <div>
-                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                  style={{ background: 'rgba(124,58,237,0.1)', border: '2px solid rgba(124,58,237,0.25)' }}>
-                  <CheckCircle2 size={32} className="text-purple-600" />
-                </div>
 
-                <h2 className="text-2xl font-extrabold text-gray-900 mb-1">Quote request received</h2>
+              <h2 className="text-2xl font-extrabold text-gray-900 mb-1">
+                {isDepositPaid ? '🎉 70% Deposit Confirmed!' : 'Quote request received'}
+              </h2>
 
                 <p className="text-gray-500 mb-6 leading-relaxed text-sm">
-                  We have your brief, <strong className="text-gray-900">{successData?.bizName ?? bizName}</strong>. You can lock in your production queue immediately with a 70% deposit or chat with our team on WhatsApp first.
+                  {isDepositPaid
+                    ? <>Your production queue slot is locked in for <strong className="text-gray-900">{successData?.bizName ?? bizName}</strong>. Our creative team has started prep work on your commercial.</>
+                    : <>We have your brief, <strong className="text-gray-900">{successData?.bizName ?? bizName}</strong>. You can lock in your production queue immediately with a 70% deposit or chat with our team on WhatsApp first.</>
+                  }
                 </p>
 
-                {/* Instant PesaPal 70% Deposit Checkout */}
-                <div className="max-w-md mx-auto mb-6 p-5 rounded-2xl text-left shadow-lg border relative overflow-hidden"
-                  style={{ background: 'linear-gradient(145deg, #09031a 0%, #150833 100%)', borderColor: 'rgba(124,58,237,0.35)' }}>
-                  
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400">Lock In Production Now</span>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                      70% Deposit Model
-                    </span>
-                  </div>
-
-                  <div className="flex items-baseline justify-between mb-2">
-                    <div>
-                      <p className="text-xs text-purple-200/70">70% Milestone Deposit to Start</p>
-                      <p className="text-2xl font-black text-white">
-                        KES {(successData?.depositAmount || Math.round(price.total * 0.7)).toLocaleString()}
-                      </p>
+                {/* Instant PesaPal 70% Deposit Checkout OR Cleared Milestone Portal */}
+                {isDepositPaid ? (
+                  <div className="max-w-md mx-auto mb-6 p-6 rounded-2xl text-left shadow-xl border relative overflow-hidden"
+                    style={{ background: 'linear-gradient(145deg, #052e16 0%, #064e3b 50%, #022c22 100%)', borderColor: 'rgba(52,211,153,0.4)' }}>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-300">Milestone Payment Verified</span>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-400/20 text-emerald-200 border border-emerald-400/30">
+                        70% Deposit Cleared
+                      </span>
                     </div>
-                    <div className="text-right">
-                      <p className="text-[11px] text-purple-200/50">Total Standard Price</p>
-                      <p className="text-sm font-semibold text-purple-200/80">
-                        KES {(successData?.totalPrice || price.total).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
 
-                  <p className="text-[11px] text-purple-200/60 leading-relaxed mb-4">
-                    Pay securely via M-Pesa, Visa, or Mastercard. The 30% balance (KES {Math.round((successData?.totalPrice || price.total) * 0.3).toLocaleString()}) is only payable after you review and approve your watermarked video preview.
-                  </p>
-
-                  {pesapalError && (
-                    <p className="text-xs text-rose-300 mb-3 bg-rose-500/20 p-2.5 rounded-lg border border-rose-500/30">
-                      {pesapalError}
+                    <h3 className="text-lg font-extrabold text-white mb-2">🎬 Live Production Assigned</h3>
+                    <p className="text-xs text-emerald-100/80 leading-relaxed mb-4">
+                      Your commercial is in pre-production. Track scriptwriting, filming, and watermarked cuts in your dedicated client portal.
                     </p>
-                  )}
 
-                  <button
-                    type="button"
-                    onClick={handlePayDeposit}
-                    disabled={pesapalLoading}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-sm font-extrabold text-white shadow-md transition-all hover:opacity-95 active:scale-[0.99] disabled:opacity-60 cursor-pointer"
-                    style={{ background: 'linear-gradient(135deg, #059669, #0284c7)' }}
-                  >
-                    {pesapalLoading ? (
-                      <>
-                        <Loader2 size={16} className="animate-spin" />
-                        Connecting to PesaPal...
-                      </>
+                    {portalToken ? (
+                      <Link
+                        to={`/delivery/${portalToken}`}
+                        className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-sm font-extrabold text-white shadow-lg transition-all hover:opacity-95 active:scale-[0.99] cursor-pointer mb-3"
+                        style={{ background: 'linear-gradient(135deg, #059669, #0284c7)' }}
+                      >
+                        <Film size={16} /> Open Live Video Production Portal →
+                      </Link>
+                    ) : portalChecking ? (
+                      <div className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-xs font-semibold text-emerald-100 bg-emerald-900/50 border border-emerald-500/30 mb-3">
+                        <Loader2 size={15} className="animate-spin text-emerald-300" />
+                        Connecting your live production tracking portal...
+                      </div>
                     ) : (
-                      <>
-                        <Lock size={15} />
-                        Pay 70% Deposit (KES {(successData?.depositAmount || Math.round(price.total * 0.7)).toLocaleString()})
-                      </>
+                      <Link
+                        to={`/delivery/demo`}
+                        className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-sm font-extrabold text-white shadow-lg transition-all hover:opacity-95 active:scale-[0.99] cursor-pointer mb-3"
+                        style={{ background: 'linear-gradient(135deg, #059669, #0284c7)' }}
+                      >
+                        <Film size={16} /> Open Production Portal →
+                      </Link>
                     )}
-                  </button>
 
-                  <div className="flex items-center justify-center gap-2.5 mt-3 text-[10px] text-purple-200/50 font-medium">
-                    <span>🔒 M-Pesa</span>
-                    <span>•</span>
-                    <span>Visa</span>
-                    <span>•</span>
-                    <span>Mastercard</span>
-                    <span>•</span>
-                    <span>PesaPal Secure Checkout</span>
+                    <div className="rounded-xl p-3 bg-black/25 border border-white/10 space-y-1.5 text-xs text-emerald-100/90">
+                      <div className="flex justify-between">
+                        <span>70% Deposit Cleared:</span>
+                        <span className="font-bold text-white">KES {(successData?.depositAmount || Math.round(price.total * 0.7)).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>30% Balance on Delivery Approval:</span>
+                        <span className="font-bold text-emerald-300">KES {Math.round((successData?.totalPrice || price.total) * 0.3).toLocaleString()}</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="max-w-md mx-auto mb-6 p-5 rounded-2xl text-left shadow-lg border relative overflow-hidden"
+                    style={{ background: 'linear-gradient(145deg, #09031a 0%, #150833 100%)', borderColor: 'rgba(124,58,237,0.35)' }}>
+                    
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400">Lock In Production Now</span>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        70% Deposit Model
+                      </span>
+                    </div>
+
+                    <div className="flex items-baseline justify-between mb-2">
+                      <div>
+                        <p className="text-xs text-purple-200/70">70% Milestone Deposit to Start</p>
+                        <p className="text-2xl font-black text-white">
+                          KES {(successData?.depositAmount || Math.round(price.total * 0.7)).toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[11px] text-purple-200/50">Total Standard Price</p>
+                        <p className="text-sm font-semibold text-purple-200/80">
+                          KES {(successData?.totalPrice || price.total).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-purple-200/60 leading-relaxed mb-4">
+                      Pay securely via M-Pesa, Visa, or Mastercard. The 30% balance (KES {Math.round((successData?.totalPrice || price.total) * 0.3).toLocaleString()}) is only payable after you review and approve your watermarked video preview.
+                    </p>
+
+                    {pesapalError && (
+                      <p className="text-xs text-rose-300 mb-3 bg-rose-500/20 p-2.5 rounded-lg border border-rose-500/30">
+                        {pesapalError}
+                      </p>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={handlePayDeposit}
+                      disabled={pesapalLoading}
+                      className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-sm font-extrabold text-white shadow-md transition-all hover:opacity-95 active:scale-[0.99] disabled:opacity-60 cursor-pointer"
+                      style={{ background: 'linear-gradient(135deg, #059669, #0284c7)' }}
+                    >
+                      {pesapalLoading ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          Connecting to PesaPal...
+                        </>
+                      ) : (
+                        <>
+                          <Lock size={15} />
+                          Pay 70% Deposit (KES {(successData?.depositAmount || Math.round(price.total * 0.7)).toLocaleString()})
+                        </>
+                      )}
+                    </button>
+
+                    <div className="flex items-center justify-center gap-2.5 mt-3 text-[10px] text-purple-200/50 font-medium">
+                      <span>🔒 M-Pesa</span>
+                      <span>•</span>
+                      <span>Visa</span>
+                      <span>•</span>
+                      <span>Mastercard</span>
+                      <span>•</span>
+                      <span>PesaPal Secure Checkout</span>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex items-center gap-3 max-w-md mx-auto mb-4">
                   <div className="h-px bg-gray-200 flex-1" />
@@ -854,7 +937,6 @@ export default function Quote() {
                   <div className="h-px bg-gray-200 flex-1" />
                 </div>
               </div>
-            )}
 
             {/* Official Quotation & Print Action */}
             <div className="max-w-md mx-auto mb-3">

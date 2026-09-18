@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Film, CheckCircle, Download, Star, Loader2, Clock, AlertCircle, CreditCard, Send, ExternalLink, Sparkles, MessageCircle } from 'lucide-react'
+import { Film, CheckCircle, Download, Star, Loader2, Clock, AlertCircle, CreditCard, Send, ExternalLink, Sparkles, MessageCircle, Eye, ShieldCheck, Lock } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 interface Project {
@@ -35,11 +35,45 @@ export default function DeliveryView() {
   const [reviewSubmitting, setReviewSubmitting] = useState(false)
   const [reviewDone, setReviewDone] = useState(false)
 
+  const isPaidParam = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('paid') === 'true'
+  const [pollingPayment, setPollingPayment] = useState(isPaidParam)
+
   useEffect(() => {
     if (!token) return
     supabase.from('projects').select('*').eq('token', token).single()
-      .then(({ data }) => { setProject(data as Project); setLoading(false) })
+      .then(({ data }) => {
+        setProject(data as Project)
+        setLoading(false)
+        if (data?.balance_paid_at) {
+          setPollingPayment(false)
+        }
+      })
   }, [token])
+
+  useEffect(() => {
+    if (!token || !isPaidParam || project?.balance_paid_at) {
+      if (project?.balance_paid_at) setPollingPayment(false)
+      return
+    }
+
+    setPollingPayment(true)
+    let attempts = 0
+    const maxAttempts = 15
+
+    const interval = setInterval(async () => {
+      attempts++
+      const { data } = await supabase.from('projects').select('*').eq('token', token).maybeSingle()
+      if (data) {
+        setProject(data as Project)
+        if (data.balance_paid_at || attempts >= maxAttempts) {
+          setPollingPayment(false)
+          clearInterval(interval)
+        }
+      }
+    }, 2000)
+
+    return () => clearInterval(interval)
+  }, [token, isPaidParam, project?.balance_paid_at])
 
   async function payBalance() {
     if (!project) return
@@ -130,6 +164,17 @@ export default function DeliveryView() {
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-12">
+        {/* Polling payment verification banner */}
+        {pollingPayment && (
+          <div className="flex items-center gap-3 rounded-2xl border border-purple-500/30 bg-purple-500/20 px-5 py-4 mb-8">
+            <Loader2 size={20} className="text-purple-300 animate-spin shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-purple-200">Verifying 30% milestone payment...</p>
+              <p className="text-xs text-purple-300/80 mt-0.5">Connecting with PesaPal IPN to unlock your commercial rights and 4K clean master file.</p>
+            </div>
+          </div>
+        )}
+
         {/* Status banner */}
         {isCompleted ? (
           <div className="flex items-center gap-3 rounded-2xl border border-green-500/30 bg-green-500/10 px-5 py-4 mb-8">
@@ -143,8 +188,12 @@ export default function DeliveryView() {
           <div className="flex items-center gap-3 rounded-2xl border border-purple-500/30 bg-purple-500/10 px-5 py-4 mb-8">
             <CheckCircle size={20} className="text-purple-400 shrink-0" />
             <div>
-              <p className="text-sm font-bold text-purple-300">Your video is ready!</p>
-              <p className="text-xs text-purple-400/80 mt-0.5">Review and download below. If everything looks great, mark it complete.</p>
+              <p className="text-sm font-bold text-purple-300">Your video is ready for review!</p>
+              <p className="text-xs text-purple-400/80 mt-0.5">
+                {balancePaid || balanceDue === 0
+                  ? 'Your commercial rights are active. Download your clean 4K master file below.'
+                  : 'Review the watermarked preview below. Clear the 30% balance to unlock the clean 4K broadcast master.'}
+              </p>
             </div>
           </div>
         ) : (
@@ -152,7 +201,7 @@ export default function DeliveryView() {
             <Clock size={20} className="text-yellow-400 shrink-0" />
             <div>
               <p className="text-sm font-bold text-yellow-300">Your video is being produced</p>
-              <p className="text-xs text-yellow-400/80 mt-0.5">You will receive an email when it is ready for review.</p>
+              <p className="text-xs text-yellow-400/80 mt-0.5">You will receive an email and WhatsApp alert when it is ready for review.</p>
             </div>
           </div>
         )}
@@ -169,7 +218,20 @@ export default function DeliveryView() {
         {/* Deliverable */}
         {isDelivered && project.deliverable_url && (
           <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur p-6 mb-6">
-            <p className="text-xs font-bold uppercase tracking-widest text-purple-400 mb-4">Your deliverable</p>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs font-bold uppercase tracking-widest text-purple-400">
+                {balancePaid || balanceDue === 0 ? 'Master Deliverable' : 'Watermarked Preview'}
+              </p>
+              {balancePaid || balanceDue === 0 ? (
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                  <ShieldCheck size={12} /> Clean 4K Master · Rights Unlocked
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
+                  <Lock size={12} /> Preview Cut · Watermarked
+                </span>
+              )}
+            </div>
 
             {/* Thumbnail / preview */}
             {project.thumbnail_url ? (
@@ -182,25 +244,53 @@ export default function DeliveryView() {
               </div>
             )}
 
-            <p className="text-base font-bold text-white mb-4">{project.deliverable_label ?? 'Final video'}</p>
+            <p className="text-base font-bold text-white mb-2">
+              {balancePaid || balanceDue === 0
+                ? (project.deliverable_label ?? 'Final 4K Master Video (Commercial Rights Unlocked)')
+                : (project.deliverable_label ? `${project.deliverable_label} (Preview)` : 'Watermarked Preview Cut (Review only)')}
+            </p>
 
-            <a href={project.deliverable_url} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg,#7c3aed,#2563eb)' }}>
-              <Download size={16} /> Download / View Video
-            </a>
+            {balanceDue > 0 && !balancePaid && (
+              <p className="text-xs text-amber-200/90 mb-4 leading-relaxed bg-amber-500/10 p-3 rounded-xl border border-amber-500/20">
+                🔒 <strong>Review Cut Notice:</strong> This preview is for your review and approval. Once you approve the cut and clear the 30% balance (KES {balanceDue.toLocaleString()}), the clean 4K commercial master file will immediately unlock without watermarks.
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-3">
+              <a href={project.deliverable_url} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 shadow-lg"
+                style={{ background: balancePaid || balanceDue === 0 ? 'linear-gradient(135deg,#059669,#0284c7)' : 'linear-gradient(135deg,#7c3aed,#2563eb)' }}>
+                {balancePaid || balanceDue === 0 ? (
+                  <><Download size={16} /> Download Clean 4K Master</>
+                ) : (
+                  <><Eye size={16} /> Review Preview Video</>
+                )}
+              </a>
+
+              {balanceDue > 0 && !balancePaid && (
+                <button
+                  type="button"
+                  onClick={payBalance}
+                  disabled={paying}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 shadow-lg cursor-pointer"
+                  style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)' }}
+                >
+                  {paying ? <><Loader2 size={15} className="animate-spin" /> Redirecting to payment...</> : <><CreditCard size={15} /> Pay 30% Balance (KES {balanceDue.toLocaleString()})</>}
+                </button>
+              )}
+            </div>
           </div>
         )}
 
         {/* Payment section */}
         {isDelivered && balanceDue > 0 && !balancePaid && (
           <div className="rounded-3xl border border-amber-500/30 bg-amber-500/10 backdrop-blur p-6 mb-6">
-            <p className="text-xs font-bold uppercase tracking-widest text-amber-400 mb-4">Balance payment</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-amber-400 mb-4">Milestone Balance Payment</p>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-sm text-gray-300">Final balance due</p>
+                <p className="text-sm text-gray-300">Final 30% balance due</p>
                 {project.final_price && project.deposit_paid && (
-                  <p className="text-xs text-gray-500 mt-0.5">KES {project.final_price.toLocaleString()} total · KES {project.deposit_paid.toLocaleString()} deposit paid</p>
+                  <p className="text-xs text-gray-500 mt-0.5">KES {project.final_price.toLocaleString()} total · KES {project.deposit_paid.toLocaleString()} (70% deposit paid)</p>
                 )}
               </div>
               <p className="text-2xl font-extrabold text-white">KES {balanceDue.toLocaleString()}</p>
@@ -209,7 +299,7 @@ export default function DeliveryView() {
             <button onClick={payBalance} disabled={paying}
               className="w-full py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-50"
               style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)' }}>
-              {paying ? <><Loader2 size={15} className="animate-spin" /> Redirecting to payment...</> : <><CreditCard size={15} /> Pay Balance Now</>}
+              {paying ? <><Loader2 size={15} className="animate-spin" /> Redirecting to payment...</> : <><CreditCard size={15} /> Pay Balance Now & Unlock Commercial Rights</>}
             </button>
           </div>
         )}
