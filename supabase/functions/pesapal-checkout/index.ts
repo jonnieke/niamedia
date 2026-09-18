@@ -51,7 +51,16 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { orderId, amountKes, description, callbackUrl, email, phone, firstName, lastName } = await req.json()
+    const body = await req.json()
+    const orderId = body.orderId || body.id
+    const amountKes = body.amountKes ?? body.amount ?? 0
+    const description = body.description || "Nia Media Order"
+    const callbackUrl = body.callbackUrl || body.callback_url || "https://niamedia.co.ke/payment/callback"
+    const email = body.email || body.email_address || ""
+    const phone = body.phone || body.phone_number || ""
+    const customerName = body.customerName || ""
+    const firstName = body.firstName || (customerName ? customerName.split(" ")[0] : "") || "Customer"
+    const lastName = body.lastName || (customerName ? customerName.split(" ").slice(1).join(" ") : "") || ""
 
     const token = await getToken()
     const ipnId = await getOrRegisterIpn(token)
@@ -83,17 +92,24 @@ Deno.serve(async (req) => {
     const orderData = await orderRes.json()
     if (!orderData.redirect_url) throw new Error(`Order submit failed: ${JSON.stringify(orderData)}`)
 
-    // Persist tracking ID so the callback page can query it
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    )
-    await supabase.from("audio_orders")
-      .update({ order_tracking_id: orderData.order_tracking_id, payment_status: "awaiting_payment" })
-      .eq("id", orderId)
+    // Persist tracking ID for audio orders if applicable
+    if (orderId && !orderId.includes("_")) {
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      )
+      await supabase.from("audio_orders")
+        .update({ order_tracking_id: orderData.order_tracking_id, payment_status: "awaiting_payment" })
+        .eq("id", orderId)
+    }
 
     return new Response(
-      JSON.stringify({ redirectUrl: orderData.redirect_url, orderTrackingId: orderData.order_tracking_id }),
+      JSON.stringify({
+        redirectUrl: orderData.redirect_url,
+        redirect_url: orderData.redirect_url,
+        orderTrackingId: orderData.order_tracking_id,
+        order_tracking_id: orderData.order_tracking_id,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     )
   } catch (err: unknown) {

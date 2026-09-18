@@ -263,6 +263,41 @@ Deno.serve(async (req) => {
           })
         }
       }
+    } else if (orderMerchantReference.startsWith("quote_")) {
+      // Instant 70% deposit on online quote
+      const quoteId = orderMerchantReference.replace("quote_", "")
+      if (paymentStatus === "paid") {
+        await supabase.from("quote_requests").update({
+          status: "converted",
+        }).eq("id", quoteId)
+
+        const { data: q } = await supabase.from("quote_requests")
+          .select("id, contact_name, business_name, email, phone, video_length, price_max")
+          .eq("id", quoteId).maybeSingle()
+
+        const depAmount = Math.round((q?.price_max || 8000) * 0.7)
+
+        void notifyAdmins(
+          "success",
+          `🎉 70% Deposit Received — ${q?.business_name ?? "Client"}`,
+          `KES ${depAmount.toLocaleString("en-KE")} 70% deposit paid via PesaPal for ${q?.video_length ?? "video"} commercial. Ready to start production!`,
+          "/admin",
+        )
+
+        if (q?.email) {
+          void supabase.functions.invoke("send-client-email", {
+            body: {
+              type: "deposit_confirmed",
+              to: q.email,
+              name: q.contact_name,
+              businessName: q.business_name,
+              depositAmount: depAmount,
+              timelineDays: 5,
+              videoLength: q.video_length,
+            },
+          })
+        }
+      }
     } else {
       // Audio order — existing logic
       await supabase.from("audio_orders")

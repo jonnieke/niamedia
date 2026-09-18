@@ -48,15 +48,18 @@ export default function DeliveryView() {
     try {
       const { data, error } = await supabase.functions.invoke('pesapal-checkout', {
         body: {
+          amountKes: project.balance_due,
           amount: project.balance_due,
-          description: `Final payment — ${project.business_name}`,
+          description: `Final balance payment (30%) — ${project.business_name}`,
           orderId: `proj_${project.id}`,
           customerName: project.contact_name ?? project.business_name,
           currency: 'KES',
+          callbackUrl: `${window.location.origin}/delivery/${project.token || token}?paid=true`,
         },
       })
-      if (error || !data?.redirect_url) throw new Error(error?.message ?? 'No redirect URL')
-      window.location.href = data.redirect_url
+      const redirect = data?.redirectUrl || data?.redirect_url
+      if (error || !redirect) throw new Error(error?.message ?? data?.error ?? 'Unable to connect to payment gateway')
+      window.location.href = redirect
     } catch (err: unknown) {
       setPayError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
       setPaying(false)
