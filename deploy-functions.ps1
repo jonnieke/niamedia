@@ -8,7 +8,7 @@ param(
   [switch]$DryRun
 )
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 
 $functions = @(
   # AI & Campaign Generation
@@ -80,10 +80,12 @@ $success = 0
 $failed  = @()
 
 Write-Host ""
-Write-Host "Nia Media — Edge Function Deploy" -ForegroundColor Cyan
+Write-Host "Nia Media - Edge Function Deploy" -ForegroundColor Cyan
 Write-Host "=================================" -ForegroundColor Cyan
 Write-Host "Functions to deploy: $total"
-if ($DryRun) { Write-Host "[DRY RUN — no deploys will happen]" -ForegroundColor Yellow }
+if ($DryRun) {
+  Write-Host "[DRY RUN - no deploys will happen]" -ForegroundColor Yellow
+}
 Write-Host ""
 
 $i = 0
@@ -98,17 +100,12 @@ foreach ($fn in $targets) {
     continue
   }
 
-  try {
-    $out = npx supabase functions deploy $fn --no-verify-jwt 2>&1
-    if ($LASTEXITCODE -ne 0) {
-      throw $out
-    }
+  npx supabase functions deploy $fn --no-verify-jwt 2>$null
+  if ($LASTEXITCODE -eq 0) {
     Write-Host "OK" -ForegroundColor Green
     $success++
-  }
-  catch {
-    Write-Host "FAILED" -ForegroundColor Red
-    Write-Host "  $_" -ForegroundColor DarkRed
+  } else {
+    Write-Host "FAILED (exit code $LASTEXITCODE)" -ForegroundColor Red
     $failed += $fn
   }
 }

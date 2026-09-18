@@ -450,6 +450,50 @@ function VideoRequestExpandedRow({ request, onStatusChange }: {
 }) {
   const [expanded, setExpanded] = useState(false)
   const [updating, setUpdating] = useState(false)
+  const [converting, setConverting] = useState(false)
+  const [convertedToken, setConvertedToken] = useState<string | null>(null)
+
+  const convertToProductionProject = async () => {
+    setConverting(true)
+    const len = request.length?.toLowerCase() || ''
+    const lengthMap: Record<string, number> = {
+      '15s': 5000,
+      '15 seconds': 5000,
+      '30s': 8000,
+      '30 seconds': 8000,
+      '60s': 15000,
+      '60 seconds': 15000,
+      '90s': 20000,
+      '90 seconds': 20000,
+      '3m': 60000,
+      '3m+': 60000,
+    }
+    const finalPrice = lengthMap[len] || 8000
+    const depAmount = Math.round(finalPrice * 0.7)
+    const balanceAmount = finalPrice - depAmount
+    const deliveryDays = request.delivery_speed === '24-hours' ? 1 : request.delivery_speed === '48-hours' ? 2 : 5
+    const dueDate = new Date(Date.now() + deliveryDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+    const { data: proj, error } = await supabase.from('projects').insert({
+      business_name: request.business_name,
+      contact_name: request.profiles?.name || null,
+      email: request.profiles?.email || null,
+      video_length: request.length || '30 seconds',
+      platforms: request.platform ? [request.platform] : ['Instagram', 'TikTok'],
+      status: 'in_production',
+      final_price: finalPrice,
+      deposit_paid: depAmount,
+      balance_due: balanceAmount,
+      due_date: dueDate,
+      editor_notes: `Spawned from Video Request #${request.id.slice(0, 8)}. Title: ${request.title}. Notes: ${request.notes || 'None'}. Script: ${request.script?.slice(0, 300) || 'None'}`,
+    }).select('id, token').single()
+
+    if (!error && proj) {
+      setConvertedToken(proj.token)
+      await updateStatus('in-production')
+    }
+    setConverting(false)
+  }
 
   const updateStatus = async (status: VideoRequestStatus) => {
     setUpdating(true)
@@ -541,6 +585,35 @@ function VideoRequestExpandedRow({ request, onStatusChange }: {
               <p className="text-xs text-gray-600 leading-relaxed">{request.notes}</p>
             </div>
           )}
+
+          {/* Convert to Production Project */}
+          <div className="p-3.5 rounded-xl border border-purple-100 bg-purple-50/50 flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <p className="text-xs font-bold text-gray-900">Production Ticket</p>
+              <p className="text-[11px] text-gray-500 mt-0.5">
+                Standard pricing: KES {(request.length?.toLowerCase().includes('15') ? 5000 : request.length?.toLowerCase().includes('60') ? 15000 : request.length?.toLowerCase().includes('90') ? 20000 : request.length?.toLowerCase().includes('3m') ? 60000 : 8000).toLocaleString()} (70% deposit / 30% delivery balance)
+              </p>
+            </div>
+            {convertedToken ? (
+              <div className="flex items-center gap-2 text-xs text-emerald-700 font-semibold bg-emerald-100/70 px-3 py-1.5 rounded-lg border border-emerald-200">
+                <CheckCircle size={14} className="text-emerald-600" /> Ticket Active on Production Board!
+                <a href={`/delivery/${convertedToken}`} target="_blank" rel="noopener noreferrer" className="underline text-purple-700 hover:text-purple-900 ml-1 font-bold">
+                  Client Portal →
+                </a>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={convertToProductionProject}
+                disabled={converting || request.status === 'in-production'}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold text-white transition-all shadow-sm hover:opacity-95 disabled:opacity-50 cursor-pointer"
+                style={{ background: 'linear-gradient(135deg,#7c3aed,#2563eb)' }}
+              >
+                {converting ? <Loader2 size={13} className="animate-spin" /> : <Film size={13} />}
+                Convert to Production Project
+              </button>
+            )}
+          </div>
 
           <div className="flex items-center gap-3 flex-wrap">
             <p className="text-xs text-gray-500">Update status:</p>

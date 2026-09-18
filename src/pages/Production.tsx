@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import {
   Film, Link2, CheckCircle, Clock, Truck, Trophy,
   Plus, ChevronRight, Loader2, X, ExternalLink,
-  AlertCircle, Calendar, DollarSign, Send,
+  AlertCircle, Calendar, DollarSign, Send, MessageCircle,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
@@ -160,6 +160,12 @@ export default function Production() {
       },
     })
     await updateStatus(project.id, 'delivered')
+    if (project.phone) {
+      const phoneNum = project.phone.replace(/\D/g, '').replace(/^0/, '254')
+      const clientName = project.contact_name || project.business_name
+      const msg = `Hi ${clientName}! 🎬 Your commercial video preview for *${project.business_name}* is ready for your review!\n\nReview the preview cut and approve final master delivery here:\n🔗 ${APP_URL}/delivery/${project.token}\n\nQuestions or revision notes? Just reply right here!`
+      window.open(`https://wa.me/${phoneNum}?text=${encodeURIComponent(msg)}`, '_blank')
+    }
     setNotifying(null)
   }
 
@@ -207,14 +213,41 @@ export default function Production() {
         </div>
         <div>
           <label className="block text-xs font-semibold text-gray-500 mb-1">Final Price (KES)</label>
-          <input type="number" value={form.final_price} onChange={e => setForm(f => ({ ...f, final_price: e.target.value }))}
-            className="input-field w-full" placeholder="15000" />
+          <input
+            type="number"
+            value={form.final_price}
+            onChange={e => {
+              const val = e.target.value
+              const num = parseFloat(val)
+              if (!isNaN(num) && num > 0) {
+                const dep70 = Math.round(num * 0.7)
+                setForm(f => ({ ...f, final_price: val, deposit_paid: dep70.toString() }))
+              } else {
+                setForm(f => ({ ...f, final_price: val }))
+              }
+            }}
+            className="input-field w-full"
+            placeholder="15000"
+          />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Deposit Paid (KES)</label>
-          <input type="number" value={form.deposit_paid} onChange={e => setForm(f => ({ ...f, deposit_paid: e.target.value }))}
-            className="input-field w-full" placeholder="7500" />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Deposit Paid (70% standard)</label>
+          <input
+            type="number"
+            value={form.deposit_paid}
+            onChange={e => setForm(f => ({ ...f, deposit_paid: e.target.value }))}
+            className="input-field w-full"
+            placeholder="10500"
+          />
         </div>
+        {form.final_price && parseFloat(form.final_price) > 0 && (
+          <div className="col-span-2 p-2.5 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-between text-xs">
+            <span className="text-purple-700 font-medium">Standard Milestone (70 / 30):</span>
+            <span className="text-purple-900 font-bold">
+              70% Deposit: KES {Math.round(parseFloat(form.final_price) * 0.7).toLocaleString()} · 30% Balance: KES {Math.round(parseFloat(form.final_price) * 0.3).toLocaleString()}
+            </span>
+          </div>
+        )}
         <div>
           <label className="block text-xs font-semibold text-gray-500 mb-1">Due Date</label>
           <input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))}
@@ -381,6 +414,28 @@ export default function Production() {
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:border-purple-200 hover:text-purple-600 transition-all">
                         <ExternalLink size={12} /> Client Page
                       </a>
+
+                      {/* 1-Click WhatsApp Client Dispatcher */}
+                      {project.phone && (() => {
+                        const phoneNum = project.phone.replace(/\D/g, '').replace(/^0/, '254')
+                        const clientName = project.contact_name || project.business_name
+                        const trackingUrl = `${APP_URL}/delivery/${project.token}`
+                        const isReviewReady = project.status === 'review' || project.status === 'delivered'
+                        const msg = isReviewReady
+                          ? `Hi ${clientName}! 🎬 Your commercial video preview for *${project.business_name}* is ready for your review!\n\nReview the watermarked preview cut and approve final master delivery here:\n🔗 ${trackingUrl}\n\nQuestions or revision notes? Just reply right here!`
+                          : `Hi ${clientName}! 🎬 Your commercial video for *${project.business_name}* is active in our production pipeline.\n\nYou can track the live production milestones and concept roadmap here:\n🔗 ${trackingUrl}\n\nWe'll notify you as soon as your preview cut is ready!`
+                        return (
+                          <a
+                            href={`https://wa.me/${phoneNum}?text=${encodeURIComponent(msg)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition-all"
+                            title="Send tracking / preview link to client via WhatsApp"
+                          >
+                            <MessageCircle size={12} /> WhatsApp Client
+                          </a>
+                        )
+                      })()}
 
                       {/* Edit */}
                       <button onClick={() => openEdit(project)}
