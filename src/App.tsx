@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { Loader2 } from 'lucide-react'
 import { AuthProvider, useAuth } from './lib/AuthContext'
 import RouteSeo from './components/RouteSeo'
+import FloatingSurveyTrigger from './components/FloatingSurveyTrigger'
 import { initAnalytics, trackPageView } from './lib/analytics'
 
 import Home from './pages/Home'
@@ -108,6 +109,7 @@ function AppRoutes() {
   return (
     <>
       <RouteSeo />
+      <FloatingSurveyTrigger />
       <Suspense fallback={<RouteLoader />}>
         <Routes>
         <Route path="/" element={<Home />} />

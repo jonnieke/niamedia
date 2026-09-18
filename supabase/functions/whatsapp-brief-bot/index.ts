@@ -133,6 +133,7 @@ Deno.serve(async (req) => {
             `✨ *Your Campaign is Ready!*\n\n` +
             `📱 *WhatsApp Message:*\n${waMsg}\n\n` +
             `🎨 *Poster Headline:*\n${content.posterCopy?.headline ?? ""}\n\n` +
+            `⭐ Rate your experience & tell us what marketing tools you need next: https://niamedia.co.ke/survey\n\n` +
             `Reply *START* to create another campaign.`
           // Can't send proactively via TwiML — store for next interaction or use Twilio API
           await supabase.from("whatsapp_sessions")
@@ -159,6 +160,7 @@ Deno.serve(async (req) => {
         `✨ *Your Campaign is Ready!*\n\n` +
         `📱 *WhatsApp Message:*\n${waMsg}\n\n` +
         `🎨 *Poster Headline:*\n${content.posterCopy?.headline ?? ""}\n\n` +
+        `⭐ Rate your experience & tell us what marketing tools you need next: https://niamedia.co.ke/survey\n\n` +
         `Reply *START* to create another campaign, or visit niamedia.co.ke to unlock the full kit.`
 
       return new Response(JSON.stringify({ reply, campaignData: content }), {

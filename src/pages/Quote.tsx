@@ -17,6 +17,7 @@ import { supabase } from '../lib/supabase'
 import { SECONDARY_NIA_CTA } from '../lib/cta'
 
 import { trackEvent } from '../lib/analytics'
+import MarketSurveyModal from '../components/MarketSurveyModal'
 
 /* Pricing logic */
 
@@ -181,6 +182,24 @@ function PricePanel({ min, max, length, rush, platforms, poster, subtitles }: {
 
       </div>
 
+      {/* 50% / 50% Milestone terms */}
+      <div className="border-t pt-4 mb-3" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+        <p className="text-[10px] font-bold tracking-widest uppercase mb-2" style={{ color: 'rgba(196,181,253,0.7)' }}>MILESTONE PAYMENT TERMS</p>
+        <div className="rounded-xl p-3 space-y-1.5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="flex items-center justify-between text-xs">
+            <span style={{ color: 'rgba(255,255,255,0.6)' }}>50% Deposit to Start:</span>
+            <span className="font-extrabold text-emerald-400">KES {Math.round(max / 2).toLocaleString()}</span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span style={{ color: 'rgba(255,255,255,0.6)' }}>50% Balance on Delivery:</span>
+            <span className="font-semibold text-white">KES {Math.round(max / 2).toLocaleString()}</span>
+          </div>
+        </div>
+        <p className="text-[10px] mt-2 leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
+          🔒 Pay 50% deposit via M-Pesa or Card to begin. Balance payable only after you review and approve the watermarked video cut.
+        </p>
+      </div>
+
       <div className="border-t pt-4" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
 
         <div className="flex items-center gap-2 mb-3">
@@ -298,6 +317,7 @@ export default function Quote() {
   const [submitting, setSubmitting] = useState(false)
 
   const [error, setError] = useState('')
+  const [showSurvey, setShowSurvey] = useState(false)
 
   const price = useMemo(() => calcPrice(length, platforms, rush, subtitles), [length, platforms, rush, subtitles])
 
@@ -696,6 +716,33 @@ export default function Quote() {
               Opens WhatsApp with your brief pre-filled - just tap Send.
 
             </p>
+
+            {/* 50% Deposit Milestone info */}
+            <div className="max-w-md mx-auto mb-5 p-4 rounded-2xl border border-emerald-200 bg-emerald-50/70 text-left">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-bold text-emerald-950 uppercase tracking-wider">Milestone Terms</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-200/60 text-emerald-800">50% / 50% Safe Model</span>
+              </div>
+              <p className="text-xs text-emerald-900 leading-relaxed">
+                Standard price is <strong>KES {price.total.toLocaleString()}</strong>. Your 50% deposit of <strong>KES {Math.round(price.total / 2).toLocaleString()}</strong> reserves your creative team and production schedule. Balance is paid upon delivery approval.
+              </p>
+            </div>
+
+            {/* Customer Survey Callout */}
+            <div className="max-w-md mx-auto mb-6 p-4 rounded-2xl border border-purple-200 bg-purple-50 flex items-center justify-between gap-3 text-left">
+              <div>
+                <p className="text-xs font-bold text-purple-950">Help us identify gaps in the market</p>
+                <p className="text-[11px] text-purple-700">Rate your experience and tell us what tools you need next.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSurvey(true)}
+                className="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold text-white shadow-sm hover:opacity-95 transition-all"
+                style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}
+              >
+                ★ Rate & Survey
+              </button>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-md mx-auto">
 
@@ -1216,8 +1263,9 @@ export default function Quote() {
 
       </div>
 
+      <MarketSurveyModal isOpen={showSurvey} onClose={() => setShowSurvey(false)} sourcePage="quote_success" />
+
     </div>
 
   )
 }
-

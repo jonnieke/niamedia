@@ -1,14 +1,15 @@
-﻿import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
 import {
   Copy, Save, RefreshCw, Download, Check, Zap, Loader2,
   Wand2, MessageSquare, Share2, Sparkles, ImageIcon, X, Film, Users,
-  Eye, MousePointerClick, TrendingUp, Link as LinkIcon, Shuffle, Package, ClipboardCheck, BookMarked,
+  Eye, MousePointerClick, TrendingUp, Link as LinkIcon, Shuffle, Package, ClipboardCheck, BookMarked, Star,
 } from 'lucide-react'
 import JSZip from 'jszip'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import CreativeAssistant, { CreativeAssistantButton } from '../components/CreativeAssistant'
 import PosterCanvas from '../components/PosterCanvas'
+import MarketSurveyModal from '../components/MarketSurveyModal'
 import { CampaignFormData, GeneratedContent } from '../types'
 import { supabase, createShareableLink } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
@@ -218,6 +219,7 @@ export default function CampaignResults() {
   const [templateTitle, setTemplateTitle] = useState('')
   const [savingTemplate, setSavingTemplate] = useState(false)
   const [templateSaved, setTemplateSaved] = useState(false)
+  const [showSurvey, setShowSurvey] = useState(false)
 
   // Poster nudge
   const [posterNudgeDismissed, setPosterNudgeDismissed] = useState(
@@ -1136,6 +1138,28 @@ export default function CampaignResults() {
           </div>
         </div>
       )}
+
+      {/* Customer Feedback & Market Gap Survey Banner */}
+      <div className="mt-8 p-4 sm:p-5 rounded-2xl border border-purple-200 bg-purple-50/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-purple-100 text-purple-700 shrink-0">
+            <Star size={20} className="fill-amber-400 text-amber-500" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-gray-900">How was this campaign output?</p>
+            <p className="text-xs text-gray-500">Rate your experience and tell us what tools or services your business needs next.</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setShowSurvey(true)}
+          className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-white shrink-0 shadow-sm hover:opacity-95 transition-all"
+          style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}
+        >
+          <Star size={13} className="fill-amber-300 text-amber-300" /> Rate & Give Feedback
+        </button>
+      </div>
+
+      <MarketSurveyModal isOpen={showSurvey} onClose={() => setShowSurvey(false)} sourcePage="campaign_results" />
 
       {/* Post-save referral nudge */}
       {showReferralNudge && (
