@@ -91,21 +91,36 @@ function buildEmail(p: EmailPayload): { subject: string; html: string } {
     }
 
     case "deposit_confirmed": {
+      const portalLink = p.projectToken ? `${APP_URL}/delivery/${p.projectToken}` : null
       return {
-        subject: `Deposit received — production starts within 24 hours`,
+        subject: `Deposit received — production starts within 24 hours (${p.businessName})`,
         html: base(`
-          <h1>Deposit confirmed, ${first}!</h1>
-          <p>We've received your deposit for the <strong>${p.businessName}</strong> video commercial. Your project is now in our production queue.</p>
+          <h1>70% Deposit Confirmed, ${first}!</h1>
+          <p>We've received your production deposit for the <strong>${p.businessName}</strong> video commercial. Your project is officially queued and in production.</p>
           <div class="box">
-            <div class="box-row"><span class="box-label">Deposit paid</span><span class="box-value green">${p.depositAmount ? fmt(p.depositAmount) : "Confirmed"}</span></div>
-            <div class="box-row"><span class="box-label">Estimated delivery</span><span class="box-value">${p.timelineDays ?? 7} business days</span></div>
+            <div class="box-row"><span class="box-label">Deposit paid</span><span class="box-value green">${p.depositAmount ? fmt(p.depositAmount) : "70% Initial Deposit"}</span></div>
+            <div class="box-row"><span class="box-label">Estimated delivery</span><span class="box-value">${p.timelineDays ?? 5} business days</span></div>
+            ${p.videoLength ? `<div class="box-row"><span class="box-label">Video length</span><span class="box-value">${p.videoLength}</span></div>` : ""}
           </div>
-          <p><strong>What happens next:</strong></p>
-          <p>1. Our creative team will prepare your production brief within 24 hours.<br>
-          2. You'll receive a link to review and approve the script and shot list.<br>
-          3. Once approved, we begin filming and editing.</p>
-          <p>We'll keep you updated via WhatsApp. Thank you for choosing Nia Media!</p>
-          <div class="cta"><a href="https://wa.me/254751822556" class="wa">Message Our Team</a></div>
+
+          ${portalLink ? `
+          <div class="cta" style="margin:24px 0 16px;">
+            <a href="${portalLink}" class="btn" style="background:linear-gradient(135deg,#7c3aed,#2563eb);">Track Video Production Live →</a>
+          </div>
+          <p style="text-align:center;font-size:12px;color:#888;margin-bottom:20px;">
+            Your tracking portal:<br><a href="${portalLink}" style="color:#7c3aed;word-break:break-all">${portalLink}</a>
+          </p>
+          ` : ""}
+
+          <p><strong>Your Production Roadmap:</strong></p>
+          <p style="font-size:13px;line-height:1.8;color:#555;">
+            <strong>Step 1:</strong> Script & Visual Treatment (within 24 hrs)<br>
+            <strong>Step 2:</strong> Video Filming & Sound Engineering<br>
+            <strong>Step 3:</strong> Watermarked Preview Delivery on your tracking portal<br>
+            <strong>Step 4:</strong> Final 30% milestone balance clears clean 4K master delivery
+          </p>
+          <p>Questions or new brand assets to share? Reach our production desk on WhatsApp:</p>
+          <div class="cta"><a href="https://wa.me/254751822556" class="wa">WhatsApp Production Desk</a></div>
         `),
       }
     }

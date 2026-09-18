@@ -284,12 +284,14 @@ Deno.serve(async (req) => {
 
           // Check if project was already created for this payment (idempotency)
           const { data: existingProj } = await supabase.from("projects")
-            .select("id")
+            .select("id, token")
             .eq("pesapal_order_id", orderTrackingId)
             .maybeSingle()
 
+          let projectToken = existingProj?.token
+
           if (!existingProj) {
-            await supabase.from("projects").insert({
+            const { data: createdProj } = await supabase.from("projects").insert({
               business_name: q.business_name,
               contact_name: q.contact_name,
               email: q.email,
@@ -303,14 +305,18 @@ Deno.serve(async (req) => {
               due_date: dueDate,
               pesapal_order_id: orderTrackingId,
               editor_notes: `Auto-spawned from quote deposit. Promotion brief: ${q.what_to_promote || "Will provide details on WhatsApp"}`,
-            })
+            }).select("id, token").maybeSingle()
+
+            if (createdProj?.token) {
+              projectToken = createdProj.token
+            }
           }
 
           void notifyAdmins(
             "success",
             `🎉 70% Deposit Received — ${q.business_name}`,
-            `KES ${depAmount.toLocaleString("en-KE")} 70% deposit paid via PesaPal for ${q.video_length} commercial. Project active in /production!`,
-            "/production",
+            `KES ${depAmount.toLocaleString("en-KE")} (70% deposit) paid via PesaPal for ${q.video_length}. Portal: ${projectToken ? `/delivery/${projectToken}` : "/production"}`,
+            projectToken ? `/delivery/${projectToken}` : "/production",
           )
 
           if (q.email) {
@@ -323,6 +329,7 @@ Deno.serve(async (req) => {
                 depositAmount: depAmount,
                 timelineDays: deliveryDays,
                 videoLength: q.video_length,
+                projectToken,
               },
             })
           }

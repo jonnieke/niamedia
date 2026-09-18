@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
-import { Film, CheckCircle, Download, Star, Loader2, Clock, AlertCircle, CreditCard, Send } from 'lucide-react'
+import { useParams, Link } from 'react-router-dom'
+import { Film, CheckCircle, Download, Star, Loader2, Clock, AlertCircle, CreditCard, Send, ExternalLink, Sparkles, MessageCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 interface Project {
@@ -215,9 +215,38 @@ export default function DeliveryView() {
         )}
 
         {balancePaid && (
-          <div className="rounded-3xl border border-green-500/30 bg-green-500/10 backdrop-blur p-5 mb-6 flex items-center gap-3">
-            <CheckCircle size={18} className="text-green-400 shrink-0" />
-            <p className="text-sm font-semibold text-green-300">Final payment received. Thank you!</p>
+          <div className="rounded-3xl border border-green-500/30 bg-green-500/10 backdrop-blur p-6 mb-6">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-2xl bg-green-500/20 border border-green-500/30 flex items-center justify-center shrink-0">
+                <CheckCircle size={22} className="text-green-400" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-bold uppercase tracking-wider text-green-400">Paid in Full</span>
+                  <span className="text-xs text-green-300/60">· 100% Commercial Usage Rights Granted</span>
+                </div>
+                <h3 className="text-lg font-bold text-white">Full Balance Received — Thank You!</h3>
+                <p className="text-xs text-gray-300 mt-1">
+                  Your final 30% milestone balance has cleared. Your master video file is unlocked and ready for commercial broadcast.
+                </p>
+                <div className="flex flex-wrap gap-2 mt-4">
+                  <Link
+                    to={`/survey?ref=delivery&token=${project.token}&business=${encodeURIComponent(project.business_name)}`}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-white/10 hover:bg-white/15 border border-white/15 transition-all"
+                  >
+                    <Sparkles size={13} className="text-amber-400" /> 2-Min Experience Survey
+                  </Link>
+                  <a
+                    href={`https://wa.me/254751822556?text=${encodeURIComponent(`Hi Nia Media team! I've cleared the final milestone balance for ${project.business_name}. Thank you for the great work!`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all"
+                  >
+                    <MessageCircle size={13} /> WhatsApp Production Desk
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -245,10 +274,26 @@ export default function DeliveryView() {
         {isCompleted && (
           <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur p-6">
             {reviewDone ? (
-              <div className="text-center py-4">
-                <CheckCircle size={28} className="text-green-400 mx-auto mb-3" />
-                <p className="text-base font-bold text-white">Thank you for your review!</p>
-                <p className="text-sm text-gray-400 mt-1">We really appreciate your feedback.</p>
+              <div className="text-center py-6">
+                <CheckCircle size={32} className="text-green-400 mx-auto mb-3" />
+                <p className="text-lg font-bold text-white">Thank you for your review!</p>
+                <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
+                  Your feedback helps other founders discover high-converting commercial production.
+                </p>
+                {rating >= 4 && (
+                  <div className="mt-5 p-4 rounded-2xl bg-white/5 border border-white/10 max-w-md mx-auto">
+                    <p className="text-xs font-semibold text-amber-300 mb-2">⭐ Want to share your thoughts in detail?</p>
+                    <p className="text-[11px] text-gray-400 mb-3">Take our 2-minute creator survey to help us tailor future campaign packages for your industry.</p>
+                    <div className="flex justify-center gap-2">
+                      <Link
+                        to={`/survey?ref=delivery&token=${project.token}&business=${encodeURIComponent(project.business_name)}`}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 transition-all"
+                      >
+                        <Sparkles size={13} /> Complete 2-Min Survey →
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <>
@@ -285,14 +330,23 @@ export default function DeliveryView() {
                   style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
                 />
 
-                <button
-                  onClick={submitReview}
-                  disabled={reviewSubmitting || rating === 0 || !reviewText.trim()}
-                  className="mt-3 flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-40"
-                  style={{ background: 'linear-gradient(135deg,#7c3aed,#2563eb)' }}>
-                  {reviewSubmitting ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
-                  Submit Review
-                </button>
+                <div className="flex items-center justify-between mt-4">
+                  <button
+                    onClick={submitReview}
+                    disabled={reviewSubmitting || rating === 0 || !reviewText.trim()}
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-40"
+                    style={{ background: 'linear-gradient(135deg,#7c3aed,#2563eb)' }}>
+                    {reviewSubmitting ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+                    Submit Review
+                  </button>
+
+                  <Link
+                    to={`/survey?ref=delivery&token=${project.token}&business=${encodeURIComponent(project.business_name)}`}
+                    className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 font-medium"
+                  >
+                    Take 2-min survey instead <ExternalLink size={12} />
+                  </Link>
+                </div>
               </>
             )}
           </div>
