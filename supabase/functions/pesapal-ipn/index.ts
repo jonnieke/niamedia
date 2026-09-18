@@ -272,30 +272,60 @@ Deno.serve(async (req) => {
         }).eq("id", quoteId)
 
         const { data: q } = await supabase.from("quote_requests")
-          .select("id, contact_name, business_name, email, phone, video_length, price_max")
+          .select("id, contact_name, business_name, email, phone, video_length, platforms, delivery_speed, price_max, what_to_promote")
           .eq("id", quoteId).maybeSingle()
 
-        const depAmount = Math.round((q?.price_max || 8000) * 0.7)
+        if (q) {
+          const finalPrice = q.price_max || 8000
+          const depAmount = Math.round(finalPrice * 0.7)
+          const balanceDue = finalPrice - depAmount
+          const deliveryDays = q.delivery_speed === "rush_24" ? 1 : q.delivery_speed === "rush_48" ? 2 : 5
+          const dueDate = new Date(Date.now() + deliveryDays * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
 
-        void notifyAdmins(
-          "success",
-          `🎉 70% Deposit Received — ${q?.business_name ?? "Client"}`,
-          `KES ${depAmount.toLocaleString("en-KE")} 70% deposit paid via PesaPal for ${q?.video_length ?? "video"} commercial. Ready to start production!`,
-          "/admin",
-        )
+          // Check if project was already created for this payment (idempotency)
+          const { data: existingProj } = await supabase.from("projects")
+            .select("id")
+            .eq("pesapal_order_id", orderTrackingId)
+            .maybeSingle()
 
-        if (q?.email) {
-          void supabase.functions.invoke("send-client-email", {
-            body: {
-              type: "deposit_confirmed",
-              to: q.email,
-              name: q.contact_name,
-              businessName: q.business_name,
-              depositAmount: depAmount,
-              timelineDays: 5,
-              videoLength: q.video_length,
-            },
-          })
+          if (!existingProj) {
+            await supabase.from("projects").insert({
+              business_name: q.business_name,
+              contact_name: q.contact_name,
+              email: q.email,
+              phone: q.phone,
+              video_length: q.video_length,
+              platforms: Array.isArray(q.platforms) ? q.platforms : ["Instagram", "TikTok"],
+              status: "in_production",
+              final_price: finalPrice,
+              deposit_paid: depAmount,
+              balance_due: balanceDue,
+              due_date: dueDate,
+              pesapal_order_id: orderTrackingId,
+              editor_notes: `Auto-spawned from quote deposit. Promotion brief: ${q.what_to_promote || "Will provide details on WhatsApp"}`,
+            })
+          }
+
+          void notifyAdmins(
+            "success",
+            `🎉 70% Deposit Received — ${q.business_name}`,
+            `KES ${depAmount.toLocaleString("en-KE")} 70% deposit paid via PesaPal for ${q.video_length} commercial. Project active in /production!`,
+            "/production",
+          )
+
+          if (q.email) {
+            void supabase.functions.invoke("send-client-email", {
+              body: {
+                type: "deposit_confirmed",
+                to: q.email,
+                name: q.contact_name,
+                businessName: q.business_name,
+                depositAmount: depAmount,
+                timelineDays: deliveryDays,
+                videoLength: q.video_length,
+              },
+            })
+          }
         }
       }
     } else {

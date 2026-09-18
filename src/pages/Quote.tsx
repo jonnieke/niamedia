@@ -6,7 +6,7 @@ import {
 
   Film, CheckCircle2, ArrowRight, Clock, Zap,
 
-  Phone, Building2, MessageSquare, ChevronRight, Star, Mic, Loader2, Paperclip, Sparkles, Trash2, Lock,
+  Phone, Building2, MessageSquare, ChevronRight, Star, Mic, Loader2, Paperclip, Sparkles, Trash2, Lock, FileText,
 
 } from 'lucide-react'
 
@@ -18,6 +18,7 @@ import { SECONDARY_NIA_CTA } from '../lib/cta'
 
 import { trackEvent } from '../lib/analytics'
 import MarketSurveyModal from '../components/MarketSurveyModal'
+import QuotationPrintModal from '../components/QuotationPrintModal'
 
 /* Pricing logic */
 
@@ -335,6 +336,7 @@ export default function Quote() {
 
   const [error, setError] = useState('')
   const [showSurvey, setShowSurvey] = useState(false)
+  const [showQuotationModal, setShowQuotationModal] = useState(false)
   const [pesapalLoading, setPesapalLoading] = useState(false)
   const [pesapalError, setPesapalError] = useState('')
 
@@ -853,6 +855,18 @@ export default function Quote() {
                 </div>
               </div>
             )}
+
+            {/* Official Quotation & Print Action */}
+            <div className="max-w-md mx-auto mb-3">
+              <button
+                type="button"
+                onClick={() => setShowQuotationModal(true)}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold text-purple-700 bg-purple-50 border border-purple-200 hover:bg-purple-100 transition-all cursor-pointer shadow-sm"
+              >
+                <FileText size={15} />
+                <span>View / Print Official Quotation (PDF)</span>
+              </button>
+            </div>
 
             <a href={`https://wa.me/254751822556?text=${successData?.waMessage ?? waMessage}`}
 
@@ -1419,6 +1433,25 @@ export default function Quote() {
       </div>
 
       <MarketSurveyModal isOpen={showSurvey} onClose={() => setShowSurvey(false)} sourcePage="quote_success" />
+
+      <QuotationPrintModal
+        isOpen={showQuotationModal}
+        onClose={() => setShowQuotationModal(false)}
+        data={{
+          quoteId: successData?.quoteId,
+          businessName: successData?.bizName || bizName || 'Valued Client',
+          contactName: contactName,
+          phone: successData?.phone || phone,
+          email: successData?.email || email,
+          videoLength: successData?.lengthLabel || LENGTHS.find(l => l.id === length)?.label || '30s',
+          platforms,
+          deliverySpeed: rush,
+          standardPrice: successData?.totalPrice || price.total,
+          depositAmount: successData?.depositAmount || Math.round(price.total * 0.7),
+          balanceAmount: Math.round((successData?.totalPrice || price.total) * 0.3),
+          isPaid: Boolean(window.location.search.includes('paid=true') || successData?.isPaid),
+        }}
+      />
 
     </div>
 

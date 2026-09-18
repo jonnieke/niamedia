@@ -4,10 +4,11 @@ import {
   Film, Music, Upload, Eye, RefreshCw, CheckCircle, Clock,
   AlertCircle, Loader2, Radio, Mic, Phone, Mail, Inbox,
   Zap, Plus, CreditCard, Search, MessageSquare, Image, Star,
-  Trash2, ExternalLink, BarChart3,
+  Trash2, ExternalLink, BarChart3, FileText,
 } from 'lucide-react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { supabase } from '../lib/supabase'
+import QuotationPrintModal, { QuotationData } from '../components/QuotationPrintModal'
 
 type AudioStatus = 'queued' | 'in-production' | 'ready-for-review' | 'accepted' | 'delivered'
 type ProjectStatus = 'queued' | 'in-production' | 'ready-for-review' | 'revision-requested' | 'accepted' | 'delivered'
@@ -624,6 +625,7 @@ export default function Admin() {
     platforms: string[]; what_to_promote: string | null; delivery_speed: string;
     price_min: number; price_max: number; status: string; admin_notes: string | null;
   }[]>([])
+  const [selectedQuotation, setSelectedQuotation] = useState<QuotationData | null>(null)
   const [portfolioItems, setPortfolioItems] = useState<{
     id: string; title: string; type: string; client_name: string | null;
     industry: string | null; description: string | null; thumbnail_url: string | null;
@@ -1259,6 +1261,31 @@ export default function Admin() {
                             style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.25)', color: '#7c3aed' }}>
                             <Plus size={10} /> Proposal
                           </a>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedQuotation({
+                                quoteId: q.id,
+                                businessName: q.business_name,
+                                contactName: q.contact_name || undefined,
+                                phone: q.phone,
+                                email: q.email || undefined,
+                                videoLength: q.video_length,
+                                platforms: q.platforms,
+                                deliverySpeed: q.delivery_speed,
+                                standardPrice: q.price_max || 8000,
+                                depositAmount: Math.round((q.price_max || 8000) * 0.7),
+                                balanceAmount: Math.round((q.price_max || 8000) * 0.3),
+                                isPaid: q.status === 'converted',
+                                createdAt: q.created_at,
+                              })
+                            }}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer"
+                            style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', color: '#2563eb' }}
+                            title="View / Print Official Quotation"
+                          >
+                            <FileText size={10} /> Quotation
+                          </button>
                           {(() => {
                             const phoneNum = q.phone.replace(/\D/g, '').replace(/^0/, '254')
                             const stdPrice = q.price_max || 8000
@@ -2030,6 +2057,12 @@ export default function Admin() {
           )}
         </>
       )}
+
+      <QuotationPrintModal
+        isOpen={Boolean(selectedQuotation)}
+        onClose={() => setSelectedQuotation(null)}
+        data={selectedQuotation}
+      />
     </DashboardLayout>
   )
 }
