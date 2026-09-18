@@ -2020,6 +2020,84 @@ export default function Admin() {
                 </div>
               </div>
 
+              {/* Market Intelligence & Opportunity Breakdown */}
+              {surveys.length > 0 && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Budget Distribution */}
+                  <div className="bg-white rounded-2xl border border-gray-200 p-5">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-3 flex items-center justify-between">
+                      <span>Customer Price Sensitivity</span>
+                      <span className="text-[10px] text-gray-400 font-normal">Based on {surveys.length} responses</span>
+                    </h4>
+                    <div className="space-y-3">
+                      {(() => {
+                        const budgets = surveys.reduce<Record<string, number>>((acc, s) => {
+                          const b = s.budget_range || 'Under KES 5,000'
+                          acc[b] = (acc[b] || 0) + 1
+                          return acc
+                        }, {})
+                        const total = surveys.length
+                        return Object.entries(budgets).map(([tier, count]) => {
+                          const pct = Math.round((count / total) * 100)
+                          return (
+                            <div key={tier} className="space-y-1">
+                              <div className="flex justify-between text-xs">
+                                <span className="font-semibold text-gray-700">{tier}</span>
+                                <span className="text-gray-500 font-medium">{count} ({pct}%)</span>
+                              </div>
+                              <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all duration-500"
+                                  style={{
+                                    width: `${pct}%`,
+                                    background: 'linear-gradient(90deg, #7c3aed, #2563eb)',
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )
+                        })
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Strategic Takeaways */}
+                  <div className="bg-white rounded-2xl border border-gray-200 p-5 flex flex-col justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-3">
+                        Strategic Agency Takeaways
+                      </h4>
+                      <div className="space-y-2.5 text-xs text-gray-600 leading-relaxed">
+                        <div className="flex items-start gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                          <p>
+                            <strong>Standard Upper Pricing:</strong> The 15s (KES 5,000) and 30s (KES 8,000) packages match the highest volume SME budget appetite in Kenya.
+                          </p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5 shrink-0" />
+                          <p>
+                            <strong>70/30 Milestone Structure:</strong> High customer comfort observed when the 70% deposit initiates production and 30% is protected until preview approval.
+                          </p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                          <p>
+                            <strong>Delivery Speed:</strong> Rapid turnaround (24–48h rush) drives high conversion for product launches and promotional flash sales.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-500">
+                      <span>Live feedback feed updated in real time</span>
+                      <a href="/survey" target="_blank" rel="noopener noreferrer" className="text-purple-600 font-bold hover:underline">
+                        Test Survey Flow →
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Responses List */}
               <div>
                 <div className="flex items-center justify-between mb-4">

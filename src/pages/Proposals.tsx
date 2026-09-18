@@ -126,7 +126,7 @@ function CreateModal({
   const [includePoster, setIncludePoster] = useState(src ? (src as Proposal).include_poster ?? (src as QuoteSnap).include_poster ?? true : true)
   const [includeSubtitles, setIncludeSubtitles] = useState(src ? (src as Proposal).include_subtitles ?? (src as QuoteSnap).include_subtitles ?? false : false)
   const [finalPrice, setFinalPrice] = useState(
-    editing?.final_price ?? (quote ? Math.round((quote.price_min + quote.price_max) / 2) : 8000)
+    editing?.final_price ?? (quote ? quote.price_max : 8000)
   )
   const [depositPercent, setDepositPercent] = useState(editing?.deposit_percent ?? 70)
   const [timelineDays, setTimelineDays] = useState(editing?.timeline_days ?? 7)

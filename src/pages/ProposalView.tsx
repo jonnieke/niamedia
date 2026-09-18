@@ -311,10 +311,16 @@ export default function ProposalView() {
                   <span className="text-xl font-extrabold text-white">{fmt(proposal.final_price)}</span>
                 </div>
                 <div className="flex justify-between items-baseline mt-2.5">
-                  <span className="text-xs" style={{ color: '#9ca3af' }}>Deposit required ({proposal.deposit_percent}%)</span>
-                  <span className="text-lg font-bold" style={{ color: '#a78bfa' }}>{fmt(proposal.deposit_amount)}</span>
+                  <span className="text-xs" style={{ color: '#9ca3af' }}>{proposal.deposit_percent}% Initial Deposit (to start)</span>
+                  <span className="text-base font-bold text-purple-300">{fmt(proposal.deposit_amount)}</span>
                 </div>
-                <p className="text-[11px] mt-1" style={{ color: '#6b7280' }}>Balance due on delivery</p>
+                <div className="flex justify-between items-baseline mt-1.5">
+                  <span className="text-xs" style={{ color: '#9ca3af' }}>{100 - proposal.deposit_percent}% Milestone Balance</span>
+                  <span className="text-sm font-semibold text-gray-300">{fmt(proposal.final_price - proposal.deposit_amount)}</span>
+                </div>
+                <p className="text-[11px] mt-2 leading-relaxed text-gray-400">
+                  Balance is due only after you review and approve your watermarked preview cut.
+                </p>
               </div>
 
               {isActive && (
