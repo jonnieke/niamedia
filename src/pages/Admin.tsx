@@ -1259,12 +1259,28 @@ export default function Admin() {
                             style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.25)', color: '#7c3aed' }}>
                             <Plus size={10} /> Proposal
                           </a>
-                          <a href={`https://wa.me/${q.phone.replace(/\D/g, '').replace(/^0/, '254')}?text=${encodeURIComponent(`Hi ${q.contact_name || q.business_name}, this is Nia Media. We received your quote request for a ${q.video_length} video commercial. Let me confirm the details and pricing for you.`)}`}
-                            target="_blank" rel="noopener noreferrer"
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-white transition-all"
-                            style={{ background: '#25d366' }}>
-                            <MessageSquare size={10} /> WhatsApp
-                          </a>
+                          {(() => {
+                            const phoneNum = q.phone.replace(/\D/g, '').replace(/^0/, '254')
+                            const stdPrice = q.price_max || 8000
+                            const dep70 = Math.round(stdPrice * 0.7)
+                            const bal30 = Math.round(stdPrice * 0.3)
+                            const quoteMsg = `Hi ${q.contact_name || q.business_name}, thank you for reaching out to Nia Media! 🎬\n\nHere is your commercial specification & quotation:\n📌 *Project:* ${q.video_length} Video Commercial\n🎯 *Business:* ${q.business_name}\n📱 *Target Platforms:* ${Array.isArray(q.platforms) ? q.platforms.join(', ') : 'Social Media'}\n⚡ *Delivery:* ${q.delivery_speed === 'rush_24' ? '24-hour rush' : q.delivery_speed === 'rush_48' ? '48-hour rush' : 'Standard (3-5 business days)'}\n\n💰 *Standard Price:* KES ${stdPrice.toLocaleString()}\n🔒 *70% Deposit to Start:* KES ${dep70.toLocaleString()}\n✅ *30% Balance on Delivery:* KES ${bal30.toLocaleString()} (due only after you approve preview)\n\n*What is included in your commercial:*\n✔ Complete AI visuals, human-polished editing & sound design\n✔ Professional voiceover & licensed background audio\n✔ 2 revision rounds included\n✔ 100% full commercial rights transfer\n\nReady to get started? Reply YES or book a call with our producer: https://niamedia.co.ke/book?service=video`
+                            return (
+                              <a href={`https://wa.me/${phoneNum}?text=${encodeURIComponent(quoteMsg)}`}
+                                target="_blank" rel="noopener noreferrer"
+                                onClick={async () => {
+                                  if (q.status === 'new') {
+                                    await supabase.from('quote_requests').update({ status: 'quoted' }).eq('id', q.id)
+                                    setQuoteRequests(prev => prev.map(x => x.id === q.id ? { ...x, status: 'quoted' } : x))
+                                  }
+                                }}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-white transition-all shadow-sm hover:opacity-90"
+                                style={{ background: '#25d366' }}
+                                title="Send formatted WhatsApp quotation">
+                                <MessageSquare size={10} /> Send Quote
+                              </a>
+                            )
+                          })()}
                           <select
                             value={q.status}
                             onChange={async e => {

@@ -6,7 +6,7 @@ import {
 
   Film, CheckCircle2, ArrowRight, Clock, Zap,
 
-  Phone, Building2, MessageSquare, ChevronRight, Star, Mic, Loader2, Paperclip, Sparkles, Trash2,
+  Phone, Building2, MessageSquare, ChevronRight, Star, Mic, Loader2, Paperclip, Sparkles, Trash2, Lock,
 
 } from 'lucide-react'
 
@@ -252,17 +252,34 @@ function PricePanel({ min, max, length, rush, platforms, poster, subtitles }: {
 
 const SUCCESS_KEY = 'nia_quote_submitted'
 const SUCCESS_TTL_MS = 2 * 60 * 60 * 1000 // 2 hours
+interface StoredSuccess {
+  bizName: string
+  waMessage: string
+  quoteId?: string
+  depositAmount?: number
+  totalPrice?: number
+  email?: string
+  phone?: string
+  lengthLabel?: string
+  isPaid?: boolean
+  ts: number
+}
 
-// Restores the success screen after a browser Back/refresh instead of
+// Restores the success screen after a browser Back/refresh or PesaPal redirect instead of
 // silently dropping the customer back to a blank step-0 form.
-function readStoredSuccess(): { bizName: string; waMessage: string } | null {
+function readStoredSuccess(): StoredSuccess | null {
   if (typeof window === 'undefined') return null
-  if (!window.location.search.includes('submitted=1')) return null
+  const isSubmitted = window.location.search.includes('submitted=1')
+  const isPaid = window.location.search.includes('paid=true')
+  if (!isSubmitted && !isPaid) return null
   try {
     const parsed = JSON.parse(sessionStorage.getItem(SUCCESS_KEY) ?? 'null')
     if (!parsed?.ts || Date.now() - parsed.ts > SUCCESS_TTL_MS) return null
-    if (!parsed.bizName || !parsed.waMessage) return null
-    return { bizName: parsed.bizName, waMessage: parsed.waMessage }
+    if (!parsed.bizName) return null
+    if (isPaid) {
+      parsed.isPaid = true
+    }
+    return parsed
   } catch { return null }
 }
 
@@ -318,8 +335,45 @@ export default function Quote() {
 
   const [error, setError] = useState('')
   const [showSurvey, setShowSurvey] = useState(false)
+  const [pesapalLoading, setPesapalLoading] = useState(false)
+  const [pesapalError, setPesapalError] = useState('')
 
   const price = useMemo(() => calcPrice(length, platforms, rush, subtitles), [length, platforms, rush, subtitles])
+
+  const handlePayDeposit = async () => {
+    setPesapalLoading(true)
+    setPesapalError('')
+    try {
+      const qId = successData?.quoteId || `quote_${Date.now()}`
+      const depositAmt = successData?.depositAmount || Math.round(price.total * 0.7)
+      const bName = successData?.bizName || bizName || 'Customer'
+      const clientEmail = successData?.email || email || 'billing@niamedia.co.ke'
+      const clientPhone = successData?.phone || phone || '0700000000'
+      const lenLabel = successData?.lengthLabel || LENGTHS.find(l => l.id === length)?.label || 'Video'
+
+      const { data, error: fnErr } = await supabase.functions.invoke('pesapal-checkout', {
+        body: {
+          orderId: `quote_${qId}`,
+          amountKes: depositAmt,
+          description: `70% Deposit for ${bName} (${lenLabel} commercial)`,
+          email: clientEmail,
+          phone: clientPhone,
+          currency: 'KES',
+          callbackUrl: `${window.location.origin}/quote?paid=true&quote_id=${qId}`,
+        },
+      })
+
+      if (fnErr || !data?.redirectUrl) {
+        throw new Error(data?.error || fnErr?.message || 'Unable to connect to PesaPal gateway')
+      }
+
+      window.location.href = data.redirectUrl
+    } catch (err: any) {
+      console.error('PesaPal checkout error:', err)
+      setPesapalError(err.message || 'Payment initiation failed. Please WhatsApp us to pay directly via Paybill.')
+      setPesapalLoading(false)
+    }
+  }
 
   useEffect(() => {
     setSpeechSupported(typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window))
@@ -546,7 +600,10 @@ export default function Quote() {
 
       const whatToPromote = `${brief.trim() || 'Will share details'}${supportingText}`
 
+      const generatedQuoteId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `q_${Date.now()}`
+
       const { error: dbErr } = await supabase.from('quote_requests').insert({
+        id:               generatedQuoteId,
         business_name:    bizName.trim(),
         contact_name:     contactName.trim() || null,
         phone:            phone.trim(),
@@ -583,7 +640,19 @@ export default function Quote() {
 
       // Persist so a browser Back or refresh restores the confirmation
       // instead of dropping the customer back to a blank form.
-      const submitted = { bizName: bizName.trim(), waMessage, ts: Date.now() }
+      const lengthLabel = LENGTHS.find(l => l.id === length)?.label || length
+      const depositAmount = Math.round(price.total * 0.7)
+      const submitted: StoredSuccess = {
+        bizName: bizName.trim(),
+        waMessage,
+        quoteId: generatedQuoteId,
+        depositAmount,
+        totalPrice: price.total,
+        email: email.trim(),
+        phone: phone.trim(),
+        lengthLabel,
+        ts: Date.now()
+      }
       try {
         sessionStorage.setItem(SUCCESS_KEY, JSON.stringify(submitted))
         window.history.replaceState(null, '', '/quote?submitted=1')
@@ -683,27 +752,113 @@ export default function Quote() {
 
           <div className="max-w-lg mx-auto text-center py-8">
 
-            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
+            {window.location.search.includes('paid=true') || successData?.isPaid ? (
+              <div className="mb-6">
+                <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4"
+                  style={{ background: 'rgba(16,185,129,0.12)', border: '2px solid rgba(16,185,129,0.3)' }}>
+                  <CheckCircle2 size={36} className="text-emerald-500" />
+                </div>
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 mb-3">
+                  🎉 70% Deposit Received via PesaPal
+                </span>
+                <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Production Slot Locked In!</h2>
+                <p className="text-gray-600 mb-6 leading-relaxed max-w-md mx-auto text-sm">
+                  Thank you, <strong className="text-gray-900">{successData?.bizName ?? bizName}</strong>! Your 70% deposit is confirmed and your creative producer has been scheduled.
+                </p>
+              </div>
+            ) : (
+              <div>
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                  style={{ background: 'rgba(124,58,237,0.1)', border: '2px solid rgba(124,58,237,0.25)' }}>
+                  <CheckCircle2 size={32} className="text-purple-600" />
+                </div>
 
-              style={{ background: 'rgba(16,185,129,0.12)', border: '2px solid rgba(16,185,129,0.3)' }}>
+                <h2 className="text-2xl font-extrabold text-gray-900 mb-1">Quote request received</h2>
 
-              <CheckCircle2 size={36} className="text-emerald-500" />
+                <p className="text-gray-500 mb-6 leading-relaxed text-sm">
+                  We have your brief, <strong className="text-gray-900">{successData?.bizName ?? bizName}</strong>. You can lock in your production queue immediately with a 70% deposit or chat with our team on WhatsApp first.
+                </p>
 
-            </div>
+                {/* Instant PesaPal 70% Deposit Checkout */}
+                <div className="max-w-md mx-auto mb-6 p-5 rounded-2xl text-left shadow-lg border relative overflow-hidden"
+                  style={{ background: 'linear-gradient(145deg, #09031a 0%, #150833 100%)', borderColor: 'rgba(124,58,237,0.35)' }}>
+                  
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400">Lock In Production Now</span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      70% Deposit Model
+                    </span>
+                  </div>
 
-            <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Quote request received</h2>
+                  <div className="flex items-baseline justify-between mb-2">
+                    <div>
+                      <p className="text-xs text-purple-200/70">70% Milestone Deposit to Start</p>
+                      <p className="text-2xl font-black text-white">
+                        KES {(successData?.depositAmount || Math.round(price.total * 0.7)).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[11px] text-purple-200/50">Total Standard Price</p>
+                      <p className="text-sm font-semibold text-purple-200/80">
+                        KES {(successData?.totalPrice || price.total).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
 
-            <p className="text-gray-500 mb-8 leading-relaxed">
+                  <p className="text-[11px] text-purple-200/60 leading-relaxed mb-4">
+                    Pay securely via M-Pesa, Visa, or Mastercard. The 30% balance (KES {Math.round((successData?.totalPrice || price.total) * 0.3).toLocaleString()}) is only payable after you review and approve your watermarked video preview.
+                  </p>
 
-              We have your brief, <strong className="text-gray-900">{successData?.bizName ?? bizName}</strong>. Send us the WhatsApp below and we will confirm your quote and timeline within 2 hours.
+                  {pesapalError && (
+                    <p className="text-xs text-rose-300 mb-3 bg-rose-500/20 p-2.5 rounded-lg border border-rose-500/30">
+                      {pesapalError}
+                    </p>
+                  )}
 
-            </p>
+                  <button
+                    type="button"
+                    onClick={handlePayDeposit}
+                    disabled={pesapalLoading}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-sm font-extrabold text-white shadow-md transition-all hover:opacity-95 active:scale-[0.99] disabled:opacity-60 cursor-pointer"
+                    style={{ background: 'linear-gradient(135deg, #059669, #0284c7)' }}
+                  >
+                    {pesapalLoading ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Connecting to PesaPal...
+                      </>
+                    ) : (
+                      <>
+                        <Lock size={15} />
+                        Pay 70% Deposit (KES {(successData?.depositAmount || Math.round(price.total * 0.7)).toLocaleString()})
+                      </>
+                    )}
+                  </button>
+
+                  <div className="flex items-center justify-center gap-2.5 mt-3 text-[10px] text-purple-200/50 font-medium">
+                    <span>🔒 M-Pesa</span>
+                    <span>•</span>
+                    <span>Visa</span>
+                    <span>•</span>
+                    <span>Mastercard</span>
+                    <span>•</span>
+                    <span>PesaPal Secure Checkout</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 max-w-md mx-auto mb-4">
+                  <div className="h-px bg-gray-200 flex-1" />
+                  <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">or communicate via WhatsApp</span>
+                  <div className="h-px bg-gray-200 flex-1" />
+                </div>
+              </div>
+            )}
 
             <a href={`https://wa.me/254751822556?text=${successData?.waMessage ?? waMessage}`}
 
               target="_blank" rel="noopener noreferrer"
 
-              className="inline-flex items-center justify-center gap-2.5 w-full max-w-xs mx-auto px-8 py-4 rounded-2xl text-sm font-bold text-white mb-4 transition-all"
+              className="inline-flex items-center justify-center gap-2.5 w-full max-w-md mx-auto px-8 py-4 rounded-2xl text-sm font-bold text-white mb-4 transition-all"
 
               style={{ background: '#25d366', boxShadow: '0 4px 20px rgba(37,211,102,0.35)' }}>
 

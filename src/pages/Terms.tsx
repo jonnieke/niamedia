@@ -1,4 +1,4 @@
-﻿import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import PublicHeader from '../components/layout/PublicHeader'
 
 export default function Terms() {
@@ -25,7 +25,7 @@ export default function Terms() {
 
           <section>
             <h2 className="text-base font-semibold text-gray-800 mb-3">3. Orders & Payment</h2>
-            <p className="mb-2">All orders are processed through our secure checkout powered by PesaPal. Payment is due in full before production begins. Rush orders (24-hour delivery) attract an additional fee as stated at checkout.</p>
+            <p className="mb-2">All orders are processed through our secure checkout powered by PesaPal. For video production projects, a 70% deposit is required to reserve your creative team and commence production, with the remaining 30% balance due upon approval of your watermarked preview before final delivery. AI credits and self-serve campaign tools are paid in full at the time of purchase. Rush orders (48-hour and 24-hour delivery) attract additional fees as stated at checkout.</p>
             <p>Prices are quoted in Kenyan Shillings (KES) inclusive of applicable taxes unless otherwise stated.</p>
           </section>
 

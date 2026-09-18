@@ -43,7 +43,7 @@ export default function VideoRequest() {
     needJingle: false,
     needSubtitles: true,
     delivery_speed: 'standard',
-    budget_range: 'KES 7,500 – 15,000',
+    budget_range: 'KES 8,000 (30s standard)',
     notes: '',
   })
   const [submitting, setSubmitting] = useState(false)
@@ -54,38 +54,37 @@ export default function VideoRequest() {
     setForm(prev => ({ ...prev, [field]: value }))
 
   const estimate = useMemo(() => {
-    const lengthMap: Record<string, { min: number; max: number; label: string }> = {
-      '15 seconds': { min: 3500, max: 5000, label: '15s starter' },
-      '30 seconds': { min: 5000, max: 8000, label: '30s promo' },
-      '60 seconds': { min: 7500, max: 15000, label: '60s campaign film' },
-      '90 seconds': { min: 12000, max: 20000, label: '90s extended story' },
-      '3+ minutes (Infomercial)': { min: 25000, max: 60000, label: '3+ min infomercial' },
+    const lengthMap: Record<string, { standard: number; label: string }> = {
+      '15 seconds': { standard: 5000, label: '15s starter' },
+      '30 seconds': { standard: 8000, label: '30s promo' },
+      '60 seconds': { standard: 15000, label: '60s campaign film' },
+      '90 seconds': { standard: 20000, label: '90s extended story' },
+      '3+ minutes (Infomercial)': { standard: 60000, label: '3+ min infomercial' },
     }
-    const voiceoverDelta: Record<string, { min: number; max: number }> = {
-      ai: { min: 0, max: 0 },
-      human: { min: 2000, max: 5000 },
-      none: { min: -1000, max: -500 },
+    const voiceoverDelta: Record<string, number> = {
+      ai: 0,
+      human: 3000,
+      none: 0,
     }
-    const addonMap = {
-      needPoster: { min: 300, max: 1000 },
-      needJingle: { min: 5000, max: 12000 },
-      needSubtitles: { min: 1000, max: 2500 },
+    const addonMap: Record<string, number> = {
+      needPoster: 500,
+      needJingle: 5000,
+      needSubtitles: 1000,
     }
     const base = lengthMap[form.length] ?? lengthMap['30 seconds']
-    const vo = voiceoverDelta[form.voiceoverMode as keyof typeof voiceoverDelta] ?? voiceoverDelta.ai
+    const vo = voiceoverDelta[form.voiceoverMode] ?? 0
     const selectedAddons = (['needPoster', 'needJingle', 'needSubtitles'] as const).filter(k => Boolean((form as Record<string, unknown>)[k]))
-    const addonRange = selectedAddons.reduce((acc, key) => {
-      const delta = addonMap[key]
-      return { min: acc.min + delta.min, max: acc.max + delta.max }
-    }, { min: 0, max: 0 })
+    const addonTotal = selectedAddons.reduce((acc, key) => acc + (addonMap[key] || 0), 0)
     const rushMultiplier = form.delivery_speed === '24h' ? 1.5 : form.delivery_speed === '48h' ? 1.25 : 1
-    const min = Math.round((base.min + vo.min + addonRange.min) * rushMultiplier)
-    const max = Math.round((base.max + vo.max + addonRange.max) * rushMultiplier)
+    const total = Math.round((base.standard + vo + addonTotal) * rushMultiplier)
+    const deposit = Math.round(total * 0.7)
     const fmt = (n: number) => `KES ${n.toLocaleString('en-KE')}`
     const voiceoverLabel = form.voiceoverMode === 'human' ? 'Human voiceover' : form.voiceoverMode === 'none' ? 'No voiceover' : 'AI voiceover'
     return {
       title: `${base.label} – ${voiceoverLabel}${selectedAddons.length ? ' – with add-ons' : ''}`,
-      range: `${fmt(min)} – ${fmt(max)}`,
+      total: fmt(total),
+      deposit: fmt(deposit),
+      range: `${fmt(total)} (70% deposit: ${fmt(deposit)})`,
       lengthLabel: base.label,
       voiceoverLabel,
       addons: selectedAddons.map(key => key === 'needPoster' ? 'Poster pack' : key === 'needJingle' ? 'Jingle' : 'Subtitles'),
@@ -343,8 +342,9 @@ export default function VideoRequest() {
             <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Quote preview</p>
             <div className="mt-3 flex items-end justify-between gap-3">
               <div>
-                <p className="text-lg font-extrabold">{estimate.range}</p>
-                <p className="text-xs text-gray-300 mt-1">{estimate.title}</p>
+                <p className="text-xl font-extrabold text-white">{estimate.total}</p>
+                <p className="text-xs text-emerald-400 font-semibold mt-0.5">70% deposit: {estimate.deposit} to start</p>
+                <p className="text-[11px] text-gray-300 mt-1">{estimate.title}</p>
               </div>
               <div className="text-right">
                 <p className="text-[11px] text-gray-400 uppercase tracking-widest">Delivery</p>
