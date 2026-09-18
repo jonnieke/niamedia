@@ -20,7 +20,7 @@ const faqs = [
   { q: 'Is there a free tier?', a: 'Yes. You can generate a demo campaign and poster preview from the homepage without an account. After signing up, your free credit unlocks one full campaign kit including the HD poster in 3 styles.' },
   { q: 'How long does video production take?', a: 'Standard: 3–5 business days. 48-hour rush: +25%. 24-hour rush: +50%. Timelines depend on asset availability and scope.' },
   { q: 'Do I own the content?', a: 'Yes — 100%. All content transfers to you fully on delivery. For custom videos, a Certificate of AI Origin is issued.' },
-  { q: 'What is the Video & Poster Retainer?', a: 'Our creative team produces, edits, and delivers fresh commercial videos and branded promotional posters for your business every month. Packages start at KES 15,000/month up to KES 60,000/month for high-volume production.' },
+  { q: 'What is the Video & Poster Retainer?', a: 'Our creative team produces, edits, and delivers fresh commercial videos and branded promotional posters for your business every month. The Starter tier is KES 15,000/month (2 commercial videos + 2 branded posters). Growth (4 videos/mo at KES 30k) and high-volume plans up to KES 60,000/month are also available.' },
   { q: 'How do I pay?', a: 'M-Pesa, Visa, or Mastercard through PesaPal secure checkout. For video production, you pay a 70% deposit to reserve your creative producer and start production, and the remaining 30% balance after you approve your watermarked video preview.' },
 ]
 
@@ -147,15 +147,15 @@ export default function Pricing() {
             <div className="mb-5">
               <span className="text-3xl font-extrabold text-gray-900">KES 15,000</span>
               <span className="text-sm text-gray-400"> / month</span>
-              <p className="text-xs text-gray-400 mt-1">One-off video & poster kits from KES 5,000</p>
+              <p className="text-xs text-emerald-600 font-semibold mt-1">Starter tier • Custom plans up to KES 60,000/mo</p>
             </div>
             <ul className="space-y-2.5 flex-1 mb-6">
               {[
-                '2–4 commercial videos per month',
-                'Matching branded social & print posters',
+                '2 commercial videos produced every month (15s–30s)',
+                '2 matching branded posters for social media & WhatsApp',
                 'Custom voiceover & scriptwriting included',
                 '2 revision rounds on every deliverable',
-                'Scales to KES 60,000/mo high volume',
+                'Need more volume? Growth (4 videos at KES 30k) & Scale available',
               ].map(f => (
                 <li key={f} className="flex items-start gap-2 text-xs text-gray-600">
                   <CheckCircle2 size={13} className="text-blue-500 shrink-0 mt-0.5" />{f}
