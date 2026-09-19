@@ -20,63 +20,78 @@ export interface ClientVideoItem {
 
 const CLIENT_VIDEOS: ClientVideoItem[] = [
   {
-    id: 'kilimani-cafe',
-    clientName: 'Kilimani Organic Cafe',
-    clientRole: 'Wanjiku Mwangi, Co-founder',
-    industry: 'Hospitality & Dining',
-    title: 'Weekend Cold Brew & Pastry Combo Reel',
+    id: 'onfon-mobile',
+    clientName: 'Onfon Mobile',
+    clientRole: 'Product & Growth Lead, Onfon Mobile',
+    industry: 'Fintech & Smartphone Financing',
+    title: 'Own a Smartphone Without Paying All at Once | Lipa Mos Mos',
+    deliverable: '60s Commercial Video (16:9)',
+    aspectRatio: '16:9',
+    thumbnail: 'https://i.ytimg.com/vi/FQzMXAd0lNU/maxresdefault.jpg',
+    videoUrl: 'https://www.youtube.com/embed/FQzMXAd0lNU',
+    platform: 'YouTube',
+    quote: 'Need a smartphone but don’t want to pay the full amount at once? Nia Media scripted and produced a crisp commercial showcasing how customers can get a smartphone today and Lipa Mos Mos. The campaign engagement and qualified purchase inquiries spiked immediately.',
+    resultMetric: '+180% device financing inquiries in 3 weeks',
+    stars: 5,
+  },
+  {
+    id: 'onfon-media',
+    clientName: 'Onfon Media',
+    clientRole: 'Enterprise Solutions Division, Onfon Media',
+    industry: 'Telecommunications & Bulk SMS',
+    title: 'Grow Your Business with Fast, Reliable Bulk SMS',
+    deliverable: '45s Commercial Explainer (16:9)',
+    aspectRatio: '16:9',
+    thumbnail: 'https://i.ytimg.com/vi/vHbOx1qhtnI/maxresdefault.jpg',
+    videoUrl: 'https://www.youtube.com/embed/vHbOx1qhtnI',
+    platform: 'YouTube',
+    quote: 'Explaining how Kenyan businesses can instantly reach thousands of customers with high-speed SMS delivery was executed flawlessly. Nia Media delivered clean visuals, punchy narration, and local relatability that made enterprise messaging crystal clear.',
+    resultMetric: '+2.6x enterprise demo requests and sign-ups',
+    stars: 5,
+  },
+  {
+    id: 'pesaflix',
+    clientName: 'PesaFlix',
+    clientRole: 'Creator Community & Partnerships, PesaFlix',
+    industry: 'Digital Media & Creator Economy',
+    title: 'What If Your Content Could Earn You Money? | PesaFlix Commercial',
+    deliverable: '60s Commercial Film (16:9)',
+    aspectRatio: '16:9',
+    thumbnail: 'https://i.ytimg.com/vi/E5Zauj4TJHo/maxresdefault.jpg',
+    videoUrl: 'https://www.youtube.com/embed/E5Zauj4TJHo',
+    platform: 'YouTube',
+    quote: 'What if watching and creating content could unlock real rewards? Nia Media captured the energy, creativity, and monetization potential of the PesaFlix platform in an electrifying commercial. The visual rhythm and voiceover fueled a massive influx of creator onboarding right after launch.',
+    resultMetric: '5,000+ creator app downloads in first 14 days',
+    stars: 5,
+  },
+  {
+    id: 'onfon-mobile-reel',
+    clientName: 'Onfon Mobile',
+    clientRole: 'Digital Campaign Team, Onfon Mobile',
+    industry: 'Fintech & Mobile Devices',
+    title: 'Lipa Mos Mos Vertical Mobile Reel',
     deliverable: '30s Vertical Reel (TikTok & IG)',
     aspectRatio: '9:16',
-    thumbnail: '/images/styles/style-cinematic.jpg',
-    videoUrl: 'https://www.youtube.com/embed/ScMzIvxBSi4', // High-energy commercial sample
+    thumbnail: 'https://i.ytimg.com/vi/mxF6bI4JZV0/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/embed/mxF6bI4JZV0',
     platform: 'YouTube',
-    quote: 'The video hook stopped people mid-scroll on TikTok. We had customers walking into the cafe showing us the exact reel on their phones.',
-    resultMetric: '+3.4x WhatsApp table reservations in 7 days',
+    quote: 'The vertical mobile format hooked users mid-scroll on Instagram Reels and TikTok. Snappy pacing and relatable Kenyan messaging drove direct click-throughs straight to our WhatsApp sales line.',
+    resultMetric: '+3.4x TikTok engagement & WhatsApp leads',
     stars: 5,
   },
   {
-    id: 'pesasure-fintech',
-    clientName: 'PesaSure App',
-    clientRole: 'Brian M., Product Lead',
-    industry: 'Fintech & Mobile Apps',
-    title: 'Kinetic App Explainer Commercial',
-    deliverable: '45s 2D Motion Graphics Video',
-    aspectRatio: '16:9',
-    thumbnail: '/images/styles/style-motion-2d.jpg',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Standard demo embed
-    platform: 'YouTube',
-    quote: 'Explaining mobile savings & SACCO loans in under 45 seconds seemed impossible until Nia Media scripted and animated this. Clean, punchy, and locally relatable.',
-    resultMetric: '1,400+ verified app installs in 2 weeks',
-    stars: 5,
-  },
-  {
-    id: 'savannah-botanicals',
-    clientName: 'Savannah Botanicals',
-    clientRole: 'Amina Hassan, Brand Lead',
-    industry: 'Organic Beauty & Wellness',
-    title: '3D Cosmic Bottle & Serum Showcase',
-    deliverable: '60s 3D Stylized Product Film',
-    aspectRatio: '16:9',
-    thumbnail: '/images/styles/style-3d-stylized.jpg',
-    videoUrl: 'https://player.vimeo.com/video/76979871', // Cinematic Vimeo sample
-    platform: 'Vimeo',
-    quote: 'The 3D product lighting and fluid dynamics gave our cosmetic line a premium aesthetic that elevated our online store conversion rate immediately.',
-    resultMetric: '2.8x online catalog conversion rate',
-    stars: 5,
-  },
-  {
-    id: 'nairobi-tech-summit',
-    clientName: 'Nairobi Tech Horizon',
-    clientRole: 'Joy Otieno, Marketing Director',
-    industry: 'Events & Conferences',
-    title: 'Futuristic AI Horizon Teaser',
-    deliverable: '30s Hyper-Realistic AI Reel',
+    id: 'onfon-media-reel',
+    clientName: 'Onfon Media',
+    clientRole: 'SME Outreach Division, Onfon Media',
+    industry: 'Enterprise Messaging & SMS',
+    title: 'Need to Reach Thousands of Customers Fast? Try Bulk SMS',
+    deliverable: '30s Vertical Reel (TikTok & IG)',
     aspectRatio: '9:16',
-    thumbnail: '/images/styles/style-hyper-ai.jpg',
-    videoUrl: 'https://www.youtube.com/embed/ScMzIvxBSi4',
+    thumbnail: 'https://i.ytimg.com/vi/B8u6EbIaoIo/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/embed/B8u6EbIaoIo',
     platform: 'YouTube',
-    quote: 'The futuristic Nairobi visuals blew everyone away. We sold out our early-bird conference tickets in 72 hours after posting this reel on LinkedIn and Instagram.',
-    resultMetric: 'All Early-Bird passes sold out in 72 hours',
+    quote: 'Short, crisp, and high energy. Perfect for WhatsApp Status and Instagram stories to show entrepreneurs how quickly they can broadcast alerts, promos, and updates to their customers.',
+    resultMetric: '450+ SME portal sign-ups in 10 days',
     stars: 5,
   },
 ]
@@ -153,22 +168,33 @@ export default function HomeVideoCarousel() {
             </p>
           </div>
 
-          {/* Navigation Controls */}
-          <div className="flex items-center gap-2 self-start md:self-end">
-            <button
-              onClick={prevSlide}
-              aria-label="Previous client video"
-              className="w-10 h-10 rounded-full border border-white/15 bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all"
+          {/* Navigation Controls & YouTube Channel link */}
+          <div className="flex items-center gap-3 self-start md:self-end">
+            <a
+              href="https://www.youtube.com/@Niamedia-b4z/videos"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
             >
-              <ChevronLeft size={18} />
-            </button>
-            <button
-              onClick={nextSlide}
-              aria-label="Next client video"
-              className="w-10 h-10 rounded-full border border-white/15 bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all"
-            >
-              <ChevronRight size={18} />
-            </button>
+              <ExternalLink size={13} />
+              <span>YouTube Channel</span>
+            </a>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={prevSlide}
+                aria-label="Previous client video"
+                className="w-10 h-10 rounded-full border border-white/15 bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                onClick={nextSlide}
+                aria-label="Next client video"
+                className="w-10 h-10 rounded-full border border-white/15 bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -178,36 +204,67 @@ export default function HomeVideoCarousel() {
           <div className="lg:col-span-6 xl:col-span-7">
             <div
               onClick={() => setActiveModalVideo(current)}
-              className="group relative w-full aspect-video rounded-2xl overflow-hidden bg-black/60 border border-white/15 shadow-2xl cursor-pointer"
+              className="group relative w-full aspect-video rounded-2xl overflow-hidden bg-black/80 border border-white/15 shadow-2xl cursor-pointer flex items-center justify-center"
             >
+              {/* Blurred backdrop for vertical videos */}
               <img
                 src={current.thumbnail}
-                alt={current.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-85 group-hover:opacity-100"
+                alt=""
+                aria-hidden="true"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  if (target.src.includes('maxresdefault.jpg')) {
+                    target.src = target.src.replace('maxresdefault.jpg', 'hqdefault.jpg')
+                  }
+                }}
+                className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ${
+                  current.aspectRatio === '9:16'
+                    ? 'blur-xl opacity-40 scale-110'
+                    : 'opacity-85 group-hover:opacity-100 group-hover:scale-105'
+                }`}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+              {/* Centered crisp visual */}
+              {current.aspectRatio === '9:16' ? (
+                <img
+                  src={current.thumbnail}
+                  alt={current.title}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    if (target.src.includes('maxresdefault.jpg')) {
+                      target.src = target.src.replace('maxresdefault.jpg', 'hqdefault.jpg')
+                    }
+                  }}
+                  className="relative z-10 h-full w-auto aspect-[9/16] object-cover rounded-xl shadow-2xl group-hover:scale-105 transition-transform duration-700"
+                />
+              ) : (
+                <div className="absolute inset-0 bg-transparent" />
+              )}
+
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent z-10 pointer-events-none" />
 
               {/* Format & Platform Badges */}
-              <div className="absolute top-4 left-4 flex items-center gap-2">
-                <span className="text-[11px] font-extrabold uppercase tracking-wide px-2.5 py-1 rounded-md bg-black/70 backdrop-blur-md text-white border border-white/20">
+              <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+                <span className="text-[11px] font-extrabold uppercase tracking-wide px-2.5 py-1 rounded-md bg-black/75 backdrop-blur-md text-white border border-white/20">
                   {current.deliverable}
                 </span>
-                <span className="text-[11px] font-bold px-2.5 py-1 rounded-md bg-purple-600/90 text-white shadow">
+                <span className="text-[11px] font-bold px-2.5 py-1 rounded-md bg-red-600/90 text-white shadow flex items-center gap-1">
+                  <Play size={10} className="fill-white" />
                   {current.platform}
                 </span>
               </div>
 
               {/* Center Play Button Pulse */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 rounded-full bg-purple-600/90 group-hover:bg-purple-500 text-white flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.6)] group-hover:scale-110 transition-all duration-300">
+              <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+                <div className="w-16 h-16 rounded-full bg-purple-600/90 group-hover:bg-purple-500 text-white flex items-center justify-center shadow-[0_0_35px_rgba(168,85,247,0.7)] group-hover:scale-110 transition-all duration-300">
                   <Play size={24} className="fill-white translate-x-0.5" />
                 </div>
               </div>
 
               {/* Bottom bar inside video preview */}
-              <div className="absolute bottom-4 inset-x-4 flex items-center justify-between text-xs text-white/90">
-                <span className="font-semibold drop-shadow">{current.title}</span>
-                <span className="inline-flex items-center gap-1 font-bold text-emerald-400 drop-shadow">
+              <div className="absolute bottom-4 inset-x-4 z-20 flex items-center justify-between text-xs text-white/95">
+                <span className="font-semibold drop-shadow truncate mr-3">{current.title}</span>
+                <span className="inline-flex items-center gap-1 font-bold text-emerald-400 drop-shadow whitespace-nowrap">
                   <CheckCircle2 size={13} /> {current.resultMetric}
                 </span>
               </div>
@@ -241,7 +298,7 @@ export default function HomeVideoCarousel() {
             <div className="p-4 rounded-xl bg-purple-950/40 border border-purple-500/30 flex items-center justify-between">
               <div>
                 <p className="text-[11px] font-extrabold uppercase tracking-wider text-purple-300">
-                  Business Impact
+                  Verified Project Impact
                 </p>
                 <p className="text-sm font-bold text-white mt-0.5">
                   {current.resultMetric}
@@ -277,6 +334,46 @@ export default function HomeVideoCarousel() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Quick Project Selector Strip */}
+        <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {CLIENT_VIDEOS.map((video, idx) => (
+            <button
+              key={video.id}
+              onClick={() => setCurrentIndex(idx)}
+              className={`p-3 rounded-2xl border text-left transition-all flex flex-col gap-2.5 ${
+                currentIndex === idx
+                  ? 'bg-purple-600/20 border-purple-500/80 shadow-[0_0_20px_rgba(168,85,247,0.2)]'
+                  : 'bg-white/[0.02] border-white/10 hover:bg-white/[0.05] hover:border-white/20'
+              }`}
+            >
+              <div className="relative aspect-video rounded-xl overflow-hidden bg-black/70">
+                <img
+                  src={video.thumbnail}
+                  alt={video.title}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    if (target.src.includes('maxresdefault.jpg')) {
+                      target.src = target.src.replace('maxresdefault.jpg', 'hqdefault.jpg')
+                    }
+                  }}
+                  className="w-full h-full object-cover"
+                />
+                <span className="absolute bottom-1 right-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-black/80 text-white">
+                  {video.aspectRatio}
+                </span>
+              </div>
+              <div className="min-w-0">
+                <p className={`text-xs font-bold truncate ${currentIndex === idx ? 'text-purple-300' : 'text-white'}`}>
+                  {video.clientName}
+                </p>
+                <p className="text-[11px] text-white/50 truncate">
+                  {video.deliverable.split('(')[0].trim()}
+                </p>
+              </div>
+            </button>
+          ))}
         </div>
       </div>
 

@@ -98,14 +98,14 @@ const POSTERS_DATA = [
 
 /* ─── Client Partner Logos ────────────────────────────────────────── */
 const CLIENT_LOGOS = [
-  'Treasured Artifacts',
-  'Kilimani Organic Cafe',
   'Onfon Media',
+  'Onfon Mobile',
+  'PesaFlix',
+  'Treasured Artifacts',
   'Ndovu Group',
-  'PesaSure Fintech',
   'Somo Smart',
   'Adiel Media',
-  'Mama Pima SACCO',
+  'Shekel Coin',
 ]
 
 /* ─── FAQs ────────────────────────────────────────────────────────── */
@@ -734,10 +734,10 @@ export default function Home() {
         <VideoModal
           isOpen={showreelOpen}
           onClose={() => setShowreelOpen(false)}
-          videoUrl="https://www.youtube.com/embed/ScMzIvxBSi4"
-          title="Nia Media Studio Commercial Showreel"
-          clientName="Nia Media Production House"
-          deliverableTag="30s Studio Showreel"
+          videoUrl="https://www.youtube.com/embed/FQzMXAd0lNU"
+          title="Own a Smartphone Without Paying All at Once | Onfon Mobile"
+          clientName="Onfon Mobile"
+          deliverableTag="60s Commercial Showcase"
           aspectRatio="16:9"
         />
       )}
