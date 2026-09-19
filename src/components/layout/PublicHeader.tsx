@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Menu, X, Sparkles } from 'lucide-react'
 import Logo from '../ui/Logo'
 import { PRIMARY_VIDEO_CTA, SECONDARY_NIA_CTA } from '../../lib/cta'
+import { openNiaAssistant } from '../GlobalNiaAssistant'
 
 const navItems = [
   { label: 'How It Works', href: '/#how-it-works' },
@@ -84,7 +85,11 @@ export default function PublicHeader({ dark = false }: { dark?: boolean }) {
           </Link>
           <Link
             to={SECONDARY_NIA_CTA.href}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all"
+            onClick={(e) => {
+              e.preventDefault()
+              openNiaAssistant()
+            }}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer"
             style={{
               background: dark ? 'rgba(168, 85, 247, 0.15)' : 'rgba(124,58,237,0.08)',
               border: dark ? '1px solid rgba(168, 85, 247, 0.3)' : '1px solid rgba(124,58,237,0.2)',
@@ -149,8 +154,12 @@ export default function PublicHeader({ dark = false }: { dark?: boolean }) {
           <div className={`mt-4 pt-4 border-t space-y-2 ${dark ? 'border-white/10' : 'border-gray-100'}`}>
             <Link
               to={SECONDARY_NIA_CTA.href}
-              onClick={() => setOpen(false)}
-              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-bold"
+              onClick={(e) => {
+                e.preventDefault()
+                setOpen(false)
+                openNiaAssistant()
+              }}
+              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-bold cursor-pointer"
               style={{
                 background: dark ? 'rgba(168, 85, 247, 0.15)' : 'rgba(124,58,237,0.08)',
                 border: dark ? '1px solid rgba(168, 85, 247, 0.3)' : '1px solid rgba(124,58,237,0.2)',

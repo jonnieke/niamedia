@@ -6,6 +6,8 @@ import RouteSeo from './components/RouteSeo'
 import FloatingSurveyTrigger from './components/FloatingSurveyTrigger'
 import { initAnalytics, trackPageView } from './lib/analytics'
 
+import GlobalNiaAssistant from './components/GlobalNiaAssistant'
+
 import Home from './pages/Home'
 const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
@@ -110,6 +112,7 @@ function AppRoutes() {
     <>
       <RouteSeo />
       <FloatingSurveyTrigger />
+      <GlobalNiaAssistant />
       <Suspense fallback={<RouteLoader />}>
         <Routes>
         <Route path="/" element={<Home />} />
