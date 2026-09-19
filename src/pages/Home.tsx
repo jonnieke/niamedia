@@ -241,7 +241,7 @@ export default function Home() {
 
             {/* Hero Right Column: Interactive 3D Cinema Frame */}
             <div className="lg:col-span-5 relative flex justify-center">
-              <div className="relative w-full max-w-md bg-gradient-to-b from-white/15 to-white/5 p-1 rounded-3xl backdrop-blur-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+              <div className="relative w-full max-w-sm sm:max-w-[360px] bg-gradient-to-b from-white/15 to-white/5 p-1 rounded-3xl backdrop-blur-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden">
                 
                 {/* Format Switcher Bar */}
                 <div className="flex items-center justify-between p-3 bg-[#0c0916] rounded-t-[22px] border-b border-white/10 text-xs">
@@ -266,14 +266,14 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Cinema Display Screen */}
+                {/* Cinema Display Screen - Edge-to-Edge with no gap */}
                 <div
-                  className={`relative overflow-hidden bg-black transition-all duration-500 flex items-center justify-center ${
+                  className={`relative w-full overflow-hidden bg-black transition-all duration-500 ${
                     heroAspectRatio === '9:16'
-                      ? 'aspect-[9/16] max-h-[500px]'
+                      ? 'h-[480px]'
                       : heroAspectRatio === '16:9'
                       ? 'aspect-video'
-                      : 'aspect-square max-h-[420px]'
+                      : 'aspect-square'
                   }`}
                 >
                   <img
