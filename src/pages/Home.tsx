@@ -366,6 +366,9 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ── SATISFIED CUSTOMERS VIDEO CAROUSEL ─────────────────────────────────── */}
+      <HomeVideoCarousel />
+
       {/* ── INTERACTIVE RATE EXPLORER (HOMEPAGE TEASER) ────────────────────────── */}
       <section className="py-16 px-6 relative bg-gradient-to-b from-[#07050d] via-[#0d091a] to-[#07050d]">
         <div className="max-w-4xl mx-auto rounded-3xl bg-white/[0.03] border border-white/10 p-6 md:p-8 backdrop-blur-xl shadow-2xl">
@@ -521,9 +524,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* ── SATISFIED CUSTOMERS VIDEO CAROUSEL ─────────────────────────────────── */}
-      <HomeVideoCarousel />
 
       {/* ── THE "WALL OF POSTERS" SHOWCASE ────────────────────────────────────── */}
       <section className="py-24 px-6 relative bg-[#07050d]">
