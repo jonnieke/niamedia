@@ -2,22 +2,24 @@ import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import PublicHeader from '../components/layout/PublicHeader'
 import HomeVideoCarousel from '../components/HomeVideoCarousel'
+import HomeCampaignGenerator from '../components/HomeCampaignGenerator'
 import VideoModal from '../components/VideoModal'
 import {
   Sparkles, Play, ArrowRight, CheckCircle2, Shield, Clock,
   Smartphone, Film, Zap, Layers, Star, MessageSquare, ChevronDown,
-  Volume2, Eye, Award, Check, Image as ImageIcon, ExternalLink
+  Volume2, Eye, Award, Check, Image as ImageIcon, ExternalLink,
+  BarChart3, Target, ArrowUpRight
 } from 'lucide-react'
 
 const WHATSAPP_URL = 'https://wa.me/254751822556?text=Hi%2C%20I%20need%20a%20video%20commercial%20for%20my%20business'
 
 /* ─── Video Pricing Ladder ────────────────────────────────────────── */
 const DURATION_TIERS = [
-  { id: '15s', label: '15 seconds', name: '15s Quick Hook', price: 5000, desc: 'TikTok, Reels, Stories hook' },
-  { id: '30s', label: '30 seconds', name: '30s Social Ad',  price: 8000, desc: 'Standard commercial all platforms' },
-  { id: '60s', label: '60 seconds', name: '60s Full Pitch', price: 15000, desc: 'Complete brand story & CTA' },
-  { id: '90s', label: '90 seconds', name: '90s Deep Story', price: 20000, desc: 'Detailed product demonstration' },
-  { id: '3m+', label: '3 min+',     name: '3m+ Brand Film', price: 60000, desc: 'Infomercial & mini-documentary' },
+  { id: 'startup_hook', label: '30s Startup Hook', name: '30s Startup Social Hook', price: 2000, usd: 15, desc: 'Kinetic AI commercial + branded poster for startups & small biz' },
+  { id: '30s', label: '30 seconds', name: '30s Social Ad',  price: 8000, usd: 65, desc: 'Standard commercial all platforms (minimum commercial tier)' },
+  { id: '60s', label: '60 seconds', name: '60s Full Pitch', price: 15000, usd: 120, desc: 'Complete brand story & high-converting CTA' },
+  { id: '90s', label: '90 seconds', name: '90s Deep Story', price: 20000, usd: 160, desc: 'Detailed product, app or service demonstration' },
+  { id: '3m+', label: '3 min+',     name: '3m+ Brand Film', price: 60000, usd: 480, desc: 'Infomercial & mini-documentary for brands & institutions' },
 ]
 
 /* ─── Visual Styles Bento Grid Data ───────────────────────────────── */
@@ -178,7 +180,7 @@ export default function Home() {
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-emerald-300">STUDIO OPEN</span>
                 <span className="text-white/30">•</span>
-                <span className="text-white/70">48h Commercial Production in Kenya</span>
+                <span className="text-white/70">48h Commercial Production · Kenya &amp; Worldwide 🌍</span>
               </div>
 
               {/* High-Impact Editorial Headline */}
@@ -192,16 +194,18 @@ export default function Home() {
 
               {/* Sub-Headline */}
               <p className="text-base sm:text-lg text-white/70 max-w-xl leading-relaxed font-normal">
-                Nia Media scripts, films, and sound-engineers broadcast-quality commercial videos and promotional graphic posters for Kenyan businesses. No inflated agency markups — transparent pricing from <strong className="text-white">KES 5,000</strong>.
+                Nia Media scripts, films, and sound-engineers broadcast-quality commercial videos and promotional graphic posters for Kenyan and global businesses. Transparent pricing from <strong className="text-white">KES 2,000 ($15 USD)</strong>.
               </p>
 
               {/* Primary Action Button Cluster */}
               <div className="flex flex-wrap items-center gap-3.5 pt-2">
                 <Link
                   to="/quote"
-                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_30px_rgba(147,51,234,0.4)] transition-all transform hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl text-base font-extrabold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_35px_rgba(147,51,234,0.5)] transition-all transform hover:-translate-y-0.5 border border-purple-400/30"
                 >
-                  <Sparkles size={16} /> Get an Instant Quote
+                  <Sparkles size={18} className="text-amber-300 animate-pulse" />
+                  <span>Request a Video Commercial</span>
+                  <ArrowRight size={16} className="text-white/80" />
                 </Link>
 
                 <button
@@ -366,6 +370,9 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ── INTERACTIVE AI CAMPAIGN & BRIEF GENERATOR (VOICE / TEXT) ───────────── */}
+      <HomeCampaignGenerator />
+
       {/* ── SATISFIED CUSTOMERS VIDEO CAROUSEL ─────────────────────────────────── */}
       <HomeVideoCarousel />
 
@@ -411,9 +418,10 @@ export default function Home() {
                   <p className="text-xs font-bold text-white">{tier.label}</p>
                   <p className="text-[10px] text-white/40 leading-tight mt-1">{tier.desc}</p>
                 </div>
-                <p className="text-xs font-extrabold text-amber-300 mt-2">
-                  KES {tier.price.toLocaleString()}
-                </p>
+                <div className="flex items-baseline justify-between mt-2">
+                  <span className="text-xs font-extrabold text-amber-300">KES {tier.price.toLocaleString()}</span>
+                  <span className="text-[10px] font-semibold text-white/50">~${tier.usd} USD</span>
+                </div>
               </button>
             ))}
           </div>
@@ -444,6 +452,46 @@ export default function Home() {
               className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 transition-colors shadow"
             >
               Start This Project <ArrowRight size={13} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── TEST YOUR BRAND TEASER ────────────────────────────────────────────── */}
+      <section className="py-12 px-6 relative bg-gradient-to-r from-purple-950/40 via-[#0c081e] to-indigo-950/40 border-y border-purple-500/20">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="space-y-3 max-w-xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-extrabold bg-gradient-to-r from-purple-500/20 to-amber-500/20 text-purple-300 border border-purple-500/30">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+              <span>NEW: AI BRAND &amp; PRICING VIABILITY STUDIO</span>
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Test Your Product Compatibility Before Producing a Commercial
+            </h3>
+            <p className="text-sm text-white/70 leading-relaxed">
+              Upload a screenshot or product concept to benchmark customer uptake %, real market pricing (KES/USD), competitor share, and regional targeting (Urban vs Mass vs Global).
+            </p>
+            <div className="flex flex-wrap items-center gap-4 text-xs text-white/60 pt-1">
+              <span className="flex items-center gap-1 text-emerald-300 font-semibold">
+                <CheckCircle2 size={13} /> 100% Free Instant Diagnostic
+              </span>
+              <span className="flex items-center gap-1 text-purple-300 font-semibold">
+                <BarChart3 size={13} /> Competitor Benchmark
+              </span>
+              <span className="flex items-center gap-1 text-amber-300 font-semibold">
+                <Target size={13} /> Price Elasticity Simulator
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+            <Link
+              to="/test-brand"
+              className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl text-sm font-extrabold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_25px_rgba(147,51,234,0.4)] transition-all transform hover:-translate-y-0.5 border border-purple-400/30"
+            >
+              <Sparkles size={16} className="text-amber-300" />
+              <span>Launch Brand Test Studio</span>
+              <ArrowRight size={15} />
             </Link>
           </div>
         </div>

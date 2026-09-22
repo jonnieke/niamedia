@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   Film, CheckCircle2, ArrowRight, Clock, Zap,
   Phone, Building2, MessageSquare, ChevronRight, Star, Mic, Loader2, Paperclip, Sparkles, Trash2, Lock, FileText,
-  Sliders, Palette, Volume2, ShieldCheck, Check, Edit3, ArrowLeft, RefreshCw, Layers
+  Sliders, Palette, Volume2, ShieldCheck, Check, Edit3, ArrowLeft, RefreshCw, Layers, HelpCircle
 } from 'lucide-react'
 import PublicHeader from '../components/layout/PublicHeader'
 import { supabase } from '../lib/supabase'
@@ -11,15 +11,37 @@ import { SECONDARY_NIA_CTA } from '../lib/cta'
 import { trackEvent } from '../lib/analytics'
 import MarketSurveyModal from '../components/MarketSurveyModal'
 import QuotationPrintModal, { QuotationData } from '../components/QuotationPrintModal'
+import PackageCompareModal from '../components/PackageCompareModal'
 
 /* Pricing Constants & Logic */
 
+export const BUSINESS_SIZES = [
+  { id: 'startup', label: 'Startup / Solopreneur', desc: 'Pre-revenue or early stage (< 5 team)', recommended: 'startup_hook' },
+  { id: 'sme', label: 'Small Business (SME)', desc: 'Local store, clinic, agency or service', recommended: '30s' },
+  { id: 'growth', label: 'Growing Brand', desc: 'Scaling digital ads across multiple feeds', recommended: '60s' },
+  { id: 'enterprise', label: 'Enterprise / Corporate', desc: 'SACCO, tech summit, or national brand', recommended: '90s' },
+]
+
+export const BUSINESS_GOALS = [
+  { id: 'social_ads', label: 'High-Converting Social Ads', desc: 'Reels, TikTok & Shorts hooks' },
+  { id: 'whatsapp_leads', label: 'Direct WhatsApp Sales Leads', desc: 'Direct customer inquiries' },
+  { id: 'product_launch', label: 'Product / Service Launch', desc: 'Announce new offer or menu' },
+  { id: 'brand_authority', label: 'Brand Trust & Prestige', desc: 'Broadcast-grade cinematic authority' },
+  { id: 'cut_costs', label: 'Quality Without Agency Markup', desc: 'Transparent fast-turnaround production' },
+]
+
+export const TARGET_MARKETS = [
+  { id: 'kenya', label: 'Kenya 🇰🇪', desc: 'Local Kenyan audience' },
+  { id: 'east_africa', label: 'East Africa 🌍', desc: 'Kenya, Uganda, Tanzania, Rwanda' },
+  { id: 'global', label: 'Global / International 🌐', desc: 'US, UK, Europe, UAE, Worldwide' },
+]
+
 const LENGTHS = [
-  { id: '15s', label: '15 seconds', desc: 'Quick hook - TikTok, Reels, Stories', price: 5000 },
-  { id: '30s', label: '30 seconds', desc: 'Standard commercial - all platforms',  price: 8000 },
-  { id: '60s', label: '60 seconds', desc: 'Campaign film - full story arc',        price: 15000 },
-  { id: '90s', label: '90 seconds', desc: 'Extended brand story',                  price: 20000 },
-  { id: '3m+', label: '3 min+',     desc: 'Infomercial / mini-documentary',        price: 60000 },
+  { id: 'startup_hook', label: '30s Startup Social Hook', desc: 'Kinetic AI commercial + branded poster + captions', price: 2000, usd: 15, tag: 'Startups & Small Biz' },
+  { id: '30s', label: '30 seconds Standard', desc: 'Full broadcast commercial all platforms (Minimum Duration)', price: 8000, usd: 65, tag: 'Most Popular' },
+  { id: '60s', label: '60 seconds Campaign', desc: 'Campaign film with full narrative story arc & CTA', price: 15000, usd: 120, tag: 'Growth Brands' },
+  { id: '90s', label: '90 seconds Deep Story', desc: 'Extended product, app or real estate demonstration', price: 20000, usd: 160, tag: 'Deep Showcases' },
+  { id: '3m+', label: '3 min+ Brand Documentary', desc: 'Infomercial & institutional brand mini-documentary', price: 60000, usd: 480, tag: 'Enterprise & Summits' },
 ]
 
 const PLATFORMS = [
@@ -47,7 +69,7 @@ const VISUAL_STYLES = [
   {
     id: 'cinematic',
     title: 'Live-Action / Cinematic Commercial',
-    desc: 'Real Kenyan talent, real location footage, product close-ups, crisp cinematography.',
+    desc: 'Real talent, real location footage, product close-ups, crisp cinematography.',
     badge: 'Popular for Retail & Products',
     tag: 'Live-Action',
     icon: Film,
@@ -83,9 +105,12 @@ const VISUAL_STYLES = [
 ]
 
 const VOICE_TONES = [
-  { id: 'en_ke', label: 'Kenyan English', desc: 'Warm, clear, and professional' },
-  { id: 'sw_ke', label: 'Kiswahili', desc: 'Authentic and culturally grounded' },
+  { id: 'en_ke', label: 'Kenyan English', desc: 'Warm, clear, and professional Kenyan delivery' },
+  { id: 'sw_ke', label: 'Kiswahili', desc: 'Authentic, culturally grounded Kiswahili Sanifu' },
   { id: 'sheng', label: 'Urban / Sheng', desc: 'High-energy youth and street appeal' },
+  { id: 'en_us', label: 'US English (Global)', desc: 'North American commercial broadcast delivery' },
+  { id: 'en_uk', label: 'UK English (Global)', desc: 'British corporate & prestige delivery' },
+  { id: 'global_neutral', label: 'Global Neutral English', desc: 'International accent for worldwide audiences' },
 ]
 
 function calcPrice(
@@ -93,18 +118,21 @@ function calcPrice(
   platforms: string[],
   rush: string,
   subtitles: boolean,
-): { min: number; max: number; total: number } {
+): { min: number; max: number; total: number; usdTotal: number } {
   const base = LENGTHS.find(l => l.id === lengthId) ?? LENGTHS[1]
   const rushMult = RUSH.find(r => r.id === rush)?.mult ?? 1
   const platformMult = platforms.includes('youtube') ? 1.15 : 1
   const multiMult = platforms.length >= 3 ? 1.1 : 1
   const sub = subtitles ? 500 : 0
+  const usdSub = subtitles ? 4 : 0
   const total = Math.round(base.price * rushMult * platformMult * multiMult + sub)
+  const usdTotal = Math.round(base.usd * rushMult * platformMult * multiMult + usdSub)
 
   return {
     min: total,
     max: total,
     total,
+    usdTotal,
   }
 }
 
@@ -112,11 +140,11 @@ function calcPrice(
 
 function StepBar({ step, onStepClick }: { step: number; onStepClick: (step: number) => void }) {
   const steps = [
-    { label: 'Details', short: '1. Details' },
-    { label: 'Scope', short: '2. Scope' },
-    { label: 'Style', short: '3. Style' },
-    { label: 'Brief', short: '4. Brief' },
-    { label: 'Review', short: '5. Review' },
+    { label: 'Business Survey', short: '1. Survey' },
+    { label: 'Scope & Tier', short: '2. Scope' },
+    { label: 'Style & Voice', short: '3. Style' },
+    { label: 'Brief & Media', short: '4. Brief' },
+    { label: 'Quote Review', short: '5. Review' },
   ]
 
   return (
@@ -169,22 +197,33 @@ function StepBar({ step, onStepClick }: { step: number; onStepClick: (step: numb
 
 function PricePanel({
   max,
+  usdMax,
   length,
   rush,
   platforms,
   subtitles,
   visualStyle,
+  currency,
+  onCurrencyToggle,
 }: {
   max: number
+  usdMax: number
   length: string
   rush: string
   platforms: string[]
   subtitles: boolean
   visualStyle: string
+  currency: 'KES' | 'USD'
+  onCurrencyToggle: (c: 'KES' | 'USD') => void
 }) {
   const rushLabel = RUSH.find(r => r.id === rush)?.label ?? 'Standard'
-  const lengthLabel = LENGTHS.find(l => l.id === length)?.label ?? '30 seconds'
+  const lengthObj = LENGTHS.find(l => l.id === length) ?? LENGTHS[1]
   const styleLabel = VISUAL_STYLES.find(s => s.id === visualStyle)?.tag ?? 'Live-Action'
+
+  const displayTotal = currency === 'KES' ? `KES ${max.toLocaleString()}` : `$${usdMax.toLocaleString()} USD`
+  const altTotal = currency === 'KES' ? `~$${usdMax.toLocaleString()} USD` : `~KES ${max.toLocaleString()}`
+  const deposit = currency === 'KES' ? `KES ${Math.round(max * 0.7).toLocaleString()}` : `$${Math.round(usdMax * 0.7).toLocaleString()} USD`
+  const balance = currency === 'KES' ? `KES ${Math.round(max * 0.3).toLocaleString()}` : `$${Math.round(usdMax * 0.3).toLocaleString()} USD`
 
   return (
     <div
@@ -196,19 +235,40 @@ function PricePanel({
     >
       <div className="flex items-center justify-between mb-3">
         <p className="text-[10px] font-extrabold uppercase tracking-widest text-purple-300">STANDARD ESTIMATE</p>
-        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-200 border border-purple-400/30">
-          70/30 Model
-        </span>
+        <div className="flex items-center gap-1 bg-white/10 p-0.5 rounded-lg border border-white/15">
+          <button
+            type="button"
+            onClick={() => onCurrencyToggle('KES')}
+            className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+              currency === 'KES' ? 'bg-purple-600 text-white shadow-sm' : 'text-white/60 hover:text-white'
+            }`}
+          >
+            KES
+          </button>
+          <button
+            type="button"
+            onClick={() => onCurrencyToggle('USD')}
+            className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+              currency === 'USD' ? 'bg-purple-600 text-white shadow-sm' : 'text-white/60 hover:text-white'
+            }`}
+          >
+            USD ($)
+          </button>
+        </div>
       </div>
 
       <div className="mb-5">
-        <p className="text-3xl font-black text-white">KES {max.toLocaleString()}</p>
-        <p className="text-[11px] mt-1 text-purple-200/60">Transparent pricing · 2 revision rounds included</p>
+        <p className="text-3xl font-black text-white">{displayTotal}</p>
+        <div className="flex items-center gap-2 mt-1">
+          <span className="text-[11px] text-purple-200/80 font-medium">{altTotal}</span>
+          <span className="text-[11px] text-purple-200/40">•</span>
+          <span className="text-[11px] text-purple-200/60">2 revision rounds included</span>
+        </div>
       </div>
 
       <div className="space-y-2 mb-5 pb-5 border-b border-white/10 text-xs">
         {[
-          { label: 'Video length', val: lengthLabel },
+          { label: 'Video tier', val: lengthObj.label },
           { label: 'Visual style', val: styleLabel },
           { label: 'Delivery', val: rushLabel },
           {
@@ -216,7 +276,7 @@ function PricePanel({
             val: platforms.length > 0 ? platforms.map(p => PLATFORMS.find(pl => pl.id === p)?.label || p).join(', ') : 'Not selected',
           },
           { label: 'Promo poster', val: 'Included Free' },
-          { label: 'Subtitles', val: subtitles ? 'Included (+KES 500)' : 'None' },
+          { label: 'Subtitles', val: subtitles ? (currency === 'KES' ? '+KES 500' : '+$4 USD') : 'None' },
         ].map(({ label, val }) => (
           <div key={label} className="flex items-start justify-between gap-3">
             <span className="text-purple-200/60 shrink-0">{label}</span>
@@ -229,11 +289,11 @@ function PricePanel({
       <div className="rounded-xl p-3 bg-white/5 border border-white/10 space-y-1.5 mb-4 text-xs">
         <div className="flex items-center justify-between">
           <span className="text-purple-200/70">70% Deposit to Start:</span>
-          <span className="font-extrabold text-emerald-400">KES {Math.round(max * 0.7).toLocaleString()}</span>
+          <span className="font-extrabold text-emerald-400">{deposit}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-purple-200/70">30% Balance on Delivery:</span>
-          <span className="font-semibold text-white">KES {Math.round(max * 0.3).toLocaleString()}</span>
+          <span className="font-semibold text-white">{balance}</span>
         </div>
       </div>
 
@@ -321,19 +381,61 @@ export default function Quote() {
     INDUSTRIES.includes(demoCtx.industry) ? demoCtx.industry : ''
   )
 
+  // Survey States
+  const [currency, setCurrency] = useState<'KES' | 'USD'>('KES')
+  const [compareOpen, setCompareOpen] = useState(false)
+  const [businessStage, setBusinessStage] = useState<string>('startup')
+  const [primaryGoal, setPrimaryGoal] = useState<string>('social_ads')
+  const [targetMarket, setTargetMarket] = useState<string>('kenya')
+
   // Step 1 - Video Scope & Formats
-  const [length, setLength] = useState('30s')
+  const [length, setLength] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search).get('length')
+      if (p && LENGTHS.some(l => l.id === p)) return p
+    }
+    return '30s'
+  })
   const [platforms, setPlatforms] = useState<string[]>(['instagram', 'tiktok'])
   const [rush, setRush] = useState('standard')
 
   // Step 2 - Creative Style & Add-ons
-  const [visualStyle, setVisualStyle] = useState('cinematic')
+  const [visualStyle, setVisualStyle] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const s = new URLSearchParams(window.location.search).get('style')
+      if (s && VISUAL_STYLES.some(v => v.id === s)) return s
+    }
+    return 'cinematic'
+  })
   const [voiceTone, setVoiceTone] = useState('en_ke')
   const [poster] = useState(true)
   const [subtitles, setSubtitles] = useState(false)
 
+  const handleSelectBusinessStage = (stageId: string) => {
+    setBusinessStage(stageId)
+    const rec = BUSINESS_SIZES.find(b => b.id === stageId)?.recommended
+    if (rec) setLength(rec)
+  }
+
+  const handleSelectTargetMarket = (marketId: string) => {
+    setTargetMarket(marketId)
+    if (marketId === 'global') {
+      setCurrency('USD')
+      setVoiceTone('global_neutral')
+    } else {
+      setCurrency('KES')
+      setVoiceTone('en_ke')
+    }
+  }
+
   // Step 3 - Brief & Media
-  const [brief, setBrief] = useState<string>(demoCtx.product ? `Promoting: ${demoCtx.product}` : '')
+  const [brief, setBrief] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const b = new URLSearchParams(window.location.search).get('brief')
+      if (b) return b
+    }
+    return demoCtx.product ? `Promoting: ${demoCtx.product}` : ''
+  })
   const [supportingFiles, setSupportingFiles] = useState<{ id: string; file: File }[]>([])
   const [isListening, setIsListening] = useState(false)
   const [listeningText, setListeningText] = useState('')
@@ -552,8 +654,12 @@ export default function Quote() {
 
       const selectedStyleObj = VISUAL_STYLES.find(s => s.id === visualStyle)
       const selectedVoiceObj = VOICE_TONES.find(v => v.id === voiceTone)
-      const styleSpec = `[Visual Style: ${selectedStyleObj?.title || 'Live-Action'}]\n[Voiceover: ${selectedVoiceObj?.label || 'Kenyan English'}]\n\n`
-      const whatToPromote = `${styleSpec}${brief.trim() || 'Will share brief details on WhatsApp'}${supportingText}`
+      const stageObj = BUSINESS_SIZES.find(s => s.id === businessStage)
+      const goalObj = BUSINESS_GOALS.find(g => g.id === primaryGoal)
+      const marketObj = TARGET_MARKETS.find(m => m.id === targetMarket)
+
+      const surveySpec = `[Business Stage: ${stageObj?.label || 'Startup'}]\n[Primary Goal: ${goalObj?.label || 'Social Ads'}]\n[Target Market: ${marketObj?.label || 'Kenya'}]\n[Currency: ${currency}]\n[Visual Style: ${selectedStyleObj?.title || 'Live-Action'}]\n[Voiceover: ${selectedVoiceObj?.label || 'Kenyan English'}]\n\n`
+      const whatToPromote = `${surveySpec}${brief.trim() || 'Will share brief details on WhatsApp'}${supportingText}`
 
       const generatedQuoteId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `q_${Date.now()}`
 
@@ -586,8 +692,8 @@ export default function Quote() {
       try {
         void supabase.rpc('notify_admins', {
           p_type: 'action',
-          p_title: `New quote - ${bizName.trim()}`,
-          p_body: `${length} video (${selectedStyleObj?.tag}) - KES ${price.total.toLocaleString()} - WhatsApp: ${phone.trim()}`,
+          p_title: `New quote - ${bizName.trim()} (${stageObj?.label || 'Startup'})`,
+          p_body: `${length} video (${selectedStyleObj?.tag}) - KES ${price.total.toLocaleString()} (~$${price.usdTotal} USD) - WhatsApp: ${phone.trim()}`,
           p_action_url: '/admin',
         })
         trackEvent('quote_submit_success', {
@@ -597,6 +703,10 @@ export default function Quote() {
           poster,
           subtitles,
           visual_style: visualStyle,
+          business_stage: businessStage,
+          primary_goal: primaryGoal,
+          target_market: targetMarket,
+          currency,
           attachment_count: supportingFiles.length,
         })
       } catch {}
@@ -645,8 +755,8 @@ export default function Quote() {
 
       const { data, error: fnErr } = await supabase.functions.invoke('pesapal-checkout', {
         body: {
-          orderId: `quote_${qId}`,
-          amountKes: depositAmt,
+          amount: depositAmt,
+          quoteId: qId,
           description: `70% Deposit for ${bName} (${lenLabel} commercial)`,
           email: clientEmail,
           phone: clientPhone,
@@ -669,7 +779,7 @@ export default function Quote() {
 
   // WhatsApp pre-fill message
   const waMessage = encodeURIComponent(
-    `Hi Nia Media, I need a commercial video.\n\nBusiness: ${bizName}\nScope: ${LENGTHS.find(l => l.id === length)?.label}\nStyle: ${VISUAL_STYLES.find(s => s.id === visualStyle)?.title}\nPlatforms: ${platforms.join(', ')}\nDelivery: ${RUSH.find(r => r.id === rush)?.label}\nEstimated Total: KES ${price.total.toLocaleString()} (70% deposit: KES ${Math.round(price.total * 0.7).toLocaleString()})\n\nWhat I am promoting: ${brief || 'Will share brief on WhatsApp'}\nContact: ${phone}`
+    `Hi Nia Media, I need a commercial video.\n\nBusiness: ${bizName}\nStage: ${BUSINESS_SIZES.find(s => s.id === businessStage)?.label || 'Startup'}\nGoal: ${BUSINESS_GOALS.find(g => g.id === primaryGoal)?.label || 'Social Ads'}\nMarket: ${TARGET_MARKETS.find(m => m.id === targetMarket)?.label || 'Kenya'}\nPackage: ${LENGTHS.find(l => l.id === length)?.label}\nStyle: ${VISUAL_STYLES.find(s => s.id === visualStyle)?.title}\nPlatforms: ${platforms.join(', ')}\nDelivery: ${RUSH.find(r => r.id === rush)?.label}\nEstimated Total: KES ${price.total.toLocaleString()} (~$${price.usdTotal} USD)\n70% Deposit to Start: KES ${Math.round(price.total * 0.7).toLocaleString()} (~$${Math.round(price.usdTotal * 0.7)} USD)\n\nWhat I am promoting: ${brief || 'Will share brief on WhatsApp'}\nContact: ${phone}`
   )
 
   // Quotation PDF modal data
@@ -923,13 +1033,110 @@ export default function Quote() {
               {step === 0 && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-bold text-gray-900 mb-1">Step 1: Your Business & Contacts</h2>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 mb-2 border border-purple-200">
+                      <Sparkles size={12} className="text-purple-600" />
+                      <span>STEP 1 OF 5: TAILORED BUSINESS INTAKE</span>
+                    </div>
+                    <h2 className="text-xl font-extrabold text-gray-900 mb-1">Tell Us About Your Business &amp; Goals</h2>
                     <p className="text-xs text-gray-500">
-                      Who should we address the official quotation and proposal to?
+                      We calibrate production scope, creative style, and pricing to your exact growth stage.
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm space-y-5">
+                  {/* 1. Business Stage & Scale Selector */}
+                  <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1">
+                      1. What best describes your business stage?
+                    </label>
+                    <p className="text-xs text-gray-400 mb-3.5">This helps us recommend the most cost-effective package without bloated agency markups.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {BUSINESS_SIZES.map(s => {
+                        const selected = businessStage === s.id
+                        return (
+                          <div
+                            key={s.id}
+                            onClick={() => handleSelectBusinessStage(s.id)}
+                            className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
+                              selected
+                                ? 'border-purple-600 bg-purple-50/60 shadow-sm'
+                                : 'border-gray-200 hover:border-gray-300 bg-white'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-bold text-xs text-gray-900">{s.label}</span>
+                              {selected && <Check size={14} className="text-purple-600" />}
+                            </div>
+                            <p className="text-[11px] text-gray-500">{s.desc}</p>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 2. Marketing Goal / Bottleneck */}
+                  <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1">
+                      2. What is your primary commercial goal?
+                    </label>
+                    <p className="text-xs text-gray-400 mb-3.5">What outcome matters most to your business right now?</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      {BUSINESS_GOALS.map(g => {
+                        const selected = primaryGoal === g.id
+                        return (
+                          <div
+                            key={g.id}
+                            onClick={() => setPrimaryGoal(g.id)}
+                            className={`p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                              selected
+                                ? 'border-purple-600 bg-purple-50/60 text-purple-900 font-semibold'
+                                : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                            }`}
+                          >
+                            <p className="text-xs font-bold">{g.label}</p>
+                            <p className="text-[10px] text-gray-400 mt-0.5">{g.desc}</p>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 3. Target Market / Geography */}
+                  <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider">
+                        3. Target Market &amp; Location
+                      </label>
+                      <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                        Global Commercial Rights Included
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-400 mb-3">Where will your commercial air and reach customers?</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      {TARGET_MARKETS.map(m => {
+                        const selected = targetMarket === m.id
+                        return (
+                          <div
+                            key={m.id}
+                            onClick={() => handleSelectTargetMarket(m.id)}
+                            className={`p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                              selected
+                                ? 'border-purple-600 bg-purple-50/60 text-purple-900 font-semibold'
+                                : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                            }`}
+                          >
+                            <p className="text-xs font-bold">{m.label}</p>
+                            <p className="text-[10px] text-gray-400 mt-0.5">{m.desc}</p>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Contact Identity */}
+                  <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm space-y-4">
+                    <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider">
+                      4. Your Business &amp; Contact Info
+                    </label>
                     <div>
                       <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
                         Business Name *
@@ -937,7 +1144,7 @@ export default function Quote() {
                       <input
                         type="text"
                         className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors"
-                        placeholder="e.g. Mama Pima Organics, Nairobi Haven Suites"
+                        placeholder="e.g. Mama Pima Organics, Nairobi Haven Suites, Apex Tech"
                         value={bizName}
                         onChange={e => setBizName(e.target.value)}
                       />
@@ -964,7 +1171,7 @@ export default function Quote() {
                         <input
                           type="tel"
                           className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 transition-colors"
-                          placeholder="0712 345 678"
+                          placeholder="0712 345 678 or +1 / +44 for global"
                           value={phone}
                           onChange={e => setPhone(e.target.value)}
                         />
@@ -973,7 +1180,7 @@ export default function Quote() {
 
                     <div>
                       <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                        Email Address (for PDF quotation & updates)
+                        Email Address (for PDF quotation &amp; updates)
                       </label>
                       <input
                         type="email"
@@ -1012,10 +1219,10 @@ export default function Quote() {
                     <button
                       type="button"
                       onClick={goToScope}
-                      className="px-6 py-3.5 rounded-xl text-sm font-bold text-white shadow-md flex items-center gap-2 hover:opacity-95 transition-all cursor-pointer"
+                      className="px-7 py-3.5 rounded-xl text-sm font-bold text-white shadow-md flex items-center gap-2 hover:opacity-95 transition-all cursor-pointer"
                       style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}
                     >
-                      Next: Video Scope & Duration <ArrowRight size={15} />
+                      Next: Choose Package &amp; Scope <ArrowRight size={15} />
                     </button>
                   </div>
                 </div>
@@ -1024,43 +1231,112 @@ export default function Quote() {
               {/* STEP 1: Video Scope, Duration & Formats */}
               {step === 1 && (
                 <div className="space-y-6">
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-900 mb-1">Step 2: Video Scope, Duration & Formats</h2>
-                    <p className="text-xs text-gray-500">
-                      Choose the duration and delivery speed that fits your campaign goals.
-                    </p>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-900 mb-1">Step 2: Video Packages &amp; Duration</h2>
+                      <p className="text-xs text-gray-500">
+                        Minimum commercial duration is 30 seconds. Choose the tier that matches your business needs.
+                      </p>
+                    </div>
+
+                    {/* Currency Selector Pill */}
+                    <div className="flex items-center gap-1.5 bg-gray-100 p-1 rounded-xl border border-gray-200">
+                      <button
+                        type="button"
+                        onClick={() => setCurrency('KES')}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          currency === 'KES' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        KES (Kenya)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCurrency('USD')}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          currency === 'USD' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        USD ($ Global)
+                      </button>
+                    </div>
                   </div>
 
                   {/* Duration Selector */}
                   <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">
-                      Commercial Duration
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {LENGTHS.map(l => (
-                        <div
-                          key={l.id}
-                          onClick={() => setLength(l.id)}
-                          className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
-                            length === l.id
-                              ? 'border-purple-600 bg-purple-50/50 shadow-sm'
-                              : 'border-gray-200 hover:border-gray-300 bg-white'
-                          }`}
-                        >
-                          <div>
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-extrabold text-sm text-gray-900">{l.label}</span>
-                              <span className="font-extrabold text-sm text-purple-700">KES {l.price.toLocaleString()}</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                          Select Package &amp; Duration
+                        </label>
+                        <p className="text-[11px] text-gray-500 mt-0.5">
+                          Standard commercial production starts at 30 seconds.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setCompareOpen(true)}
+                        className="text-xs font-bold text-purple-700 hover:text-purple-800 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                      >
+                        <Sparkles size={13} className="text-amber-500" />
+                        <span>Compare 2K vs 8K: What's included?</span>
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      {LENGTHS.map(l => {
+                        const isSelected = length === l.id
+                        const priceDisplay = currency === 'KES' ? `KES ${l.price.toLocaleString()}` : `$${l.usd} USD`
+                        const altPrice = currency === 'KES' ? `~$${l.usd} USD` : `~KES ${l.price.toLocaleString()}`
+
+                        return (
+                          <div
+                            key={l.id}
+                            onClick={() => setLength(l.id)}
+                            className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col justify-between relative ${
+                              isSelected
+                                ? 'border-purple-600 bg-purple-50/50 shadow-md ring-2 ring-purple-100'
+                                : 'border-gray-200 hover:border-gray-300 bg-white'
+                            }`}
+                          >
+                            {l.tag && (
+                              <span className="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-purple-100 text-purple-800 border border-purple-200">
+                                {l.tag}
+                              </span>
+                            )}
+                            <div>
+                              <div className="flex items-baseline justify-between mb-1">
+                                <span className="font-extrabold text-sm text-gray-900">{l.label}</span>
+                                <div className="text-right">
+                                  <span className="font-extrabold text-sm text-purple-700">{priceDisplay}</span>
+                                  <span className="text-[10px] text-gray-400 block font-normal">{altPrice}</span>
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-500 leading-relaxed mt-1">{l.desc}</p>
                             </div>
-                            <p className="text-xs text-gray-500">{l.desc}</p>
+                            {isSelected && (
+                              <div className="mt-3 flex items-center gap-1 text-[11px] font-bold text-purple-700">
+                                <Check size={13} /> Selected Package
+                              </div>
+                            )}
                           </div>
-                          {length === l.id && (
-                            <div className="mt-2 flex items-center gap-1 text-[11px] font-bold text-purple-700">
-                              <Check size={13} /> Selected
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                        )
+                      })}
+                    </div>
+
+                    {/* Helpful 2K vs 8K Clarity Box */}
+                    <div className="mt-4 p-3.5 rounded-xl bg-purple-50/80 border border-purple-100 flex items-start gap-2.5 text-xs text-purple-900">
+                      <HelpCircle size={15} className="text-purple-600 shrink-0 mt-0.5" />
+                      <div className="leading-relaxed">
+                        <strong className="text-purple-950">Why KES 2,000 vs KES 8,000?</strong> The <strong>KES 2,000 (~$15)</strong> tier is an entry package for bootstrapped founders testing organic TikTok/Reels traction (kinetic animation &amp; AI voice). The <strong>KES 8,000 (~$65)</strong> tier is our flagship commercial package with a <strong>professional human studio voice artist</strong>, custom cinematography or 2D animation, 2 full revision rounds, and 100% worldwide broadcast rights for paid advertising.{' '}
+                        <button
+                          type="button"
+                          onClick={() => setCompareOpen(true)}
+                          className="font-bold underline text-purple-800 hover:text-purple-950 cursor-pointer ml-1"
+                        >
+                          View complete side-by-side comparison &rarr;
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -1440,23 +1716,26 @@ export default function Quote() {
                     {/* Adjust Duration */}
                     <div>
                       <span className="block text-[11px] font-bold text-gray-600 uppercase tracking-wide mb-2">
-                        Adjust Duration:
+                        Adjust Package / Duration:
                       </span>
                       <div className="flex flex-wrap gap-2">
-                        {LENGTHS.map(l => (
-                          <button
-                            key={l.id}
-                            type="button"
-                            onClick={() => setLength(l.id)}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-                              length === l.id
-                                ? 'bg-purple-600 border-purple-600 text-white shadow-sm'
-                                : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
-                            }`}
-                          >
-                            {l.id} (KES {l.price.toLocaleString()})
-                          </button>
-                        ))}
+                        {LENGTHS.map(l => {
+                          const pStr = currency === 'KES' ? `KES ${l.price.toLocaleString()}` : `$${l.usd} USD`
+                          return (
+                            <button
+                              key={l.id}
+                              type="button"
+                              onClick={() => setLength(l.id)}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                                length === l.id
+                                  ? 'bg-purple-600 border-purple-600 text-white shadow-sm'
+                                  : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                              }`}
+                            >
+                              {l.label} ({pStr})
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
 
@@ -1509,7 +1788,7 @@ export default function Quote() {
                               : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
                           }`}
                         >
-                          Burned-in Subtitles & SRT (+KES 500)
+                          Burned-in Subtitles &amp; SRT ({currency === 'KES' ? '+KES 500' : '+$4 USD'})
                         </button>
                       </div>
                     </div>
@@ -1564,6 +1843,14 @@ export default function Quote() {
                         <p className="font-bold text-gray-900">{bizName}</p>
                         <p className="text-gray-500">{contactName ? `${contactName} · ` : ''}{phone}</p>
                         {email && <p className="text-gray-500">{email}</p>}
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-100 text-purple-800">
+                            {BUSINESS_SIZES.find(s => s.id === businessStage)?.label}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-gray-100 text-gray-700">
+                            {BUSINESS_GOALS.find(g => g.id === primaryGoal)?.label}
+                          </span>
+                        </div>
                       </div>
 
                       <div>
@@ -1604,15 +1891,30 @@ export default function Quote() {
                     <div className="rounded-xl p-4 bg-gray-50 border border-gray-200/80 space-y-2 text-xs">
                       <div className="flex items-center justify-between">
                         <span className="text-gray-600">Total Standard Price:</span>
-                        <span className="text-base font-extrabold text-gray-900">KES {price.total.toLocaleString()}</span>
+                        <div className="text-right">
+                          <span className="text-base font-extrabold text-gray-900">
+                            {currency === 'KES' ? `KES ${price.total.toLocaleString()}` : `$${price.usdTotal} USD`}
+                          </span>
+                          <span className="text-[11px] text-gray-400 block font-normal">
+                            {currency === 'KES' ? `(~$${price.usdTotal} USD)` : `(~KES ${price.total.toLocaleString()})`}
+                          </span>
+                        </div>
                       </div>
                       <div className="flex items-center justify-between text-emerald-700 font-bold">
                         <span>70% Milestone Deposit to Start:</span>
-                        <span>KES {Math.round(price.total * 0.7).toLocaleString()}</span>
+                        <span>
+                          {currency === 'KES'
+                            ? `KES ${Math.round(price.total * 0.7).toLocaleString()}`
+                            : `$${Math.round(price.usdTotal * 0.7)} USD`}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between text-gray-500">
                         <span>30% Balance on Delivery Approval:</span>
-                        <span>KES {Math.round(price.total * 0.3).toLocaleString()}</span>
+                        <span>
+                          {currency === 'KES'
+                            ? `KES ${Math.round(price.total * 0.3).toLocaleString()}`
+                            : `$${Math.round(price.usdTotal * 0.3)} USD`}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1638,7 +1940,7 @@ export default function Quote() {
                         </>
                       ) : (
                         <>
-                          <CheckCircle2 size={16} /> Confirm Brief & Submit Quote →
+                          <CheckCircle2 size={16} /> Confirm Brief &amp; Submit Quote →
                         </>
                       )}
                     </button>
@@ -1651,11 +1953,14 @@ export default function Quote() {
             <div className="hidden lg:block">
               <PricePanel
                 max={price.total}
+                usdMax={price.usdTotal}
                 length={length}
                 rush={rush}
                 platforms={platforms}
                 subtitles={subtitles}
                 visualStyle={visualStyle}
+                currency={currency}
+                onCurrencyToggle={setCurrency}
               />
             </div>
           </div>
@@ -1674,6 +1979,14 @@ export default function Quote() {
         isOpen={showSurvey}
         onClose={() => setShowSurvey(false)}
         sourcePage="quote_success"
+      />
+
+      {/* Package Comparison 2K vs 8K Modal */}
+      <PackageCompareModal
+        isOpen={compareOpen}
+        onClose={() => setCompareOpen(false)}
+        onSelectPackage={(pkg) => setLength(pkg)}
+        currentCurrency={currency}
       />
     </div>
   )

@@ -10,6 +10,7 @@ const navItems = [
   { label: 'Services', href: '/#services' },
   { label: 'Portfolio', href: '/portfolio' },
   { label: 'Pricing', href: '/pricing' },
+  { label: 'Test Your Brand', href: '/test-brand', badge: 'AI' },
   { label: 'Market Survey', href: '/survey' },
 ]
 
@@ -49,7 +50,7 @@ export default function PublicHeader({ dark = false }: { dark?: boolean }) {
               <button
                 key={item.label}
                 onClick={() => handleAnchor(item.href)}
-                className={`px-3.5 py-2 text-sm font-medium rounded-lg transition-all ${
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-all ${
                   dark
                     ? 'text-white/70 hover:text-white hover:bg-white/5'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -61,13 +62,18 @@ export default function PublicHeader({ dark = false }: { dark?: boolean }) {
               <Link
                 key={item.label}
                 to={item.href}
-                className={`px-3.5 py-2 text-sm font-medium rounded-lg transition-all ${
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-all inline-flex items-center gap-1.5 ${
                   dark
                     ? 'text-white/70 hover:text-white hover:bg-white/5'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
-                {item.label}
+                <span>{item.label}</span>
+                {'badge' in item && item.badge && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-gradient-to-r from-purple-500 to-indigo-500 text-white tracking-wider shadow-sm">
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             )
           ))}
@@ -140,14 +146,19 @@ export default function PublicHeader({ dark = false }: { dark?: boolean }) {
               <Link
                 key={item.label}
                 to={item.href}
-                className={`block py-3 text-sm font-medium border-b last:border-0 ${
+                className={`py-3 text-sm font-medium border-b last:border-0 flex items-center justify-between ${
                   dark
                     ? 'text-white/80 hover:text-white border-white/10'
                     : 'text-gray-700 hover:text-gray-900 border-gray-100'
                 }`}
                 onClick={() => setOpen(false)}
               >
-                {item.label}
+                <span>{item.label}</span>
+                {'badge' in item && item.badge && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-gradient-to-r from-purple-500 to-indigo-500 text-white tracking-wider shadow-sm">
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             )
           ))}

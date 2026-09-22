@@ -64,6 +64,7 @@ const DeliveryView = lazy(() => import('./pages/DeliveryView'))
 const Retainers = lazy(() => import('./pages/Retainers'))
 const AdminAnalytics = lazy(() => import('./pages/AdminAnalytics'))
 const Survey = lazy(() => import('./pages/Survey'))
+const BrandTest = lazy(() => import('./pages/BrandTest'))
 
 function RouteLoader() {
   return (
@@ -127,6 +128,7 @@ function AppRoutes() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/payment/callback" element={<PaymentCallback />} />
         <Route path="/quote" element={<Quote />} />
+        <Route path="/test-brand" element={<BrandTest />} />
         {/* /start folded into /quote — one public intake funnel */}
         <Route path="/start" element={<Navigate to="/quote" replace />} />
         <Route path="/proposal/:token" element={<ProposalView />} />

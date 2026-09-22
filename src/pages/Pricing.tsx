@@ -4,28 +4,32 @@ import { CheckCircle2, Zap, Film, Users, ChevronDown, ChevronUp, Music } from 'l
 import PublicHeader from '../components/layout/PublicHeader'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
+import PackageCompareModal from '../components/PackageCompareModal'
 
 const WHATSAPP_URL = 'https://wa.me/254751822556?text=Hi%2C%20I%20was%20looking%20at%20your%20pricing%20—%20which%20option%20fits%20my%20business%3F'
 
 const VIDEO_LADDER = [
-  { label: '15 seconds', use: 'TikTok, Reels, Stories', price: '5,000' },
-  { label: '30 seconds', use: 'Standard commercial', price: '8,000' },
-  { label: '60 seconds', use: 'Campaign film', price: '15,000' },
-  { label: '90 seconds', use: 'Extended brand story', price: '20,000' },
-  { label: '3 min+', use: 'Infomercial / documentary', price: '60,000' },
+  { label: '30s Startup Social Hook', use: 'TikTok, Reels, Stories (Startups & Small Biz)', price: '2,000', usd: '$15' },
+  { label: '30 seconds Standard', use: 'Standard broadcast commercial (Minimum Duration)', price: '8,000', usd: '$65' },
+  { label: '60 seconds Campaign', use: 'Full campaign film & narrative arc', price: '15,000', usd: '$120' },
+  { label: '90 seconds Deep Story', use: 'Extended brand & product demonstration', price: '20,000', usd: '$160' },
+  { label: '3 min+ Brand Documentary', use: 'Infomercial / institutional documentary', price: '60,000', usd: '$480' },
 ]
 
 const faqs = [
-  { q: 'What do I actually get for one credit?', a: 'One full campaign kit: social captions for every platform, a video script, WhatsApp broadcast copy, poster copy, a 7-day content calendar — plus the HD promotional poster in 3 AI-designed styles.' },
-  { q: 'Is there a free tier?', a: 'Yes. You can generate a demo campaign and poster preview from the homepage without an account. After signing up, your free credit unlocks one full campaign kit including the HD poster in 3 styles.' },
-  { q: 'How long does video production take?', a: 'Standard: 3–5 business days. 48-hour rush: +25%. 24-hour rush: +50%. Timelines depend on asset availability and scope.' },
-  { q: 'Do I own the content?', a: 'Yes — 100%. All content transfers to you fully on delivery. For custom videos, a Certificate of AI Origin is issued.' },
+  { q: 'What is an AI Campaign and what outputs do I receive?', a: 'An AI Campaign is an instant, software-generated marketing kit. For KES 500 (~$5 USD), you receive 3 high-resolution branded posters in different visual styles, a 30-second high-converting video script with hook variations, social captions with hashtags for all major platforms, ready-to-send WhatsApp broadcast copy, and a 7-day content schedule. It is generated in under 60 seconds with 100% commercial rights.' },
+  { q: 'What is the difference between the KES 2,000 and KES 8,000 packages?', a: 'The KES 2,000 (~$15) Startup Hook is an entry package for micro-businesses testing social traction (30s vertical 9:16 video with kinetic typography and automated speech). The KES 8,000 (~$65) package is our flagship standard commercial: it includes a dedicated human studio voiceover artist (Kenyan, Swahili, Sheng, or US/UK), custom cinematic or 2D animation directing, sound mastering, 2 revision rounds, and 100% worldwide commercial broadcast rights for paid ads and TV.' },
+  { q: 'What is your minimum commercial video duration?', a: 'Our minimum commercial duration is 30 seconds. For standard custom-directed commercials with Kenyan voice talent and 2 revision rounds, 30s starts at KES 8,000 ($65 USD). For early-stage startups and small businesses, we also offer our 30s Startup Social Hook package at KES 2,000 ($15 USD).' },
+  { q: 'Can I order if I am outside Kenya?', a: 'Yes! We produce commercials for businesses across East Africa, the UK, the US, and globally. You can pay securely with international Visa or Mastercard (or M-Pesa), toggle between KES and USD, and choose from authentic Kenyan English, Swahili, Sheng, US English, UK English, or Global Neutral voiceovers.' },
+  { q: 'How long does video production take?', a: 'Standard turnaround is 48 to 72 hours (3–5 business days). Need it faster? 48-hour rush is +25% and 24-hour rush is +50%.' },
+  { q: 'Do I own the content and commercial rights?', a: 'Yes — 100%. All video files, promotional posters, and copy transfer to you with complete worldwide broadcast and commercial advertising rights upon final milestone delivery.' },
   { q: 'What is the Video & Poster Retainer?', a: 'Our creative team produces, edits, and delivers fresh commercial videos and branded promotional posters for your business every month. The Starter tier is KES 15,000/month (2 commercial videos + 2 branded posters), with savings of up to 20% on high-volume plans up to KES 60,000/month.' },
-  { q: 'How do I pay?', a: 'M-Pesa, Visa, or Mastercard through PesaPal secure checkout. For video production, you pay a 70% deposit to reserve your creative producer and start production, and the remaining 30% balance after you approve your watermarked video preview.' },
+  { q: 'How does payment work?', a: 'M-Pesa, Visa, or Mastercard through PesaPal secure checkout. For video production, you pay a 70% deposit to reserve your creative team and start production, and the remaining 30% milestone balance after you review and approve your watermarked video preview.' },
 ]
 
 export default function Pricing() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [compareOpen, setCompareOpen] = useState(false)
   const { user } = useAuth()
   const [credits, setCredits] = useState<number | null>(null)
 
@@ -114,27 +118,35 @@ export default function Pricing() {
             <h2 className="text-lg font-extrabold text-gray-900 mb-1">Video Production</h2>
             <p className="text-xs text-gray-500 mb-4">A professional commercial for your business, produced by us.</p>
             <div className="mb-5">
-              <span className="text-3xl font-extrabold text-gray-900">KES 5,000</span>
-              <span className="text-sm text-gray-400"> (15s Standard)</span>
-              <p className="text-xs text-gray-400 mt-1">Clear standard pricing by length below</p>
+              <span className="text-3xl font-extrabold text-gray-900">KES 8,000</span>
+              <span className="text-sm text-gray-400"> (30s Standard Min.)</span>
+              <p className="text-xs text-emerald-600 font-semibold mt-1">Startup Social Hook available from KES 2,000 (~$15)</p>
             </div>
             <ul className="space-y-2.5 flex-1 mb-6">
               {[
-                '15 seconds to 3+ minutes',
-                'AI visuals, voiceover & music',
+                'Minimum duration: 30 seconds',
+                'Kenyan, Swahili, Sheng, or Global US/UK voiceovers',
+                'Free matching promotional poster included',
                 '70% deposit to start / 30% on delivery',
-                '2 revision rounds included',
-                'Full commercial rights on delivery',
+                '2 revision rounds & 100% global commercial rights',
               ].map(f => (
                 <li key={f} className="flex items-start gap-2 text-xs text-gray-600">
                   <CheckCircle2 size={13} className="text-emerald-500 shrink-0 mt-0.5" />{f}
                 </li>
               ))}
             </ul>
-            <Link to="/quote" className="block text-center py-3 rounded-xl text-sm font-bold text-white"
+            <Link to="/quote" className="block text-center py-3 rounded-xl text-sm font-bold text-white shadow-md hover:opacity-95 transition-all"
               style={{ background: 'linear-gradient(135deg, #059669, #0891b2)' }}>
-              Get an Instant Quote
+              Request a Video Commercial
             </Link>
+            <button
+              type="button"
+              onClick={() => setCompareOpen(true)}
+              className="mt-3 text-xs font-bold text-emerald-800 hover:text-emerald-950 text-center flex items-center justify-center gap-1 cursor-pointer py-1"
+            >
+              <span>Compare 2K vs 8K differences</span>
+              <span className="text-emerald-600">→</span>
+            </button>
           </div>
 
           {/* Video & Poster Retainer */}
@@ -184,16 +196,28 @@ export default function Pricing() {
               <h2 className="text-base font-bold text-gray-900">Video pricing by length</h2>
               <p className="text-xs text-gray-400 mt-0.5">Final price depends on platforms, delivery speed & add-ons</p>
             </div>
-            <Link to="/quote" className="text-xs font-bold text-emerald-700 hover:underline">Price my exact video →</Link>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setCompareOpen(true)}
+                className="text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+              >
+                Compare 2K vs 8K Tiers
+              </button>
+              <Link to="/quote" className="text-xs font-bold text-emerald-700 hover:underline">Price my exact video →</Link>
+            </div>
           </div>
           <div className="divide-y divide-gray-100">
-            {VIDEO_LADDER.map(({ label, use, price }) => (
+            {VIDEO_LADDER.map(({ label, use, price, usd }) => (
               <div key={label} className="flex items-center justify-between px-6 py-3.5">
                 <div>
                   <p className="text-sm font-bold text-gray-900">{label}</p>
                   <p className="text-xs text-gray-400">{use}</p>
                 </div>
-                <span className="text-sm font-bold text-gray-800 whitespace-nowrap">KES {price}</span>
+                <div className="text-right">
+                  <span className="text-sm font-bold text-gray-800 whitespace-nowrap">KES {price}</span>
+                  <span className="text-xs text-gray-400 block font-normal">~{usd} USD</span>
+                </div>
               </div>
             ))}
           </div>
@@ -241,6 +265,11 @@ export default function Pricing() {
           </div>
         </div>
       </section>
+
+      <PackageCompareModal
+        isOpen={compareOpen}
+        onClose={() => setCompareOpen(false)}
+      />
     </div>
   )
 }
