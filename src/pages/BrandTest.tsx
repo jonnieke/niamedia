@@ -1,11 +1,19 @@
-import { useState, useRef, useMemo } from 'react'
+import { useState, useRef, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Sparkles, Award, ArrowRight, Upload, X,
   RefreshCw, BarChart3, Target, Compass, Printer, Film, Check,
-  DollarSign
+  DollarSign, Mic, MicOff, HelpCircle, Repeat
 } from 'lucide-react'
 import PublicHeader from '../components/layout/PublicHeader'
+
+export const PRICING_MODELS = [
+  { id: 'per_item', label: 'Per Item / Unit', short: '/ item', desc: 'One-off price per physical item, bottle, pack, or piece' },
+  { id: 'subscription_daily', label: 'Daily Subscription', short: '/ day', desc: 'Daily recurring micro-fee (e.g. daily tips, study access)' },
+  { id: 'subscription_monthly', label: 'Monthly Subscription', short: '/ month', desc: 'Monthly recurring plan (e.g. software, school fees, retainer)' },
+  { id: 'subscription_annual', label: 'Annual Subscription', short: '/ year', desc: 'Yearly recurring subscription or membership' },
+  { id: 'per_service', label: 'Per Service / Project', short: '/ project', desc: 'One-time fee per project, consultation, or service' },
+] as const
 
 /* ─── Industry Profiles & Benchmark Data ───────────────────────────── */
 interface IndustryBenchmark {
@@ -25,6 +33,36 @@ interface IndustryBenchmark {
 }
 
 const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmark> = {
+  education_edtech: {
+    id: 'education_edtech',
+    name: 'Education, EdTech & Academic Services',
+    kesFloor: 500,
+    kesSweetSpot: 2500,
+    kesCeiling: 12000,
+    usdFloor: 5,
+    usdSweetSpot: 25,
+    usdCeiling: 120,
+    typicalMargin: '65% – 85%',
+    marketSizeNote: 'High parent & candidate demand in Kenya (CBC, KCSE, IGCSE); student pass-rate testimonials and teacher endorsements drive rapid WhatsApp adoption.',
+    keyCompetitors: ['Traditional Tuition Centers', 'Online Revision Portals', 'Textbook Publishers'],
+    primaryBarrier: 'Curriculum CBC/KCSE alignment proof & academic trust',
+    globalUptakeFactor: 0.90,
+  },
+  agriculture_agritech: {
+    id: 'agriculture_agritech',
+    name: 'Agriculture, Agri-Tech & Fresh Produce',
+    kesFloor: 800,
+    kesSweetSpot: 3500,
+    kesCeiling: 25000,
+    usdFloor: 8,
+    usdSweetSpot: 35,
+    usdCeiling: 250,
+    typicalMargin: '30% – 50%',
+    marketSizeNote: 'Pillar of East African trade; farmers, agrovets, and cooperatives respond strongly to video harvest proof, yield demonstrations, and direct farm-gate WhatsApp ordering.',
+    keyCompetitors: ['Agrovet Stockists', 'Regional Commodity Brokers', 'Export Cooperatives'],
+    primaryBarrier: 'Field harvest proof, quality consistency & delivery logistics',
+    globalUptakeFactor: 0.84,
+  },
   fmcg_retail: {
     id: 'fmcg_retail',
     name: 'Retail & Consumer Packaged Goods (FMCG)',
@@ -144,12 +182,80 @@ export default function BrandTest() {
 
   // Form States
   const [brandName, setBrandName] = useState('')
-  const [industryId, setIndustryId] = useState('beauty_cosmetics')
+  const [industryId, setIndustryId] = useState('education_edtech')
   const [productDesc, setProductDesc] = useState('')
   const [priceInput, setPriceInput] = useState<number | ''>(2500)
   const [currency, setCurrency] = useState<'KES' | 'USD'>('KES')
+  const [priceModel, setPriceModel] = useState<string>('per_item')
   const [targetRegion, setTargetRegion] = useState('urban_ke')
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
+
+  // Speech Recognition (Mic Voice Input for Description)
+  const [isListening, setIsListening] = useState(false)
+  const [speechSupported, setSpeechSupported] = useState(false)
+  const recognitionRef = useRef<any>(null)
+
+  useEffect(() => {
+    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (SpeechRec) {
+      setSpeechSupported(true)
+    }
+  }, [])
+
+  const toggleListening = () => {
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop()
+      }
+      setIsListening(false)
+      return
+    }
+
+    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRec) {
+      alert('Voice dictation is not supported by your current browser. You can type directly or use Google Chrome or Safari.')
+      return
+    }
+
+    try {
+      const recognition = new SpeechRec()
+      recognition.continuous = true
+      recognition.interimResults = true
+      recognition.lang = 'en-KE'
+
+      recognition.onstart = () => {
+        setIsListening(true)
+      }
+
+      recognition.onresult = (event: any) => {
+        let transcript = ''
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript
+        }
+        if (transcript.trim()) {
+          setProductDesc((prev) => {
+            const trimmed = prev.trim()
+            return trimmed ? `${trimmed} ${transcript.trim()}` : transcript.trim()
+          })
+        }
+      }
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error)
+        setIsListening(false)
+      }
+
+      recognition.onend = () => {
+        setIsListening(false)
+      }
+
+      recognitionRef.current = recognition
+      recognition.start()
+    } catch (err) {
+      console.error('Failed to start speech recognition:', err)
+      setIsListening(false)
+    }
+  }
 
   // Simulation / Result States
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -157,7 +263,7 @@ export default function BrandTest() {
   const [analysisProgress, setAnalysisProgress] = useState(0)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-  const benchmark = INDUSTRY_BENCHMARKS[industryId] || INDUSTRY_BENCHMARKS.beauty_cosmetics
+  const benchmark = INDUSTRY_BENCHMARKS[industryId] || INDUSTRY_BENCHMARKS.education_edtech
 
   // Handle Image Upload
   const handleImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -176,6 +282,12 @@ export default function BrandTest() {
     if (!brandName.trim()) {
       alert('Please enter your brand or product name.')
       return
+    }
+
+    // Stop listening if mic was left on
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop()
+      setIsListening(false)
     }
 
     setIsAnalyzing(true)
@@ -200,11 +312,20 @@ export default function BrandTest() {
   // Diagnostic Computed Metrics
   const diagnostics = useMemo(() => {
     const numPrice = Number(priceInput) || benchmark.kesSweetSpot
-    const effectiveKesPrice = currency === 'KES' ? numPrice : numPrice * 130
+    const rawKesPrice = currency === 'KES' ? numPrice : numPrice * 130
+
+    // Normalize price for subscription frequency if applicable
+    let effectiveKesPrice = rawKesPrice
+    if (priceModel === 'subscription_daily') {
+      // Compare daily recurring to benchmark baseline (average 30 days)
+      effectiveKesPrice = rawKesPrice * 30
+    } else if (priceModel === 'subscription_annual') {
+      effectiveKesPrice = rawKesPrice / 12
+    }
 
     // Pricing assessment
     let priceVerdict: 'underpriced' | 'sweet_spot' | 'premium' = 'sweet_spot'
-    if (effectiveKesPrice < benchmark.kesFloor * 1.1) {
+    if (effectiveKesPrice < benchmark.kesFloor * 1.05) {
       priceVerdict = 'underpriced'
     } else if (effectiveKesPrice > benchmark.kesSweetSpot * 1.45) {
       priceVerdict = 'premium'
@@ -241,6 +362,8 @@ export default function BrandTest() {
       regionalNote = 'Global & Diaspora Export: High margin arbitrage potential! International consumers pay 2x–3x more, but demand certified ingredient purity and cinematic brand proof.'
     }
 
+    const activeModel = PRICING_MODELS.find((m) => m.id === priceModel) || PRICING_MODELS[0]
+
     return {
       priceVerdict,
       overallScore,
@@ -249,15 +372,17 @@ export default function BrandTest() {
       nameRating,
       visualCritique,
       regionalNote,
+      activeModel,
+      effectiveKesPrice,
     }
-  }, [priceInput, currency, benchmark, brandName, productDesc, uploadedImage, targetRegion])
+  }, [priceInput, currency, priceModel, benchmark, brandName, productDesc, uploadedImage, targetRegion])
 
   // Navigate to Video Commercial Quote with brand context pre-filled
   const handleProceedToCommercial = () => {
     const params = new URLSearchParams({
       businessName: brandName,
       product: `${productDesc} (${benchmark.name})`,
-      price: String(priceInput),
+      price: `${priceInput} (${PRICING_MODELS.find((m) => m.id === priceModel)?.label || 'per item'})`,
       region: targetRegion,
     })
     navigate(`/quote?${params.toString()}`)
@@ -344,18 +469,60 @@ export default function BrandTest() {
                 </select>
               </div>
 
-              {/* Product Brief Description */}
+              {/* Product Brief Description with Speech-to-Text Mic */}
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase tracking-wider mb-1.5">
-                  Product / Service Description &amp; What It Does
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-white/80 uppercase tracking-wider">
+                    Product / Service Description &amp; What It Does
+                  </label>
+                  <button
+                    type="button"
+                    onClick={toggleListening}
+                    title={isListening ? 'Stop recording voice description' : 'Dictate description using voice microphone'}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                      isListening
+                        ? 'bg-rose-500/25 text-rose-200 border-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.5)] animate-pulse'
+                        : 'bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border-purple-400/30'
+                    }`}
+                  >
+                    {isListening ? (
+                      <>
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                        </span>
+                        <MicOff size={13} className="text-rose-300" />
+                        <span className="font-bold">Listening... (Tap to finish)</span>
+                      </>
+                    ) : (
+                      <>
+                        <Mic size={13} className="text-purple-300" />
+                        <span>Voice Mic (Dictate)</span>
+                      </>
+                    )}
+                  </button>
+                </div>
                 <textarea
                   rows={3}
-                  placeholder="e.g. Pure cold-pressed avocado oil for natural hair hydration and glowing skin. Packaged in 250ml amber bottles with dropper."
+                  placeholder={
+                    isListening
+                      ? '🎙️ Listening... Speak naturally about your product, what it does, and who it is for.'
+                      : 'e.g. Pure cold-pressed avocado oil for natural hair hydration and glowing skin. Packaged in 250ml amber bottles with dropper.'
+                  }
                   value={productDesc}
                   onChange={(e) => setProductDesc(e.target.value)}
-                  className="w-full bg-white/5 border border-white/15 rounded-xl p-3.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-purple-400 transition-all resize-none"
+                  className={`w-full bg-white/5 border rounded-xl p-3.5 text-sm text-white placeholder-white/30 focus:outline-none transition-all resize-none ${
+                    isListening
+                      ? 'border-rose-400/80 ring-2 ring-rose-500/30 bg-rose-950/20'
+                      : 'border-white/15 focus:border-purple-400'
+                  }`}
                 />
+                {isListening && (
+                  <p className="text-[11px] text-rose-300/90 mt-1.5 flex items-center gap-1.5 font-medium animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                    Recording voice notes into description... Click "Listening... (Tap to finish)" when done.
+                  </p>
+                )}
               </div>
 
               {/* Screenshot / Photo / Packaging Uploader */}
@@ -408,7 +575,7 @@ export default function BrandTest() {
                 </div>
               </div>
 
-              {/* Price & Currency Toggle */}
+              {/* Price & Billing Model (Per Item vs Subscription) */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-bold text-white/80 uppercase tracking-wider">
@@ -436,6 +603,37 @@ export default function BrandTest() {
                   </div>
                 </div>
 
+                {/* Pricing Structure Pill Selector */}
+                <div className="mb-2.5">
+                  <div className="text-[11px] text-white/60 mb-1.5 font-medium flex items-center justify-between">
+                    <span>Billing Type / Pricing Unit:</span>
+                    <span className="text-purple-300 font-bold">
+                      {PRICING_MODELS.find((m) => m.id === priceModel)?.desc}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                    {PRICING_MODELS.map((model) => {
+                      const isSelected = priceModel === model.id
+                      return (
+                        <button
+                          key={model.id}
+                          type="button"
+                          onClick={() => setPriceModel(model.id)}
+                          className={`px-2.5 py-2 rounded-xl text-left border text-xs font-semibold transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-purple-600/30 border-purple-400 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]'
+                              : 'bg-white/5 border-white/10 hover:border-white/20 text-white/70 hover:text-white'
+                          }`}
+                        >
+                          <div className="font-bold text-[11px] leading-tight">{model.label}</div>
+                          <div className="text-[10px] text-white/40 mt-0.5">{model.short}</div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Amount Input with Suffix */}
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-white/50">
                     {currency === 'KES' ? 'KES' : '$'}
@@ -446,9 +644,37 @@ export default function BrandTest() {
                     placeholder={currency === 'KES' ? '2500' : '20'}
                     value={priceInput}
                     onChange={(e) => setPriceInput(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full bg-white/5 border border-white/15 rounded-xl pl-14 pr-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-purple-400 transition-all font-semibold"
+                    className="w-full bg-white/5 border border-white/15 rounded-xl pl-14 pr-24 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-purple-400 transition-all font-semibold"
                   />
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded border border-purple-400/30">
+                    {PRICING_MODELS.find((m) => m.id === priceModel)?.short || '/ unit'}
+                  </span>
                 </div>
+
+                {/* Contextual Sub-note for Daily vs Monthly vs Item */}
+                <p className="text-[11px] text-white/50 mt-1.5">
+                  {priceModel === 'subscription_daily' && (
+                    <span className="text-amber-300">
+                      💡 Daily rate: {currency === 'KES' ? `KES ${(Number(priceInput) * 30).toLocaleString()}` : `$${(Number(priceInput) * 30).toFixed(0)}`}/month normalized run-rate across 30 days.
+                    </span>
+                  )}
+                  {priceModel === 'subscription_monthly' && (
+                    <span className="text-emerald-300">
+                      💡 Monthly recurring subscription billed each 30 days.
+                    </span>
+                  )}
+                  {priceModel === 'subscription_annual' && (
+                    <span className="text-purple-300">
+                      💡 Annual lump-sum (approx. {currency === 'KES' ? `KES ${(Number(priceInput) / 12).toFixed(0)}` : `$${(Number(priceInput) / 12).toFixed(1)}`}/month).
+                    </span>
+                  )}
+                  {priceModel === 'per_item' && (
+                    <span>💡 Unit price per individual package, bottle, box, or item sold.</span>
+                  )}
+                  {priceModel === 'per_service' && (
+                    <span>💡 Project or retainer fee per completed engagement.</span>
+                  )}
+                </p>
               </div>
 
               {/* Target Region */}
@@ -614,16 +840,30 @@ export default function BrandTest() {
                     </div>
                   </div>
 
-                  <p className="text-xs text-white/70 leading-relaxed bg-black/30 p-3 rounded-xl border border-white/5">
-                    <strong>Pricing Verdict:</strong> Your price of{' '}
-                    <strong className="text-white">
-                      {currency === 'KES' ? `KES ${Number(priceInput).toLocaleString()}` : `$${priceInput} USD`}
-                    </strong>{' '}
-                    {diagnostics.priceVerdict === 'sweet_spot'
-                      ? 'is right in the sweet-spot of consumer willingness to pay. You have solid room for advertising margin.'
-                      : diagnostics.priceVerdict === 'underpriced'
-                      ? 'is lower than average. While this helps rapid adoption, you risk being perceived as cheap. Consider bundling or raising prices once you have initial social proof.'
-                      : 'is at the top tier. To justify this premium, your brand must have high-production cinematic commercial video and flawless packaging.'}
+                  <p className="text-xs text-white/70 leading-relaxed bg-black/30 p-3.5 rounded-xl border border-white/5 space-y-1">
+                    <div>
+                      <strong>Pricing Verdict:</strong> Your price of{' '}
+                      <strong className="text-white">
+                        {currency === 'KES' ? `KES ${Number(priceInput).toLocaleString()}` : `$${priceInput} USD`}
+                        <span className="text-purple-300"> {diagnostics.activeModel.short}</span>
+                      </strong>{' '}
+                      <span className="text-white/50 text-[11px]">({diagnostics.activeModel.label})</span>{' '}
+                      {diagnostics.priceVerdict === 'sweet_spot'
+                        ? 'is right in the sweet-spot of consumer willingness to pay. You have solid room for customer acquisition and advertising margin.'
+                        : diagnostics.priceVerdict === 'underpriced'
+                        ? 'is lower than typical category benchmarks. While this accelerates rapid adoption, you risk leaving revenue on the table or being perceived as cheap. Consider bundling or raising prices once initial social proof is established.'
+                        : 'is at the premium top tier. To justify this premium, your brand must deliver high-production cinematic commercial video, verified social proof, and flawless packaging.'}
+                    </div>
+                    {priceModel === 'subscription_daily' && (
+                      <div className="text-[11px] text-amber-300/90 pt-1 border-t border-white/5">
+                        🔄 <strong>Subscription Note:</strong> Billed at {currency === 'KES' ? `KES ${Number(priceInput).toLocaleString()}` : `$${priceInput}`} daily (~{currency === 'KES' ? `KES ${(Number(priceInput) * 30).toLocaleString()}` : `$${(Number(priceInput) * 30).toFixed(0)}`}/month run-rate). Daily billing significantly reduces customer friction for mobile money (M-Pesa) users.
+                      </div>
+                    )}
+                    {priceModel === 'subscription_monthly' && (
+                      <div className="text-[11px] text-emerald-300/90 pt-1 border-t border-white/5">
+                        🔄 <strong>Subscription Note:</strong> Monthly recurring billing offers predictable ARR/MRR. Maintain high video retention and renewal onboarding to prevent churn.
+                      </div>
+                    )}
                   </p>
                 </div>
 
