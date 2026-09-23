@@ -143,8 +143,32 @@ export default function Home() {
   const [selectedDuration, setSelectedDuration] = useState('30s')
   const [currency, setCurrency] = useState<'KES' | 'USD'>(() => {
     const c = searchParams.get('currency')
-    return c && c.toUpperCase() === 'USD' ? 'USD' : 'KES'
+    if (c) return c.toUpperCase() === 'USD' ? 'USD' : 'KES'
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('nia_preferred_currency')
+      if (stored === 'USD' || stored === 'KES') return stored
+    }
+    return 'KES'
   })
+
+  useEffect(() => {
+    const handleSync = (e: Event) => {
+      const customEvent = e as CustomEvent<string>
+      if (customEvent.detail === 'KES' || customEvent.detail === 'USD') {
+        setCurrency(customEvent.detail as 'KES' | 'USD')
+      }
+    }
+    window.addEventListener('nia-currency-changed', handleSync)
+    return () => window.removeEventListener('nia-currency-changed', handleSync)
+  }, [])
+
+  const handleCurrencySwitch = (newCurrency: 'KES' | 'USD') => {
+    setCurrency(newCurrency)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('nia_preferred_currency', newCurrency)
+      window.dispatchEvent(new CustomEvent('nia-currency-changed', { detail: newCurrency }))
+    }
+  }
   const [activeHeroStyle, setActiveHeroStyle] = useState(0)
   const [heroAspectRatio, setHeroAspectRatio] = useState<'9:16' | '16:9' | '1:1'>('9:16')
   const [openFaq, setOpenFaq] = useState<number | null>(null)
@@ -393,7 +417,7 @@ export default function Home() {
                 <div className="flex items-center gap-1 bg-white/10 p-0.5 rounded-lg border border-white/15">
                   <button
                     type="button"
-                    onClick={() => setCurrency('KES')}
+                    onClick={() => handleCurrencySwitch('KES')}
                     className={`px-2.5 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
                       currency === 'KES' ? 'bg-purple-600 text-white shadow-sm' : 'text-white/60 hover:text-white'
                     }`}
@@ -402,7 +426,7 @@ export default function Home() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setCurrency('USD')}
+                    onClick={() => handleCurrencySwitch('USD')}
                     className={`px-2.5 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
                       currency === 'USD' ? 'bg-purple-600 text-white shadow-sm' : 'text-white/60 hover:text-white'
                     }`}

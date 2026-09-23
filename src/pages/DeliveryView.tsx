@@ -22,6 +22,38 @@ interface Project {
   completed_at: string | null
 }
 
+function isDirectVideoUrl(url: string | null): boolean {
+  if (!url) return false
+  const clean = url.toLowerCase().split('?')[0]
+  return (
+    clean.endsWith('.mp4') ||
+    clean.endsWith('.webm') ||
+    clean.endsWith('.mov') ||
+    clean.endsWith('.m4v') ||
+    url.includes('/storage/v1/object/public/') ||
+    url.includes('blob:')
+  )
+}
+
+function getEmbedUrl(url: string | null): string | null {
+  if (!url) return null
+  try {
+    if (url.includes('youtube.com/watch') || url.includes('youtu.be/')) {
+      const id = url.includes('youtu.be/')
+        ? url.split('youtu.be/')[1]?.split('?')[0]
+        : new URL(url).searchParams.get('v')
+      return id ? `https://www.youtube-nocookie.com/embed/${id}` : null
+    }
+    if (url.includes('vimeo.com/')) {
+      const id = url.split('vimeo.com/')[1]?.split('?')[0]
+      return id ? `https://player.vimeo.com/video/${id}` : null
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 export default function DeliveryView() {
   const { token } = useParams<{ token: string }>()
   const [project, setProject] = useState<Project | null>(null)
@@ -233,9 +265,59 @@ export default function DeliveryView() {
               )}
             </div>
 
-            {/* Thumbnail / preview */}
-            {project.thumbnail_url ? (
-              <div className="aspect-video rounded-2xl overflow-hidden mb-4 bg-black">
+            {/* In-Page Video Player with Watermark Overlay */}
+            {project.deliverable_url && isDirectVideoUrl(project.deliverable_url) ? (
+              <div className="relative aspect-video rounded-2xl overflow-hidden mb-4 bg-black border border-white/10 shadow-2xl">
+                <video
+                  src={project.deliverable_url}
+                  poster={project.thumbnail_url || undefined}
+                  controls
+                  controlsList={balanceDue > 0 && !balancePaid ? "nodownload" : undefined}
+                  onContextMenu={(e) => {
+                    if (balanceDue > 0 && !balancePaid) e.preventDefault()
+                  }}
+                  className="w-full h-full object-contain bg-black"
+                />
+
+                {/* Dynamic Watermark Overlay when 30% milestone balance is pending */}
+                {balanceDue > 0 && !balancePaid && (
+                  <div
+                    className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center overflow-hidden select-none"
+                    style={{
+                      background: 'radial-gradient(circle at center, rgba(0,0,0,0.15) 30%, rgba(0,0,0,0.65) 100%)'
+                    }}
+                  >
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md border border-amber-500/30 text-[10px] font-extrabold uppercase text-amber-300">
+                      <Lock size={11} /> Review Cut · Watermarked
+                    </div>
+                    <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md border border-white/20 text-[10px] font-semibold text-white/80">
+                      Clean 4K Broadcast Master Locked
+                    </div>
+
+                    <div className="transform -rotate-12 px-6 py-3.5 rounded-2xl bg-black/70 backdrop-blur-[2px] border border-amber-500/50 text-center shadow-[0_0_40px_rgba(0,0,0,0.9)] max-w-sm mx-4">
+                      <div className="flex items-center justify-center gap-2 text-white font-black text-sm tracking-widest uppercase">
+                        <Lock size={15} className="text-amber-400" />
+                        <span>NIA MEDIA · PREVIEW CUT</span>
+                      </div>
+                      <p className="text-[10px] text-amber-200/90 font-medium mt-1">
+                        Client Review Only · Clear 30% balance to unlock clean 4K master
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : project.deliverable_url && getEmbedUrl(project.deliverable_url) ? (
+              <div className="relative aspect-video rounded-2xl overflow-hidden mb-4 bg-black border border-white/10 shadow-2xl">
+                <iframe
+                  src={getEmbedUrl(project.deliverable_url)!}
+                  title="Deliverable Preview"
+                  className="w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            ) : project.thumbnail_url ? (
+              <div className="aspect-video rounded-2xl overflow-hidden mb-4 bg-black border border-white/10 shadow-xl">
                 <img src={project.thumbnail_url} alt="Thumbnail" className="w-full h-full object-cover" />
               </div>
             ) : (

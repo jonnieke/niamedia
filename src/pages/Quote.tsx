@@ -383,12 +383,31 @@ export default function Quote() {
   )
 
   // Survey States
-  const isUsdParam = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('currency')?.toUpperCase() === 'USD'
+  const isUsdParam = typeof window !== 'undefined' && (
+    new URLSearchParams(window.location.search).get('currency')?.toUpperCase() === 'USD' ||
+    localStorage.getItem('nia_preferred_currency') === 'USD'
+  )
   const [currency, setCurrency] = useState<'KES' | 'USD'>(isUsdParam ? 'USD' : 'KES')
   const [compareOpen, setCompareOpen] = useState(false)
   const [businessStage, setBusinessStage] = useState<string>('startup')
   const [primaryGoal, setPrimaryGoal] = useState<string>('social_ads')
   const [targetMarket, setTargetMarket] = useState<string>(isUsdParam ? 'global' : 'kenya')
+
+  useEffect(() => {
+    const handleSync = (e: Event) => {
+      const customEvent = e as CustomEvent<string>
+      if (customEvent.detail === 'KES' || customEvent.detail === 'USD') {
+        const next = customEvent.detail as 'KES' | 'USD'
+        setCurrency(next)
+        if (next === 'USD') {
+          setTargetMarket('global')
+          setVoiceTone('global_neutral')
+        }
+      }
+    }
+    window.addEventListener('nia-currency-changed', handleSync)
+    return () => window.removeEventListener('nia-currency-changed', handleSync)
+  }, [])
 
   // Step 1 - Video Scope & Formats
   const [length, setLength] = useState<string>(() => {
