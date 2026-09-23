@@ -760,6 +760,23 @@ export default function Quote() {
 
       const lengthLabel = LENGTHS.find(l => l.id === length)?.label || length
       const depositAmount = Math.round(price.total * 0.7)
+
+      if (email.trim()) {
+        try {
+          void supabase.functions.invoke('send-client-email', {
+            body: {
+              type: 'quote_received',
+              to: email.trim(),
+              name: contactName.trim() || bizName.trim(),
+              businessName: bizName.trim(),
+              videoLength: lengthLabel,
+              finalPrice: price.total,
+              depositAmount,
+              quoteId: generatedQuoteId,
+            },
+          })
+        } catch {}
+      }
       const submittedPayload: StoredSuccess = {
         bizName: bizName.trim(),
         waMessage,

@@ -10,6 +10,7 @@ const navItems = [
   { label: 'Services', href: '/#services' },
   { label: 'Portfolio', href: '/portfolio' },
   { label: 'Pricing', href: '/pricing' },
+  { label: 'Diaspora', href: '/diaspora', badge: 'USD' },
   { label: 'Test Your Brand', href: '/test-brand', badge: 'AI' },
   { label: 'Market Survey', href: '/survey' },
 ]

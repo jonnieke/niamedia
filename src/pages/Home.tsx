@@ -762,6 +762,12 @@ export default function Home() {
 
             <div className="flex flex-wrap items-center gap-3 shrink-0">
               <Link
+                to="/diaspora"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold text-white/90 bg-white/10 hover:bg-white/15 border border-white/10 transition-all"
+              >
+                Diaspora Hub <ArrowRight size={14} className="text-purple-300" />
+              </Link>
+              <Link
                 to="/quote?currency=USD"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_20px_rgba(147,51,234,0.4)] transition-all"
               >

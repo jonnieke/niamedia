@@ -65,6 +65,7 @@ const Retainers = lazy(() => import('./pages/Retainers'))
 const AdminAnalytics = lazy(() => import('./pages/AdminAnalytics'))
 const Survey = lazy(() => import('./pages/Survey'))
 const BrandTest = lazy(() => import('./pages/BrandTest'))
+const Diaspora = lazy(() => import('./pages/Diaspora'))
 
 function RouteLoader() {
   return (
@@ -129,6 +130,7 @@ function AppRoutes() {
         <Route path="/payment/callback" element={<PaymentCallback />} />
         <Route path="/quote" element={<Quote />} />
         <Route path="/test-brand" element={<BrandTest />} />
+        <Route path="/diaspora" element={<Diaspora />} />
         {/* /start folded into /quote — one public intake funnel */}
         <Route path="/start" element={<Navigate to="/quote" replace />} />
         <Route path="/proposal/:token" element={<ProposalView />} />

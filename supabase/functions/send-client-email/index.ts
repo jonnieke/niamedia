@@ -45,6 +45,7 @@ type EmailType =
   | "video_delivered"
   | "balance_paid_admin"
   | "proposal_reminder"
+  | "quote_received"
 
 interface EmailPayload {
   type: EmailType
@@ -54,6 +55,7 @@ interface EmailPayload {
   proposalToken?: string
   briefToken?: string
   projectToken?: string
+  quoteId?: string
   finalPrice?: number
   depositAmount?: number
   balanceDue?: number
@@ -219,6 +221,33 @@ function buildEmail(p: EmailPayload): { subject: string; html: string } {
             ${p.balanceDue ? `<div class="box-row"><span class="box-label">Amount paid</span><span class="box-value green">KES ${p.balanceDue.toLocaleString("en-KE")}</span></div>` : ""}
           </div>
           <div class="cta"><a href="${APP_URL}/production" class="btn">View Production Board →</a></div>
+        `),
+      }
+    }
+
+    case "quote_received": {
+      return {
+        subject: `Your video commercial quote is confirmed — ${p.businessName}`,
+        html: base(`
+          <h1>We've received your video quote, ${first}!</h1>
+          <p>Thank you for submitting your commercial video specification for <strong>${p.businessName}</strong>. Our creative team has reviewed your details and is ready to start production.</p>
+          <div class="box">
+            ${p.videoLength ? `<div class="box-row"><span class="box-label">Video length</span><span class="box-value">${p.videoLength}</span></div>` : ""}
+            ${p.finalPrice ? `<div class="box-row"><span class="box-label">Package price</span><span class="box-value">${fmt(p.finalPrice)}</span></div>` : ""}
+            ${p.depositAmount ? `<div class="box-row"><span class="box-label">70% Deposit to start</span><span class="box-value green">${fmt(p.depositAmount)}</span></div>` : ""}
+            <div class="box-row"><span class="box-label">Turnaround</span><span class="box-value">48 to 72 hours</span></div>
+          </div>
+
+          <p><strong>Every commercial package includes:</strong></p>
+          <ul style="font-size:13px;line-height:1.8;color:#555;padding-left:20px;margin-bottom:20px;">
+            <li>Studio scriptwriting & visual directing</li>
+            <li>Professional voiceover (Kenyan English, Swahili, Sheng, or US/UK)</li>
+            <li>Free matching promotional poster for WhatsApp & social feeds</li>
+            <li>2 revision rounds with 100% commercial usage rights</li>
+          </ul>
+
+          <p>Ready to lock in your creative team and start production? Message our Creative Director on WhatsApp to confirm your slot:</p>
+          <div class="cta"><a href="https://wa.me/254751822556?text=${encodeURIComponent(`Hi! I submitted a quote for ${p.businessName} and would like to confirm my production slot.`)}" class="wa">Chat on WhatsApp (0751 822 556)</a></div>
         `),
       }
     }

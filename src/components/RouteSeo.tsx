@@ -21,6 +21,10 @@ const PUBLIC_ROUTES: Record<string, { title: string; description: string }> = {
     title: 'AI Brand & Commercial Viability Studio | Nia Media',
     description: 'Benchmark your product against Kenyan competitors, calculate customer uptake %, test unit economics & pricing elasticity in KES and USD.',
   },
+  '/diaspora': {
+    title: 'Commercial Video Production for Kenyan Diaspora & Global Brands | Nia Media',
+    description: 'Studio-grade video production for Kenyan diaspora running Airbnbs, real estate, retail, or tech in Kenya. Pay in USD via Visa/Mastercard. 100% remote direction.',
+  },
   '/survey': {
     title: 'Experience Survey & Marketing Feedback | Nia Media',
     description: 'Share your video production experience and tell us what tools and content formats your business needs next.',
