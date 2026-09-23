@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import {
   Sparkles, Award, ArrowRight, Upload, X,
   RefreshCw, BarChart3, Target, Compass, Printer, Film, Check,
-  DollarSign, Mic, MicOff, HelpCircle, Repeat
+  DollarSign, Mic, MicOff, HelpCircle, Repeat,
+  ShieldCheck, AlertTriangle, Users, Play, Copy, Zap, TrendingUp,
+  ChevronRight, CheckCircle2, ShoppingBag, Eye, Lightbulb, Share2
 } from 'lucide-react'
 import PublicHeader from '../components/layout/PublicHeader'
 
@@ -261,6 +263,9 @@ export default function BrandTest() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [hasTested, setHasTested] = useState(false)
   const [analysisProgress, setAnalysisProgress] = useState(0)
+  const [analysisStage, setAnalysisStage] = useState('Parsing Brand Concept...')
+  const [activeTab, setActiveTab] = useState<'overview' | 'commercial' | 'market' | 'roadmap'>('overview')
+  const [copied, setCopied] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const benchmark = INDUSTRY_BENCHMARKS[industryId] || INDUSTRY_BENCHMARKS.education_edtech
@@ -292,38 +297,60 @@ export default function BrandTest() {
 
     setIsAnalyzing(true)
     setAnalysisProgress(15)
+    setAnalysisStage('Extracting Core Value Proposition & Buyer Psychology...')
 
-    const p1 = setTimeout(() => setAnalysisProgress(45), 400)
-    const p2 = setTimeout(() => setAnalysisProgress(75), 900)
+    const p1 = setTimeout(() => {
+      setAnalysisProgress(40)
+      setAnalysisStage('Benchmarking East African & Regional Competitors...')
+    }, 350)
+
+    const p2 = setTimeout(() => {
+      setAnalysisProgress(70)
+      setAnalysisStage('Simulating Price Elasticity & 30s Commercial Script...')
+    }, 750)
+
     const p3 = setTimeout(() => {
+      setAnalysisProgress(90)
+      setAnalysisStage('Finalizing 7-Day Go-To-Market Execution Plan...')
+    }, 1100)
+
+    const p4 = setTimeout(() => {
       setAnalysisProgress(100)
       setIsAnalyzing(false)
       setHasTested(true)
+      setActiveTab('overview')
       window.scrollTo({ top: 480, behavior: 'smooth' })
-    }, 1400)
+    }, 1450)
 
     return () => {
       clearTimeout(p1)
       clearTimeout(p2)
       clearTimeout(p3)
+      clearTimeout(p4)
     }
   }
 
-  // Diagnostic Computed Metrics
+  // Diagnostic Deep Semantic Intelligence Engine
   const diagnostics = useMemo(() => {
+    const rawBrand = brandName.trim() || 'Your Brand'
+    const rawDesc = productDesc.trim()
+    const lowerDesc = rawDesc.toLowerCase()
+    const lowerBrand = rawBrand.toLowerCase()
+
     const numPrice = Number(priceInput) || benchmark.kesSweetSpot
     const rawKesPrice = currency === 'KES' ? numPrice : numPrice * 130
 
     // Normalize price for subscription frequency if applicable
     let effectiveKesPrice = rawKesPrice
     if (priceModel === 'subscription_daily') {
-      // Compare daily recurring to benchmark baseline (average 30 days)
       effectiveKesPrice = rawKesPrice * 30
     } else if (priceModel === 'subscription_annual') {
       effectiveKesPrice = rawKesPrice / 12
     }
 
-    // Pricing assessment
+    const activeModel = PRICING_MODELS.find((m) => m.id === priceModel) || PRICING_MODELS[0]
+
+    // Pricing Assessment
     let priceVerdict: 'underpriced' | 'sweet_spot' | 'premium' = 'sweet_spot'
     if (effectiveKesPrice < benchmark.kesFloor * 1.05) {
       priceVerdict = 'underpriced'
@@ -331,51 +358,298 @@ export default function BrandTest() {
       priceVerdict = 'premium'
     }
 
-    // Compatibility Index
-    let baseScore = 78
-    if (brandName.length >= 4 && brandName.length <= 18) baseScore += 5
-    if (productDesc.length > 50) baseScore += 5
-    if (uploadedImage) baseScore += 6
+    // Dynamic Viability Scoring based on input depth, realism, and differentiation
+    let baseScore = 74
+    if (rawBrand.length >= 3 && rawBrand.length <= 22) baseScore += 4
+    if (rawDesc.length > 25) baseScore += 5
+    if (rawDesc.length > 70) baseScore += 4
+    if (uploadedImage) baseScore += 5
     if (priceVerdict === 'sweet_spot') baseScore += 4
     if (targetRegion === 'global') baseScore = Math.round(baseScore * benchmark.globalUptakeFactor)
-    const overallScore = Math.min(Math.max(baseScore, 62), 96)
+    const overallScore = Math.min(Math.max(baseScore, 68), 96)
 
-    // Market Share & Uptake
-    const uptakeRate = Math.min(Math.round(overallScore * 0.92), 94)
-    const addressableShare = (Math.max(12, Math.round(overallScore * 0.22 * 10) / 10)).toFixed(1)
+    const uptakeRate = Math.min(Math.round(overallScore * 0.91), 94)
+    const addressableShare = (Math.max(14, Math.round(overallScore * 0.24 * 10) / 10)).toFixed(1)
 
-    // Aesthetic & Brand Rating
-    const nameRating = brandName.length < 15 ? '8.8 / 10 (High Recall)' : '7.5 / 10 (Consider Shortening)'
-    const visualCritique = uploadedImage
-      ? 'Packaging visual uploaded: Clean contrast, high digital feed viability. Enhancing typography weight and contrast will boost luxury perception.'
-      : 'No visual asset provided yet: Product packaging or clear mockups will be essential to establish digital shelf authority.'
+    // Domain Specific Extraction
+    const isEd = industryId === 'education_edtech' || lowerDesc.includes('school') || lowerDesc.includes('exam') || lowerDesc.includes('kcse') || lowerDesc.includes('cbc') || lowerDesc.includes('teacher') || lowerDesc.includes('student') || lowerDesc.includes('tutor')
+    const isAgri = industryId === 'agriculture_agritech' || lowerDesc.includes('farm') || lowerDesc.includes('crop') || lowerDesc.includes('produce') || lowerDesc.includes('vegetable') || lowerDesc.includes('cow') || lowerDesc.includes('dairy') || lowerDesc.includes('poultry') || lowerDesc.includes('avocado') || lowerDesc.includes('harvest')
+    const isTech = industryId === 'tech_saas' || lowerDesc.includes('app') || lowerDesc.includes('software') || lowerDesc.includes('saas') || lowerDesc.includes('fintech') || lowerDesc.includes('chama') || lowerDesc.includes('pos') || lowerDesc.includes('bot')
+    const isBeauty = industryId === 'beauty_cosmetics' || lowerDesc.includes('skin') || lowerDesc.includes('hair') || lowerDesc.includes('oil') || lowerDesc.includes('cream') || lowerDesc.includes('glow') || lowerDesc.includes('soap') || lowerDesc.includes('lotion')
+    const isFood = industryId === 'food_dining' || lowerDesc.includes('cafe') || lowerDesc.includes('restaurant') || lowerDesc.includes('burger') || lowerDesc.includes('meal') || lowerDesc.includes('snack') || lowerDesc.includes('baking') || lowerDesc.includes('coffee')
+    const isRealEstate = industryId === 'hospitality_realestate' || lowerDesc.includes('apartment') || lowerDesc.includes('airbnb') || lowerDesc.includes('house') || lowerDesc.includes('plot') || lowerDesc.includes('land') || lowerDesc.includes('villa')
+    const isFashion = industryId === 'fashion_apparel' || lowerDesc.includes('cloth') || lowerDesc.includes('wear') || lowerDesc.includes('dress') || lowerDesc.includes('suit') || lowerDesc.includes('streetwear') || lowerDesc.includes('shoe')
 
-    // Regional Takeaway
-    let regionalNote = ''
-    if (targetRegion === 'urban_ke') {
-      regionalNote = 'Nairobi & Urban Core: Consumers expect polished short-form video demos, instant WhatsApp checkout, and same-day delivery.'
-    } else if (targetRegion === 'mass_ke') {
-      regionalNote = 'Countrywide Mass Distribution: Focus on clear value communication in Swahili/English and multi-pack affordability.'
-    } else if (targetRegion === 'east_africa') {
-      regionalNote = 'East African Cross-Border: High potential in Kampala & Dar es Salaam. Keep packaging bilingual (English & Swahili).'
+    // Contextual Insights Generator
+    let executiveVerdict = ''
+    let superpower = ''
+    let criticalBlindspot = ''
+    let buyerPersona = { payer: '', endUser: '', trigger: '' }
+    let objections: { objection: string; counter: string }[] = []
+    let commercial = {
+      hook: '',
+      scene1Visual: '',
+      proof: '',
+      scene2Visual: '',
+      cta: '',
+      scene3Visual: '',
+      voiceover: '',
+      style: '',
+    }
+    let competitors: { name: string; flaw: string; attackAngle: string } = {
+      name: benchmark.keyCompetitors.join(', '),
+      flaw: '',
+      attackAngle: '',
+    }
+    let frequencyAdvice = ''
+    let recommendedAdBudget = ''
+    let launchPlan: { day: string; task: string; tip: string }[] = []
+
+    if (isEd) {
+      executiveVerdict = `For an academic and educational solution like ${rawBrand}, customer willingness-to-pay in Kenya is high because parents prioritize exam outcomes above all discretionary spend. However, your biggest obstacle is not student desire—it is parent trust, syllabus authenticity (CBC/KCSE), and proof of tangible grade improvement.`
+      superpower = `High emotional urgency: Parents feel acute anxiety as national exam windows approach and will pay rapidly if they see guaranteed test practice and direct WhatsApp mentor access.`
+      criticalBlindspot = `Parent skepticism regarding screen time: If parents suspect the app or platform encourages aimless mobile phone browsing or lacks official KNEC syllabus rigor, churn will be rapid.`
+      buyerPersona = {
+        payer: 'Kenyan Parents (mothers & fathers managing school budgets) and School Administrators.',
+        endUser: 'Primary & High School Candidates (Grades 6–9 CBC and Form 1–4 KCSE).',
+        trigger: 'Fear of weak exam grades, frustration with high private tuition fees (KES 15K–30K/term), and WhatsApp parent group recommendations.',
+      }
+      objections = [
+        { objection: 'Will my child use the phone to play games or watch TikTok instead of studying?', counter: 'Feature a "Parental Daily Revision SMS / WhatsApp Report" showing exact minutes and subjects studied.' },
+        { objection: 'Does this match the actual current KNEC/CBC syllabus or is it foreign content?', counter: 'Display certified Kenyan subject-teacher badges and actual past-paper question tags.' },
+        { objection: 'What if data bundles run out or Wi-Fi is unavailable in our home?', counter: 'Highlight lightweight offline download mode or direct SMS/WhatsApp bot revision.' },
+      ]
+      commercial = {
+        hook: `“POV: KCSE and CBC exams are 90 days away, your child is averaging a C, and private tutors want KES 20,000 per term. Here is what smart Kenyan parents are doing instead.”`,
+        scene1Visual: 'Close-up of a worried Kenyan mother reviewing a report card at the kitchen table; evening ambient lighting; smartphone screen turns on displaying the Soma / learning dashboard.',
+        proof: `“With ${rawBrand}, candidates get instant step-by-step revision, past-paper breakdowns, and interactive exam hints 24/7 on WhatsApp or mobile.”`,
+        scene2Visual: 'Split screen: High school candidate smiling as a tricky physics/math problem gets solved with a clear visual graphic; mother receives an automated SMS: "15 questions mastered today".',
+        cta: `“Give your candidate the unfair advantage they deserve. Send 'REVISE' to our official WhatsApp right now to unlock 3 days of free practice.”`,
+        scene3Visual: 'Clean branded end-card with M-Pesa Till/Paybill badge, WhatsApp CTA button, and 48-hour revision pass callout.',
+        voiceover: 'Warm, reassuring Kenyan English with an authoritative mentor cadence. Calm, aspirational, and deeply credible.',
+        style: 'Kinetic 2D UI screen captures combined with live-action parent/student b-roll and animated typography.',
+      }
+      competitors = {
+        name: 'Zeraki Analytics, Eneza Education (Shupavu 291), Longhorn E-Learning, Private Tuition Tutors',
+        flaw: 'Traditional textbook publishers sell static, dry PDFs that students find boring. Institutional portals cater primarily to school admin rather than direct parent-student empowerment.',
+        attackAngle: 'Position as a 24/7 personal revision coach on WhatsApp that speaks the student\'s language and keeps parents in the loop.',
+      }
+      frequencyAdvice = priceModel === 'subscription_daily'
+        ? `At ${currency === 'KES' ? `KES ${numPrice}` : `$${numPrice}`} / day, daily billing lowers the M-Pesa barrier. However, daily manual STK pushes suffer over 45% drop-off by Day 5. STRATEGY: Use the daily fee as the marketing hook ("Only KES ${numPrice}/day!"), but sell 7-Day Sprint Passes (${currency === 'KES' ? `KES ${(numPrice * 6).toLocaleString()}` : `$${numPrice * 6}`}) and Termly Passes to secure upfront cashflow.`
+        : `At ${currency === 'KES' ? `KES ${numPrice.toLocaleString()}` : `$${numPrice}`} ${activeModel.short}, parents perceive this as high value compared to weekend tuition. Offer a 3-day risk-free trial that rolls into the subscription.`
+      recommendedAdBudget = 'Target KES 1,200 – 2,500/day on Meta (Facebook & Instagram) targeting Parents aged 32–54 in Nairobi, Nakuru, Eldoret, Kisumu & Mombasa.'
+      launchPlan = [
+        { day: 'Day 1', task: 'WhatsApp Funnel Setup', tip: 'Configure WhatsApp Business catalogue and 3 auto-replies: Syllabus Breakdown, Free Trial Link, and Parent FAQ.' },
+        { day: 'Day 2', task: 'Commercial Video Production', tip: 'Produce a 30s broadcast hook video demonstrating the single hardest math/science concept made simple in 15 seconds.' },
+        { day: 'Day 3', task: 'Teacher Micro-Endorsements', tip: 'Seed access to 5 popular TikTok/YouTube Kenyan teachers for authentic testimonial reactions.' },
+        { day: 'Day 4', task: 'Launch Meta Ads to WhatsApp', tip: 'Run video ads with "Send WhatsApp Message" objective targeting mothers interested in education.' },
+        { day: 'Day 5', task: 'Parent Social Proof Broadcast', tip: 'Share a screenshot of candidate grade improvement or solved exam question to active inquirers.' },
+        { day: 'Day 6', task: 'Term Pass Offer', tip: 'Introduce a limited-time termly bundle with 20% discount for the first 100 subscribers.' },
+        { day: 'Day 7', task: 'CAC & Conversion Review', tip: 'Evaluate cost per WhatsApp conversation (target: < KES 65) and scale the top-performing video creative.' },
+      ]
+    } else if (isAgri) {
+      executiveVerdict = `For an agriculture or fresh-produce brand like ${rawBrand}, the East African market is enormous, but plagued by broker exploitation and customer fear of post-harvest spoilage. Your commercial strategy must lead with visual harvest freshness, farm-gate provenance, and guaranteed pricing.`
+      superpower = `Direct-to-consumer or direct-to-agrovet arbitrage: Cutting out multiple broker tiers allows you to pay farmers higher rates while offering urban buyers fresher produce at lower prices.`
+      criticalBlindspot = `Cold-chain transit delays: If delivery takes longer than 12 hours or packaging bruises delicate produce, initial trial buyers will never re-order.`
+      buyerPersona = {
+        payer: 'Commercial Farmers, Agrovet Stockists, Nairobi estate household buyers, or Wholesale Cooperatives.',
+        endUser: 'Farmers seeking yield improvement or urban households demanding verified organic produce.',
+        trigger: 'Desire to bypass unreliable brokers, ensure predictable weekly earnings, and access farm-fresh goods.',
+      }
+      objections = [
+        { objection: 'Will the produce arrive bruised or wilted after county transit?', counter: 'Demonstrate ventilated harvest crates and guaranteed 6-hour farm-to-door delivery in video.' },
+        { objection: 'Are yield improvement or organic claims backed by field testing?', counter: 'Film real Kenyan farmers walking through their fields showing harvest volume and measuring tape proof.' },
+        { objection: 'Will payments be delayed for 30–60 days like traditional supermarket brokers?', counter: 'Promote instant M-Pesa settlement upon harvest verification.' },
+      ]
+      commercial = {
+        hook: `“Stop letting middlemen take 40% of your farm earnings at the gate. Here is how Kenyan agricultural producers are selling direct with ${rawBrand}.”`,
+        scene1Visual: 'Morning golden hour over a lush Kenyan farm; dew on vibrant produce; broker driving away leaving farmer underpaid and frustrated.',
+        proof: `“With ${rawBrand}, verified harvest quality connects directly to high-paying urban buyers with guaranteed transparent pricing and same-day M-Pesa.”`,
+        scene2Visual: 'Farmer inspecting crisp harvest; tapping WhatsApp confirmation; instant M-Pesa payment alert pops up on screen; produce loaded into branded clean crates.',
+        cta: `“Take control of your agricultural profits today. Tap the link or message our WhatsApp team to list your harvest.”`,
+        scene3Visual: 'Branded delivery van, WhatsApp contact number, and verified agricultural quality seal.',
+        voiceover: 'Grounded, respectful Swahili or authentic Kenyan English with genuine agricultural warmth and authority.',
+        style: 'Cinematic 4K outdoor macro shots, vibrant soil and foliage contrasts, and authentic documentary field footage.',
+      }
+      competitors = {
+        name: 'Twiga Foods, Selina Wamucii, Regional Commodity Brokers, Wakulima / Marikiti Open Markets',
+        flaw: 'Brokers delay payouts by up to 30 days and arbitrarily downgrade quality grades upon delivery. Open markets lack consistency.',
+        attackAngle: 'Guaranteed instant M-Pesa payouts, transparent grading standards, and direct WhatsApp booking.',
+      }
+      frequencyAdvice = priceModel === 'subscription_daily'
+        ? `A daily fee of ${currency === 'KES' ? `KES ${numPrice}` : `$${numPrice}`} fits daily market collection fees. Bundle into weekly harvest cycles.`
+        : `At ${currency === 'KES' ? `KES ${numPrice.toLocaleString()}` : `$${numPrice}`} ${activeModel.short}, ensure your unit margin covers transport and crate loss. Minimum order size should be KES 1,500 to absorb courier costs.`
+      recommendedAdBudget = 'Target KES 1,000 – 2,000/day on Facebook & TikTok targeting estate communities in Kilimani, Westlands, Kileleshwa, and Karen.'
+      launchPlan = [
+        { day: 'Day 1', task: 'Farm-Gate Harvest Audit', tip: 'Record 3 raw video clips directly on the farm showing produce quality and harvest handling.' },
+        { day: 'Day 2', task: 'Produce 30s Commercial', tip: 'Assemble a cinematic commercial contrasting broker deductions vs direct farm-gate freshness.' },
+        { day: 'Day 3', task: 'WhatsApp Ordering Channel', tip: 'Post a fresh weekly harvest price list on WhatsApp Status and broadcast to estate groups.' },
+        { day: 'Day 4', task: 'Sample Basket Seeding', tip: 'Send 3 sample produce baskets to neighborhood food creators or community leaders for unboxing videos.' },
+        { day: 'Day 5', task: 'Launch Paid Meta Ads', tip: 'Target residential estate radiuses with "Fresh Farm Delivery to Your Door Tomorrow Morning".' },
+        { day: 'Day 6', task: 'Delivery Proof Reel', tip: 'Post customer delivery unboxing reactions on Instagram Reels and TikTok.' },
+        { day: 'Day 7', task: 'Repeat Subscriber Offer', tip: 'Introduce a weekly recurring vegetable/fruit box discount for standing orders.' },
+      ]
+    } else if (isTech) {
+      executiveVerdict = `For a tech platform or software solution like ${rawBrand}, the East African market is rapidly adopting mobile-first tools, but customers resist friction. If your onboarding takes more than 2 minutes or requires a desktop computer, drop-off will exceed 70%.`
+      superpower = `Frictionless M-Pesa integration & mobile responsiveness: Businesses want software that works seamlessly on WhatsApp or their smartphone without complex training.`
+      criticalBlindspot = `Perceived setup complexity: Non-technical SME owners fear getting locked into tools they cannot independently manage.`
+      buyerPersona = {
+        payer: 'Kenyan SME Owners, Chama Treasurers, Operations Managers, and Solo Entrepreneurs.',
+        endUser: 'Frontline staff, cashiers, field officers, or community members.',
+        trigger: 'Lost inventory, manual spreadsheet chaos, missing cash tracking, and desire to automate daily repetitive tasks.',
+      }
+      objections = [
+        { objection: 'Is my data secure and will M-Pesa payments reconcile automatically?', counter: 'Show real-time M-Pesa STK push and bank-grade encryption badges in your demo video.' },
+        { objection: 'Will my staff find this too complicated to use daily?', counter: 'Showcase an intuitive 3-tap interface designed specifically for mobile screens.' },
+        { objection: 'What if we need support when a glitch occurs during business hours?', counter: 'Promote dedicated Nairobi-based WhatsApp priority support.' },
+      ]
+      commercial = {
+        hook: `“Running a business in Kenya shouldn't mean losing hours every night balancing chaotic notebooks and manual M-Pesa statements. Meet ${rawBrand}.”`,
+        scene1Visual: 'Frustrated SME owner surrounded by receipts, calculator, and ringing phones late at night in a Nairobi shop.',
+        proof: `“With ${rawBrand}, sales, inventory, and customer payments reconcile automatically in real time right from your phone.”`,
+        scene2Visual: 'Customer taps phone to pay via M-Pesa; instant green checkmark appears on ${rawBrand} mobile dashboard; owner smiles with automated daily summary.',
+        cta: `“Start your 14-day free trial today. Tap the link or WhatsApp our onboarding team to get set up in 5 minutes.”`,
+        scene3Visual: 'Sleek smartphone mockup displaying the live app interface with WhatsApp signup button.',
+        voiceover: 'Confident, crisp Kenyan professional voice. Tech-forward, modern, and pragmatic.',
+        style: 'Kinetic UI motion graphics, dynamic screen flows, and clean split-screen demonstrations.',
+      }
+      competitors = {
+        name: 'Zoho Local Partners, Kopokopo, QuickBooks Online, Custom-Built Local Web Portals',
+        flaw: 'Foreign tools require credit cards, lack native M-Pesa reconciliation, and offer slow offshore email support.',
+        attackAngle: '100% mobile-first, native M-Pesa integration, and instant local WhatsApp onboarding.',
+      }
+      frequencyAdvice = `At ${currency === 'KES' ? `KES ${numPrice.toLocaleString()}` : `$${numPrice}`} ${activeModel.short}, software pricing is viable. Offer annual prepayments with 2 months free to boost upfront annual recurring revenue (ARR).`
+      recommendedAdBudget = 'Target KES 1,500 – 3,000/day on LinkedIn and Meta targeting Business Page Admins and SME Owners in Kenya.'
+      launchPlan = [
+        { day: 'Day 1', task: 'Onboarding Screen Recording', tip: 'Record a 45-second screen recording showing a complete transaction completed in under 30 seconds.' },
+        { day: 'Day 2', task: 'Produce 30s Commercial Video', tip: 'Assemble a high-impact commercial contrasting spreadsheet chaos with automated dashboard peace of mind.' },
+        { day: 'Day 3', task: 'Case Study Graphic', tip: 'Design a single carousel showing: "How Shop X saved 12 hours a week with ${rawBrand}".' },
+        { day: 'Day 4', task: 'Launch Founder Direct Outreach', tip: 'Reach out to 25 target SME owners on WhatsApp with a personalized 30s loom/screen demo.' },
+        { day: 'Day 5', task: 'Run Meta B2B Video Campaign', tip: 'Target retail, service, and fintech business owners with a direct "Book a Demo" CTA.' },
+        { day: 'Day 6', task: 'Free Migration Offer', tip: 'Offer free data import from Excel/notebooks for the first 50 business signups.' },
+        { day: 'Day 7', task: 'Conversion Sprint Review', tip: 'Analyze trial-to-paid conversion rate (target: > 18%) and optimize the onboarding sequence.' },
+      ]
     } else {
-      regionalNote = 'Global & Diaspora Export: High margin arbitrage potential! International consumers pay 2x–3x more, but demand certified ingredient purity and cinematic brand proof.'
+      // Universal High-Value Commercial Architecture for Beauty, Food, Fashion, Real Estate & General
+      executiveVerdict = `For ${rawBrand} in ${benchmark.name}, your brand has strong digital viability because visual appeal and social proof are the primary conversion drivers on Instagram, TikTok, and WhatsApp. To win, your messaging must emphasize authentic product quality, verified customer proof, and frictionless delivery.`
+      superpower = `High visual desirability: Products in this category command immediate purchase impulse when presented with high-production video and clear lifestyle positioning.`
+      criticalBlindspot = `Generic positioning: If your branding looks like an unverified drop-shipping product or lacks clear local brand authority, shoppers will hesitate to transfer funds.`
+      buyerPersona = {
+        payer: 'Urban aspirational consumers, diaspora shoppers, and professionals seeking premium quality.',
+        endUser: 'Individuals upgrading their personal lifestyle, wellness, or wardrobe.',
+        trigger: 'Visual social proof, influencer endorsements, and desire for premium self-expression.',
+      }
+      objections = [
+        { objection: 'Is the quality genuinely as good as the photos and videos depict?', counter: 'Use unedited 4K macro video footage showing texture, packaging finish, and real customer reactions.' },
+        { objection: 'What happens if delivery is delayed or I need customer support?', counter: 'Promote same-day Nairobi delivery and instant WhatsApp tracking.' },
+        { objection: 'Why should I choose this over established supermarket or imported alternatives?', counter: 'Emphasize superior natural ingredients, custom bespoke craftsmanship, and local community pride.' },
+      ]
+      commercial = {
+        hook: `“Tired of generic products that overpromise and underdeliver? Discover why ${rawBrand} is turning heads across Nairobi.”`,
+        scene1Visual: 'Cinematic slow-motion product reveal with dramatic lighting, reflections, and premium color grading.',
+        proof: `“Crafted with premium standards and verified by hundreds of happy customers, ${rawBrand} delivers exceptional quality you can see and feel.”`,
+        scene2Visual: 'Customer using the product with visible delight; macro close-up of craftsmanship, ingredients, and flawless finish.',
+        cta: `“Upgrade your experience today. Tap the link or order directly via WhatsApp for same-day delivery.”`,
+        scene3Visual: 'Branded callout card with package, WhatsApp order button, and satisfaction guarantee badge.',
+        voiceover: 'Sophisticated, energetic, and contemporary voiceover reflecting modern East African lifestyle aesthetics.',
+        style: 'High-end commercial lighting, 60fps slow-motion macro shots, and kinetic typography.',
+      }
+      competitors = {
+        name: benchmark.keyCompetitors.join(', '),
+        flaw: 'Mass-market competitors rely on generic corporate advertising and impersonal retail channels.',
+        attackAngle: 'Direct, personal customer relationship via WhatsApp, authentic local storytelling, and agile product iteration.',
+      }
+      frequencyAdvice = `At ${currency === 'KES' ? `KES ${numPrice.toLocaleString()}` : `$${numPrice}`} ${activeModel.short}, you are well positioned in the market. Create 2-pack or 3-pack bundles to increase average order value (AOV) and absorb Nairobi delivery fees.`
+      recommendedAdBudget = 'Target KES 1,000 – 2,000/day on Instagram Reels and TikTok Ads targeting lifestyle consumers in Nairobi, Mombasa, and regional urban hubs.'
+      launchPlan = [
+        { day: 'Day 1', task: 'Product Photography & Macro Video', tip: 'Capture 5 high-resolution macro video clips highlighting product textures, labels, and packaging.' },
+        { day: 'Day 2', task: 'Produce 30s Commercial', tip: 'Create an engaging commercial combining hook, product demonstration, and WhatsApp order CTA.' },
+        { day: 'Day 3', task: 'WhatsApp Catalog Setup', tip: 'List all items with clear pricing, variant descriptions, and payment guidelines.' },
+        { day: 'Day 4', task: 'Micro-Influencer Gifting', tip: 'Send 3 curated packages to aligned creators for organic unboxing stories.' },
+        { day: 'Day 5', task: 'Launch Paid Video Ads', tip: 'Run Instagram Reels ads with direct WhatsApp click-to-chat messaging.' },
+        { day: 'Day 6', task: 'Urgency & Free Delivery Promo', tip: 'Offer free delivery within Nairobi for all orders placed in the next 48 hours.' },
+        { day: 'Day 7', task: 'Repeat Purchase Re-engagement', tip: 'Message initial buyers for reviews and offer a 10% loyalty discount on their next order.' },
+      ]
     }
 
-    const activeModel = PRICING_MODELS.find((m) => m.id === priceModel) || PRICING_MODELS[0]
+    const fullReportText = `=====================================================
+NIA MEDIA — BRAND DIAGNOSTIC & STRATEGIC BRIEF
+=====================================================
+Brand: ${rawBrand}
+Industry: ${benchmark.name}
+Proposed Price: ${currency === 'KES' ? `KES ${numPrice.toLocaleString()}` : `$${numPrice}`} ${activeModel.short} (${activeModel.label})
+Market Viability Score: ${overallScore} / 100
+Customer Uptake Probability: ${uptakeRate}%
+Est. Addressable Market Share: ${addressableShare}%
+
+EXECUTIVE STRATEGIC VERDICT:
+${executiveVerdict}
+
+BRAND SUPERPOWER (UNFAIR ADVANTAGE):
+${superpower}
+
+CRITICAL BLINDSPOT / FATAL OBJECTION:
+${criticalBlindspot}
+
+TARGET BUYER PERSONA:
+- Primary Payer: ${buyerPersona.payer}
+- End User: ${buyerPersona.endUser}
+- Primary Buying Trigger: ${buyerPersona.trigger}
+
+30-SECOND COMMERCIAL SCRIPT CONCEPT:
+[0-5s Hook]: ${commercial.hook}
+- Visual: ${commercial.scene1Visual}
+
+[5-20s Proof]: ${commercial.proof}
+- Visual: ${commercial.scene2Visual}
+
+[20-30s CTA]: ${commercial.cta}
+- Visual: ${commercial.scene3Visual}
+
+Voiceover Direction: ${commercial.voiceover}
+Recommended Production Style: ${commercial.style}
+
+COMPETITOR WARFARE & POSITIONING:
+- Key Competitors: ${competitors.name}
+- Competitor Vulnerability: ${competitors.flaw}
+- Your Attack Angle: ${competitors.attackAngle}
+
+PRICING & UNIT ECONOMICS:
+- Assessment: ${priceVerdict.toUpperCase()}
+- Frequency Advice: ${frequencyAdvice}
+- Recommended Ad Spend: ${recommendedAdBudget}
+
+7-DAY GO-TO-MARKET EXECUTION CHECKLIST:
+${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
+=====================================================`.trim()
 
     return {
       priceVerdict,
       overallScore,
       uptakeRate,
       addressableShare,
-      nameRating,
-      visualCritique,
-      regionalNote,
       activeModel,
       effectiveKesPrice,
+      executiveVerdict,
+      superpower,
+      criticalBlindspot,
+      buyerPersona,
+      objections,
+      commercial,
+      competitors,
+      frequencyAdvice,
+      recommendedAdBudget,
+      launchPlan,
+      fullReportText,
     }
   }, [priceInput, currency, priceModel, benchmark, brandName, productDesc, uploadedImage, targetRegion])
+
+  // Copy Brief to Clipboard
+  const handleCopyReport = () => {
+    navigator.clipboard.writeText(diagnostics.fullReportText)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2200)
+  }
 
   // Navigate to Video Commercial Quote with brand context pre-filled
   const handleProceedToCommercial = () => {
@@ -752,182 +1026,469 @@ export default function BrandTest() {
             ) : isAnalyzing ? (
               <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-12 text-center space-y-6">
                 <div className="w-16 h-16 rounded-full border-4 border-purple-500/20 border-t-purple-500 animate-spin mx-auto" />
-                <div>
-                  <h3 className="text-lg font-extrabold text-white">Simulating Competitive Environment...</h3>
-                  <p className="text-xs text-white/50 mt-1">
-                    Benchmarking against {benchmark.name} in {targetRegion === 'global' ? 'International Markets' : 'East Africa'}.
+                <div className="space-y-2">
+                  <h3 className="text-lg font-extrabold text-white">Running Strategic Brand Diagnostic...</h3>
+                  <p className="text-xs text-purple-300 font-medium animate-pulse">
+                    {analysisStage}
+                  </p>
+                  <p className="text-[11px] text-white/40">
+                    Benchmarking {brandName || 'Brand'} in {benchmark.name} ({targetRegion === 'global' ? 'International / Global Markets' : 'East Africa & Kenya'}).
                   </p>
                 </div>
                 <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden max-w-xs mx-auto">
                   <div
-                    className="bg-gradient-to-r from-purple-500 to-amber-400 h-full transition-all duration-300"
+                    className="bg-gradient-to-r from-purple-500 via-amber-400 to-emerald-400 h-full transition-all duration-300"
                     style={{ width: `${analysisProgress}%` }}
                   />
                 </div>
               </div>
             ) : (
-              /* Diagnostic Report Output */
-              <div className="space-y-6">
-                {/* Score Card Banner */}
-                <div className="rounded-3xl p-6 sm:p-7 bg-gradient-to-br from-purple-900/40 via-[#12082b] to-[#07050d] border border-purple-500/30 shadow-2xl relative overflow-hidden">
+              /* Deep Diagnostic Report Output */
+              <div className="space-y-5">
+                {/* Header Score Card Banner */}
+                <div className="rounded-3xl p-6 sm:p-7 bg-gradient-to-br from-purple-900/50 via-[#12082b] to-[#07050d] border border-purple-500/30 shadow-2xl relative overflow-hidden">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <span className="text-[11px] font-extrabold tracking-widest uppercase text-amber-300">
-                        DIAGNOSTIC BENCHMARK REPORT
-                      </span>
-                      <h3 className="text-2xl font-black text-white mt-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-extrabold tracking-widest uppercase text-amber-300 bg-amber-400/10 px-2.5 py-0.5 rounded-full border border-amber-400/30">
+                          DIAGNOSTIC BENCHMARK REPORT
+                        </span>
+                        <span className="text-[10px] font-bold text-white/50">
+                          {benchmark.name}
+                        </span>
+                      </div>
+                      <h3 className="text-2xl sm:text-3xl font-black text-white mt-1.5 tracking-tight">
                         {brandName}
                       </h3>
-                      <p className="text-xs text-purple-200/70">{benchmark.name}</p>
+                      <p className="text-xs text-purple-200/80 mt-0.5">
+                        Proposed: <strong className="text-white">{currency === 'KES' ? `KES ${Number(priceInput).toLocaleString()}` : `$${priceInput}`}</strong> {diagnostics.activeModel.short} · {targetRegion === 'global' ? 'Global Export' : 'East Africa'}
+                      </p>
                     </div>
 
                     <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <span className="text-3xl font-black text-emerald-400">
+                        <span className="text-3xl sm:text-4xl font-black text-emerald-400">
                           {diagnostics.overallScore}
                         </span>
-                        <span className="text-xs text-white/50 block">/ 100 Score</span>
+                        <span className="text-[11px] text-white/50 block font-medium">/ 100 Viability</span>
                       </div>
-                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
                         <Award size={24} />
                       </div>
                     </div>
                   </div>
 
                   {/* Badges Strip */}
-                  <div className="mt-4 pt-4 border-t border-white/10 flex flex-wrap gap-2 text-xs">
-                    <span className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-white/90 font-semibold">
-                      Uptake Likelihood: <strong className="text-emerald-300">{diagnostics.uptakeRate}%</strong>
-                    </span>
-                    <span className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-white/90 font-semibold">
-                      Est. Addressable Share: <strong className="text-purple-300">{diagnostics.addressableShare}%</strong>
-                    </span>
-                    <span className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-white/90 font-semibold">
-                      Margin Potential: <strong className="text-amber-300">{benchmark.typicalMargin}</strong>
-                    </span>
+                  <div className="mt-4 pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="flex flex-wrap gap-2">
+                      <span className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-white/90 font-semibold">
+                        Uptake Probability: <strong className="text-emerald-300">{diagnostics.uptakeRate}%</strong>
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-white/90 font-semibold">
+                        Addressable Share: <strong className="text-purple-300">{diagnostics.addressableShare}%</strong>
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-white/90 font-semibold">
+                        Typical Margins: <strong className="text-amber-300">{benchmark.typicalMargin}</strong>
+                      </span>
+                    </div>
+
+                    {/* Copy Full Report Action */}
+                    <button
+                      type="button"
+                      onClick={handleCopyReport}
+                      className="px-3 py-1 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center gap-1.5 transition-all cursor-pointer"
+                      title="Copy full strategic report as plain text"
+                    >
+                      {copied ? (
+                        <>
+                          <Check size={13} className="text-emerald-400" />
+                          <span className="text-emerald-300 font-bold">Brief Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={13} className="text-purple-300" />
+                          <span>Copy Brief</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
 
-                {/* Pricing Spectrum & Elasticity Assessment */}
-                <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <DollarSign size={16} className="text-amber-400" />
-                      <h4 className="font-extrabold text-sm text-white">Market Pricing Spectrum</h4>
-                    </div>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-                      diagnostics.priceVerdict === 'sweet_spot'
-                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
-                        : diagnostics.priceVerdict === 'underpriced'
-                        ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30'
-                        : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
-                    }`}>
-                      {diagnostics.priceVerdict === 'sweet_spot' ? 'Sweet-Spot Value' : diagnostics.priceVerdict === 'underpriced' ? 'Value / Penetration Price' : 'Premium Positioning'}
-                    </span>
-                  </div>
+                {/* Report Navigation Tabs */}
+                <div className="flex items-center gap-1 bg-white/[0.04] p-1.5 rounded-2xl border border-white/10 overflow-x-auto">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('overview')}
+                    className={`flex-1 min-w-[110px] py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      activeTab === 'overview'
+                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <BarChart3 size={14} />
+                    <span>Executive Audit</span>
+                  </button>
 
-                  {/* Spectrum Bar Graphic */}
-                  <div className="space-y-1.5 pt-2">
-                    <div className="h-3 w-full bg-white/10 rounded-full overflow-hidden flex">
-                      <div className="w-1/3 bg-blue-500/70" title="Budget Floor" />
-                      <div className="w-1/3 bg-emerald-500/80" title="Sweet Spot" />
-                      <div className="w-1/3 bg-amber-500/70" title="Premium" />
-                    </div>
-                    <div className="flex justify-between text-[11px] text-white/60">
-                      <span>Floor: {currency === 'KES' ? `KES ${benchmark.kesFloor.toLocaleString()}` : `$${benchmark.usdFloor}`}</span>
-                      <span className="text-emerald-300 font-bold">Sweet-Spot: {currency === 'KES' ? `KES ${benchmark.kesSweetSpot.toLocaleString()}` : `$${benchmark.usdSweetSpot}`}</span>
-                      <span>Premium: {currency === 'KES' ? `KES ${benchmark.kesCeiling.toLocaleString()}` : `$${benchmark.usdCeiling}`}</span>
-                    </div>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('commercial')}
+                    className={`flex-1 min-w-[125px] py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      activeTab === 'commercial'
+                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <Film size={14} />
+                    <span>30s Video Script</span>
+                  </button>
 
-                  <p className="text-xs text-white/70 leading-relaxed bg-black/30 p-3.5 rounded-xl border border-white/5 space-y-1">
-                    <div>
-                      <strong>Pricing Verdict:</strong> Your price of{' '}
-                      <strong className="text-white">
-                        {currency === 'KES' ? `KES ${Number(priceInput).toLocaleString()}` : `$${priceInput} USD`}
-                        <span className="text-purple-300"> {diagnostics.activeModel.short}</span>
-                      </strong>{' '}
-                      <span className="text-white/50 text-[11px]">({diagnostics.activeModel.label})</span>{' '}
-                      {diagnostics.priceVerdict === 'sweet_spot'
-                        ? 'is right in the sweet-spot of consumer willingness to pay. You have solid room for customer acquisition and advertising margin.'
-                        : diagnostics.priceVerdict === 'underpriced'
-                        ? 'is lower than typical category benchmarks. While this accelerates rapid adoption, you risk leaving revenue on the table or being perceived as cheap. Consider bundling or raising prices once initial social proof is established.'
-                        : 'is at the premium top tier. To justify this premium, your brand must deliver high-production cinematic commercial video, verified social proof, and flawless packaging.'}
-                    </div>
-                    {priceModel === 'subscription_daily' && (
-                      <div className="text-[11px] text-amber-300/90 pt-1 border-t border-white/5">
-                        🔄 <strong>Subscription Note:</strong> Billed at {currency === 'KES' ? `KES ${Number(priceInput).toLocaleString()}` : `$${priceInput}`} daily (~{currency === 'KES' ? `KES ${(Number(priceInput) * 30).toLocaleString()}` : `$${(Number(priceInput) * 30).toFixed(0)}`}/month run-rate). Daily billing significantly reduces customer friction for mobile money (M-Pesa) users.
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('market')}
+                    className={`flex-1 min-w-[120px] py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      activeTab === 'market'
+                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <Target size={14} />
+                    <span>Competitors &amp; Objections</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('roadmap')}
+                    className={`flex-1 min-w-[120px] py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      activeTab === 'roadmap'
+                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <Zap size={14} />
+                    <span>7-Day Launch Plan</span>
+                  </button>
+                </div>
+
+                {/* TAB 1: EXECUTIVE AUDIT & PRICING VERDICT */}
+                {activeTab === 'overview' && (
+                  <div className="space-y-4">
+                    {/* Executive Verdict Box */}
+                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Compass size={16} className="text-purple-400" />
+                        <h4 className="font-extrabold text-sm text-white">Strategic Executive Verdict</h4>
                       </div>
-                    )}
-                    {priceModel === 'subscription_monthly' && (
-                      <div className="text-[11px] text-emerald-300/90 pt-1 border-t border-white/5">
-                        🔄 <strong>Subscription Note:</strong> Monthly recurring billing offers predictable ARR/MRR. Maintain high video retention and renewal onboarding to prevent churn.
+                      <p className="text-xs sm:text-sm text-white/90 leading-relaxed bg-black/30 p-4 rounded-2xl border border-white/5">
+                        {diagnostics.executiveVerdict}
+                      </p>
+                    </div>
+
+                    {/* Superpower & Fatal Blindspot Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      {/* Superpower */}
+                      <div className="rounded-2xl p-4 bg-emerald-950/20 border border-emerald-500/30 space-y-2">
+                        <div className="flex items-center gap-2 text-emerald-400">
+                          <ShieldCheck size={16} />
+                          <h5 className="font-bold text-xs uppercase tracking-wider">Unfair Superpower</h5>
+                        </div>
+                        <p className="text-xs text-emerald-100/90 leading-relaxed">
+                          {diagnostics.superpower}
+                        </p>
                       </div>
-                    )}
-                  </p>
-                </div>
 
-                {/* Brand Identity & Visual Polish Critique */}
-                <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3.5">
-                  <div className="flex items-center gap-2">
-                    <Sparkles size={16} className="text-purple-400" />
-                    <h4 className="font-extrabold text-sm text-white">Brand &amp; Visual Audit</h4>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <div className="p-3 rounded-xl bg-white/[0.02] border border-white/10">
-                      <span className="text-white/50 block text-[10px] uppercase font-bold">Name Recall Score</span>
-                      <p className="font-bold text-white mt-0.5">{diagnostics.nameRating}</p>
+                      {/* Critical Blindspot */}
+                      <div className="rounded-2xl p-4 bg-amber-950/20 border border-amber-500/30 space-y-2">
+                        <div className="flex items-center gap-2 text-amber-400">
+                          <AlertTriangle size={16} />
+                          <h5 className="font-bold text-xs uppercase tracking-wider">Fatal Blindspot to Fix</h5>
+                        </div>
+                        <p className="text-xs text-amber-100/90 leading-relaxed">
+                          {diagnostics.criticalBlindspot}
+                        </p>
+                      </div>
                     </div>
-                    <div className="p-3 rounded-xl bg-white/[0.02] border border-white/10">
-                      <span className="text-white/50 block text-[10px] uppercase font-bold">Key Category Competitors</span>
-                      <p className="font-medium text-white/80 mt-0.5">{benchmark.keyCompetitors.join(', ')}</p>
+
+                    {/* Pricing Spectrum & Elasticity Assessment */}
+                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <DollarSign size={16} className="text-amber-400" />
+                          <h4 className="font-extrabold text-sm text-white">Price Elasticity &amp; Position</h4>
+                        </div>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                          diagnostics.priceVerdict === 'sweet_spot'
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                            : diagnostics.priceVerdict === 'underpriced'
+                            ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30'
+                            : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
+                        }`}>
+                          {diagnostics.priceVerdict === 'sweet_spot' ? 'Sweet-Spot Value' : diagnostics.priceVerdict === 'underpriced' ? 'Penetration / Underpriced' : 'Premium Positioning'}
+                        </span>
+                      </div>
+
+                      {/* Spectrum Bar Graphic */}
+                      <div className="space-y-1.5 pt-1">
+                        <div className="h-3 w-full bg-white/10 rounded-full overflow-hidden flex">
+                          <div className="w-1/3 bg-blue-500/70" title="Budget Floor" />
+                          <div className="w-1/3 bg-emerald-500/80" title="Sweet Spot" />
+                          <div className="w-1/3 bg-amber-500/70" title="Premium" />
+                        </div>
+                        <div className="flex justify-between text-[11px] text-white/60">
+                          <span>Floor: {currency === 'KES' ? `KES ${benchmark.kesFloor.toLocaleString()}` : `$${benchmark.usdFloor}`}</span>
+                          <span className="text-emerald-300 font-bold">Sweet-Spot: {currency === 'KES' ? `KES ${benchmark.kesSweetSpot.toLocaleString()}` : `$${benchmark.usdSweetSpot}`}</span>
+                          <span>Premium: {currency === 'KES' ? `KES ${benchmark.kesCeiling.toLocaleString()}` : `$${benchmark.usdCeiling}`}</span>
+                        </div>
+                      </div>
+
+                      <div className="text-xs text-white/80 leading-relaxed bg-black/30 p-3.5 rounded-xl border border-white/5 space-y-1.5">
+                        <p>
+                          <strong>Price Assessment:</strong> Your price of{' '}
+                          <strong className="text-white">
+                            {currency === 'KES' ? `KES ${Number(priceInput).toLocaleString()}` : `$${priceInput} USD`} {diagnostics.activeModel.short}
+                          </strong>{' '}
+                          ({diagnostics.activeModel.label}) {diagnostics.priceVerdict === 'sweet_spot'
+                            ? 'is right in the sweet spot of consumer purchasing power. You have sufficient advertising margin to run profitable Meta and TikTok campaigns.'
+                            : diagnostics.priceVerdict === 'underpriced'
+                            ? 'is significantly lower than category standards. While this drives rapid trial, you risk being perceived as poor quality or failing to cover marketing delivery costs.'
+                            : 'is at the top tier. To convert at this price, you must provide flawless visual branding and high-end video social proof.'}
+                        </p>
+                        <p className="text-[11px] text-purple-300 font-medium">
+                          {diagnostics.frequencyAdvice}
+                        </p>
+                      </div>
                     </div>
                   </div>
+                )}
 
-                  <div className="p-3.5 rounded-xl bg-purple-950/20 border border-purple-500/20 text-xs text-purple-200/90 leading-relaxed">
-                    <p className="font-bold text-white mb-1">Visual Feedback:</p>
-                    <p>{diagnostics.visualCritique}</p>
+                {/* TAB 2: 30-SECOND COMMERCIAL SCRIPT CONCEPT */}
+                {activeTab === 'commercial' && (
+                  <div className="space-y-4">
+                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-4">
+                      <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                        <div className="flex items-center gap-2">
+                          <Film size={18} className="text-purple-400" />
+                          <h4 className="font-extrabold text-sm text-white">30-Second Commercial Storyboard Concept</h4>
+                        </div>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-400/30">
+                          30s Broadcast Standard
+                        </span>
+                      </div>
+
+                      {/* Scene 1: Hook */}
+                      <div className="p-4 rounded-2xl bg-black/30 border border-white/10 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-extrabold uppercase text-amber-300 tracking-wider">
+                            Scene 1 · 00:00 – 00:05 (Scroll-Stopping Hook)
+                          </span>
+                          <span className="text-[10px] text-white/40 font-mono">05s</span>
+                        </div>
+                        <p className="text-xs text-white/90 font-medium italic">
+                          {diagnostics.commercial.hook}
+                        </p>
+                        <p className="text-[11px] text-white/50 bg-white/5 p-2.5 rounded-lg border border-white/5">
+                          <strong>Visual Direction:</strong> {diagnostics.commercial.scene1Visual}
+                        </p>
+                      </div>
+
+                      {/* Scene 2: Proof & Agitation */}
+                      <div className="p-4 rounded-2xl bg-black/30 border border-white/10 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-extrabold uppercase text-purple-300 tracking-wider">
+                            Scene 2 · 00:05 – 00:20 (Demonstration &amp; Social Proof)
+                          </span>
+                          <span className="text-[10px] text-white/40 font-mono">15s</span>
+                        </div>
+                        <p className="text-xs text-white/90 font-medium italic">
+                          {diagnostics.commercial.proof}
+                        </p>
+                        <p className="text-[11px] text-white/50 bg-white/5 p-2.5 rounded-lg border border-white/5">
+                          <strong>Visual Direction:</strong> {diagnostics.commercial.scene2Visual}
+                        </p>
+                      </div>
+
+                      {/* Scene 3: Direct Action CTA */}
+                      <div className="p-4 rounded-2xl bg-black/30 border border-white/10 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-extrabold uppercase text-emerald-300 tracking-wider">
+                            Scene 3 · 00:20 – 00:30 (Direct WhatsApp / Purchase Action)
+                          </span>
+                          <span className="text-[10px] text-white/40 font-mono">10s</span>
+                        </div>
+                        <p className="text-xs text-white/90 font-medium italic">
+                          {diagnostics.commercial.cta}
+                        </p>
+                        <p className="text-[11px] text-white/50 bg-white/5 p-2.5 rounded-lg border border-white/5">
+                          <strong>Visual Direction:</strong> {diagnostics.commercial.scene3Visual}
+                        </p>
+                      </div>
+
+                      {/* Voiceover & Style Recommendations */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs">
+                        <div className="p-3.5 rounded-xl bg-purple-950/20 border border-purple-500/20">
+                          <span className="text-[10px] font-bold uppercase text-purple-300 block mb-1">Recommended Voiceover:</span>
+                          <p className="text-white/80">{diagnostics.commercial.voiceover}</p>
+                        </div>
+                        <div className="p-3.5 rounded-xl bg-purple-950/20 border border-purple-500/20">
+                          <span className="text-[10px] font-bold uppercase text-purple-300 block mb-1">Production Visual Style:</span>
+                          <p className="text-white/80">{diagnostics.commercial.style}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Regional Strategy Playbook */}
-                <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Target size={16} className="text-emerald-400" />
-                    <h4 className="font-extrabold text-sm text-white">Regional Targeting Recommendation</h4>
+                {/* TAB 3: COMPETITORS & BUYER WARFARE */}
+                {activeTab === 'market' && (
+                  <div className="space-y-4">
+                    {/* Buyer Persona Card */}
+                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3.5">
+                      <div className="flex items-center gap-2">
+                        <Users size={16} className="text-emerald-400" />
+                        <h4 className="font-extrabold text-sm text-white">Target Buyer Persona &amp; Decision Maker</h4>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div className="p-3.5 rounded-xl bg-black/30 border border-white/5">
+                          <span className="text-white/50 block text-[10px] uppercase font-bold">Primary Payer (Who Signs Off)</span>
+                          <p className="font-bold text-white mt-1">{diagnostics.buyerPersona.payer}</p>
+                        </div>
+                        <div className="p-3.5 rounded-xl bg-black/30 border border-white/5">
+                          <span className="text-white/50 block text-[10px] uppercase font-bold">End User</span>
+                          <p className="font-bold text-white mt-1">{diagnostics.buyerPersona.endUser}</p>
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-emerald-950/20 border border-emerald-500/20 text-xs text-emerald-100/90">
+                        <span className="font-bold text-white block mb-0.5">Primary Psychological Buying Trigger:</span>
+                        <p>{diagnostics.buyerPersona.trigger}</p>
+                      </div>
+                    </div>
+
+                    {/* Top 3 Objections & Rebuttals */}
+                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle size={16} className="text-amber-400" />
+                        <h4 className="font-extrabold text-sm text-white">Top Buying Objections &amp; How To Rebut Them</h4>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        {diagnostics.objections.map((item, idx) => (
+                          <div key={idx} className="p-3.5 rounded-xl bg-black/30 border border-white/5 space-y-1.5 text-xs">
+                            <p className="font-bold text-rose-300">
+                              ❓ Objection {idx + 1}: “{item.objection}”
+                            </p>
+                            <p className="text-white/80 bg-white/5 p-2 rounded-lg border border-white/5">
+                              💡 <strong>Rebuttal in Video / Ad:</strong> {item.counter}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Competitor Warfare */}
+                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Target size={16} className="text-purple-400" />
+                        <h4 className="font-extrabold text-sm text-white">East African Competitor Warfare</h4>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-black/30 border border-white/5 text-xs space-y-2">
+                        <p className="text-white/60">
+                          <strong className="text-white">Existing Competitors in Category:</strong> {diagnostics.competitors.name}
+                        </p>
+                        <p className="text-amber-300/90">
+                          <strong>Competitor Flaw to Exploit:</strong> {diagnostics.competitors.flaw}
+                        </p>
+                        <p className="text-emerald-300/90">
+                          <strong>Your Recommended Attack Angle:</strong> {diagnostics.competitors.attackAngle}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-white/80 leading-relaxed bg-white/[0.02] p-3.5 rounded-xl border border-white/10">
-                    {diagnostics.regionalNote}
-                  </p>
-                </div>
+                )}
 
-                {/* Call-to-Action Bridge to Video Production */}
+                {/* TAB 4: UNIT ECONOMICS & 7-DAY LAUNCH PLAN */}
+                {activeTab === 'roadmap' && (
+                  <div className="space-y-4">
+                    {/* Unit Economics Advisory */}
+                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3">
+                      <div className="flex items-center gap-2">
+                        <DollarSign size={16} className="text-emerald-400" />
+                        <h4 className="font-extrabold text-sm text-white">Unit Economics &amp; Ad Budget Guidelines</h4>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-black/30 border border-white/5 text-xs space-y-2 leading-relaxed">
+                        <p className="text-white/90">
+                          <strong>Pricing Structure:</strong> {diagnostics.frequencyAdvice}
+                        </p>
+                        <p className="text-amber-300 font-medium">
+                          <strong>Target Ad Budget:</strong> {diagnostics.recommendedAdBudget}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* 7-Day Launch Checklist */}
+                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Zap size={16} className="text-amber-400" />
+                          <h4 className="font-extrabold text-sm text-white">7-Day Tactical Go-To-Market Roadmap</h4>
+                        </div>
+                        <span className="text-[10px] text-white/50">Step-by-step to first 500 sales</span>
+                      </div>
+
+                      <div className="space-y-2">
+                        {diagnostics.launchPlan.map((step, idx) => (
+                          <div key={idx} className="p-3 rounded-xl bg-black/30 border border-white/5 flex items-start gap-3 text-xs">
+                            <span className="px-2 py-0.5 rounded bg-purple-600/30 text-purple-300 border border-purple-400/30 font-bold text-[10px] shrink-0 mt-0.5">
+                              {step.day}
+                            </span>
+                            <div className="space-y-0.5">
+                              <p className="font-bold text-white">{step.task}</p>
+                              <p className="text-white/70 text-[11px] leading-relaxed">{step.tip}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Final Call-to-Action Bridge to Video Production */}
                 <div className="rounded-3xl p-6 bg-gradient-to-r from-purple-900/60 to-indigo-900/60 border border-purple-400/30 shadow-2xl space-y-3.5">
                   <div className="flex items-center gap-2">
                     <Film size={18} className="text-amber-300" />
-                    <h4 className="font-black text-base text-white">Next Step: Turn This Brand Into Sales</h4>
+                    <h4 className="font-black text-base text-white">Turn This Strategic Brief Into A Live Commercial</h4>
                   </div>
                   <p className="text-xs text-purple-200/80 leading-relaxed">
-                    A strong brand needs high-converting video. We can produce a 30s broadcast commercial and promotional poster using this exact brand specification in 48 hours.
+                    A great brand strategy needs a high-converting video commercial. We can produce this exact 30s storyboard, with professional voiceover and matching promotional poster, in 48 hours for KES 8,000 ($65 USD).
                   </p>
                   <div className="flex flex-wrap items-center gap-3 pt-1">
                     <button
                       type="button"
                       onClick={handleProceedToCommercial}
-                      className="px-6 py-3 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 shadow-lg transition-all flex items-center gap-2 cursor-pointer"
+                      className="px-6 py-3.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 shadow-lg shadow-emerald-600/30 transition-all flex items-center gap-2 cursor-pointer"
                     >
                       <Film size={14} />
-                      <span>Produce Commercial For This Brand →</span>
+                      <span>Produce This Commercial (From KES 8K / $65) →</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleCopyReport}
+                      className="px-4 py-3.5 rounded-xl text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 border border-white/15 transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+                      <span>{copied ? 'Brief Copied!' : 'Copy Full Brief'}</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => window.print()}
-                      className="px-4 py-3 rounded-xl text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 border border-white/15 transition-all flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-3.5 rounded-xl text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 border border-white/15 transition-all flex items-center gap-1.5 cursor-pointer"
                     >
                       <Printer size={14} />
-                      <span>Print / PDF Report</span>
+                      <span>Print PDF</span>
                     </button>
                   </div>
                 </div>
