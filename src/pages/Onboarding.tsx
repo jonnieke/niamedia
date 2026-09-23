@@ -50,6 +50,26 @@ function readDemoCtx(): { businessName?: string; industry?: string } {
   try {
     const raw = localStorage.getItem('nia_demo_ctx')
     if (raw) return JSON.parse(raw)
+    const brandTestRaw = localStorage.getItem('nia_brand_test_draft')
+    if (brandTestRaw) {
+      const parsed = JSON.parse(brandTestRaw)
+      const indMap: Record<string, string> = {
+        education_edtech: 'Education',
+        agriculture_agritech: 'Other',
+        tech_saas: 'Fintech / SACCO',
+        hospitality_realestate: 'Real Estate',
+        food_dining: 'Restaurant',
+        beauty_cosmetics: 'Health & Wellness',
+        fashion_apparel: 'Retail',
+        consulting_agency: 'Professional Services',
+        fitness_wellness: 'Health & Wellness',
+        events_entertainment: 'Events',
+      }
+      return {
+        businessName: parsed.brandName || '',
+        industry: indMap[parsed.industryId] || 'Other',
+      }
+    }
   } catch {}
   return {}
 }

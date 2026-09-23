@@ -747,6 +747,7 @@ export default function Quote() {
     setPesapalError('')
     try {
       const qId = successData?.quoteId || `quote_${Date.now()}`
+      const orderId = qId.startsWith('quote_') ? qId : `quote_${qId}`
       const depositAmt = successData?.depositAmount || Math.round(price.total * 0.7)
       const bName = successData?.bizName || bizName || 'Customer'
       const clientEmail = successData?.email || email || 'billing@niamedia.co.ke'
@@ -755,11 +756,14 @@ export default function Quote() {
 
       const { data, error: fnErr } = await supabase.functions.invoke('pesapal-checkout', {
         body: {
-          amount: depositAmt,
+          orderId,
           quoteId: qId,
+          amountKes: depositAmt,
+          amount: depositAmt,
           description: `70% Deposit for ${bName} (${lenLabel} commercial)`,
           email: clientEmail,
           phone: clientPhone,
+          customerName: bName,
           currency: 'KES',
           callbackUrl: `${window.location.origin}/quote?paid=true&quote_id=${qId}`,
         },

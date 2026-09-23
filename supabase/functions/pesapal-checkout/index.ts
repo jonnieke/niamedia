@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json()
-    const orderId = body.orderId || body.id
+    const orderId = body.orderId || body.id || (body.quoteId ? (String(body.quoteId).startsWith("quote_") ? String(body.quoteId) : `quote_${body.quoteId}`) : "") || `ord_${Date.now()}`
     const amountKes = body.amountKes ?? body.amount ?? 0
     const description = body.description || "Nia Media Order"
     const callbackUrl = body.callbackUrl || body.callback_url || "https://niamedia.co.ke/payment/callback"
