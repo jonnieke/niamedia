@@ -8,7 +8,7 @@ import {
   ChevronRight, CheckCircle2, ShoppingBag, Eye, Lightbulb, Share2,
   Globe, Lock, ExternalLink, UserPlus, LogIn, Calendar, CheckSquare,
   Download, Clock, Layers, ArrowUpRight, ShoppingCart, Smartphone,
-  FileText
+  FileText, Calculator, Sliders, Truck, Package, CreditCard
 } from 'lucide-react'
 import PublicHeader from '../components/layout/PublicHeader'
 import { useAuth } from '../lib/AuthContext'
@@ -753,6 +753,13 @@ export default function BrandTest() {
   const [targetRegion, setTargetRegion] = useState('urban_ke')
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
 
+  // Interactive Unit Economics & Net Profit Stress-Tester States
+  const [cogsCost, setCogsCost] = useState<number>(750)
+  const [packCost, setPackCost] = useState<number>(120)
+  const [deliveryCost, setDeliveryCost] = useState<number>(300)
+  const [adCacCost, setAdCacCost] = useState<number>(450)
+  const [salesVolumeMonthly, setSalesVolumeMonthly] = useState<number>(150)
+
   // Rate Limiting & Auth Gating Modals
   const [showLimitModal, setShowLimitModal] = useState(false)
   const [showPdfAuthModal, setShowPdfAuthModal] = useState(false)
@@ -784,6 +791,11 @@ export default function BrandTest() {
         if (parsed.priceModel) setPriceModel(parsed.priceModel)
         if (parsed.targetRegion) setTargetRegion(parsed.targetRegion)
         if (parsed.uploadedImage) setUploadedImage(parsed.uploadedImage)
+        if (parsed.cogsCost !== undefined) setCogsCost(parsed.cogsCost)
+        if (parsed.packCost !== undefined) setPackCost(parsed.packCost)
+        if (parsed.deliveryCost !== undefined) setDeliveryCost(parsed.deliveryCost)
+        if (parsed.adCacCost !== undefined) setAdCacCost(parsed.adCacCost)
+        if (parsed.salesVolumeMonthly !== undefined) setSalesVolumeMonthly(parsed.salesVolumeMonthly)
         if (parsed.hasTested) setHasTested(true)
       } catch (err) {
         console.error('Failed to parse brand test draft from localStorage', err)
@@ -880,22 +892,30 @@ export default function BrandTest() {
     reader.readAsDataURL(file)
   }
 
+  // Helper to persist current user draft & unit economics to localStorage
+  const getDraftPayload = () => ({
+    brandName,
+    industryId,
+    productDesc,
+    websiteUrl,
+    priceInput,
+    currency,
+    priceModel,
+    targetRegion,
+    uploadedImage,
+    cogsCost,
+    packCost,
+    deliveryCost,
+    adCacCost,
+    salesVolumeMonthly,
+    hasTested: true,
+  })
+
   // PDF Export Gate Handler - Gated for Authenticated Users
   const handlePdfDownload = () => {
     if (!isAuthenticated) {
       // Save draft first so user never loses their report!
-      localStorage.setItem('nia_brand_test_draft', JSON.stringify({
-        brandName,
-        industryId,
-        productDesc,
-        websiteUrl,
-        priceInput,
-        currency,
-        priceModel,
-        targetRegion,
-        uploadedImage,
-        hasTested: true,
-      }))
+      localStorage.setItem('nia_brand_test_draft', JSON.stringify(getDraftPayload()))
       sessionStorage.setItem('nia_pending_pdf_download', 'true')
       setShowPdfAuthModal(true)
       return
@@ -906,18 +926,7 @@ export default function BrandTest() {
   // Direct Markdown Dossier Download (Offline Backup)
   const handleDownloadFile = () => {
     if (!isAuthenticated) {
-      localStorage.setItem('nia_brand_test_draft', JSON.stringify({
-        brandName,
-        industryId,
-        productDesc,
-        websiteUrl,
-        priceInput,
-        currency,
-        priceModel,
-        targetRegion,
-        uploadedImage,
-        hasTested: true,
-      }))
+      localStorage.setItem('nia_brand_test_draft', JSON.stringify(getDraftPayload()))
       sessionStorage.setItem('nia_pending_pdf_download', 'true')
       setShowPdfAuthModal(true)
       return
@@ -935,18 +944,7 @@ export default function BrandTest() {
 
   // Redirect to Auth with Draft Persisted
   const handleProceedToAuth = (path: '/login' | '/register') => {
-    localStorage.setItem('nia_brand_test_draft', JSON.stringify({
-      brandName,
-      industryId,
-      productDesc,
-      websiteUrl,
-      priceInput,
-      currency,
-      priceModel,
-      targetRegion,
-      uploadedImage,
-      hasTested: true,
-    }))
+    localStorage.setItem('nia_brand_test_draft', JSON.stringify(getDraftPayload()))
     sessionStorage.setItem('nia_pending_pdf_download', 'true')
     navigate(`${path}?redirect=/test-brand%3Fdownload%3Dtrue`)
   }
@@ -999,18 +997,7 @@ export default function BrandTest() {
         localStorage.setItem('nia_guest_brand_test_count', '1')
       }
       // Save draft into localStorage
-      localStorage.setItem('nia_brand_test_draft', JSON.stringify({
-        brandName,
-        industryId,
-        productDesc,
-        websiteUrl,
-        priceInput,
-        currency,
-        priceModel,
-        targetRegion,
-        uploadedImage,
-        hasTested: true,
-      }))
+      localStorage.setItem('nia_brand_test_draft', JSON.stringify(getDraftPayload()))
       setActiveTab('who_why_when')
       window.scrollTo({ top: 480, behavior: 'smooth' })
     }, 1450)
@@ -1385,6 +1372,73 @@ export default function BrandTest() {
       },
     ]
 
+    // Unit Economics & Profit Stress-Testing Engine (Kenyan Fulfillment & Marketing Reality)
+    const activeSellingPrice = currency === 'KES' ? Math.round(effectiveKesPrice) : (Number(priceInput) || 25)
+    const gatewayFee = Math.round(activeSellingPrice * 0.018)
+    const totalUnitCost = Math.round(cogsCost + packCost + deliveryCost + adCacCost + gatewayFee)
+    const netProfitPerUnit = Math.round(activeSellingPrice - totalUnitCost)
+    const netMarginPercent = activeSellingPrice > 0 ? Math.round((netProfitPerUnit / activeSellingPrice) * 100) : 0
+    const monthlyGrossRevenue = Math.round(activeSellingPrice * salesVolumeMonthly)
+    const monthlyTotalCosts = Math.round(totalUnitCost * salesVolumeMonthly)
+    const monthlyNetTakeHome = Math.round(netProfitPerUnit * salesVolumeMonthly)
+
+    // Contribution margin breakdown percentages for the stacked visual bar
+    const cogsPercent = activeSellingPrice > 0 ? Math.min(100, Math.round((cogsCost / activeSellingPrice) * 100)) : 0
+    const packPercent = activeSellingPrice > 0 ? Math.min(100, Math.round((packCost / activeSellingPrice) * 100)) : 0
+    const deliveryPercent = activeSellingPrice > 0 ? Math.min(100, Math.round((deliveryCost / activeSellingPrice) * 100)) : 0
+    const cacPercent = activeSellingPrice > 0 ? Math.min(100, Math.round((adCacCost / activeSellingPrice) * 100)) : 0
+    const gatewayPercent = activeSellingPrice > 0 ? Math.min(100, Math.round((gatewayFee / activeSellingPrice) * 100)) : 0
+
+    let unitHealth: {
+      status: 'loss' | 'thin' | 'healthy' | 'powerhouse'
+      badge: string
+      colorClass: string
+      borderClass: string
+      bgClass: string
+      headline: string
+      advice: string
+    } = {
+      status: 'healthy',
+      badge: '✅ Commercially Scalable (20% – 49% Net Margin)',
+      colorClass: 'text-emerald-400',
+      borderClass: 'border-emerald-500/30',
+      bgClass: 'bg-emerald-950/20',
+      headline: 'Healthy unit economics capable of scaling paid Meta & TikTok campaigns.',
+      advice: 'Your margins leave sufficient buffer for customer acquisition. You can safely afford up to KES 600–900 CAC and retain solid monthly cash profit.',
+    }
+
+    if (netProfitPerUnit <= 0) {
+      unitHealth = {
+        status: 'loss',
+        badge: '🚨 Cash Bleed (Negative Margin)',
+        colorClass: 'text-rose-400',
+        borderClass: 'border-rose-500/30',
+        bgClass: 'bg-rose-950/20',
+        headline: 'Selling below landed delivery and marketing acquisition cost!',
+        advice: 'Every sale is depleting your working capital. Immediate fix: increase retail price, bundle into multi-packs (e.g. 2-pack/3-pack so 1 delivery fee covers 2+ items), or charge courier fee separately to the customer.',
+      }
+    } else if (netMarginPercent < 20) {
+      unitHealth = {
+        status: 'thin',
+        badge: '⚠️ Dangerously Thin (<20% Net Margin)',
+        colorClass: 'text-amber-400',
+        borderClass: 'border-amber-500/30',
+        bgClass: 'bg-amber-950/20',
+        headline: 'High vulnerability to courier returns & rising ad CPMs.',
+        advice: 'In East African commerce, an 8–15% delivery rejection rate or slight Facebook ad price spike will wipe out this entire profit. Target at least 30% net margin by adding high-margin upsells or lowering sourcing costs.',
+      }
+    } else if (netMarginPercent >= 50) {
+      unitHealth = {
+        status: 'powerhouse',
+        badge: '💎 High-Margin Cash Powerhouse (50%+ Net Margin)',
+        colorClass: 'text-cyan-300',
+        borderClass: 'border-cyan-500/30',
+        bgClass: 'bg-cyan-950/20',
+        headline: 'Elite unit economics with exceptional pricing power & cash yield.',
+        advice: 'Outstanding margins. You can aggressively outspend competitors on high-definition video creative, offer free premium gifts, or run aggressive affiliate commissions to monopolize distribution.',
+      }
+    }
+
     const fullReportText = `=====================================================
 NIA MEDIA — STRATEGIC BRAND & MARKET INTELLIGENCE DOSSIER
 =====================================================
@@ -1493,11 +1547,24 @@ ${commercial.cta}
 Visual: ${commercial.scene3Visual}
 
 -----------------------------------------------------
-6. PRICING & UNIT ECONOMICS
+6. INTERACTIVE UNIT ECONOMICS & PROFIT STRESS-TEST
 -----------------------------------------------------
-- Assessment: ${priceVerdict.toUpperCase()}
-- Frequency Advice: ${frequencyAdvice}
-- Recommended Daily Ad Budget: ${recommendedAdBudget}
+- Selling Price: ${currency === 'KES' ? 'KES ' : '$'}${activeSellingPrice.toLocaleString()} ${activeModel.short}
+- Sourcing / COGS: ${currency === 'KES' ? 'KES ' : '$'}${cogsCost.toLocaleString()}
+- Packaging & Inserts: ${currency === 'KES' ? 'KES ' : '$'}${packCost.toLocaleString()}
+- Courier / Delivery: ${currency === 'KES' ? 'KES ' : '$'}${deliveryCost.toLocaleString()}
+- Ad CAC (Meta/TikTok): ${currency === 'KES' ? 'KES ' : '$'}${adCacCost.toLocaleString()}
+- Payment Gateway (1.8%): ${currency === 'KES' ? 'KES ' : '$'}${gatewayFee.toLocaleString()}
+- TOTAL LANDED UNIT COST: ${currency === 'KES' ? 'KES ' : '$'}${totalUnitCost.toLocaleString()}
+- NET PROFIT PER UNIT: ${currency === 'KES' ? 'KES ' : '$'}${netProfitPerUnit.toLocaleString()} (${netMarginPercent}% Net Margin)
+- FINANCIAL HEALTH RATING: ${unitHealth.badge}
+  ${unitHealth.headline}
+  Tactical Advice: ${unitHealth.advice}
+
+MONTHLY PROJECTION (${salesVolumeMonthly} units/month):
+- Monthly Gross Revenue: ${currency === 'KES' ? 'KES ' : '$'}${monthlyGrossRevenue.toLocaleString()}
+- Monthly Total Costs: ${currency === 'KES' ? 'KES ' : '$'}${monthlyTotalCosts.toLocaleString()}
+- Monthly Net Cash Take-Home: ${currency === 'KES' ? 'KES ' : '$'}${monthlyNetTakeHome.toLocaleString()}
 
 CROSS-FREQUENCY SUBSCRIPTION MATRIX:
 ${subscriptionMatrix.map(s => `- ${s.frequency}: ${currency === 'KES' ? 'KES ' : '$'}${s.price} (${s.savings}) | Churn Risk: ${s.churnRisk} | Retention: ${s.retentionTactic}`).join('\n')}
@@ -1519,6 +1586,20 @@ https://niamedia.org
       addressableShare,
       activeModel,
       effectiveKesPrice,
+      activeSellingPrice,
+      gatewayFee,
+      totalUnitCost,
+      netProfitPerUnit,
+      netMarginPercent,
+      monthlyGrossRevenue,
+      monthlyTotalCosts,
+      monthlyNetTakeHome,
+      cogsPercent,
+      packPercent,
+      deliveryPercent,
+      cacPercent,
+      gatewayPercent,
+      unitHealth,
       executiveVerdict,
       superpower,
       criticalBlindspot,
@@ -1537,7 +1618,7 @@ https://niamedia.org
       baseMonthlyNormalized,
       fullReportText,
     }
-  }, [priceInput, currency, priceModel, benchmark, brandName, productDesc, uploadedImage, targetRegion, websiteUrl])
+  }, [priceInput, currency, priceModel, benchmark, brandName, productDesc, uploadedImage, targetRegion, websiteUrl, cogsCost, packCost, deliveryCost, adCacCost, salesVolumeMonthly])
 
   // Copy Brief to Clipboard
   const handleCopyReport = () => {
@@ -2625,20 +2706,433 @@ https://niamedia.org
                       </div>
                     </div>
 
-                    {/* Unit Economics Advisory */}
-                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3">
-                      <div className="flex items-center gap-2">
-                        <DollarSign size={16} className="text-emerald-400" />
-                        <h4 className="font-extrabold text-sm text-white">Unit Economics &amp; Ad Budget Guidelines</h4>
+                    {/* Interactive Unit Economics & Net Profit Stress-Tester */}
+                    <div className="rounded-3xl p-6 bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/10 shadow-2xl space-y-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-400/20 text-emerald-400">
+                              <Calculator size={18} />
+                            </div>
+                            <h4 className="font-extrabold text-base text-white">Live Unit Economics &amp; Net Margin Stress-Tester</h4>
+                          </div>
+                          <p className="text-xs text-white/60">
+                            Move the sliders below to stress-test your real Kenya fulfillment costs, ad CAC, and take-home cash profit.
+                          </p>
+                        </div>
+                        <span className="self-start sm:self-auto text-[10px] font-bold text-emerald-300 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-400/20 flex items-center gap-1.5">
+                          <Sparkles size={11} /> Real-Time Financial Math
+                        </span>
                       </div>
 
-                      <div className="p-3.5 rounded-xl bg-black/30 border border-white/5 text-xs space-y-2 leading-relaxed">
-                        <p className="text-white/90">
-                          <strong>Pricing Structure:</strong> {diagnostics.frequencyAdvice}
+                      {/* Top 4 Real-Time Financial Stat Cards */}
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-1">
+                          <span className="text-[10px] uppercase font-bold text-white/50 tracking-wider">Selling Price</span>
+                          <p className="text-xl sm:text-2xl font-black text-white">
+                            {currency === 'KES' ? `KES ${diagnostics.activeSellingPrice.toLocaleString()}` : `$${diagnostics.activeSellingPrice}`}
+                          </p>
+                          <span className="text-[10px] text-white/40 block">{diagnostics.activeModel.label}</span>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-1">
+                          <span className="text-[10px] uppercase font-bold text-white/50 tracking-wider">Landed Unit Cost</span>
+                          <p className="text-xl sm:text-2xl font-black text-rose-300">
+                            {currency === 'KES' ? `KES ${diagnostics.totalUnitCost.toLocaleString()}` : `$${diagnostics.totalUnitCost}`}
+                          </p>
+                          <span className="text-[10px] text-white/40 block">COGS + Pack + Delivery + CAC + M-Pesa</span>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-1">
+                          <span className="text-[10px] uppercase font-bold text-white/50 tracking-wider">Net Profit / Unit</span>
+                          <p className={`text-xl sm:text-2xl font-black ${
+                            diagnostics.netProfitPerUnit > 0 ? 'text-emerald-400' : 'text-rose-400'
+                          }`}>
+                            {currency === 'KES' ? `KES ${diagnostics.netProfitPerUnit.toLocaleString()}` : `$${diagnostics.netProfitPerUnit}`}
+                          </p>
+                          <span className={`text-[10px] font-bold ${diagnostics.netProfitPerUnit > 0 ? 'text-emerald-400/80' : 'text-rose-400/80'}`}>
+                            {diagnostics.netProfitPerUnit > 0 ? 'Cash generated per sale' : 'Net cash loss per sale'}
+                          </span>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-1">
+                          <span className="text-[10px] uppercase font-bold text-white/50 tracking-wider">Net Profit Margin</span>
+                          <div className="flex items-baseline gap-1.5">
+                            <p className={`text-xl sm:text-2xl font-black ${
+                              diagnostics.netMarginPercent >= 50
+                                ? 'text-cyan-300'
+                                : diagnostics.netMarginPercent >= 20
+                                ? 'text-emerald-400'
+                                : diagnostics.netMarginPercent > 0
+                                ? 'text-amber-400'
+                                : 'text-rose-400'
+                            }`}>
+                              {diagnostics.netMarginPercent}%
+                            </p>
+                            <span className="text-[10px] text-white/40">of retail</span>
+                          </div>
+                          <span className="text-[10px] font-medium text-white/50 block">Target: 30%+ in Kenya</span>
+                        </div>
+                      </div>
+
+                      {/* Dynamic Financial Health Alert Banner */}
+                      <div className={`p-4 sm:p-5 rounded-2xl border ${diagnostics.unitHealth.borderClass} ${diagnostics.unitHealth.bgClass} space-y-2`}>
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className={`text-xs font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
+                            diagnostics.unitHealth.status === 'loss'
+                              ? 'bg-rose-500/20 text-rose-300 border border-rose-400/30'
+                              : diagnostics.unitHealth.status === 'thin'
+                              ? 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
+                              : diagnostics.unitHealth.status === 'powerhouse'
+                              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/30'
+                              : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                          }`}>
+                            {diagnostics.unitHealth.badge}
+                          </span>
+                          <span className="text-[11px] text-white/60">
+                            Contribution breakdown: COGS {diagnostics.cogsPercent}% | Delivery {diagnostics.deliveryPercent}% | CAC {diagnostics.cacPercent}%
+                          </span>
+                        </div>
+                        <h5 className="font-bold text-sm text-white">{diagnostics.unitHealth.headline}</h5>
+                        <p className="text-xs text-white/80 leading-relaxed bg-black/30 p-3 rounded-xl border border-white/5">
+                          <strong>Commercial Prescription:</strong> {diagnostics.unitHealth.advice}
                         </p>
-                        <p className="text-amber-300 font-medium">
-                          <strong>Target Ad Budget:</strong> {diagnostics.recommendedAdBudget}
-                        </p>
+                      </div>
+
+                      {/* Visual Cost Allocation Stacked Bar */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-xs text-white/70">
+                          <span className="font-semibold text-white">Landed Price Breakdown per Unit</span>
+                          <span className="text-[11px] text-white/50">100% of Retail Price</span>
+                        </div>
+                        <div className="h-4 w-full bg-white/5 rounded-full overflow-hidden flex border border-white/10 p-0.5">
+                          {diagnostics.cogsPercent > 0 && (
+                            <div
+                              style={{ width: `${Math.min(diagnostics.cogsPercent, 100)}%` }}
+                              className="bg-blue-500 h-full rounded-sm transition-all"
+                              title={`COGS: ${diagnostics.cogsPercent}%`}
+                            />
+                          )}
+                          {diagnostics.packPercent > 0 && (
+                            <div
+                              style={{ width: `${Math.min(diagnostics.packPercent, 100)}%` }}
+                              className="bg-purple-500 h-full rounded-sm transition-all"
+                              title={`Packaging: ${diagnostics.packPercent}%`}
+                            />
+                          )}
+                          {diagnostics.deliveryPercent > 0 && (
+                            <div
+                              style={{ width: `${Math.min(diagnostics.deliveryPercent, 100)}%` }}
+                              className="bg-amber-500 h-full rounded-sm transition-all"
+                              title={`Courier: ${diagnostics.deliveryPercent}%`}
+                            />
+                          )}
+                          {diagnostics.cacPercent > 0 && (
+                            <div
+                              style={{ width: `${Math.min(diagnostics.cacPercent, 100)}%` }}
+                              className="bg-rose-500 h-full rounded-sm transition-all"
+                              title={`Ad CAC: ${diagnostics.cacPercent}%`}
+                            />
+                          )}
+                          {diagnostics.gatewayPercent > 0 && (
+                            <div
+                              style={{ width: `${Math.min(diagnostics.gatewayPercent, 100)}%` }}
+                              className="bg-indigo-400 h-full rounded-sm transition-all"
+                              title={`Gateway: ${diagnostics.gatewayPercent}%`}
+                            />
+                          )}
+                          {diagnostics.netMarginPercent > 0 && (
+                            <div
+                              style={{ width: `${Math.min(diagnostics.netMarginPercent, 100)}%` }}
+                              className="bg-emerald-500 h-full rounded-sm transition-all"
+                              title={`Net Margin: ${diagnostics.netMarginPercent}%`}
+                            />
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-white/60 pt-1">
+                          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" /> COGS ({currency === 'KES' ? `KES ${cogsCost.toLocaleString()}` : `$${cogsCost}`})</span>
+                          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block" /> Packaging ({currency === 'KES' ? `KES ${packCost.toLocaleString()}` : `$${packCost}`})</span>
+                          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" /> Courier ({currency === 'KES' ? `KES ${deliveryCost.toLocaleString()}` : `$${deliveryCost}`})</span>
+                          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" /> Ad CAC ({currency === 'KES' ? `KES ${adCacCost.toLocaleString()}` : `$${adCacCost}`})</span>
+                          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-indigo-400 inline-block" /> M-Pesa 1.8% ({currency === 'KES' ? `KES ${diagnostics.gatewayFee.toLocaleString()}` : `$${diagnostics.gatewayFee}`})</span>
+                          <span className="flex items-center gap-1.5 font-bold text-emerald-300"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" /> Net Profit ({currency === 'KES' ? `KES ${diagnostics.netProfitPerUnit.toLocaleString()}` : `$${diagnostics.netProfitPerUnit}`})</span>
+                        </div>
+                      </div>
+
+                      {/* Interactive Sliders Section */}
+                      <div className="p-5 rounded-2xl bg-black/40 border border-white/10 space-y-5">
+                        <div className="flex items-center justify-between">
+                          <h5 className="font-extrabold text-sm text-white flex items-center gap-2">
+                            <Sliders size={16} className="text-purple-400" />
+                            <span>Adjust Your Operational Levers</span>
+                          </h5>
+                          <span className="text-[11px] text-white/50">Changes reflect instantly</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                          {/* 1. COGS / Sourcing Cost */}
+                          <div className="space-y-2 p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+                            <div className="flex items-center justify-between text-xs">
+                              <label className="font-bold text-white/90 flex items-center gap-1.5">
+                                <Package size={14} className="text-blue-400" />
+                                <span>Product COGS / Wholesale Cost:</span>
+                              </label>
+                              <div className="flex items-center gap-1 bg-black/60 px-2 py-0.5 rounded border border-white/10">
+                                <span className="text-[11px] text-white/50">{currency}</span>
+                                <input
+                                  type="number"
+                                  value={cogsCost}
+                                  onChange={(e) => setCogsCost(Math.max(0, parseInt(e.target.value) || 0))}
+                                  className="w-16 bg-transparent text-right font-bold text-blue-300 focus:outline-none text-xs"
+                                />
+                              </div>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max={currency === 'KES' ? 10000 : 200}
+                              step={currency === 'KES' ? 50 : 2}
+                              value={cogsCost}
+                              onChange={(e) => setCogsCost(Number(e.target.value))}
+                              className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                            />
+                            <div className="flex justify-between text-[10px] text-white/40">
+                              <span>Free / Digital (0)</span>
+                              <span>Mid ({currency === 'KES' ? 'KES 2,500' : '$50'})</span>
+                              <span>High ({currency === 'KES' ? 'KES 10,000' : '$200'})</span>
+                            </div>
+                          </div>
+
+                          {/* 2. Packaging & Labeling */}
+                          <div className="space-y-2 p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+                            <div className="flex items-center justify-between text-xs">
+                              <label className="font-bold text-white/90 flex items-center gap-1.5">
+                                <Layers size={14} className="text-purple-400" />
+                                <span>Packaging, KEBS &amp; Branded Inserts:</span>
+                              </label>
+                              <div className="flex items-center gap-1 bg-black/60 px-2 py-0.5 rounded border border-white/10">
+                                <span className="text-[11px] text-white/50">{currency}</span>
+                                <input
+                                  type="number"
+                                  value={packCost}
+                                  onChange={(e) => setPackCost(Math.max(0, parseInt(e.target.value) || 0))}
+                                  className="w-16 bg-transparent text-right font-bold text-purple-300 focus:outline-none text-xs"
+                                />
+                              </div>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max={currency === 'KES' ? 2000 : 40}
+                              step={currency === 'KES' ? 20 : 1}
+                              value={packCost}
+                              onChange={(e) => setPackCost(Number(e.target.value))}
+                              className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                            />
+                            <div className="flex justify-between text-[10px] text-white/40">
+                              <span>Minimal (0)</span>
+                              <span>Branded Box ({currency === 'KES' ? 'KES 250' : '$5'})</span>
+                              <span>Luxury Rigid Box ({currency === 'KES' ? 'KES 1,200+' : '$20+'})</span>
+                            </div>
+                          </div>
+
+                          {/* 3. Courier / Delivery Fee */}
+                          <div className="space-y-2 p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+                            <div className="flex items-center justify-between text-xs">
+                              <label className="font-bold text-white/90 flex items-center gap-1.5">
+                                <Truck size={14} className="text-amber-400" />
+                                <span>Courier / Delivery (Borne by Seller):</span>
+                              </label>
+                              <div className="flex items-center gap-1 bg-black/60 px-2 py-0.5 rounded border border-white/10">
+                                <span className="text-[11px] text-white/50">{currency}</span>
+                                <input
+                                  type="number"
+                                  value={deliveryCost}
+                                  onChange={(e) => setDeliveryCost(Math.max(0, parseInt(e.target.value) || 0))}
+                                  className="w-16 bg-transparent text-right font-bold text-amber-300 focus:outline-none text-xs"
+                                />
+                              </div>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max={currency === 'KES' ? 1500 : 30}
+                              step={currency === 'KES' ? 50 : 1}
+                              value={deliveryCost}
+                              onChange={(e) => setDeliveryCost(Number(e.target.value))}
+                              className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                            />
+                            {/* Quick Delivery Presets */}
+                            <div className="flex items-center gap-1.5 pt-1">
+                              <button
+                                type="button"
+                                onClick={() => setDeliveryCost(0)}
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
+                                  deliveryCost === 0 ? 'bg-amber-400 text-black' : 'bg-white/5 text-white/70 hover:bg-white/10'
+                                }`}
+                              >
+                                Buyer Pays (0)
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDeliveryCost(currency === 'KES' ? 300 : 3)}
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
+                                  deliveryCost === (currency === 'KES' ? 300 : 3) ? 'bg-amber-400 text-black' : 'bg-white/5 text-white/70 hover:bg-white/10'
+                                }`}
+                              >
+                                Nairobi Rider ({currency === 'KES' ? '300' : '$3'})
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDeliveryCost(currency === 'KES' ? 500 : 5)}
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
+                                  deliveryCost === (currency === 'KES' ? 500 : 5) ? 'bg-amber-400 text-black' : 'bg-white/5 text-white/70 hover:bg-white/10'
+                                }`}
+                              >
+                                Fargo / Upcountry ({currency === 'KES' ? '500' : '$5'})
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* 4. Customer Acquisition Cost (Ad CAC) */}
+                          <div className="space-y-2 p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+                            <div className="flex items-center justify-between text-xs">
+                              <label className="font-bold text-white/90 flex items-center gap-1.5">
+                                <Target size={14} className="text-rose-400" />
+                                <span>Estimated Ad CAC (Meta / TikTok / Google):</span>
+                              </label>
+                              <div className="flex items-center gap-1 bg-black/60 px-2 py-0.5 rounded border border-white/10">
+                                <span className="text-[11px] text-white/50">{currency}</span>
+                                <input
+                                  type="number"
+                                  value={adCacCost}
+                                  onChange={(e) => setAdCacCost(Math.max(0, parseInt(e.target.value) || 0))}
+                                  className="w-16 bg-transparent text-right font-bold text-rose-300 focus:outline-none text-xs"
+                                />
+                              </div>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max={currency === 'KES' ? 3500 : 70}
+                              step={currency === 'KES' ? 50 : 1}
+                              value={adCacCost}
+                              onChange={(e) => setAdCacCost(Number(e.target.value))}
+                              className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-rose-500"
+                            />
+                            <div className="flex justify-between text-[10px] text-white/40">
+                              <span>Organic / Viral (0)</span>
+                              <span>Kenya Benchmark ({currency === 'KES' ? 'KES 450' : '$3.50'})</span>
+                              <span>High Competition ({currency === 'KES' ? 'KES 2,000+' : '$20+'})</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 5. Monthly Sales Goal & Scaled Cashflow */}
+                        <div className="p-4 rounded-xl bg-gradient-to-r from-purple-950/40 via-black to-emerald-950/40 border border-white/10 space-y-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                              <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                                <TrendingUp size={14} className="text-emerald-400" />
+                                <span>Monthly Unit Sales Goal:</span>
+                              </span>
+                              <span className="text-[11px] text-white/60">How many units or active subscribers do you plan to ship each month?</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                min="1"
+                                max="10000"
+                                value={salesVolumeMonthly}
+                                onChange={(e) => setSalesVolumeMonthly(Math.max(1, parseInt(e.target.value) || 1))}
+                                className="w-20 bg-black/80 text-center font-black text-amber-300 border border-white/20 rounded-lg px-2 py-1 text-sm focus:outline-none"
+                              />
+                              <span className="text-xs font-bold text-white/70">units / mo</span>
+                            </div>
+                          </div>
+                          <input
+                            type="range"
+                            min="10"
+                            max="1000"
+                            step="10"
+                            value={salesVolumeMonthly}
+                            onChange={(e) => setSalesVolumeMonthly(Number(e.target.value))}
+                            className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                          />
+
+                          {/* Live Monthly Profit Projection Bar */}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-white/10 text-center">
+                            <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
+                              <span className="text-[10px] uppercase font-bold text-white/50 block">Monthly Gross Sales</span>
+                              <span className="text-base font-black text-white">
+                                {currency === 'KES' ? `KES ${diagnostics.monthlyGrossRevenue.toLocaleString()}` : `$${diagnostics.monthlyGrossRevenue.toLocaleString()}`}
+                              </span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
+                              <span className="text-[10px] uppercase font-bold text-white/50 block">Monthly Total Operating Outflow</span>
+                              <span className="text-base font-black text-rose-300">
+                                {currency === 'KES' ? `KES ${diagnostics.monthlyTotalCosts.toLocaleString()}` : `$${diagnostics.monthlyTotalCosts.toLocaleString()}`}
+                              </span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30">
+                              <span className="text-[10px] uppercase font-extrabold text-emerald-300 block">Monthly Net Take-Home Cash</span>
+                              <span className={`text-lg font-black ${
+                                diagnostics.monthlyNetTakeHome > 0 ? 'text-emerald-400' : 'text-rose-400'
+                              }`}>
+                                {currency === 'KES' ? `KES ${diagnostics.monthlyNetTakeHome.toLocaleString()}` : `$${diagnostics.monthlyNetTakeHome.toLocaleString()}`}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Strategic Execution Levers to Multiply Net Margins */}
+                      <div className="space-y-3 pt-2">
+                        <h5 className="font-extrabold text-xs uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
+                          <Zap size={14} className="text-amber-400" />
+                          <span>3 Real Levers to Multiply Your Net Profit in Kenya</span>
+                        </h5>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div className="p-3.5 rounded-2xl bg-black/40 border border-white/5 space-y-1.5">
+                            <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                              <Package size={13} className="text-emerald-400" />
+                              <span>1. The Multi-Pack Bundle</span>
+                            </span>
+                            <p className="text-[11px] text-white/70 leading-relaxed">
+                              In Kenya, a rider charges KES 300 whether delivering 1 item or 3 items. By bundling 2 or 3 units at a 10% discount, you eliminate redundant courier fees and double your take-home cash per customer.
+                            </p>
+                          </div>
+
+                          <div className="p-3.5 rounded-2xl bg-black/40 border border-white/5 space-y-1.5">
+                            <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                              <CreditCard size={13} className="text-purple-400" />
+                              <span>2. Daraja STK Push</span>
+                            </span>
+                            <p className="text-[11px] text-white/70 leading-relaxed">
+                              Manual Paybills suffer a 42% cart drop-off when buyers leave the browser to open SIM toolkit. Automated Daraja STK prompts directly boost completed checkouts by 28%, cutting your blended ad CAC.
+                            </p>
+                          </div>
+
+                          <div className="p-3.5 rounded-2xl bg-black/40 border border-white/5 space-y-1.5">
+                            <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                              <Film size={13} className="text-amber-400" />
+                              <span>3. High-Converting Video</span>
+                            </span>
+                            <p className="text-[11px] text-white/70 leading-relaxed">
+                              Meta and TikTok algorithms reward high-watchtime video creative with 50% lower CPMs. A professionally produced Nia Media commercial script cuts your paid traffic acquisition costs significantly.
+                            </p>
+                            <a
+                              href={getBookingUrl('video')}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-300 hover:text-amber-200 pt-1"
+                            >
+                              <span>Produce 30s Commercial</span>
+                              <ArrowUpRight size={11} />
+                            </a>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
