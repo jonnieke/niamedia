@@ -1,12 +1,14 @@
 import { useState, useRef, useMemo, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Sparkles, Award, ArrowRight, Upload, X,
   RefreshCw, BarChart3, Target, Compass, Printer, Film, Check,
   DollarSign, Mic, MicOff, HelpCircle, Repeat,
   ShieldCheck, AlertTriangle, Users, Play, Copy, Zap, TrendingUp,
   ChevronRight, CheckCircle2, ShoppingBag, Eye, Lightbulb, Share2,
-  Globe, Lock, ExternalLink, UserPlus, LogIn, Calendar, CheckSquare
+  Globe, Lock, ExternalLink, UserPlus, LogIn, Calendar, CheckSquare,
+  Download, Clock, Layers, ArrowUpRight, ShoppingCart, Smartphone,
+  FileText
 } from 'lucide-react'
 import PublicHeader from '../components/layout/PublicHeader'
 import { useAuth } from '../lib/AuthContext'
@@ -24,7 +26,50 @@ export const PRICING_MODELS = [
 ] as const
 
 /* ─── Industry Profiles & Benchmark Data ───────────────────────────── */
-interface IndustryBenchmark {
+export interface CompetitorProfile {
+  name: string
+  marketTier: string
+  howTheyWin: string
+  vulnerability: string
+  attackAngle: string
+}
+
+export interface TargetAudienceProfile {
+  who: {
+    icp: string
+    ageBracket: string
+    incomeBracket: string
+    decisionMakers: string
+    geoHubs: string
+    deviceHabits: string
+  }
+  why: {
+    functionalJob: string
+    emotionalRelief: string
+    socialStatus: string
+    costOfInaction: string
+  }
+  how: {
+    primaryChannels: string
+    paymentFlow: string
+    trustSignalsNeeded: string
+  }
+  when: {
+    monthlyPayrollCycle: string
+    seasonalPeak: string
+    weeklyBuyingHours: string
+  }
+}
+
+export interface CroPlaybook {
+  speedBenchmark: string
+  checkoutRequirement: string
+  aboveTheFoldMustHave: string
+  recommendedVideoType: string
+  pixelsAndTracking: string
+}
+
+export interface IndustryBenchmark {
   id: string
   name: string
   kesFloor: number
@@ -36,6 +81,9 @@ interface IndustryBenchmark {
   typicalMargin: string
   marketSizeNote: string
   keyCompetitors: string[]
+  competitorProfiles: CompetitorProfile[]
+  audience: TargetAudienceProfile
+  croPlaybook: CroPlaybook
   primaryBarrier: string
   globalUptakeFactor: number
 }
@@ -52,7 +100,63 @@ const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmark> = {
     usdCeiling: 120,
     typicalMargin: '65% – 85%',
     marketSizeNote: 'High parent & candidate demand in Kenya (CBC, KCSE, IGCSE); student pass-rate testimonials and teacher endorsements drive rapid WhatsApp adoption.',
-    keyCompetitors: ['Traditional Tuition Centers', 'Online Revision Portals', 'Textbook Publishers'],
+    keyCompetitors: ['Zeraki Analytics & Learning', 'Eneza Education (Shupavu 291)', 'Longhorn E-Learning & Traditional Publishers'],
+    competitorProfiles: [
+      {
+        name: 'Zeraki Analytics & Learning',
+        marketTier: 'Market Leader (B2B School Software in 4,000+ Kenyan schools)',
+        howTheyWin: 'Institutional school lock-in; teachers enter marks into their grading portal; strong relationships with principals.',
+        vulnerability: 'Administrative focus with a cold clinical interface; lacks direct student-friendly mobile video mentoring and parent WhatsApp engagement.',
+        attackAngle: 'Direct-to-parent and direct-to-student personal WhatsApp revision coach; zero school bureaucracy needed; bite-sized interactive past-paper challenges.'
+      },
+      {
+        name: 'Eneza Education (Shupavu 291)',
+        marketTier: 'Legacy Mass Market Pioneer',
+        howTheyWin: 'Safaricom USSD code (*291#) partnership; accessible on basic 2G feature phones without internet.',
+        vulnerability: 'Text-only SMS format is dry, lacks diagrams, interactive animations, and modern smartphone media engagement.',
+        attackAngle: 'Rich visual 2D animated lessons, kinetic video breakdowns, and audio voice explanations on smartphones and tablets.'
+      },
+      {
+        name: 'Longhorn E-Learning & Traditional Publishers',
+        marketTier: 'Incumbent Curriculum Publishers',
+        howTheyWin: 'Decades of syllabus textbook credibility and bookstore shelf presence across East Africa.',
+        vulnerability: 'Sells static, boring PDF ebooks; expensive printed revisions (KES 800 per book); zero adaptive personalization.',
+        attackAngle: '24/7 interactive WhatsApp revision bot at KES 2,500/term covering all subjects, replacing a stack of KES 12,000 physical books.'
+      }
+    ],
+    audience: {
+      who: {
+        icp: 'Kenyan parents with candidates in CBC (Grades 6–9) and KCSE (Form 1–4), plus private tutors and teachers.',
+        ageBracket: '32 – 54 years old (Mothers & Fathers)',
+        incomeBracket: 'Middle to Upper-Middle (KES 45,000 – KES 250,000 / mo household income)',
+        decisionMakers: 'Mother controls academic revision budget; Father approves high-ticket termly tuition; Student is daily user.',
+        geoHubs: 'Nairobi (Westlands, Kilimani, Buruburu, South C, Kasarani), Nakuru, Eldoret, Kisumu, Mombasa.',
+        deviceHabits: '92% mobile access, evening revision peak (7:30 PM – 9:30 PM), heavy parent WhatsApp group sharing.'
+      },
+      why: {
+        functionalJob: 'Pass KNEC national exams, master tricky STEM concepts, and get instant step-by-step marking schemes 24/7.',
+        emotionalRelief: 'Eliminates chronic parent anxiety over failing grades and embarrassment during school parents’ meetings.',
+        socialStatus: 'Pride in raising high-achieving candidates who qualify for national schools and university admissions.',
+        costOfInaction: 'Candidate misses university cut-off marks, forcing parents to pay KES 300,000+ in self-sponsored tuition or repeat years.'
+      },
+      how: {
+        primaryChannels: 'Parent WhatsApp groups, Meta video ads (Facebook/Instagram targeting parents), teacher word-of-mouth.',
+        paymentFlow: 'M-Pesa Express Daraja STK Push (Daily revision pass or termly discounted pass).',
+        trustSignalsNeeded: 'Certified KNEC/CBC curriculum alignment badges, student score improvements, teacher video endorsements.'
+      },
+      when: {
+        monthlyPayrollCycle: '25th – 5th payday surge (when school revision fees and termly subscriptions are paid).',
+        seasonalPeak: 'January (Term 1 kickoff), June/July (Mid-year mocks), September–November (KCSE/KPSEA exam countdown).',
+        weeklyBuyingHours: 'Sunday 6:00 PM – 9:30 PM (weekly study planning) and weekday evenings.'
+      }
+    },
+    croPlaybook: {
+      speedBenchmark: 'Under 1.5s on Safaricom 4G; lightweight mobile assets for fast loading on student devices.',
+      checkoutRequirement: 'Instant M-Pesa Daraja STK Push with automated SMS confirmation and WhatsApp study pass delivery.',
+      aboveTheFoldMustHave: 'Headline with guaranteed exam practice ("Master KCSE & CBC in 30 Days") + WhatsApp direct trial button.',
+      recommendedVideoType: '30s broadcast commercial showing a mother reviewing past exam results and child solving a tricky problem in 15 seconds.',
+      pixelsAndTracking: 'Meta Pixel targeting parents aged 32–54 + Google Search Ads on "KCSE past papers with answers".'
+    },
     primaryBarrier: 'Curriculum CBC/KCSE alignment proof & academic trust',
     globalUptakeFactor: 0.90,
   },
@@ -67,7 +171,63 @@ const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmark> = {
     usdCeiling: 250,
     typicalMargin: '30% – 50%',
     marketSizeNote: 'Pillar of East African trade; farmers, agrovets, and cooperatives respond strongly to video harvest proof, yield demonstrations, and direct farm-gate WhatsApp ordering.',
-    keyCompetitors: ['Agrovet Stockists', 'Regional Commodity Brokers', 'Export Cooperatives'],
+    keyCompetitors: ['Twiga Foods & Fresh Aggregators', 'Elgon Kenya & Agrovet Stockists', 'Local Farm-Gate Commodity Brokers ("Brokers wa Marikiti")'],
+    competitorProfiles: [
+      {
+        name: 'Twiga Foods & Produce Aggregators',
+        marketTier: 'Scaled B2B Supply Chain Leader',
+        howTheyWin: 'Massive distribution logistics, fleet of delivery trucks, vendor financing, and formal supermarket supply contracts.',
+        vulnerability: 'High operational overheads, vendor payment delays (farmers waiting 14–30 days for payout), generic bulk commoditization.',
+        attackAngle: 'Immediate 24h M-Pesa farm-gate payout; premium single-origin traceability; direct chef/hotel supply without broker discount.'
+      },
+      {
+        name: 'Elgon Kenya & Traditional Agrovet Stockists',
+        marketTier: 'Traditional Input & Fertilizer Giants',
+        howTheyWin: 'Nationwide shelf presence in 5,000+ local agrovets; institutional subsidies and government tenders.',
+        vulnerability: 'Traditional offline retail, zero direct farmer digital guidance, technical chemical jargon on packaging.',
+        attackAngle: 'Direct-to-farm WhatsApp agronomy support with voice notes in Swahili/vernacular; tailored micro-dosed nutrient packs.'
+      },
+      {
+        name: 'Local Farm-Gate Commodity Brokers ("Brokers wa Marikiti")',
+        marketTier: 'Informal Dominant Channel',
+        howTheyWin: 'Physically present at farm gate with cash on collection day.',
+        vulnerability: 'Unfair weighing scales, price fixing, taking up to 60% of retail margin from hard-working growers.',
+        attackAngle: 'Digital scale verification, published daily market prices on WhatsApp, guaranteed transparent weight-based contracts.'
+      }
+    ],
+    audience: {
+      who: {
+        icp: 'Commercial smallholders, cooperative managers, poultry/dairy farmers, and fresh produce exporters in Rift Valley, Central, and Eastern Kenya.',
+        ageBracket: '28 – 60 years old (Agri-entrepreneurs)',
+        incomeBracket: 'KES 35,000 – KES 500,000 / month (cyclical harvest revenues)',
+        decisionMakers: 'Farm owner / farm manager; spouse manages daily bookkeeping; agrovets advise input purchases.',
+        geoHubs: 'Nakuru, Uasin Gishu, Kiambu, Meru, Kirinyaga, Machakos, Naivasha.',
+        deviceHabits: '85% Android smartphone, WhatsApp voice notes preferred over typing, early morning (5:30 AM – 7:30 AM) and evening checking.'
+      },
+      why: {
+        functionalJob: 'Maximize crop yield per acre, prevent disease outbreaks, and secure guaranteed buyer contracts.',
+        emotionalRelief: 'Eliminates terror of crop disease wiping out KES 200,000 investment; relief from broker price manipulation.',
+        socialStatus: 'Respected as a progressive model farmer in the county/chama; visible wealth through bumper harvests.',
+        costOfInaction: '40% post-harvest crop spoilage or broker undervaluation, losing up to KES 150,000 per acre per season.'
+      },
+      how: {
+        primaryChannels: 'Agrovet physical recommendations, Facebook farming groups, WhatsApp direct ordering.',
+        paymentFlow: 'M-Pesa Buy Goods Till or Paybill upon delivery or verified weighbridge receipt.',
+        trustSignalsNeeded: 'Video proof of field harvest, agronomist certification, neighbor farmer testimonials with actual sack counts.'
+      },
+      when: {
+        monthlyPayrollCycle: 'Irregular cashflows tied to harvest sales (M-Pesa cash-in peaks upon produce collection).',
+        seasonalPeak: 'Long rains planting (March–May), Short rains planting (October–November), Harvest sales (July/August & December).',
+        weeklyBuyingHours: 'Saturday morning market days and Sunday afternoon farmer reviews.'
+      }
+    },
+    croPlaybook: {
+      speedBenchmark: 'Under 1.8s on 3G rural networks; highly compressed WebP imagery.',
+      checkoutRequirement: 'WhatsApp Click-to-Chat with pre-filled product name + M-Pesa Till number in pinned message.',
+      aboveTheFoldMustHave: 'Raw unedited 4K smartphone video showing lush crop yield or clean packaging + verified kilogram pricing.',
+      recommendedVideoType: '30s farmer testimonial standing in front of healthy crops, stating harvest numbers and income increase.',
+      pixelsAndTracking: 'Meta Ads targeting Agricultural interests + Location targeting in agricultural counties.'
+    },
     primaryBarrier: 'Field harvest proof, quality consistency & delivery logistics',
     globalUptakeFactor: 0.84,
   },
@@ -82,7 +242,63 @@ const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmark> = {
     usdCeiling: 40,
     typicalMargin: '28% – 45%',
     marketSizeNote: 'High velocity, impulse-driven, sensitive to shelf visual appeal and WhatsApp distribution.',
-    keyCompetitors: ['Local Supermarket Brands', 'Imported EU/SA Goods', 'Artisan Kenyan Makers'],
+    keyCompetitors: ['Bidco / Unilever / Kapa Oil', 'Naivas & Quickmart Supermarket House Brands', 'Artisan Kenyan Boutique Makers'],
+    competitorProfiles: [
+      {
+        name: 'Bidco, Unilever & Kapa Oil',
+        marketTier: 'Industrial Conglomerate Leaders',
+        howTheyWin: 'Massive supermarket shelf dominance, nationwide television and billboard ad spend, deep retail distribution.',
+        vulnerability: 'Mass-produced perception, generic corporate branding, heavy reliance on palm oil/synthetic fillers.',
+        attackAngle: 'Pure organic, cold-pressed, clean-label artisan positioning with traceable Kenyan farm ingredients.'
+      },
+      {
+        name: 'Naivas & Quickmart Supermarket House Brands',
+        marketTier: 'Retailer Private Label Brands',
+        howTheyWin: 'Prime eye-level supermarket shelf placement and aggressive 15% discount pricing.',
+        vulnerability: 'Bland packaging, zero brand loyalty or lifestyle community clout.',
+        attackAngle: 'High-end aspirational packaging, influencer unboxing video proof, and direct-to-consumer home delivery bundles.'
+      },
+      {
+        name: 'Informal Local Traders & Mitumba FMCG',
+        marketTier: 'Local Low-Cost Sellers',
+        howTheyWin: 'Cheapest cash price at local estate kiosks.',
+        vulnerability: 'Inconsistent hygiene standards, counterfeit risk, lack of KEBS standardization.',
+        attackAngle: 'Official KEBS quality stamp, tamper-evident seals, and guaranteed return policy.'
+      }
+    ],
+    audience: {
+      who: {
+        icp: 'Kenyan urban households, mothers, wellness-conscious millennials, and estate retail shoppers.',
+        ageBracket: '24 – 48 years old',
+        incomeBracket: 'Middle to Upper-Middle (KES 40,000 – KES 180,000 / month)',
+        decisionMakers: 'Primary household grocery decision maker (mothers & young working professionals).',
+        geoHubs: 'Nairobi, Mombasa, Kisumu, Nakuru, Eldoret, Thika.',
+        deviceHabits: 'Mobile-first, Instagram & TikTok scrolling during commutes and lunch hours.'
+      },
+      why: {
+        functionalJob: 'Clean, reliable, everyday consumable products that nourish family health without synthetic toxins.',
+        emotionalRelief: 'Peace of mind knowing food or household items are hygienic, genuine, and safe for children.',
+        socialStatus: 'Displaying premium, aesthetically pleasing packaged goods on kitchen counters and dining tables.',
+        costOfInaction: 'Consuming low-grade counterfeit or chemical-heavy generic oils and pantry goods.'
+      },
+      how: {
+        primaryChannels: 'Instagram Reels, TikTok influencer recipes, estate mini-marts, WhatsApp delivery groups.',
+        paymentFlow: 'M-Pesa STK push for direct delivery, card at supermarket checkout.',
+        trustSignalsNeeded: 'KEBS certification mark, visible manufacturing expiry date, clean tamper-evident bottle packaging.'
+      },
+      when: {
+        monthlyPayrollCycle: 'Heavy monthly stock-up shopping between 28th and 5th of each month.',
+        seasonalPeak: 'Easter, August school holiday family feasts, and Christmas holiday hampers.',
+        weeklyBuyingHours: 'Friday evening grocery orders and Saturday supermarket visits.'
+      }
+    },
+    croPlaybook: {
+      speedBenchmark: 'Under 1.6s on mobile; quick-loading image gallery.',
+      checkoutRequirement: 'M-Pesa STK push checkout with bundle options (Buy 2 Get 1 Free, or Free Nairobi Delivery over KES 2,500).',
+      aboveTheFoldMustHave: 'Clear product bottle/pack mockup with volume/weight tag and prominent "Add to Cart / WhatsApp Order" button.',
+      recommendedVideoType: '30s fast-paced sensory commercial: unboxing, bottle pour, sizzling texture, and satisfied family smiles.',
+      pixelsAndTracking: 'Meta Pixel + TikTok Pixel tracking "Add to Cart" and "Initiate Checkout".'
+    },
     primaryBarrier: 'Packaging finish & consistent retail shelf distribution',
     globalUptakeFactor: 0.85,
   },
@@ -97,7 +313,63 @@ const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmark> = {
     usdCeiling: 65,
     typicalMargin: '55% – 75%',
     marketSizeNote: 'Explosive TikTok/Reels uptake; customers pay high premiums for organic trust signals and authentic video proof.',
-    keyCompetitors: ['International Pharmacy Brands', 'L’Oreal/Garnier', 'Local Organic Skin Lines'],
+    keyCompetitors: ['L’Oreal / Garnier / Nivea', 'Suzzie Beauty & Local Cosmetics', 'Imported Boutique Skincare Lines'],
+    competitorProfiles: [
+      {
+        name: 'L’Oreal, Garnier & Nivea',
+        marketTier: 'Multinational Pharmacy Giants',
+        howTheyWin: 'Global marketing power, shelf space in every pharmacy, dermatologist clinical claims.',
+        vulnerability: 'Formulated for generic Western skin; rarely address melanin-specific hyperpigmentation or East African sun intensity.',
+        attackAngle: 'Melanin-first formulations using local East African botanicals (Nilotica shea, avocado, marula); authentic Kenyan creator video proof.'
+      },
+      {
+        name: 'Suzzie Beauty & First-Wave Kenyan Lines',
+        marketTier: 'Local Brand Pioneers',
+        howTheyWin: 'Local founder story and initial department store presence.',
+        vulnerability: 'Dated brand packaging, inconsistent stock availability, limited modern TikTok creator advocacy.',
+        attackAngle: 'Modern glass dropper aesthetic, viral TikTok before-and-after routines, 24-hour fast dispatch.'
+      },
+      {
+        name: 'Imported Dubai & UK Boutique Skincare',
+        marketTier: 'Import Resellers',
+        howTheyWin: 'Imported prestige appeal.',
+        vulnerability: 'High prices (KES 4,000–8,000), frequent customs stockouts, lack of personalized consultation.',
+        attackAngle: 'Direct local production at half the price (KES 2,000) with guaranteed same-day availability.'
+      }
+    ],
+    audience: {
+      who: {
+        icp: 'Kenyan women & young professionals (20–42) battling hyperpigmentation, dry skin, or hair breakage.',
+        ageBracket: '20 – 42 years old',
+        incomeBracket: 'KES 35,000 – KES 200,000 / month',
+        decisionMakers: 'Individual consumer making personal wellness and beauty choices.',
+        geoHubs: 'Nairobi (Kilimani, Westlands, Rongai, Roysambu), Mombasa, Kisumu, Nakuru, Eldoret.',
+        deviceHabits: 'Heavy TikTok & Instagram Reels daily consumption (1–2 hours/day), night-time scrolling.'
+      },
+      why: {
+        functionalJob: 'Clear blemishes, hyperpigmentation, sun damage, and retain deep all-day skin hydration.',
+        emotionalRelief: 'Overcomes self-consciousness about acne scars and dull skin; confidence to go makeup-free.',
+        socialStatus: 'Aesthetic glowing skin compliments from friends, peers, and on social media.',
+        costOfInaction: 'Wasting money on harsh bleaching creams or ineffective pharmacy lotions that worsen skin barriers.'
+      },
+      how: {
+        primaryChannels: 'TikTok organic routines, Instagram Reels, beauty creator collaborations, WhatsApp skin consultation.',
+        paymentFlow: 'M-Pesa STK Push direct checkout or WhatsApp order with rider dispatch.',
+        trustSignalsNeeded: 'Unfiltered before-and-after video proof, ingredient transparency, dermatologist safety endorsement.'
+      },
+      when: {
+        monthlyPayrollCycle: 'Surge from 25th to 5th (treating oneself on payday).',
+        seasonalPeak: 'December festive season, Valentine’s month, and sunny outdoor wedding season (August–October).',
+        weeklyBuyingHours: 'Thursday & Friday evenings (preparing for weekend outings).'
+      }
+    },
+    croPlaybook: {
+      speedBenchmark: 'Under 1.4s on mobile; instant product image swatches.',
+      checkoutRequirement: 'M-Pesa Express 1-click checkout + optional WhatsApp beauty advisor consultation.',
+      aboveTheFoldMustHave: 'Close-up macro skin texture video + 14-day results guarantee banner.',
+      recommendedVideoType: '30s TikTok routine: Close-up dropper application, texture glide, Day 1 vs Day 14 skin glow comparison.',
+      pixelsAndTracking: 'TikTok Pixel + Meta Pixel optimized for Purchase conversions with video view retargeting.'
+    },
     primaryBarrier: 'Dermatological trust proof & high-end bottle/label finish',
     globalUptakeFactor: 0.95,
   },
@@ -112,7 +384,63 @@ const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmark> = {
     usdCeiling: 200,
     typicalMargin: '70% – 90%',
     marketSizeNote: 'Massive mobile-first market across East Africa; global diaspora adoption high if payment is frictionless.',
-    keyCompetitors: ['Regional Fintechs', 'Global SaaS Tools', 'Custom Built Local Portals'],
+    keyCompetitors: ['ChamaSoft & Kopokopo', 'Global SaaS (QuickBooks / Zoho / Stripe)', 'Custom Built Local Portals'],
+    competitorProfiles: [
+      {
+        name: 'ChamaSoft, Kopokopo & Regional Fintechs',
+        marketTier: 'Established Regional Incumbents',
+        howTheyWin: 'Direct M-Pesa B2B integration, early mover brand recognition in East Africa.',
+        vulnerability: 'Clunky legacy web dashboards, high transaction commissions, slow customer support ticketing.',
+        attackAngle: 'Zero-install WhatsApp-native interface; AI-automated bookkeeping; instant dispute resolution via live chat.'
+      },
+      {
+        name: 'Global SaaS (QuickBooks, Zoho, Xero)',
+        marketTier: 'Global Enterprise Giants',
+        howTheyWin: 'Deep enterprise feature depth, international investor trust, extensive documentation.',
+        vulnerability: 'Priced in expensive USD ($30–$90/month), zero native M-Pesa STK push, not compliant with KRA eTIMS.',
+        attackAngle: 'Billed in affordable KES; built-in automated M-Pesa reconciliation; 1-click KRA eTIMS invoice generation.'
+      },
+      {
+        name: 'Manual Spreadsheets & Paper Ledgers',
+        marketTier: 'Informal Dominant Alternative',
+        howTheyWin: 'Free, familiar, zero subscription fees.',
+        vulnerability: 'Massive human error, fraud risk in chamas/businesses, lost receipts, zero automated audit trail.',
+        attackAngle: 'Free 14-day trial showing how 5 hours of manual weekly bookkeeping shrinks to 30 seconds of automated M-Pesa sync.'
+      }
+    ],
+    audience: {
+      who: {
+        icp: 'Kenyan SME founders, chama treasurers, landlords, retailers, and modern agency directors.',
+        ageBracket: '25 – 50 years old',
+        incomeBracket: 'Business turnover KES 150,000 – KES 5,000,000 / month',
+        decisionMakers: 'Business owner, Managing Director, or Chama Treasurer.',
+        geoHubs: 'Nairobi, Mombasa, Kisumu, Eldoret, plus East African diaspora in US/UK/UAE.',
+        deviceHabits: 'Mobile-first during day (checking M-Pesa), laptop/desktop for deep accounting.'
+      },
+      why: {
+        functionalJob: 'Eliminate manual bookkeeping, track every M-Pesa payment automatically, and prevent staff theft/leakage.',
+        emotionalRelief: 'Ends the stress of unaccounted balances, reconciliation arguments in chamas, and fear of KRA tax audits.',
+        socialStatus: 'Positioned as an organized, tech-savvy, professional business operator.',
+        costOfInaction: 'Losing KES 30,000+ monthly in undetected payment leakages, inventory theft, or KRA non-compliance penalties.'
+      },
+      how: {
+        primaryChannels: 'LinkedIn positioning, Meta video ads demonstrating UI, founder Twitter/X, business WhatsApp referrals.',
+        paymentFlow: 'Automated recurring M-Pesa STK push or corporate card billing (Monthly or Annual pass).',
+        trustSignalsNeeded: 'Bank-grade 256-bit encryption badge, Safaricom Daraja certified partner status, customer case studies.'
+      },
+      when: {
+        monthlyPayrollCycle: 'Subscription renewals concentrated on 1st–5th of every month.',
+        seasonalPeak: 'January (annual business planning & tax prep) and July (mid-year financial audit).',
+        weeklyBuyingHours: 'Monday morning operational planning (8:00 AM – 11:00 AM).'
+      }
+    },
+    croPlaybook: {
+      speedBenchmark: 'Under 1.2s web app loading; sub-second API responses.',
+      checkoutRequirement: 'Frictionless 14-day free trial with no credit card required; 1-click M-Pesa activation.',
+      aboveTheFoldMustHave: 'Interactive screen recording showing M-Pesa payment sync in under 5 seconds + "Start Free Trial" CTA.',
+      recommendedVideoType: '30s kinetic UI walkthrough showing a chaotic spreadsheet transformed into clean real-time financial graphs.',
+      pixelsAndTracking: 'Google Tag Manager + Meta Pixel tracking "CompleteRegistration" and "Subscribe".'
+    },
     primaryBarrier: 'Onboarding friction & clear kinetic 2D video explanation',
     globalUptakeFactor: 0.92,
   },
@@ -127,7 +455,63 @@ const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmark> = {
     usdCeiling: 120,
     typicalMargin: '45% – 65%',
     marketSizeNote: 'High visual demand on Instagram; cultural identity and modern streetwear resonate strongly locally and globally.',
-    keyCompetitors: ['Mitumba High-End Markets', 'Fast Fashion (Zara/Shein)', 'Bespoke African Designers'],
+    keyCompetitors: ['Gikomba & High-End Thrift Curators', 'Fast Fashion Importers (Zara / Shein)', 'Bespoke Kenyan Labels (Vivo, KikoRomeo)'],
+    competitorProfiles: [
+      {
+        name: 'Gikomba & Instagram Thrift Curators',
+        marketTier: 'High-Volume Secondhand Segment',
+        howTheyWin: 'One-of-a-kind pieces, rapid weekly inventory drops, very low unit cost.',
+        vulnerability: 'Used clothing hygiene stigma, inconsistent sizing, zero repeat inventory availability.',
+        attackAngle: 'Brand new, premium Kenyan-tailored pieces with consistent standard sizing and luxury brand packaging.'
+      },
+      {
+        name: 'Fast Fashion Importers (Zara, Shein, ASOS)',
+        marketTier: 'Global Fast Fashion Giants',
+        howTheyWin: 'Massive product catalogs, runway trend copies within 14 days.',
+        vulnerability: 'Expensive international shipping (KES 2,000+), 2-3 week customs delays, generic non-African fit.',
+        attackAngle: 'Designed specifically for African body proportions, premium breathable fabrics, same-day Nairobi delivery.'
+      },
+      {
+        name: 'Bespoke High-End Kenyan Labels (Vivo, KikoRomeo)',
+        marketTier: 'Established Domestic Retailers',
+        howTheyWin: 'Mall store locations, strong brand recognition among older professionals.',
+        vulnerability: 'High mall retail overheads reflected in elevated prices (KES 6,000–15,000); conservative silhouettes.',
+        attackAngle: 'Direct-to-consumer online pricing (KES 3,500), modern afro-urban streetwear aesthetic, creator-led styling.'
+      }
+    ],
+    audience: {
+      who: {
+        icp: 'Kenyan urban youth, creatives, stylish corporate professionals, and African diaspora fashionistas.',
+        ageBracket: '21 – 38 years old',
+        incomeBracket: 'KES 40,000 – KES 250,000 / month',
+        decisionMakers: 'Individual consumer expressing identity and style.',
+        geoHubs: 'Nairobi, Mombasa, plus diaspora in UK, US, Canada, Europe.',
+        deviceHabits: 'Instagram Stories & Reels heavy, TikTok outfit-of-the-day (OOTD) culture.'
+      },
+      why: {
+        functionalJob: 'Look stylish, confident, and comfortable for work, brunches, events, and photos.',
+        emotionalRelief: 'Eliminates outfit anxiety and fear of showing up underdressed or in poor-quality fabric.',
+        socialStatus: 'Compliments from peers, aesthetic Instagram photos, pride in wearing original African design.',
+        costOfInaction: 'Wasting money on flimsy fast-fashion items that shrink or fade after two washes.'
+      },
+      how: {
+        primaryChannels: 'Instagram Reels styling videos, TikTok creator hauls, influencer tagging, WhatsApp direct catalogue.',
+        paymentFlow: 'M-Pesa STK push on website or Paybill upon rider delivery.',
+        trustSignalsNeeded: 'Video clips showing fabric stretch and texture, clear size chart, easy exchange policy.'
+      },
+      when: {
+        monthlyPayrollCycle: 'Payday wardrobe shopping (25th–5th).',
+        seasonalPeak: 'Blankets & Wine / festival weekends, December holiday travel, Easter brunch season.',
+        weeklyBuyingHours: 'Wednesday & Thursday evenings (ordering outfits in time for Friday/Saturday events).'
+      }
+    },
+    croPlaybook: {
+      speedBenchmark: 'Under 1.5s on mobile; instant high-res zoom on garment fabrics.',
+      checkoutRequirement: 'Express M-Pesa STK Push with size selector and rider delivery tracking.',
+      aboveTheFoldMustHave: '30s dynamic model walkthrough showing movement and drape + clear sizing guide button.',
+      recommendedVideoType: '30s fashion lookbook: Runway walk, outdoor golden-hour lighting, fabric close-up, and styling combinations.',
+      pixelsAndTracking: 'Meta Pixel + TikTok Pixel tracking "ViewContent" and "AddToCart" with lookalike audience retargeting.'
+    },
     primaryBarrier: 'Fabric texture perception online & fit confidence',
     globalUptakeFactor: 0.88,
   },
@@ -142,7 +526,63 @@ const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmark> = {
     usdCeiling: 50,
     typicalMargin: '35% – 50%',
     marketSizeNote: 'Driven by mouthwatering video close-ups, delivery reliability, and word-of-mouth social clout.',
-    keyCompetitors: ['Established Casual Dining Chains', 'Cloud Kitchens', 'Artisan Caterers'],
+    keyCompetitors: ['Java House & Artcaffe', 'Cloud Kitchens & Glovo Delivery Brands', 'Artisan Gourmet Caterers & Bakeries'],
+    competitorProfiles: [
+      {
+        name: 'Java House & Artcaffe',
+        marketTier: 'Commercial Restaurant Giants',
+        howTheyWin: 'Prime mall real estate, familiar standardized menus, corporate meeting locations.',
+        vulnerability: 'Expensive restaurant pricing (KES 2,000+ per meal), impersonal mass dining experience, high delivery commissions.',
+        attackAngle: 'Boutique artisan specialty focus (e.g. signature gourmet burgers, artisanal pastries, specialty coffee roast) with direct WhatsApp dispatch.'
+      },
+      {
+        name: 'Cloud Kitchens & Glovo/UberEats Brands',
+        marketTier: 'Aggregator Delivery Brands',
+        howTheyWin: 'Prominent placement in Glovo/UberEats apps, fast delivery algorithms.',
+        vulnerability: 'Food arrives cold/soggy due to generic packaging; high 25–30% platform commission passed to customer.',
+        attackAngle: 'Insulated custom branded packaging, direct WhatsApp order club with free delivery perks, fresher taste.'
+      },
+      {
+        name: 'Estate Fast Food Joints & Kiosks',
+        marketTier: 'Hyper-Local Budget Players',
+        howTheyWin: 'Lowest prices in the neighborhood.',
+        vulnerability: 'Unpredictable hygiene standards, lack of packaging aesthetics, limited menu innovation.',
+        attackAngle: 'Guaranteed hygienic open-kitchen video proof, tamper-proof packaging, gourmet flavor profiles.'
+      }
+    ],
+    audience: {
+      who: {
+        icp: 'Kenyan urban foodies, working professionals ordering lunch, weekend brunch enthusiasts, and family dinner hosts.',
+        ageBracket: '22 – 45 years old',
+        incomeBracket: 'KES 40,000 – KES 250,000 / month',
+        decisionMakers: 'Hungry individual, office lunch organizer, or evening family meal planner.',
+        geoHubs: 'Nairobi (Westlands, Kilimani, Lavington, CBD, Parklands, Karen), Mombasa, Kisumu.',
+        deviceHabits: 'Food app browsing during lunch hour (11:30 AM – 1:30 PM) and evening dinner cravings (6:00 PM – 8:30 PM).'
+      },
+      why: {
+        functionalJob: 'Delicious, freshly prepared, piping-hot meals or gourmet pantry items delivered reliably on time.',
+        emotionalRelief: 'Instant comfort and reward after a exhausting workday; relief from cooking and cleaning dishes.',
+        socialStatus: 'Sharing Instagrammable meals, artisanal coffee, or hosting friends with gourmet foods.',
+        costOfInaction: 'Wasting money on disappointing, cold, bland food that ruins an evening.'
+      },
+      how: {
+        primaryChannels: 'Instagram food reels, TikTok food creator reviews, WhatsApp direct order line, office word of mouth.',
+        paymentFlow: 'M-Pesa STK push upon order confirmation or Buy Goods Till on delivery.',
+        trustSignalsNeeded: 'Steaming-hot food video clips, authentic customer reviews, clean food-grade packaging.'
+      },
+      when: {
+        monthlyPayrollCycle: 'Dining-out spikes from 26th to 5th; steady lunch orders throughout the month.',
+        seasonalPeak: 'Festive seasons (December, Easter), Valentine’s dinners, and rainy cold days (comfort food delivery).',
+        weeklyBuyingHours: 'Friday evening dinner orders, Saturday brunch, and Sunday family dinners.'
+      }
+    },
+    croPlaybook: {
+      speedBenchmark: 'Under 1.2s mobile loading; mouthwatering menu navigation.',
+      checkoutRequirement: '2-click M-Pesa STK push checkout with delivery location pin and real-time rider dispatch update.',
+      aboveTheFoldMustHave: 'High-definition macro video of sizzling cheese/fresh roast + 30-minute delivery guarantee.',
+      recommendedVideoType: '30s sensory food commercial: Sizzling sound, slow-motion steam, sauce drizzle, and crunch bite.',
+      pixelsAndTracking: 'Meta Ads with click-to-WhatsApp messaging + Location radius geo-fencing (5km delivery radius).'
+    },
     primaryBarrier: 'Consistent taste expectation & delivery radius',
     globalUptakeFactor: 0.78,
   },
@@ -157,7 +597,63 @@ const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmark> = {
     usdCeiling: 450,
     typicalMargin: '40% – 60%',
     marketSizeNote: 'Diaspora and international business travellers represent over 60% of premium bookings.',
-    keyCompetitors: ['Boutique Hotels', 'Kilimani/Westlands Luxury Airbnbs', 'Savills/Knight Frank'],
+    keyCompetitors: ['BuyRentKenya & HassConsult', 'Kilimani & Westlands Luxury Airbnbs', 'Knight Frank & Pam Golding'],
+    competitorProfiles: [
+      {
+        name: 'BuyRentKenya, HassConsult & Property24',
+        marketTier: 'Dominant Property Aggregators',
+        howTheyWin: 'Huge Google search SEO traffic, thousands of agent listings.',
+        vulnerability: 'Full of fake duplicate listings, outdated prices, unresponsive agents, zero cinematic video tours.',
+        attackAngle: '100% verified developer listings, 4K cinematic drone and interior walkthroughs, direct WhatsApp concierge.'
+      },
+      {
+        name: 'Kilimani & Westlands Airbnb Superhosts',
+        marketTier: 'Short-Stay Rental Hosts',
+        howTheyWin: 'Airbnb platform algorithm rankings, established reviews.',
+        vulnerability: 'High 15% platform fees, unpredictable Wi-Fi/water backups, impersonal automated lockboxes.',
+        attackAngle: 'Direct booking portal saving guests 15%; guaranteed 100Mbps fiber + solar backup; personal airport transfer concierge.'
+      },
+      {
+        name: 'Traditional Legacy Hotels',
+        marketTier: 'Corporate Hospitality Incumbents',
+        howTheyWin: 'Conference facilities, legacy corporate account contracts.',
+        vulnerability: 'High room rates ($150–$300/night) for small cramped rooms with no kitchen or living space.',
+        attackAngle: 'Spacious serviced 2BR/3BR luxury apartments with full chef kitchens at half the hotel rate.'
+      }
+    ],
+    audience: {
+      who: {
+        icp: 'Kenyan diaspora visiting home, corporate business travelers, expat consultants, and property investors.',
+        ageBracket: '28 – 65 years old',
+        incomeBracket: 'Upper-Middle to High Net Worth (Income KES 150,000 – KES 1,500,000+ / mo)',
+        decisionMakers: 'Investor / Head of Household / Corporate Travel Manager.',
+        geoHubs: 'Nairobi (Kilimani, Westlands, Riverside, Karen, Kitisuru), Diani, Naivasha, Mombasa, plus Diaspora in US/UK/Europe/UAE.',
+        deviceHabits: 'Researches on laptop/tablet, books via mobile WhatsApp or direct website.'
+      },
+      why: {
+        functionalJob: 'Secure safe, luxurious, fully serviced accommodation or high-yield verified property investments in Kenya.',
+        emotionalRelief: 'Eliminates fear of being scammed by fake agents or arriving at dirty, noisy Airbnbs.',
+        socialStatus: 'Prestige of owning luxury Kenyan real estate or staying in breathtaking penthouses.',
+        costOfInaction: 'Losing millions of shillings to fraudulent land/off-plan schemes or wasting KES 100,000 on sub-par hotel stays.'
+      },
+      how: {
+        primaryChannels: 'YouTube property video tours, Instagram luxury reels, Diaspora Facebook groups, WhatsApp concierge.',
+        paymentFlow: 'International Visa/Mastercard, M-Pesa STK push for deposits, bank wire for real estate purchases.',
+        trustSignalsNeeded: 'Cinematic 4K walkthrough video, verified title deed credentials, Google Street View context, reviews from diaspora guests.'
+      },
+      when: {
+        monthlyPayrollCycle: 'Corporate travel booked 1–3 weeks ahead; real estate purchases triggered by diaspora remittances.',
+        seasonalPeak: 'July–August (Summer diaspora visits), November–January (Christmas holiday influx), Easter Naivasha/Coast getaways.',
+        weeklyBuyingHours: 'Sunday afternoon property research and weekday evening international WhatsApp calls.'
+      }
+    },
+    croPlaybook: {
+      speedBenchmark: 'Under 1.5s on international connections; CDN-hosted 4K video player.',
+      checkoutRequirement: 'Direct calendar date selector with instant M-Pesa/Card deposit + WhatsApp host concierge button.',
+      aboveTheFoldMustHave: 'Breathtaking 4K drone view of property + exact neighborhood landmark proximity + verified amenities badge.',
+      recommendedVideoType: '30s cinematic commercial: Drone exterior swoop, luxury interior walk, balcony sunset view, and smiling guest relaxation.',
+      pixelsAndTracking: 'Meta Pixel + Google Ads targeting "Airbnb Nairobi" and Diaspora audiences in North America & Europe.'
+    },
     primaryBarrier: 'Cinematic 4K walkthrough video proof & verified host trust',
     globalUptakeFactor: 0.98,
   },
@@ -172,7 +668,63 @@ const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmark> = {
     usdCeiling: 750,
     typicalMargin: '60% – 85%',
     marketSizeNote: 'High ticket authority market; closed via LinkedIn positioning, client case studies, and WhatsApp follow-up.',
-    keyCompetitors: ['Traditional Mid-Tier Agencies', 'Independent Consultants', 'Big 4 Consultancies'],
+    keyCompetitors: ['Big 4 Consultancies (PwC, KPMG, Deloitte)', 'Mid-Tier Nairobi Corporate Agencies', 'Freelance Upwork / LinkedIn Specialists'],
+    competitorProfiles: [
+      {
+        name: 'Big 4 Consultancies (PwC, Deloitte, KPMG)',
+        marketTier: 'Enterprise Global Firms',
+        howTheyWin: 'Boardroom brand authority, corporate enterprise tenders, multi-million shilling retainers.',
+        vulnerability: 'Exorbitant fees (KES 500,000+), slow bureaucratic execution, junior associates doing the actual work.',
+        attackAngle: 'Agile execution delivered directly by senior specialists in 1/4 of the time at 1/5 of the fee.'
+      },
+      {
+        name: 'Mid-Tier Nairobi Traditional Agencies',
+        marketTier: 'Local Agency Competitors',
+        howTheyWin: 'Established physical offices in Westlands/Kilimani, personal connections with marketing directors.',
+        vulnerability: 'Outdated non-AI workflows, generic deliverables, slow 6-week turnaround times.',
+        attackAngle: 'AI-accelerated 48-hour turnarounds, data-backed ROI reporting, modern digital-first deliverables.'
+      },
+      {
+        name: 'Freelance Upwork & Fiverr Contractors',
+        marketTier: 'Budget Offshore Freelancers',
+        howTheyWin: 'Low hourly rates.',
+        vulnerability: 'Zero understanding of Kenyan cultural nuances, lack of institutional accountability, ghosting.',
+        attackAngle: 'Locally grounded experts with legal contracts, physical Nairobi accountability, and proven regional track record.'
+      }
+    ],
+    audience: {
+      who: {
+        icp: 'Managing Directors, Marketing Heads, SME Founders, Corporate Executives, and Diaspora Investors.',
+        ageBracket: '30 – 58 years old',
+        incomeBracket: 'Corporate budgets / High-earning founders (KES 100,000 – KES 1,000,000+ / month)',
+        decisionMakers: 'CEO, Managing Director, or Head of Department.',
+        geoHubs: 'Nairobi (Upper Hill, Westlands, CBD, Kilimani) and international corporate clients.',
+        deviceHabits: 'Desktop during work hours, LinkedIn mobile app during commutes, WhatsApp for fast business decisions.'
+      },
+      why: {
+        functionalJob: 'Solve high-stakes business challenges (branding, marketing, legal, compliance, tax, strategy) with zero risk.',
+        emotionalRelief: 'Eliminates fear of costly commercial mistakes, lost contracts, or looking incompetent before board members.',
+        socialStatus: 'Authority and prestige of partnering with state-of-the-art specialist advisors.',
+        costOfInaction: 'Wasting months of company time and millions in lost revenue on failed in-house trials.'
+      },
+      how: {
+        primaryChannels: 'LinkedIn thought leadership, executive referrals, Cal.com strategy calls, WhatsApp direct consultation.',
+        paymentFlow: 'Formal corporate invoicing with 70% bank transfer/M-Pesa deposit and milestone delivery balance.',
+        trustSignalsNeeded: 'Documented case studies with revenue metrics, recognizable client logos, executive testimonials.'
+      },
+      when: {
+        monthlyPayrollCycle: 'Corporate budgets allocated at the start of each month or quarterly budget cycles.',
+        seasonalPeak: 'Q1 (January–February strategy kickoffs) and Q4 (budget clearing before December).',
+        weeklyBuyingHours: 'Tuesday and Thursday mornings (peak corporate meeting and decision hours).'
+      }
+    },
+    croPlaybook: {
+      speedBenchmark: 'Under 1.2s on corporate high-speed networks; clean minimalist UI.',
+      checkoutRequirement: 'Embedded 1-click Cal.com strategy consultation booking + instant PDF case study download.',
+      aboveTheFoldMustHave: 'Executive authority headline + client results metric ("Helped 40+ East African Brands Scale") + "Book Strategy Call".',
+      recommendedVideoType: '30s executive founder video explaining the core strategic framework with client outcome proofs.',
+      pixelsAndTracking: 'LinkedIn Insight Tag + Meta Pixel tracking "Schedule" and "Lead" conversions.'
+    },
     primaryBarrier: 'Perceived institutional gravitas & brand authority',
     globalUptakeFactor: 0.90,
   },
@@ -187,6 +739,7 @@ const REGION_TARGETS = [
 
 export default function BrandTest() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { user, isAuthenticated } = useAuth()
 
   // Form States
@@ -213,6 +766,28 @@ export default function BrandTest() {
     const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (SpeechRec) {
       setSpeechSupported(true)
+    }
+  }, [])
+
+  // Hydrate draft from localStorage on mount (preserves analysis when user signs in or registers)
+  useEffect(() => {
+    const savedDraft = localStorage.getItem('nia_brand_test_draft')
+    if (savedDraft) {
+      try {
+        const parsed = JSON.parse(savedDraft)
+        if (parsed.brandName) setBrandName(parsed.brandName)
+        if (parsed.industryId && INDUSTRY_BENCHMARKS[parsed.industryId]) setIndustryId(parsed.industryId)
+        if (parsed.productDesc) setProductDesc(parsed.productDesc)
+        if (parsed.websiteUrl) setWebsiteUrl(parsed.websiteUrl)
+        if (parsed.priceInput !== undefined) setPriceInput(parsed.priceInput)
+        if (parsed.currency) setCurrency(parsed.currency)
+        if (parsed.priceModel) setPriceModel(parsed.priceModel)
+        if (parsed.targetRegion) setTargetRegion(parsed.targetRegion)
+        if (parsed.uploadedImage) setUploadedImage(parsed.uploadedImage)
+        if (parsed.hasTested) setHasTested(true)
+      } catch (err) {
+        console.error('Failed to parse brand test draft from localStorage', err)
+      }
     }
   }, [])
 
@@ -276,11 +851,23 @@ export default function BrandTest() {
   const [hasTested, setHasTested] = useState(false)
   const [analysisProgress, setAnalysisProgress] = useState(0)
   const [analysisStage, setAnalysisStage] = useState('Parsing Brand Concept...')
-  const [activeTab, setActiveTab] = useState<'overview' | 'commercial' | 'market' | 'roadmap'>('overview')
+  const [activeTab, setActiveTab] = useState<'who_why_when' | 'competitors' | 'storefront' | 'commercial' | 'roadmap'>('who_why_when')
   const [copied, setCopied] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const benchmark = INDUSTRY_BENCHMARKS[industryId] || INDUSTRY_BENCHMARKS.education_edtech
+
+  // Auto-download PDF if user just signed in and was redirected with download intent
+  useEffect(() => {
+    const isPending = searchParams.get('download') === 'true' || sessionStorage.getItem('nia_pending_pdf_download') === 'true'
+    if (isAuthenticated && isPending && hasTested) {
+      sessionStorage.removeItem('nia_pending_pdf_download')
+      const timer = setTimeout(() => {
+        window.print()
+      }, 700)
+      return () => clearTimeout(timer)
+    }
+  }, [isAuthenticated, searchParams, hasTested])
 
   // Handle Image Upload
   const handleImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -296,10 +883,72 @@ export default function BrandTest() {
   // PDF Export Gate Handler - Gated for Authenticated Users
   const handlePdfDownload = () => {
     if (!isAuthenticated) {
+      // Save draft first so user never loses their report!
+      localStorage.setItem('nia_brand_test_draft', JSON.stringify({
+        brandName,
+        industryId,
+        productDesc,
+        websiteUrl,
+        priceInput,
+        currency,
+        priceModel,
+        targetRegion,
+        uploadedImage,
+        hasTested: true,
+      }))
+      sessionStorage.setItem('nia_pending_pdf_download', 'true')
       setShowPdfAuthModal(true)
       return
     }
     window.print()
+  }
+
+  // Direct Markdown Dossier Download (Offline Backup)
+  const handleDownloadFile = () => {
+    if (!isAuthenticated) {
+      localStorage.setItem('nia_brand_test_draft', JSON.stringify({
+        brandName,
+        industryId,
+        productDesc,
+        websiteUrl,
+        priceInput,
+        currency,
+        priceModel,
+        targetRegion,
+        uploadedImage,
+        hasTested: true,
+      }))
+      sessionStorage.setItem('nia_pending_pdf_download', 'true')
+      setShowPdfAuthModal(true)
+      return
+    }
+    const blob = new Blob([diagnostics.fullReportText], { type: 'text/markdown;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${(brandName || 'Brand').replace(/[^a-zA-Z0-9_-]/g, '_')}_Strategic_Market_Dossier.md`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  // Redirect to Auth with Draft Persisted
+  const handleProceedToAuth = (path: '/login' | '/register') => {
+    localStorage.setItem('nia_brand_test_draft', JSON.stringify({
+      brandName,
+      industryId,
+      productDesc,
+      websiteUrl,
+      priceInput,
+      currency,
+      priceModel,
+      targetRegion,
+      uploadedImage,
+      hasTested: true,
+    }))
+    sessionStorage.setItem('nia_pending_pdf_download', 'true')
+    navigate(`${path}?redirect=/test-brand%3Fdownload%3Dtrue`)
   }
 
   // Run Brand Diagnostic Simulation
@@ -349,7 +998,20 @@ export default function BrandTest() {
       if (!isAuthenticated) {
         localStorage.setItem('nia_guest_brand_test_count', '1')
       }
-      setActiveTab('overview')
+      // Save draft into localStorage
+      localStorage.setItem('nia_brand_test_draft', JSON.stringify({
+        brandName,
+        industryId,
+        productDesc,
+        websiteUrl,
+        priceInput,
+        currency,
+        priceModel,
+        targetRegion,
+        uploadedImage,
+        hasTested: true,
+      }))
+      setActiveTab('who_why_when')
       window.scrollTo({ top: 480, behavior: 'smooth' })
     }, 1450)
 
@@ -724,17 +1386,19 @@ export default function BrandTest() {
     ]
 
     const fullReportText = `=====================================================
-NIA MEDIA — BRAND DIAGNOSTIC & STRATEGIC BRIEF
+NIA MEDIA — STRATEGIC BRAND & MARKET INTELLIGENCE DOSSIER
 =====================================================
 Brand: ${rawBrand}
 Industry: ${benchmark.name}
-Domain / Link: ${websiteUrl.trim() || 'None provided'} (${websiteAudit.statusLabel})
+Domain / Digital Storefront: ${websiteUrl.trim() || 'None provided'} (${websiteAudit.statusLabel})
 Proposed Price: ${currency === 'KES' ? `KES ${numPrice.toLocaleString()}` : `$${numPrice}`} ${activeModel.short} (${activeModel.label})
 Market Viability Score: ${overallScore} / 100
 Customer Uptake Probability: ${uptakeRate}%
 Est. Addressable Market Share: ${addressableShare}%
 
-EXECUTIVE STRATEGIC VERDICT:
+-----------------------------------------------------
+1. EXECUTIVE STRATEGIC VERDICT
+-----------------------------------------------------
 ${executiveVerdict}
 
 BRAND SUPERPOWER (UNFAIR ADVANTAGE):
@@ -743,44 +1407,109 @@ ${superpower}
 CRITICAL BLINDSPOT / FATAL OBJECTION:
 ${criticalBlindspot}
 
-STOREFRONT & DOMAIN AUDIT:
-- Status: ${websiteAudit.statusLabel}
-- Analysis: ${websiteAudit.insight}
-- Action: ${websiteAudit.recommendation}
+-----------------------------------------------------
+2. WHO WE SELL TO, WHY, HOW, WHEN (BUYER INTELLIGENCE)
+-----------------------------------------------------
+WHO DO WE SELL TO (ICP & DEMOGRAPHICS):
+- Ideal Customer Profile: ${benchmark.audience.who.icp}
+- Age & Life Stage: ${benchmark.audience.who.ageBracket}
+- Income Bracket: ${benchmark.audience.who.incomeBracket}
+- Key Decision Makers: ${benchmark.audience.who.decisionMakers}
+- Geographic Hubs: ${benchmark.audience.who.geoHubs}
+- Device & Media Habits: ${benchmark.audience.who.deviceHabits}
 
-TARGET BUYER PERSONA:
-- Primary Payer: ${buyerPersona.payer}
-- End User: ${buyerPersona.endUser}
-- Primary Buying Trigger: ${buyerPersona.trigger}
+WHY DO THEY BUY (PSYCHOLOGICAL & ECONOMIC DRIVERS):
+- Functional Job-to-be-Done: ${benchmark.audience.why.functionalJob}
+- Emotional Relief: ${benchmark.audience.why.emotionalRelief}
+- Social Status Signal: ${benchmark.audience.why.socialStatus}
+- Cost of Inaction: ${benchmark.audience.why.costOfInaction}
 
-30-SECOND COMMERCIAL SCRIPT CONCEPT:
-[0-5s Hook]: ${commercial.hook}
-- Visual: ${commercial.scene1Visual}
+HOW DO THEY BUY (CONVERSION CHANNELS & TRUST):
+- Primary Discovery Channels: ${benchmark.audience.how.primaryChannels}
+- Payment Mechanism: ${benchmark.audience.how.paymentFlow}
+- Trust Signals Required: ${benchmark.audience.how.trustSignalsNeeded}
 
-[5-20s Proof]: ${commercial.proof}
-- Visual: ${commercial.scene2Visual}
+WHEN DO THEY BUY (SEASONALITY & CASHFLOW TIMING):
+- Monthly Payroll Cycle: ${benchmark.audience.when.monthlyPayrollCycle}
+- Seasonal Peaks: ${benchmark.audience.when.seasonalPeak}
+- Weekly Peak Buying Hours: ${benchmark.audience.when.weeklyBuyingHours}
 
-[20-30s CTA]: ${commercial.cta}
-- Visual: ${commercial.scene3Visual}
+-----------------------------------------------------
+3. COMPETITOR WARFARE & DISTRIBUTION MOATS
+-----------------------------------------------------
+NAMED MARKET INCUMBENTS & HOW THEY WIN:
+${benchmark.competitorProfiles.map((c, i) => `
+[Competitor ${i + 1}: ${c.name}] (${c.marketTier})
+- How They Win The Market (Moat): ${c.howTheyWin}
+- Their Critical Vulnerability: ${c.vulnerability}
+- Recommended Attack Angle: ${c.attackAngle}
+`).join('')}
 
-Voiceover Direction: ${commercial.voiceover}
-Recommended Production Style: ${commercial.style}
+TOP BUYING OBJECTIONS & PROVEN REBUTTALS:
+${objections.map((o, i) => `
+[Objection ${i + 1}]: "${o.objection}"
+Rebuttal in Video / Ad: ${o.counter}
+`).join('')}
 
-COMPETITOR WARFARE & POSITIONING:
-- Key Competitors: ${competitors.name}
-- Competitor Vulnerability: ${competitors.flaw}
-- Your Attack Angle: ${competitors.attackAngle}
+-----------------------------------------------------
+4. DIGITAL STOREFRONT & WEBSITE CONVERSION AUDIT (CRO)
+-----------------------------------------------------
+Submitted URL Diagnostic:
+- Status: ${websiteAudit.statusLabel} (Trust Score: ${websiteAudit.trustScore}/100)
+- Strategic Analysis: ${websiteAudit.insight}
+- Actionable Recommendation: ${websiteAudit.recommendation}
 
-PRICING & UNIT ECONOMICS:
+Mobile Speed & Performance Benchmark:
+- ${benchmark.croPlaybook.speedBenchmark}
+- Target: Under 1.8s page load on Safaricom 4G/3G mobile networks.
+
+M-Pesa Checkout Architecture (STK Push vs Manual Paybill):
+- ${benchmark.croPlaybook.checkoutRequirement}
+- Critical Insight: Manual Paybill numbers lose ~42% of buyers at checkout. Always use automated Daraja STK Push.
+
+Above-The-Fold Wireframe Blueprint:
+- ${benchmark.croPlaybook.aboveTheFoldMustHave}
+
+Tracking Pixels & Retargeting:
+- ${benchmark.croPlaybook.pixelsAndTracking}
+
+-----------------------------------------------------
+5. 30-SECOND COMMERCIAL SCRIPT CONCEPT & STORYBOARD
+-----------------------------------------------------
+Recommended Style: ${benchmark.croPlaybook.recommendedVideoType}
+Voiceover Cadence: ${commercial.voiceover}
+Production Visuals: ${commercial.style}
+
+[00:00 - 00:05 Hook]:
+${commercial.hook}
+Visual: ${commercial.scene1Visual}
+
+[00:05 - 00:20 Demonstration & Proof]:
+${commercial.proof}
+Visual: ${commercial.scene2Visual}
+
+[00:20 - 00:30 Direct CTA]:
+${commercial.cta}
+Visual: ${commercial.scene3Visual}
+
+-----------------------------------------------------
+6. PRICING & UNIT ECONOMICS
+-----------------------------------------------------
 - Assessment: ${priceVerdict.toUpperCase()}
 - Frequency Advice: ${frequencyAdvice}
-- Recommended Ad Spend: ${recommendedAdBudget}
+- Recommended Daily Ad Budget: ${recommendedAdBudget}
 
 CROSS-FREQUENCY SUBSCRIPTION MATRIX:
-${subscriptionMatrix.map(s => `- ${s.frequency}: ${currency === 'KES' ? 'KES ' : '$'}${s.price} (${s.savings}) | Churn Risk: ${s.churnRisk}`).join('\n')}
+${subscriptionMatrix.map(s => `- ${s.frequency}: ${currency === 'KES' ? 'KES ' : '$'}${s.price} (${s.savings}) | Churn Risk: ${s.churnRisk} | Retention: ${s.retentionTactic}`).join('\n')}
 
-7-DAY GO-TO-MARKET EXECUTION CHECKLIST:
+-----------------------------------------------------
+7. 7-DAY GO-TO-MARKET EXECUTION ROADMAP
+-----------------------------------------------------
 ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
+
+=====================================================
+Produced by Nia Media Brand & Commercial Studio
+https://niamedia.org
 =====================================================`.trim()
 
     return {
@@ -797,6 +1526,9 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
       objections,
       commercial,
       competitors,
+      audience: benchmark.audience,
+      competitorProfiles: benchmark.competitorProfiles,
+      croPlaybook: benchmark.croPlaybook,
       frequencyAdvice,
       recommendedAdBudget,
       launchPlan,
@@ -1332,6 +2064,17 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
 
                       <button
                         type="button"
+                        onClick={handleDownloadFile}
+                        className="px-3 py-1 rounded-lg text-xs font-semibold bg-teal-500/20 hover:bg-teal-500/30 border border-teal-400/30 text-teal-200 flex items-center gap-1.5 transition-all cursor-pointer"
+                        title="Download complete offline markdown dossier (.md)"
+                      >
+                        <FileText size={13} className="text-teal-300" />
+                        <span>Download Dossier (.md)</span>
+                        {!isAuthenticated && <Lock size={11} className="text-amber-300 ml-0.5" />}
+                      </button>
+
+                      <button
+                        type="button"
                         onClick={handlePdfDownload}
                         className="px-3 py-1 rounded-lg text-xs font-semibold bg-purple-600/30 hover:bg-purple-600/50 border border-purple-400/40 text-white flex items-center gap-1.5 transition-all cursor-pointer"
                         title={isAuthenticated ? 'Export full report as PDF' : 'Sign in required to export PDF'}
@@ -1344,19 +2087,45 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
                   </div>
                 </div>
 
-                {/* Report Navigation Tabs */}
+                {/* Report Navigation Tabs - 5 Strategic Pillars */}
                 <div className="flex items-center gap-1 bg-white/[0.04] p-1.5 rounded-2xl border border-white/10 overflow-x-auto">
                   <button
                     type="button"
-                    onClick={() => setActiveTab('overview')}
-                    className={`flex-1 min-w-[110px] py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                      activeTab === 'overview'
+                    onClick={() => setActiveTab('who_why_when')}
+                    className={`flex-1 min-w-[130px] py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      activeTab === 'who_why_when'
                         ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
                         : 'text-white/60 hover:text-white hover:bg-white/5'
                     }`}
                   >
-                    <BarChart3 size={14} />
-                    <span>Executive Audit</span>
+                    <Users size={14} />
+                    <span>Who, Why &amp; When</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('competitors')}
+                    className={`flex-1 min-w-[140px] py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      activeTab === 'competitors'
+                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <Target size={14} />
+                    <span>Competitor Warfare</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('storefront')}
+                    className={`flex-1 min-w-[130px] py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      activeTab === 'storefront'
+                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <Globe size={14} />
+                    <span>Website &amp; CRO Audit</span>
                   </button>
 
                   <button
@@ -1374,126 +2143,220 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
 
                   <button
                     type="button"
-                    onClick={() => setActiveTab('market')}
-                    className={`flex-1 min-w-[120px] py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                      activeTab === 'market'
-                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
-                        : 'text-white/60 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    <Target size={14} />
-                    <span>Competitors &amp; Objections</span>
-                  </button>
-
-                  <button
-                    type="button"
                     onClick={() => setActiveTab('roadmap')}
-                    className={`flex-1 min-w-[120px] py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    className={`flex-1 min-w-[135px] py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                       activeTab === 'roadmap'
                         ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
                         : 'text-white/60 hover:text-white hover:bg-white/5'
                     }`}
                   >
-                    <Zap size={14} />
-                    <span>7-Day Launch Plan</span>
+                    <BarChart3 size={14} />
+                    <span>Economics &amp; Plan</span>
                   </button>
                 </div>
 
-                {/* TAB 1: EXECUTIVE AUDIT & PRICING VERDICT */}
-                {activeTab === 'overview' && (
+                {/* TAB 1: WHO WE SELL TO, WHY, HOW, WHEN (BUYER INTELLIGENCE) */}
+                {activeTab === 'who_why_when' && (
                   <div className="space-y-4">
-                    {/* Executive Verdict Box */}
-                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Compass size={16} className="text-purple-400" />
-                        <h4 className="font-extrabold text-sm text-white">Strategic Executive Verdict</h4>
-                      </div>
-                      <p className="text-xs sm:text-sm text-white/90 leading-relaxed bg-black/30 p-4 rounded-2xl border border-white/5">
-                        {diagnostics.executiveVerdict}
-                      </p>
-                    </div>
-
-                    {/* Superpower & Fatal Blindspot Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      {/* Superpower */}
-                      <div className="rounded-2xl p-4 bg-emerald-950/20 border border-emerald-500/30 space-y-2">
-                        <div className="flex items-center gap-2 text-emerald-400">
-                          <ShieldCheck size={16} />
-                          <h5 className="font-bold text-xs uppercase tracking-wider">Unfair Superpower</h5>
-                        </div>
-                        <p className="text-xs text-emerald-100/90 leading-relaxed">
-                          {diagnostics.superpower}
-                        </p>
-                      </div>
-
-                      {/* Critical Blindspot */}
-                      <div className="rounded-2xl p-4 bg-amber-950/20 border border-amber-500/30 space-y-2">
-                        <div className="flex items-center gap-2 text-amber-400">
-                          <AlertTriangle size={16} />
-                          <h5 className="font-bold text-xs uppercase tracking-wider">Fatal Blindspot to Fix</h5>
-                        </div>
-                        <p className="text-xs text-amber-100/90 leading-relaxed">
-                          {diagnostics.criticalBlindspot}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Pricing Spectrum & Elasticity Assessment */}
+                    {/* Primary Buyer Profile Header */}
                     <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-4">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between pb-3 border-b border-white/10">
                         <div className="flex items-center gap-2">
-                          <DollarSign size={16} className="text-amber-400" />
-                          <h4 className="font-extrabold text-sm text-white">Price Elasticity &amp; Position</h4>
+                          <Users size={18} className="text-emerald-400" />
+                          <h4 className="font-extrabold text-sm text-white">Target Buyer Persona &amp; Decision-Making Unit</h4>
                         </div>
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-                          diagnostics.priceVerdict === 'sweet_spot'
-                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
-                            : diagnostics.priceVerdict === 'underpriced'
-                            ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30'
-                            : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
-                        }`}>
-                          {diagnostics.priceVerdict === 'sweet_spot' ? 'Sweet-Spot Value' : diagnostics.priceVerdict === 'underpriced' ? 'Penetration / Underpriced' : 'Premium Positioning'}
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                          ICP Demographics
                         </span>
                       </div>
 
-                      {/* Spectrum Bar Graphic */}
-                      <div className="space-y-1.5 pt-1">
-                        <div className="h-3 w-full bg-white/10 rounded-full overflow-hidden flex">
-                          <div className="w-1/3 bg-blue-500/70" title="Budget Floor" />
-                          <div className="w-1/3 bg-emerald-500/80" title="Sweet Spot" />
-                          <div className="w-1/3 bg-amber-500/70" title="Premium" />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div className="p-3.5 rounded-2xl bg-black/40 border border-white/5 space-y-1">
+                          <span className="text-white/50 block text-[10px] uppercase font-bold tracking-wider">Primary Payer (Who Signs Off)</span>
+                          <p className="font-bold text-white text-sm">{diagnostics.buyerPersona.payer}</p>
+                          <p className="text-[11px] text-white/60 mt-1">Authority: {benchmark.audience.who.decisionMakers}</p>
                         </div>
-                        <div className="flex justify-between text-[11px] text-white/60">
-                          <span>Floor: {currency === 'KES' ? `KES ${benchmark.kesFloor.toLocaleString()}` : `$${benchmark.usdFloor}`}</span>
-                          <span className="text-emerald-300 font-bold">Sweet-Spot: {currency === 'KES' ? `KES ${benchmark.kesSweetSpot.toLocaleString()}` : `$${benchmark.usdSweetSpot}`}</span>
-                          <span>Premium: {currency === 'KES' ? `KES ${benchmark.kesCeiling.toLocaleString()}` : `$${benchmark.usdCeiling}`}</span>
+                        <div className="p-3.5 rounded-2xl bg-black/40 border border-white/5 space-y-1">
+                          <span className="text-white/50 block text-[10px] uppercase font-bold tracking-wider">End Beneficiary / User</span>
+                          <p className="font-bold text-white text-sm">{diagnostics.buyerPersona.endUser}</p>
+                          <p className="text-[11px] text-white/60 mt-1">Life Stage: {benchmark.audience.who.ageBracket}</p>
                         </div>
                       </div>
 
-                      <div className="text-xs text-white/80 leading-relaxed bg-black/30 p-3.5 rounded-xl border border-white/5 space-y-1.5">
-                        <p>
-                          <strong>Price Assessment:</strong> Your price of{' '}
-                          <strong className="text-white">
-                            {currency === 'KES' ? `KES ${Number(priceInput).toLocaleString()}` : `$${priceInput} USD`} {diagnostics.activeModel.short}
-                          </strong>{' '}
-                          ({diagnostics.activeModel.label}) {diagnostics.priceVerdict === 'sweet_spot'
-                            ? 'is right in the sweet spot of consumer purchasing power. You have sufficient advertising margin to run profitable Meta and TikTok campaigns.'
-                            : diagnostics.priceVerdict === 'underpriced'
-                            ? 'is significantly lower than category standards. While this drives rapid trial, you risk being perceived as poor quality or failing to cover marketing delivery costs.'
-                            : 'is at the top tier. To convert at this price, you must provide flawless visual branding and high-end video social proof.'}
-                        </p>
-                        <p className="text-[11px] text-purple-300 font-medium">
-                          {diagnostics.frequencyAdvice}
-                        </p>
+                      {/* Purchasing Power & Hubs Strip */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs pt-1">
+                        <div className="p-3 rounded-xl bg-purple-950/20 border border-purple-500/20">
+                          <span className="text-[10px] font-bold text-purple-300 uppercase block mb-0.5">Income Bracket</span>
+                          <p className="text-white font-medium text-[11px]">{benchmark.audience.who.incomeBracket}</p>
+                        </div>
+                        <div className="p-3 rounded-xl bg-purple-950/20 border border-purple-500/20">
+                          <span className="text-[10px] font-bold text-purple-300 uppercase block mb-0.5">Geographic Hubs</span>
+                          <p className="text-white font-medium text-[11px]">{benchmark.audience.who.geoHubs}</p>
+                        </div>
+                        <div className="p-3 rounded-xl bg-purple-950/20 border border-purple-500/20">
+                          <span className="text-[10px] font-bold text-purple-300 uppercase block mb-0.5">Device &amp; Media Habits</span>
+                          <p className="text-white font-medium text-[11px]">{benchmark.audience.who.deviceHabits}</p>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Digital Storefront & Domain Link Audit */}
+                    {/* WHY THEY BUY: Jobs To Be Done & Emotional Relievers */}
+                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3.5">
+                      <div className="flex items-center gap-2">
+                        <Lightbulb size={16} className="text-amber-400" />
+                        <h4 className="font-extrabold text-sm text-white">Why They Buy: Psychological &amp; Economic Drivers</h4>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                          <span className="text-amber-300 block text-[10px] uppercase font-bold tracking-wider">Functional Job-to-be-Done</span>
+                          <p className="text-white/90 leading-relaxed">{benchmark.audience.why.functionalJob}</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                          <span className="text-emerald-300 block text-[10px] uppercase font-bold tracking-wider">Emotional Relief</span>
+                          <p className="text-white/90 leading-relaxed">{benchmark.audience.why.emotionalRelief}</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                          <span className="text-purple-300 block text-[10px] uppercase font-bold tracking-wider">Social Status Signal</span>
+                          <p className="text-white/90 leading-relaxed">{benchmark.audience.why.socialStatus}</p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl bg-rose-950/20 border border-rose-500/20 space-y-1">
+                          <span className="text-rose-300 block text-[10px] uppercase font-bold tracking-wider">Cost of Inaction (Status Quo)</span>
+                          <p className="text-rose-100/90 leading-relaxed">{benchmark.audience.why.costOfInaction}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* HOW & WHEN THEY BUY: Channels, M-Pesa & Seasonal Timing */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      {/* How They Buy */}
+                      <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3">
+                        <div className="flex items-center gap-2 text-teal-400">
+                          <Smartphone size={16} />
+                          <h5 className="font-bold text-xs uppercase tracking-wider text-white">How They Buy (Channels &amp; Payments)</h5>
+                        </div>
+                        <div className="space-y-2 text-xs">
+                          <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-0.5">
+                            <span className="text-white/50 block text-[10px] uppercase font-bold">Discovery Channels</span>
+                            <p className="text-white/90 font-medium">{benchmark.audience.how.primaryChannels}</p>
+                          </div>
+                          <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-0.5">
+                            <span className="text-white/50 block text-[10px] uppercase font-bold">East Africa Payment Flow</span>
+                            <p className="text-emerald-300 font-medium">{benchmark.audience.how.paymentFlow}</p>
+                          </div>
+                          <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-0.5">
+                            <span className="text-white/50 block text-[10px] uppercase font-bold">Trust Signals Required</span>
+                            <p className="text-amber-200 font-medium">{benchmark.audience.how.trustSignalsNeeded}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* When They Buy */}
+                      <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3">
+                        <div className="flex items-center gap-2 text-amber-400">
+                          <Clock size={16} />
+                          <h5 className="font-bold text-xs uppercase tracking-wider text-white">When They Buy (Cashflow &amp; Timing)</h5>
+                        </div>
+                        <div className="space-y-2 text-xs">
+                          <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-0.5">
+                            <span className="text-white/50 block text-[10px] uppercase font-bold">Monthly Payroll Cycle</span>
+                            <p className="text-white/90 font-medium">{benchmark.audience.when.monthlyPayrollCycle}</p>
+                          </div>
+                          <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-0.5">
+                            <span className="text-white/50 block text-[10px] uppercase font-bold">Seasonal Spending Peaks</span>
+                            <p className="text-purple-300 font-medium">{benchmark.audience.when.seasonalPeak}</p>
+                          </div>
+                          <div className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-0.5">
+                            <span className="text-white/50 block text-[10px] uppercase font-bold">Weekly Peak Buying Hours</span>
+                            <p className="text-teal-300 font-medium">{benchmark.audience.when.weeklyBuyingHours}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 2: COMPETITOR WARFARE & DISTRIBUTION MOATS */}
+                {activeTab === 'competitors' && (
+                  <div className="space-y-4">
+                    {/* Incumbent Battlecards Grid */}
+                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-4">
+                      <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                        <div className="flex items-center gap-2">
+                          <Target size={18} className="text-purple-400" />
+                          <h4 className="font-extrabold text-sm text-white">Named Competitor Battlecards &amp; Attack Angles</h4>
+                        </div>
+                        <span className="text-[10px] font-bold text-purple-300 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-400/20">
+                          Market Warfare
+                        </span>
+                      </div>
+
+                      <div className="space-y-3.5">
+                        {benchmark.competitorProfiles.map((comp, idx) => (
+                          <div key={idx} className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-2.5">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 font-black text-xs flex items-center justify-center border border-purple-500/30">
+                                  {idx + 1}
+                                </span>
+                                <h5 className="font-bold text-sm text-white">{comp.name}</h5>
+                              </div>
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-white/70">
+                                {comp.marketTier}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs pt-1">
+                              <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/5 space-y-1">
+                                <span className="text-white/40 block text-[10px] font-bold uppercase">How They Win (Moat)</span>
+                                <p className="text-white/80 leading-relaxed text-[11px]">{comp.howTheyWin}</p>
+                              </div>
+                              <div className="p-2.5 rounded-xl bg-amber-950/20 border border-amber-500/20 space-y-1">
+                                <span className="text-amber-400 block text-[10px] font-bold uppercase">Their Vulnerability / Flaw</span>
+                                <p className="text-amber-100/90 leading-relaxed text-[11px]">{comp.vulnerability}</p>
+                              </div>
+                              <div className="p-2.5 rounded-xl bg-emerald-950/20 border border-emerald-500/20 space-y-1">
+                                <span className="text-emerald-400 block text-[10px] font-bold uppercase">Your Recommended Attack Angle</span>
+                                <p className="text-emerald-200 leading-relaxed text-[11px] font-medium">{comp.attackAngle}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Top 3 Objections & Rebuttals */}
+                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle size={16} className="text-amber-400" />
+                        <h4 className="font-extrabold text-sm text-white">Top Buying Objections &amp; How To Rebut Them In Ads</h4>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        {diagnostics.objections.map((item, idx) => (
+                          <div key={idx} className="p-3.5 rounded-xl bg-black/30 border border-white/5 space-y-1.5 text-xs">
+                            <p className="font-bold text-rose-300">
+                              ❓ Objection {idx + 1}: “{item.objection}”
+                            </p>
+                            <p className="text-white/80 bg-white/5 p-2 rounded-lg border border-white/5">
+                              💡 <strong>Rebuttal in Video / Ad:</strong> {item.counter}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 3: DIGITAL STOREFRONT & WEBSITE OPTIMIZATION (CRO AUDIT) */}
+                {activeTab === 'storefront' && (
+                  <div className="space-y-4">
+                    {/* Submitted URL Diagnostic Box */}
                     <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3.5">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Globe size={16} className="text-teal-400" />
-                          <h4 className="font-extrabold text-sm text-white">Digital Storefront &amp; Domain Link Audit</h4>
+                          <Globe size={18} className="text-teal-400" />
+                          <h4 className="font-extrabold text-sm text-white">Submitted Storefront / Domain Audit</h4>
                         </div>
                         <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
                           diagnostics.websiteAudit.badgeColor === 'emerald'
@@ -1508,7 +2371,7 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
                         </span>
                       </div>
 
-                      <div className="p-3.5 rounded-xl bg-black/30 border border-white/5 space-y-2 text-xs">
+                      <div className="p-4 rounded-2xl bg-black/30 border border-white/5 space-y-2 text-xs">
                         {websiteUrl.trim() && (
                           <div className="flex items-center gap-2 text-purple-300 font-mono text-[11px] pb-1.5 border-b border-white/5">
                             <ExternalLink size={12} className="shrink-0" />
@@ -1520,23 +2383,85 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
                             >
                               {websiteUrl}
                             </a>
+                            <span className="ml-auto text-[10px] text-white/50">Trust Score: {diagnostics.websiteAudit.trustScore}/100</span>
                           </div>
                         )}
                         <p className="text-white/80 leading-relaxed">
                           {diagnostics.websiteAudit.insight}
                         </p>
-                        <div className="pt-1.5 flex items-start gap-2 text-emerald-300 bg-emerald-950/20 p-2.5 rounded-lg border border-emerald-500/20">
-                          <CheckCircle2 size={14} className="shrink-0 mt-0.5 text-emerald-400" />
-                          <p className="text-[11px] font-medium leading-relaxed">
-                            <strong>Conversion Optimization Play:</strong> {diagnostics.websiteAudit.recommendation}
+                        <div className="pt-2 flex items-start gap-2 text-emerald-300 bg-emerald-950/20 p-3 rounded-xl border border-emerald-500/20">
+                          <CheckCircle2 size={15} className="shrink-0 mt-0.5 text-emerald-400" />
+                          <p className="text-xs font-medium leading-relaxed">
+                            <strong>Immediate Action:</strong> {diagnostics.websiteAudit.recommendation}
                           </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* CRO Pillars Grid: Speed, M-Pesa STK, Wireframe & Pixels */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      {/* Mobile Speed & Performance */}
+                      <div className="rounded-2xl p-4 bg-white/[0.03] border border-white/10 space-y-2 text-xs">
+                        <div className="flex items-center gap-2 text-amber-300">
+                          <Zap size={16} />
+                          <h5 className="font-bold uppercase tracking-wider text-white">Mobile Speed Benchmark</h5>
+                        </div>
+                        <p className="text-white/80 leading-relaxed">
+                          {benchmark.croPlaybook.speedBenchmark}
+                        </p>
+                        <div className="p-2.5 rounded-lg bg-black/30 text-[11px] text-white/60 space-y-1">
+                          <p>⚡ <strong>Target:</strong> Under 1.8s page load on Safaricom 4G/3G mobile networks.</p>
+                          <p>📦 Use WebP image compression to keep total page weight under 1.2MB.</p>
+                        </div>
+                      </div>
+
+                      {/* M-Pesa STK Push Checkout */}
+                      <div className="rounded-2xl p-4 bg-white/[0.03] border border-white/10 space-y-2 text-xs">
+                        <div className="flex items-center gap-2 text-emerald-400">
+                          <Smartphone size={16} />
+                          <h5 className="font-bold uppercase tracking-wider text-white">M-Pesa STK Push Checkout</h5>
+                        </div>
+                        <p className="text-white/80 leading-relaxed">
+                          {benchmark.croPlaybook.checkoutRequirement}
+                        </p>
+                        <div className="p-2.5 rounded-lg bg-black/30 text-[11px] text-emerald-300 space-y-1">
+                          <p>💡 Manual Paybill numbers lose ~42% of buyers at checkout due to app-switching.</p>
+                          <p>Always integrate Daraja API 1-tap STK Push or instant WhatsApp Paybill prompt.</p>
+                        </div>
+                      </div>
+
+                      {/* Above-The-Fold Wireframe */}
+                      <div className="rounded-2xl p-4 bg-white/[0.03] border border-white/10 space-y-2 text-xs">
+                        <div className="flex items-center gap-2 text-purple-300">
+                          <Layers size={16} />
+                          <h5 className="font-bold uppercase tracking-wider text-white">Above-The-Fold Blueprint</h5>
+                        </div>
+                        <p className="text-white/80 leading-relaxed">
+                          {benchmark.croPlaybook.aboveTheFoldMustHave}
+                        </p>
+                        <div className="p-2.5 rounded-lg bg-black/30 text-[11px] text-white/60">
+                          Layout: [Urgent Hook Headline] + [30s Commercial Video Embed] + [Sticky WhatsApp Concierge CTA].
+                        </div>
+                      </div>
+
+                      {/* Tracking Pixels & Attribution */}
+                      <div className="rounded-2xl p-4 bg-white/[0.03] border border-white/10 space-y-2 text-xs">
+                        <div className="flex items-center gap-2 text-teal-300">
+                          <BarChart3 size={16} />
+                          <h5 className="font-bold uppercase tracking-wider text-white">Tracking &amp; Ad Retargeting</h5>
+                        </div>
+                        <p className="text-white/80 leading-relaxed">
+                          {benchmark.croPlaybook.pixelsAndTracking}
+                        </p>
+                        <div className="p-2.5 rounded-lg bg-black/30 text-[11px] text-teal-300">
+                          Set up Custom Audiences for 180-day retargeting to recover abandoned checkouts.
                         </div>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* TAB 2: 30-SECOND COMMERCIAL SCRIPT CONCEPT */}
+                {/* TAB 4: 30-SECOND COMMERCIAL SCRIPT CONCEPT */}
                 {activeTab === 'commercial' && (
                   <div className="space-y-4">
                     <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-4">
@@ -1613,79 +2538,93 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
                   </div>
                 )}
 
-                {/* TAB 3: COMPETITORS & BUYER WARFARE */}
-                {activeTab === 'market' && (
-                  <div className="space-y-4">
-                    {/* Buyer Persona Card */}
-                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3.5">
-                      <div className="flex items-center gap-2">
-                        <Users size={16} className="text-emerald-400" />
-                        <h4 className="font-extrabold text-sm text-white">Target Buyer Persona &amp; Decision Maker</h4>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                        <div className="p-3.5 rounded-xl bg-black/30 border border-white/5">
-                          <span className="text-white/50 block text-[10px] uppercase font-bold">Primary Payer (Who Signs Off)</span>
-                          <p className="font-bold text-white mt-1">{diagnostics.buyerPersona.payer}</p>
-                        </div>
-                        <div className="p-3.5 rounded-xl bg-black/30 border border-white/5">
-                          <span className="text-white/50 block text-[10px] uppercase font-bold">End User</span>
-                          <p className="font-bold text-white mt-1">{diagnostics.buyerPersona.endUser}</p>
-                        </div>
-                      </div>
-
-                      <div className="p-3.5 rounded-xl bg-emerald-950/20 border border-emerald-500/20 text-xs text-emerald-100/90">
-                        <span className="font-bold text-white block mb-0.5">Primary Psychological Buying Trigger:</span>
-                        <p>{diagnostics.buyerPersona.trigger}</p>
-                      </div>
-                    </div>
-
-                    {/* Top 3 Objections & Rebuttals */}
-                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3">
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle size={16} className="text-amber-400" />
-                        <h4 className="font-extrabold text-sm text-white">Top Buying Objections &amp; How To Rebut Them</h4>
-                      </div>
-
-                      <div className="space-y-2.5">
-                        {diagnostics.objections.map((item, idx) => (
-                          <div key={idx} className="p-3.5 rounded-xl bg-black/30 border border-white/5 space-y-1.5 text-xs">
-                            <p className="font-bold text-rose-300">
-                              ❓ Objection {idx + 1}: “{item.objection}”
-                            </p>
-                            <p className="text-white/80 bg-white/5 p-2 rounded-lg border border-white/5">
-                              💡 <strong>Rebuttal in Video / Ad:</strong> {item.counter}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Competitor Warfare */}
-                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Target size={16} className="text-purple-400" />
-                        <h4 className="font-extrabold text-sm text-white">East African Competitor Warfare</h4>
-                      </div>
-
-                      <div className="p-3.5 rounded-xl bg-black/30 border border-white/5 text-xs space-y-2">
-                        <p className="text-white/60">
-                          <strong className="text-white">Existing Competitors in Category:</strong> {diagnostics.competitors.name}
-                        </p>
-                        <p className="text-amber-300/90">
-                          <strong>Competitor Flaw to Exploit:</strong> {diagnostics.competitors.flaw}
-                        </p>
-                        <p className="text-emerald-300/90">
-                          <strong>Your Recommended Attack Angle:</strong> {diagnostics.competitors.attackAngle}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* TAB 4: UNIT ECONOMICS & 7-DAY LAUNCH PLAN */}
+                {/* TAB 5: UNIT ECONOMICS & 7-DAY LAUNCH PLAN */}
                 {activeTab === 'roadmap' && (
                   <div className="space-y-4">
+                    {/* Executive Verdict Box */}
+                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Compass size={16} className="text-purple-400" />
+                        <h4 className="font-extrabold text-sm text-white">Strategic Executive Verdict</h4>
+                      </div>
+                      <p className="text-xs sm:text-sm text-white/90 leading-relaxed bg-black/30 p-4 rounded-2xl border border-white/5">
+                        {diagnostics.executiveVerdict}
+                      </p>
+                    </div>
+
+                    {/* Superpower & Fatal Blindspot Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div className="rounded-2xl p-4 bg-emerald-950/20 border border-emerald-500/30 space-y-2">
+                        <div className="flex items-center gap-2 text-emerald-400">
+                          <ShieldCheck size={16} />
+                          <h5 className="font-bold text-xs uppercase tracking-wider">Unfair Superpower</h5>
+                        </div>
+                        <p className="text-xs text-emerald-100/90 leading-relaxed">
+                          {diagnostics.superpower}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl p-4 bg-amber-950/20 border border-amber-500/30 space-y-2">
+                        <div className="flex items-center gap-2 text-amber-400">
+                          <AlertTriangle size={16} />
+                          <h5 className="font-bold text-xs uppercase tracking-wider">Fatal Blindspot to Fix</h5>
+                        </div>
+                        <p className="text-xs text-amber-100/90 leading-relaxed">
+                          {diagnostics.criticalBlindspot}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Pricing Spectrum & Elasticity Assessment */}
+                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <DollarSign size={16} className="text-amber-400" />
+                          <h4 className="font-extrabold text-sm text-white">Price Elasticity &amp; Position</h4>
+                        </div>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                          diagnostics.priceVerdict === 'sweet_spot'
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                            : diagnostics.priceVerdict === 'underpriced'
+                            ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30'
+                            : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
+                        }`}>
+                          {diagnostics.priceVerdict === 'sweet_spot' ? 'Sweet-Spot Value' : diagnostics.priceVerdict === 'underpriced' ? 'Penetration / Underpriced' : 'Premium Positioning'}
+                        </span>
+                      </div>
+
+                      {/* Spectrum Bar Graphic */}
+                      <div className="space-y-1.5 pt-1">
+                        <div className="h-3 w-full bg-white/10 rounded-full overflow-hidden flex">
+                          <div className="w-1/3 bg-blue-500/70" title="Budget Floor" />
+                          <div className="w-1/3 bg-emerald-500/80" title="Sweet Spot" />
+                          <div className="w-1/3 bg-amber-500/70" title="Premium" />
+                        </div>
+                        <div className="flex justify-between text-[11px] text-white/60">
+                          <span>Floor: {currency === 'KES' ? `KES ${benchmark.kesFloor.toLocaleString()}` : `$${benchmark.usdFloor}`}</span>
+                          <span className="text-emerald-300 font-bold">Sweet-Spot: {currency === 'KES' ? `KES ${benchmark.kesSweetSpot.toLocaleString()}` : `$${benchmark.usdSweetSpot}`}</span>
+                          <span>Premium: {currency === 'KES' ? `KES ${benchmark.kesCeiling.toLocaleString()}` : `$${benchmark.usdCeiling}`}</span>
+                        </div>
+                      </div>
+
+                      <div className="text-xs text-white/80 leading-relaxed bg-black/30 p-3.5 rounded-xl border border-white/5 space-y-1.5">
+                        <p>
+                          <strong>Price Assessment:</strong> Your price of{' '}
+                          <strong className="text-white">
+                            {currency === 'KES' ? `KES ${Number(priceInput).toLocaleString()}` : `$${priceInput} USD`} {diagnostics.activeModel.short}
+                          </strong>{' '}
+                          ({diagnostics.activeModel.label}) {diagnostics.priceVerdict === 'sweet_spot'
+                            ? 'is right in the sweet spot of consumer purchasing power. You have sufficient advertising margin to run profitable Meta and TikTok campaigns.'
+                            : diagnostics.priceVerdict === 'underpriced'
+                            ? 'is significantly lower than category standards. While this drives rapid trial, you risk being perceived as poor quality or failing to cover marketing delivery costs.'
+                            : 'is at the top tier. To convert at this price, you must provide flawless visual branding and high-end video social proof.'}
+                        </p>
+                        <p className="text-[11px] text-purple-300 font-medium">
+                          {diagnostics.frequencyAdvice}
+                        </p>
+                      </div>
+                    </div>
+
                     {/* Unit Economics Advisory */}
                     <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3">
                       <div className="flex items-center gap-2">
@@ -1700,31 +2639,6 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
                         <p className="text-amber-300 font-medium">
                           <strong>Target Ad Budget:</strong> {diagnostics.recommendedAdBudget}
                         </p>
-                      </div>
-                    </div>
-
-                    {/* 7-Day Launch Checklist */}
-                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3.5">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Zap size={16} className="text-amber-400" />
-                          <h4 className="font-extrabold text-sm text-white">7-Day Tactical Go-To-Market Roadmap</h4>
-                        </div>
-                        <span className="text-[10px] text-white/50">Step-by-step to first 500 sales</span>
-                      </div>
-
-                      <div className="space-y-2">
-                        {diagnostics.launchPlan.map((step, idx) => (
-                          <div key={idx} className="p-3 rounded-xl bg-black/30 border border-white/5 flex items-start gap-3 text-xs">
-                            <span className="px-2 py-0.5 rounded bg-purple-600/30 text-purple-300 border border-purple-400/30 font-bold text-[10px] shrink-0 mt-0.5">
-                              {step.day}
-                            </span>
-                            <div className="space-y-0.5">
-                              <p className="font-bold text-white">{step.task}</p>
-                              <p className="text-white/70 text-[11px] leading-relaxed">{step.tip}</p>
-                            </div>
-                          </div>
-                        ))}
                       </div>
                     </div>
 
@@ -1781,6 +2695,31 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
                         <p className="leading-relaxed text-[11px] text-purple-200/90">
                           If selling digital subscriptions or recurring services in Kenya, avoid relying solely on daily or weekly manual M-Pesa STK prompts. Over 50% of consumers abandon daily prompts after day 4 due to transaction fatigue or balance gaps. Always offer a <strong>Termly / Quarterly Pass</strong> with a 15% discount; this collects 90 days of revenue upfront, giving you cash reserves to fund customer acquisition.
                         </p>
+                      </div>
+                    </div>
+
+                    {/* 7-Day Launch Checklist */}
+                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Zap size={16} className="text-amber-400" />
+                          <h4 className="font-extrabold text-sm text-white">7-Day Tactical Go-To-Market Roadmap</h4>
+                        </div>
+                        <span className="text-[10px] text-white/50">Step-by-step to first 500 sales</span>
+                      </div>
+
+                      <div className="space-y-2">
+                        {diagnostics.launchPlan.map((step, idx) => (
+                          <div key={idx} className="p-3 rounded-xl bg-black/30 border border-white/5 flex items-start gap-3 text-xs">
+                            <span className="px-2 py-0.5 rounded bg-purple-600/30 text-purple-300 border border-purple-400/30 font-bold text-[10px] shrink-0 mt-0.5">
+                              {step.day}
+                            </span>
+                            <div className="space-y-0.5">
+                              <p className="font-bold text-white">{step.task}</p>
+                              <p className="text-white/70 text-[11px] leading-relaxed">{step.tip}</p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -1843,16 +2782,26 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
                     </div>
                   </div>
 
-                  {/* Utility Bar: Print PDF, Copy Report */}
+                  {/* Utility Bar: Print PDF, Download Markdown, Copy Report */}
                   <div className="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
                         onClick={handlePdfDownload}
-                        className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-white/10 hover:bg-white/15 border border-white/15 transition-all flex items-center gap-1.5 cursor-pointer"
+                        className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-purple-600/40 hover:bg-purple-600/60 border border-purple-400/40 transition-all flex items-center gap-1.5 cursor-pointer"
                       >
                         <Printer size={14} />
-                        <span>Download PDF Executive Brief</span>
+                        <span>Export PDF Brief</span>
+                        {!isAuthenticated && <Lock size={12} className="text-amber-400 ml-1" />}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleDownloadFile}
+                        className="px-4 py-2.5 rounded-xl text-xs font-bold text-teal-200 bg-teal-600/20 hover:bg-teal-600/30 border border-teal-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <FileText size={14} className="text-teal-300" />
+                        <span>Download Dossier (.md)</span>
                         {!isAuthenticated && <Lock size={12} className="text-amber-400 ml-1" />}
                       </button>
 
@@ -1862,14 +2811,14 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
                         className="px-4 py-2.5 rounded-xl text-xs font-bold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex items-center gap-1.5 cursor-pointer"
                       >
                         {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
-                        <span>{copied ? 'Brief Copied!' : 'Copy Markdown Brief'}</span>
+                        <span>{copied ? 'Brief Copied!' : 'Copy Markdown'}</span>
                       </button>
                     </div>
 
                     {!isAuthenticated && (
                       <span className="text-[11px] text-amber-300 font-medium flex items-center gap-1">
                         <Lock size={12} />
-                        <span>PDF download requires free account login</span>
+                        <span>PDF &amp; Dossier export requires free account login</span>
                       </span>
                     )}
                   </div>
@@ -1910,7 +2859,7 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
 
             <div className="space-y-2.5 pt-2">
               <button
-                onClick={() => navigate('/register?redirect=/test-brand')}
+                onClick={() => handleProceedToAuth('/register')}
                 className="w-full py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-purple-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <UserPlus size={16} />
@@ -1918,7 +2867,7 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
               </button>
 
               <button
-                onClick={() => navigate('/login?redirect=/test-brand')}
+                onClick={() => handleProceedToAuth('/login')}
                 className="w-full py-3 px-4 rounded-xl text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <LogIn size={14} />
@@ -1949,24 +2898,24 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
                 Member Feature Only
               </span>
               <h3 className="text-xl sm:text-2xl font-black text-white">
-                Sign In To Export PDF Executive Brief
+                Sign In To Export PDF &amp; Market Dossier
               </h3>
               <p className="text-xs sm:text-sm text-white/70 leading-relaxed max-w-sm mx-auto">
-                High-resolution PDF dossiers, 30s commercial storyboards, and competitor battlecards are exclusively available to authenticated members. Sign in or create a free account to instantly download and print your full strategic dossier.
+                High-resolution PDF dossiers, 30s commercial storyboards, competitor battlecards, and CRO audit checklists are exclusively available to authenticated members. Sign in or create a free account to instantly download and print your full strategic dossier.
               </p>
             </div>
 
             <div className="space-y-2.5 pt-2">
               <button
-                onClick={() => navigate('/register?redirect=/test-brand')}
+                onClick={() => handleProceedToAuth('/register')}
                 className="w-full py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-purple-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <UserPlus size={16} />
-                <span>Register To Download PDF →</span>
+                <span>Register To Download PDF &amp; Dossier →</span>
               </button>
 
               <button
-                onClick={() => navigate('/login?redirect=/test-brand')}
+                onClick={() => handleProceedToAuth('/login')}
                 className="w-full py-3 px-4 rounded-xl text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <LogIn size={14} />

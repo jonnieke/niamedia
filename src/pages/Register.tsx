@@ -1,4 +1,4 @@
-﻿import { useState, FormEvent } from 'react'
+import { useState, FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Eye, EyeOff, ArrowRight, CheckCircle2, Mail, Loader2, Gift } from 'lucide-react'
 import Logo from '../components/ui/Logo'
@@ -115,7 +115,12 @@ export default function Register() {
       if (confirm) {
         setNeedsConfirmation(true)
       } else {
-        navigate(localStorage.getItem('onboarded') ? '/dashboard' : '/onboarding')
+        const redirectParam = searchParams.get('redirect')
+        if (redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')) {
+          navigate(redirectParam, { replace: true })
+        } else {
+          navigate(localStorage.getItem('onboarded') ? '/dashboard' : '/onboarding')
+        }
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
