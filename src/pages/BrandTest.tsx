@@ -5,16 +5,22 @@ import {
   RefreshCw, BarChart3, Target, Compass, Printer, Film, Check,
   DollarSign, Mic, MicOff, HelpCircle, Repeat,
   ShieldCheck, AlertTriangle, Users, Play, Copy, Zap, TrendingUp,
-  ChevronRight, CheckCircle2, ShoppingBag, Eye, Lightbulb, Share2
+  ChevronRight, CheckCircle2, ShoppingBag, Eye, Lightbulb, Share2,
+  Globe, Lock, ExternalLink, UserPlus, LogIn, Calendar, CheckSquare
 } from 'lucide-react'
 import PublicHeader from '../components/layout/PublicHeader'
+import { useAuth } from '../lib/AuthContext'
+import { getBookingUrl } from '../lib/booking'
 
 export const PRICING_MODELS = [
-  { id: 'per_item', label: 'Per Item / Unit', short: '/ item', desc: 'One-off price per physical item, bottle, pack, or piece' },
-  { id: 'subscription_daily', label: 'Daily Subscription', short: '/ day', desc: 'Daily recurring micro-fee (e.g. daily tips, study access)' },
-  { id: 'subscription_monthly', label: 'Monthly Subscription', short: '/ month', desc: 'Monthly recurring plan (e.g. software, school fees, retainer)' },
-  { id: 'subscription_annual', label: 'Annual Subscription', short: '/ year', desc: 'Yearly recurring subscription or membership' },
-  { id: 'per_service', label: 'Per Service / Project', short: '/ project', desc: 'One-time fee per project, consultation, or service' },
+  { id: 'per_item', label: 'Per Item / Unit', short: '/ item', category: 'unit', desc: 'One-off price per physical item, bottle, pack, or piece' },
+  { id: 'subscription_daily', label: 'Daily Pass (Micro-billing)', short: '/ day', category: 'subscription', desc: 'Daily recurring fee (e.g. daily tips, study access, micro-SaaS)' },
+  { id: 'subscription_weekly', label: 'Weekly Subscription', short: '/ week', category: 'subscription', desc: '7-day recurring sprint (e.g. exam revision sprint, weekly harvest basket)' },
+  { id: 'subscription_monthly', label: 'Monthly Subscription', short: '/ month', category: 'subscription', desc: 'Standard 30-day recurring plan (e.g. software, school fees, retainer)' },
+  { id: 'subscription_termly', label: 'Termly / Quarterly (3 Months)', short: '/ term', category: 'subscription', desc: '90-day seasonal term pass (e.g. school term, 3-month coaching retainer)' },
+  { id: 'subscription_biannual', label: 'Semi-Annual (6 Months)', short: '/ 6 mo', category: 'subscription', desc: '6-month semester or bi-annual harvest cycle membership' },
+  { id: 'subscription_annual', label: 'Annual Subscription', short: '/ year', category: 'subscription', desc: 'Yearly recurring subscription (typically 12 months for price of 10)' },
+  { id: 'per_service', label: 'Per Service / Project', short: '/ project', category: 'unit', desc: 'One-time fee per project, consultation, or custom service' },
 ] as const
 
 /* ─── Industry Profiles & Benchmark Data ───────────────────────────── */
@@ -181,16 +187,22 @@ const REGION_TARGETS = [
 
 export default function BrandTest() {
   const navigate = useNavigate()
+  const { user, isAuthenticated } = useAuth()
 
   // Form States
   const [brandName, setBrandName] = useState('')
   const [industryId, setIndustryId] = useState('education_edtech')
   const [productDesc, setProductDesc] = useState('')
+  const [websiteUrl, setWebsiteUrl] = useState('')
   const [priceInput, setPriceInput] = useState<number | ''>(2500)
   const [currency, setCurrency] = useState<'KES' | 'USD'>('KES')
   const [priceModel, setPriceModel] = useState<string>('per_item')
   const [targetRegion, setTargetRegion] = useState('urban_ke')
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
+
+  // Rate Limiting & Auth Gating Modals
+  const [showLimitModal, setShowLimitModal] = useState(false)
+  const [showPdfAuthModal, setShowPdfAuthModal] = useState(false)
 
   // Speech Recognition (Mic Voice Input for Description)
   const [isListening, setIsListening] = useState(false)
@@ -281,11 +293,27 @@ export default function BrandTest() {
     reader.readAsDataURL(file)
   }
 
+  // PDF Export Gate Handler - Gated for Authenticated Users
+  const handlePdfDownload = () => {
+    if (!isAuthenticated) {
+      setShowPdfAuthModal(true)
+      return
+    }
+    window.print()
+  }
+
   // Run Brand Diagnostic Simulation
   const handleRunTest = (e: React.FormEvent) => {
     e.preventDefault()
     if (!brandName.trim()) {
       alert('Please enter your brand or product name.')
+      return
+    }
+
+    // Abuse Prevention: Limit guest visitors to 1 test
+    const guestCount = parseInt(localStorage.getItem('nia_guest_brand_test_count') || '0', 10)
+    if (!isAuthenticated && guestCount >= 1 && !hasTested) {
+      setShowLimitModal(true)
       return
     }
 
@@ -318,6 +346,9 @@ export default function BrandTest() {
       setAnalysisProgress(100)
       setIsAnalyzing(false)
       setHasTested(true)
+      if (!isAuthenticated) {
+        localStorage.setItem('nia_guest_brand_test_count', '1')
+      }
       setActiveTab('overview')
       window.scrollTo({ top: 480, behavior: 'smooth' })
     }, 1450)
@@ -344,6 +375,12 @@ export default function BrandTest() {
     let effectiveKesPrice = rawKesPrice
     if (priceModel === 'subscription_daily') {
       effectiveKesPrice = rawKesPrice * 30
+    } else if (priceModel === 'subscription_weekly') {
+      effectiveKesPrice = rawKesPrice * 4.33
+    } else if (priceModel === 'subscription_termly') {
+      effectiveKesPrice = rawKesPrice / 3
+    } else if (priceModel === 'subscription_biannual') {
+      effectiveKesPrice = rawKesPrice / 6
     } else if (priceModel === 'subscription_annual') {
       effectiveKesPrice = rawKesPrice / 12
     }
@@ -358,12 +395,13 @@ export default function BrandTest() {
       priceVerdict = 'premium'
     }
 
-    // Dynamic Viability Scoring based on input depth, realism, and differentiation
+    // Dynamic Viability Scoring based on input depth, realism, differentiation, and domain link
     let baseScore = 74
     if (rawBrand.length >= 3 && rawBrand.length <= 22) baseScore += 4
     if (rawDesc.length > 25) baseScore += 5
     if (rawDesc.length > 70) baseScore += 4
     if (uploadedImage) baseScore += 5
+    if (websiteUrl.trim().length > 5) baseScore += 4
     if (priceVerdict === 'sweet_spot') baseScore += 4
     if (targetRegion === 'global') baseScore = Math.round(baseScore * benchmark.globalUptakeFactor)
     const overallScore = Math.min(Math.max(baseScore, 68), 96)
@@ -572,11 +610,125 @@ export default function BrandTest() {
       ]
     }
 
+    // Storefront & Domain Link Semantic Audit
+    const cleanUrl = websiteUrl.trim()
+    let websiteAudit = {
+      type: 'missing',
+      statusLabel: 'No Digital Link Provided',
+      badgeColor: 'amber',
+      insight: 'Operating without a digital destination reduces buyer trust by ~38% in modern African and global commerce. Even a direct WhatsApp Business catalog shortlink (wa.me/254...) provides a tangible buying destination.',
+      recommendation: 'Register an official .co.ke or .com domain, or generate a free WhatsApp Business shortlink to capture commercial ad traffic.',
+      trustScore: 45,
+    }
+
+    if (cleanUrl) {
+      const lowerUrl = cleanUrl.toLowerCase()
+      if (lowerUrl.includes('wa.me') || lowerUrl.includes('whatsapp.com')) {
+        websiteAudit = {
+          type: 'whatsapp',
+          statusLabel: 'Direct WhatsApp Conversational Storefront',
+          badgeColor: 'emerald',
+          insight: `Direct WhatsApp links (${cleanUrl}) boast the highest impulse closing rates in East Africa (over 65% of Kenyan digital purchases close in WhatsApp chats). However, manual response delays during paid ad surges cause up to 40% lead drop-off.`,
+          recommendation: 'Implement an automated welcome catalog with Nia Media’s WhatsApp Brief Bot to instantly qualify buyers and issue M-Pesa Till/Paybill prompts 24/7.',
+          trustScore: 82,
+        }
+      } else if (lowerUrl.includes('instagram.com') || lowerUrl.includes('tiktok.com') || lowerUrl.includes('facebook.com')) {
+        websiteAudit = {
+          type: 'social',
+          statusLabel: 'Social Media Bio Storefront',
+          badgeColor: 'purple',
+          insight: `Social profile destinations (${cleanUrl}) offer great visual proof and viral discovery. However, social friction is high: users landing on profiles often get sidetracked by notifications before completing an order.`,
+          recommendation: 'Place a dedicated single-link checkout or WhatsApp order link in your bio instead of generic "DM to order" friction.',
+          trustScore: 78,
+        }
+      } else if (lowerUrl.includes('.co.ke') || lowerUrl.includes('.ke') || lowerUrl.includes('.com') || lowerUrl.includes('.africa') || lowerUrl.includes('.org') || lowerUrl.includes('.io') || lowerUrl.includes('.store')) {
+        websiteAudit = {
+          type: 'custom_domain',
+          statusLabel: 'Dedicated Web / E-Commerce Domain',
+          badgeColor: 'teal',
+          insight: `Having an official domain (${cleanUrl}) delivers high brand equity and opens doors for international corporate clients and diaspora buyers.`,
+          recommendation: 'Ensure your mobile checkout supports instant M-Pesa Daraja STK Push and loads under 2 seconds on Safaricom 4G networks.',
+          trustScore: 94,
+        }
+      } else {
+        websiteAudit = {
+          type: 'other_link',
+          statusLabel: 'Digital Product Link',
+          badgeColor: 'blue',
+          insight: `Detected digital link: ${cleanUrl}. Digital direct response links allow accurate tracking of cost-per-acquisition (CPA).`,
+          recommendation: 'Ensure tracking pixels (Meta Pixel / Google Tag) are active on this URL to retarget visitors who do not buy on day 1.',
+          trustScore: 80,
+        }
+      }
+    }
+
+    // Cross-Frequency Subscription Modeling
+    const baseMonthlyNormalized = (
+      priceModel === 'subscription_daily' ? numPrice * 30
+      : priceModel === 'subscription_weekly' ? numPrice * 4.33
+      : priceModel === 'subscription_termly' ? numPrice / 3
+      : priceModel === 'subscription_biannual' ? numPrice / 6
+      : priceModel === 'subscription_annual' ? numPrice / 12
+      : numPrice
+    )
+
+    const subscriptionMatrix = [
+      {
+        frequency: 'Daily Pass (Micro-billing)',
+        cadence: 'Billed daily or on-demand',
+        price: Math.max(1, Math.round(baseMonthlyNormalized / 20)),
+        savings: 'Entry hook',
+        churnRisk: 'High (45-60%) due to daily M-Pesa PIN prompt fatigue',
+        retentionTactic: 'Convert daily users into 7-Day Sprint Passes by Day 3 with bonus revision/content unlock.'
+      },
+      {
+        frequency: 'Weekly Sprint (7 Days)',
+        cadence: 'Billed every 7 days',
+        price: Math.max(1, Math.round(baseMonthlyNormalized / 3.6)),
+        savings: 'Save ~25% vs daily',
+        churnRisk: 'Medium (25-35%)',
+        retentionTactic: 'Send Day 5 milestone recap SMS highlighting progress before the renewal prompt.'
+      },
+      {
+        frequency: 'Monthly Standard',
+        cadence: 'Billed every 30 days',
+        price: Math.max(1, Math.round(baseMonthlyNormalized)),
+        savings: 'Standard baseline',
+        churnRisk: 'Moderate (12-18%)',
+        retentionTactic: 'Incentivize auto-renewal STK push with a 5% loyalty cashback or monthly masterclass.'
+      },
+      {
+        frequency: 'Termly / Quarterly (3 Months)',
+        cadence: 'Billed every 90 days',
+        price: Math.max(1, Math.round(baseMonthlyNormalized * 2.55)),
+        savings: 'Save 15% (Best cashflow)',
+        churnRisk: 'Very Low (< 8% during active term)',
+        retentionTactic: 'Sync with Kenyan school term dates (Jan, May, Sept) or quarterly business planning.'
+      },
+      {
+        frequency: 'Semi-Annual (6 Months)',
+        cadence: 'Billed every 6 months',
+        price: Math.max(1, Math.round(baseMonthlyNormalized * 4.8)),
+        savings: 'Save 20%',
+        churnRisk: 'Low (< 5%)',
+        retentionTactic: 'Dedicated onboarding check-in call and seasonal content/inventory priority.'
+      },
+      {
+        frequency: 'Annual Membership (12 Months)',
+        cadence: 'Billed yearly (Lump-sum)',
+        price: Math.max(1, Math.round(baseMonthlyNormalized * 9.0)),
+        savings: 'Pay for 9 months, get 12 (Save 25%)',
+        churnRisk: 'Lowest churn, locks in 12-month LTV upfront',
+        retentionTactic: 'VIP WhatsApp channel, zero downtime guarantee, and 1-on-1 strategy review.'
+      },
+    ]
+
     const fullReportText = `=====================================================
 NIA MEDIA — BRAND DIAGNOSTIC & STRATEGIC BRIEF
 =====================================================
 Brand: ${rawBrand}
 Industry: ${benchmark.name}
+Domain / Link: ${websiteUrl.trim() || 'None provided'} (${websiteAudit.statusLabel})
 Proposed Price: ${currency === 'KES' ? `KES ${numPrice.toLocaleString()}` : `$${numPrice}`} ${activeModel.short} (${activeModel.label})
 Market Viability Score: ${overallScore} / 100
 Customer Uptake Probability: ${uptakeRate}%
@@ -590,6 +742,11 @@ ${superpower}
 
 CRITICAL BLINDSPOT / FATAL OBJECTION:
 ${criticalBlindspot}
+
+STOREFRONT & DOMAIN AUDIT:
+- Status: ${websiteAudit.statusLabel}
+- Analysis: ${websiteAudit.insight}
+- Action: ${websiteAudit.recommendation}
 
 TARGET BUYER PERSONA:
 - Primary Payer: ${buyerPersona.payer}
@@ -619,6 +776,9 @@ PRICING & UNIT ECONOMICS:
 - Frequency Advice: ${frequencyAdvice}
 - Recommended Ad Spend: ${recommendedAdBudget}
 
+CROSS-FREQUENCY SUBSCRIPTION MATRIX:
+${subscriptionMatrix.map(s => `- ${s.frequency}: ${currency === 'KES' ? 'KES ' : '$'}${s.price} (${s.savings}) | Churn Risk: ${s.churnRisk}`).join('\n')}
+
 7-DAY GO-TO-MARKET EXECUTION CHECKLIST:
 ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
 =====================================================`.trim()
@@ -640,9 +800,12 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
       frequencyAdvice,
       recommendedAdBudget,
       launchPlan,
+      websiteAudit,
+      subscriptionMatrix,
+      baseMonthlyNormalized,
       fullReportText,
     }
-  }, [priceInput, currency, priceModel, benchmark, brandName, productDesc, uploadedImage, targetRegion])
+  }, [priceInput, currency, priceModel, benchmark, brandName, productDesc, uploadedImage, targetRegion, websiteUrl])
 
   // Copy Brief to Clipboard
   const handleCopyReport = () => {
@@ -660,6 +823,16 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
       region: targetRegion,
     })
     navigate(`/quote?${params.toString()}`)
+  }
+
+  // Open Consultation Booking (Cal.com or WhatsApp fallback)
+  const handleBookConsultation = () => {
+    const url = getBookingUrl('consultation')
+    if (url && url !== 'https://cal.com') {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } else {
+      navigate('/book?service=consultation')
+    }
   }
 
   return (
@@ -741,6 +914,27 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Product / Service / Store URL */}
+              <div>
+                <label className="block text-xs font-bold text-white/80 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Globe size={13} className="text-purple-400" />
+                    <span>Product, Service or Store Link (URL)</span>
+                  </span>
+                  <span className="text-[10px] text-white/40 font-normal lowercase">optional · website, social or wa.me</span>
+                </label>
+                <div className="relative">
+                  <Globe size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+                  <input
+                    type="text"
+                    placeholder="e.g. https://mybrand.co.ke, instagram.com/brand, or wa.me/2547..."
+                    value={websiteUrl}
+                    onChange={(e) => setWebsiteUrl(e.target.value)}
+                    className="w-full bg-white/5 border border-white/15 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-purple-400 transition-all font-normal"
+                  />
+                </div>
               </div>
 
               {/* Product Brief Description with Speech-to-Text Mic */}
@@ -980,6 +1174,29 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
                 </div>
               </div>
 
+              {/* Guest Quota & Token Abuse Protection Indicator */}
+              {!isAuthenticated ? (
+                <div className="flex items-center justify-between text-[11px] text-white/60 bg-white/[0.03] border border-white/10 px-3.5 py-2.5 rounded-xl">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck size={14} className="text-amber-400 shrink-0" />
+                    <span>Free Guest Quota: <strong>1 Full Brand Analysis</strong></span>
+                  </div>
+                  <span className="text-[10px] font-bold text-amber-300 bg-amber-400/10 px-2.5 py-0.5 rounded border border-amber-400/20">
+                    {parseInt(localStorage.getItem('nia_guest_brand_test_count') || '0', 10) >= 1 ? '1/1 Used (Sign In to Retest)' : '1 Free Test Available'}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between text-[11px] text-emerald-300 bg-emerald-950/20 border border-emerald-500/20 px-3.5 py-2.5 rounded-xl">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+                    <span>Member Mode: <strong>Unlimited Brand Tests &amp; PDF Exports Active</strong></span>
+                  </div>
+                  <span className="text-[10px] font-bold text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-400/30">
+                    Pro Verified
+                  </span>
+                </div>
+              )}
+
               {/* Submit CTA */}
               <button
                 type="submit"
@@ -1092,25 +1309,38 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
                       </span>
                     </div>
 
-                    {/* Copy Full Report Action */}
-                    <button
-                      type="button"
-                      onClick={handleCopyReport}
-                      className="px-3 py-1 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center gap-1.5 transition-all cursor-pointer"
-                      title="Copy full strategic report as plain text"
-                    >
-                      {copied ? (
-                        <>
-                          <Check size={13} className="text-emerald-400" />
-                          <span className="text-emerald-300 font-bold">Brief Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={13} className="text-purple-300" />
-                          <span>Copy Brief</span>
-                        </>
-                      )}
-                    </button>
+                    {/* Header Quick Actions */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCopyReport}
+                        className="px-3 py-1 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center gap-1.5 transition-all cursor-pointer"
+                        title="Copy full strategic report as plain text"
+                      >
+                        {copied ? (
+                          <>
+                            <Check size={13} className="text-emerald-400" />
+                            <span className="text-emerald-300 font-bold">Brief Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={13} className="text-purple-300" />
+                            <span>Copy Brief</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handlePdfDownload}
+                        className="px-3 py-1 rounded-lg text-xs font-semibold bg-purple-600/30 hover:bg-purple-600/50 border border-purple-400/40 text-white flex items-center gap-1.5 transition-all cursor-pointer"
+                        title={isAuthenticated ? 'Export full report as PDF' : 'Sign in required to export PDF'}
+                      >
+                        <Printer size={13} className="text-purple-300" />
+                        <span>Export PDF</span>
+                        {!isAuthenticated && <Lock size={11} className="text-amber-300 ml-0.5" />}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -1255,6 +1485,52 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
                         <p className="text-[11px] text-purple-300 font-medium">
                           {diagnostics.frequencyAdvice}
                         </p>
+                      </div>
+                    </div>
+
+                    {/* Digital Storefront & Domain Link Audit */}
+                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-3.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Globe size={16} className="text-teal-400" />
+                          <h4 className="font-extrabold text-sm text-white">Digital Storefront &amp; Domain Link Audit</h4>
+                        </div>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                          diagnostics.websiteAudit.badgeColor === 'emerald'
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                            : diagnostics.websiteAudit.badgeColor === 'teal'
+                            ? 'bg-teal-500/20 text-teal-300 border border-teal-400/30'
+                            : diagnostics.websiteAudit.badgeColor === 'purple'
+                            ? 'bg-purple-500/20 text-purple-300 border border-purple-400/30'
+                            : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
+                        }`}>
+                          {diagnostics.websiteAudit.statusLabel}
+                        </span>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-black/30 border border-white/5 space-y-2 text-xs">
+                        {websiteUrl.trim() && (
+                          <div className="flex items-center gap-2 text-purple-300 font-mono text-[11px] pb-1.5 border-b border-white/5">
+                            <ExternalLink size={12} className="shrink-0" />
+                            <a
+                              href={websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="underline hover:text-white truncate"
+                            >
+                              {websiteUrl}
+                            </a>
+                          </div>
+                        )}
+                        <p className="text-white/80 leading-relaxed">
+                          {diagnostics.websiteAudit.insight}
+                        </p>
+                        <div className="pt-1.5 flex items-start gap-2 text-emerald-300 bg-emerald-950/20 p-2.5 rounded-lg border border-emerald-500/20">
+                          <CheckCircle2 size={14} className="shrink-0 mt-0.5 text-emerald-400" />
+                          <p className="text-[11px] font-medium leading-relaxed">
+                            <strong>Conversion Optimization Play:</strong> {diagnostics.websiteAudit.recommendation}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1451,45 +1727,151 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
                         ))}
                       </div>
                     </div>
+
+                    {/* Multi-Frequency Subscription Pricing Matrix & Churn Defense */}
+                    <div className="rounded-3xl p-6 bg-white/[0.03] border border-white/10 shadow-xl space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Repeat size={16} className="text-purple-400" />
+                          <h4 className="font-extrabold text-sm text-white">Subscription Pricing Matrix &amp; Churn Defense</h4>
+                        </div>
+                        <span className="text-[10px] font-bold text-purple-300 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-400/20">
+                          Multi-Frequency Modeling
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-white/70 leading-relaxed">
+                        Compare how your price maps across East African and global recurring cadences. In Kenya, churn is heavily driven by payment friction (e.g. daily M-Pesa PIN prompt fatigue vs. upfront term passes).
+                      </p>
+
+                      {/* Subscription Tier Cards Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                        {diagnostics.subscriptionMatrix.map((tier, idx) => (
+                          <div key={idx} className="p-3.5 rounded-2xl bg-black/40 border border-white/5 space-y-2 hover:border-purple-500/30 transition-all">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-xs text-white">{tier.frequency}</span>
+                              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                                {tier.savings}
+                              </span>
+                            </div>
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="text-lg font-black text-amber-300">
+                                {currency === 'KES' ? `KES ${tier.price.toLocaleString()}` : `$${tier.price.toLocaleString()}`}
+                              </span>
+                              <span className="text-[10px] text-white/40">{tier.cadence}</span>
+                            </div>
+                            <div className="text-[11px] space-y-1 pt-1.5 border-t border-white/5">
+                              <p className="text-rose-300/90 font-medium">
+                                <strong>⚠️ Churn Risk:</strong> {tier.churnRisk}
+                              </p>
+                              <p className="text-white/70 leading-relaxed">
+                                <strong>🛡️ Retention Play:</strong> {tier.retentionTactic}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* East African Payment Retention Playbook */}
+                      <div className="p-4 rounded-2xl bg-purple-950/20 border border-purple-500/20 text-xs space-y-1.5 text-purple-200">
+                        <p className="font-bold text-white flex items-center gap-1.5">
+                          <Zap size={14} className="text-amber-300" />
+                          <span>Sustaining Platform Cashflow: The "Termly Pass" Rule</span>
+                        </p>
+                        <p className="leading-relaxed text-[11px] text-purple-200/90">
+                          If selling digital subscriptions or recurring services in Kenya, avoid relying solely on daily or weekly manual M-Pesa STK prompts. Over 50% of consumers abandon daily prompts after day 4 due to transaction fatigue or balance gaps. Always offer a <strong>Termly / Quarterly Pass</strong> with a 15% discount; this collects 90 days of revenue upfront, giving you cash reserves to fund customer acquisition.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
 
-                {/* Final Call-to-Action Bridge to Video Production */}
-                <div className="rounded-3xl p-6 bg-gradient-to-r from-purple-900/60 to-indigo-900/60 border border-purple-400/30 shadow-2xl space-y-3.5">
+                {/* Final Call-to-Action Bridge & Revenue Streams */}
+                <div className="rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-purple-900/70 via-[#12082b] to-indigo-950/70 border border-purple-400/40 shadow-2xl space-y-4">
                   <div className="flex items-center gap-2">
-                    <Film size={18} className="text-amber-300" />
-                    <h4 className="font-black text-base text-white">Turn This Strategic Brief Into A Live Commercial</h4>
+                    <Film size={20} className="text-amber-300" />
+                    <h4 className="font-black text-lg text-white">Execute This Brand &amp; Commercial Strategy</h4>
                   </div>
-                  <p className="text-xs text-purple-200/80 leading-relaxed">
-                    A great brand strategy needs a high-converting video commercial. We can produce this exact 30s storyboard, with professional voiceover and matching promotional poster, in 48 hours for KES 8,000 ($65 USD).
+                  <p className="text-xs sm:text-sm text-purple-200/90 leading-relaxed max-w-2xl">
+                    Transform this strategic audit into live commercial revenue. Nia Media pairs AI intelligence with full-stack commercial video production, creative director consulting, and high-converting marketing campaigns.
                   </p>
-                  <div className="flex flex-wrap items-center gap-3 pt-1">
-                    <button
-                      type="button"
-                      onClick={handleProceedToCommercial}
-                      className="px-6 py-3.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 shadow-lg shadow-emerald-600/30 transition-all flex items-center gap-2 cursor-pointer"
-                    >
-                      <Film size={14} />
-                      <span>Produce This Commercial (From KES 8K / $65) →</span>
-                    </button>
 
-                    <button
-                      type="button"
-                      onClick={handleCopyReport}
-                      className="px-4 py-3.5 rounded-xl text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 border border-white/15 transition-all flex items-center gap-1.5 cursor-pointer"
-                    >
-                      {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
-                      <span>{copied ? 'Brief Copied!' : 'Copy Full Brief'}</span>
-                    </button>
+                  {/* Revenue CTAs Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    {/* Option 1: 30s Commercial Production */}
+                    <div className="p-4 rounded-2xl bg-black/40 border border-purple-500/30 space-y-2 flex flex-col justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">Fastest Turnaround</span>
+                          <span className="text-xs font-extrabold text-white">From KES 8,000 / $65</span>
+                        </div>
+                        <h5 className="font-extrabold text-sm text-white">Produce 30s Video Commercial</h5>
+                        <p className="text-[11px] text-white/70 leading-relaxed">
+                          We bring this exact 30s storyboard to life with pro voiceover, motion graphics, and WhatsApp CTA in 48 hours.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleProceedToCommercial}
+                        className="w-full mt-2 py-3 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Film size={14} />
+                        <span>Book Commercial Video Deposit →</span>
+                      </button>
+                    </div>
 
-                    <button
-                      type="button"
-                      onClick={() => window.print()}
-                      className="px-4 py-3.5 rounded-xl text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 border border-white/15 transition-all flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <Printer size={14} />
-                      <span>Print PDF</span>
-                    </button>
+                    {/* Option 2: 1-on-1 Creative Director Strategy Call */}
+                    <div className="p-4 rounded-2xl bg-black/40 border border-purple-500/30 space-y-2 flex flex-col justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-purple-300 uppercase tracking-wider">1-on-1 Strategy</span>
+                          <span className="text-xs font-extrabold text-white">Cal.com Booking</span>
+                        </div>
+                        <h5 className="font-extrabold text-sm text-white">Creative Director Consultation</h5>
+                        <p className="text-[11px] text-white/70 leading-relaxed">
+                          Book a 30-minute deep dive with our creative team to refine your brand positioning, packaging, and ad scaling roadmap.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleBookConsultation}
+                        className="w-full mt-2 py-3 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-purple-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Calendar size={14} />
+                        <span>Schedule Strategy Call →</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Utility Bar: Print PDF, Copy Report */}
+                  <div className="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handlePdfDownload}
+                        className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-white/10 hover:bg-white/15 border border-white/15 transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Printer size={14} />
+                        <span>Download PDF Executive Brief</span>
+                        {!isAuthenticated && <Lock size={12} className="text-amber-400 ml-1" />}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleCopyReport}
+                        className="px-4 py-2.5 rounded-xl text-xs font-bold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+                        <span>{copied ? 'Brief Copied!' : 'Copy Markdown Brief'}</span>
+                      </button>
+                    </div>
+
+                    {!isAuthenticated && (
+                      <span className="text-[11px] text-amber-300 font-medium flex items-center gap-1">
+                        <Lock size={12} />
+                        <span>PDF download requires free account login</span>
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1497,6 +1879,125 @@ ${launchPlan.map((l) => `${l.day} (${l.task}): ${l.tip}`).join('\n')}
           </div>
         </div>
       </div>
+
+      {/* ─── Rate Limiting & Auth Modals ─────────────────────────────── */}
+      {/* 1-Analysis Guest Limit Modal */}
+      {showLimitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
+          <div className="bg-[#12082b] border border-purple-500/40 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-center space-y-5 shadow-2xl relative">
+            <button
+              onClick={() => setShowLimitModal(false)}
+              className="absolute top-4 right-4 p-2 text-white/50 hover:text-white rounded-full bg-white/5 hover:bg-white/10 cursor-pointer"
+            >
+              <X size={16} />
+            </button>
+
+            <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
+              <Lock size={28} />
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-300 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">
+                Guest Limit Reached (1/1 Free Tests)
+              </span>
+              <h3 className="text-xl sm:text-2xl font-black text-white">
+                Create A Free Account For Unlimited Analyses
+              </h3>
+              <p className="text-xs sm:text-sm text-white/70 leading-relaxed max-w-sm mx-auto">
+                You have completed your complimentary guest brand test. Sign up for a free Nia Media account to run unlimited market simulations, save your brand dossiers, and export PDF briefs.
+              </p>
+            </div>
+
+            <div className="space-y-2.5 pt-2">
+              <button
+                onClick={() => navigate('/register?redirect=/test-brand')}
+                className="w-full py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-purple-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <UserPlus size={16} />
+                <span>Create Free Account (Takes 30s) →</span>
+              </button>
+
+              <button
+                onClick={() => navigate('/login?redirect=/test-brand')}
+                className="w-full py-3 px-4 rounded-xl text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <LogIn size={14} />
+                <span>Already have an account? Sign In</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PDF Auth Gate Modal */}
+      {showPdfAuthModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
+          <div className="bg-[#12082b] border border-purple-500/40 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-center space-y-5 shadow-2xl relative">
+            <button
+              onClick={() => setShowPdfAuthModal(false)}
+              className="absolute top-4 right-4 p-2 text-white/50 hover:text-white rounded-full bg-white/5 hover:bg-white/10 cursor-pointer"
+            >
+              <X size={16} />
+            </button>
+
+            <div className="w-16 h-16 rounded-2xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center mx-auto text-purple-300 shadow-[0_0_20px_rgba(168,85,247,0.2)]">
+              <Printer size={28} />
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-purple-300 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/30">
+                Member Feature Only
+              </span>
+              <h3 className="text-xl sm:text-2xl font-black text-white">
+                Sign In To Export PDF Executive Brief
+              </h3>
+              <p className="text-xs sm:text-sm text-white/70 leading-relaxed max-w-sm mx-auto">
+                High-resolution PDF dossiers, 30s commercial storyboards, and competitor battlecards are exclusively available to authenticated members. Sign in or create a free account to instantly download and print your full strategic dossier.
+              </p>
+            </div>
+
+            <div className="space-y-2.5 pt-2">
+              <button
+                onClick={() => navigate('/register?redirect=/test-brand')}
+                className="w-full py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-purple-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <UserPlus size={16} />
+                <span>Register To Download PDF →</span>
+              </button>
+
+              <button
+                onClick={() => navigate('/login?redirect=/test-brand')}
+                className="w-full py-3 px-4 rounded-xl text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <LogIn size={14} />
+                <span>Sign In To Existing Account</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Print Specific Executive Styling */}
+      <style>{`
+        @media print {
+          body {
+            background: #ffffff !important;
+            color: #000000 !important;
+          }
+          header, nav, button, input, select, textarea, form, .no-print {
+            display: none !important;
+          }
+          .bg-white\\/\\[0\\.03\\], .bg-black\\/30, .bg-black\\/40, .bg-purple-950\\/20 {
+            background: #ffffff !important;
+            color: #111111 !important;
+            border: 1px solid #e5e7eb !important;
+            box-shadow: none !important;
+          }
+          .text-white, .text-purple-200, .text-white\\/90, .text-white\\/80, .text-white\\/70 {
+            color: #111111 !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }
