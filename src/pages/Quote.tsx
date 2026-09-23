@@ -383,11 +383,12 @@ export default function Quote() {
   )
 
   // Survey States
-  const [currency, setCurrency] = useState<'KES' | 'USD'>('KES')
+  const isUsdParam = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('currency')?.toUpperCase() === 'USD'
+  const [currency, setCurrency] = useState<'KES' | 'USD'>(isUsdParam ? 'USD' : 'KES')
   const [compareOpen, setCompareOpen] = useState(false)
   const [businessStage, setBusinessStage] = useState<string>('startup')
   const [primaryGoal, setPrimaryGoal] = useState<string>('social_ads')
-  const [targetMarket, setTargetMarket] = useState<string>('kenya')
+  const [targetMarket, setTargetMarket] = useState<string>(isUsdParam ? 'global' : 'kenya')
 
   // Step 1 - Video Scope & Formats
   const [length, setLength] = useState<string>(() => {
@@ -408,7 +409,7 @@ export default function Quote() {
     }
     return 'cinematic'
   })
-  const [voiceTone, setVoiceTone] = useState('en_ke')
+  const [voiceTone, setVoiceTone] = useState(isUsdParam ? 'global_neutral' : 'en_ke')
   const [poster] = useState(true)
   const [subtitles, setSubtitles] = useState(false)
 

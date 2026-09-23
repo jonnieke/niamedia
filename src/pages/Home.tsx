@@ -8,7 +8,7 @@ import {
   Sparkles, Play, ArrowRight, CheckCircle2, Shield, Clock,
   Smartphone, Film, Zap, Layers, Star, MessageSquare, ChevronDown,
   Volume2, Eye, Award, Check, Image as ImageIcon, ExternalLink,
-  BarChart3, Target, ArrowUpRight
+  BarChart3, Target, ArrowUpRight, Globe, CreditCard
 } from 'lucide-react'
 
 const WHATSAPP_URL = 'https://wa.me/254751822556?text=Hi%2C%20I%20need%20a%20video%20commercial%20for%20my%20business'
@@ -141,6 +141,10 @@ const FAQS = [
 export default function Home() {
   const [searchParams] = useSearchParams()
   const [selectedDuration, setSelectedDuration] = useState('30s')
+  const [currency, setCurrency] = useState<'KES' | 'USD'>(() => {
+    const c = searchParams.get('currency')
+    return c && c.toUpperCase() === 'USD' ? 'USD' : 'KES'
+  })
   const [activeHeroStyle, setActiveHeroStyle] = useState(0)
   const [heroAspectRatio, setHeroAspectRatio] = useState<'9:16' | '16:9' | '1:1'>('9:16')
   const [openFaq, setOpenFaq] = useState<number | null>(null)
@@ -381,9 +385,32 @@ export default function Home() {
         <div className="max-w-4xl mx-auto rounded-3xl bg-white/[0.03] border border-white/10 p-6 md:p-8 backdrop-blur-xl shadow-2xl">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-white/10">
             <div>
-              <span className="text-xs font-extrabold uppercase tracking-wider text-purple-400">
-                INSTANT RATE EXPLORER
-              </span>
+              <div className="flex items-center gap-3 mb-1">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-purple-400">
+                  INSTANT RATE EXPLORER
+                </span>
+                {/* Currency Switcher Toggle */}
+                <div className="flex items-center gap-1 bg-white/10 p-0.5 rounded-lg border border-white/15">
+                  <button
+                    type="button"
+                    onClick={() => setCurrency('KES')}
+                    className={`px-2.5 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
+                      currency === 'KES' ? 'bg-purple-600 text-white shadow-sm' : 'text-white/60 hover:text-white'
+                    }`}
+                  >
+                    KES
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrency('USD')}
+                    className={`px-2.5 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
+                      currency === 'USD' ? 'bg-purple-600 text-white shadow-sm' : 'text-white/60 hover:text-white'
+                    }`}
+                  >
+                    USD ($)
+                  </button>
+                </div>
+              </div>
               <h2 className="text-2xl font-extrabold text-white mt-1">
                 Transparent Video Pricing. Zero Hidden Fees.
               </h2>
@@ -394,10 +421,10 @@ export default function Home() {
             <div className="text-right self-start md:self-end">
               <span className="text-xs text-white/40 block">Estimated Total</span>
               <span className="text-3xl font-extrabold text-white">
-                KES {currentDuration.price.toLocaleString()}
+                {currency === 'KES' ? `KES ${currentDuration.price.toLocaleString()}` : `$${currentDuration.usd.toLocaleString()} USD`}
               </span>
               <span className="text-xs text-emerald-400 font-semibold block mt-0.5">
-                (70% Deposit to Start: KES {Math.round(currentDuration.price * 0.7).toLocaleString()})
+                (70% Deposit to Start: {currency === 'KES' ? `KES ${Math.round(currentDuration.price * 0.7).toLocaleString()}` : `$${Math.round(currentDuration.usd * 0.7).toLocaleString()} USD`})
               </span>
             </div>
           </div>
@@ -419,8 +446,12 @@ export default function Home() {
                   <p className="text-[10px] text-white/40 leading-tight mt-1">{tier.desc}</p>
                 </div>
                 <div className="flex items-baseline justify-between mt-2">
-                  <span className="text-xs font-extrabold text-amber-300">KES {tier.price.toLocaleString()}</span>
-                  <span className="text-[10px] font-semibold text-white/50">~${tier.usd} USD</span>
+                  <span className="text-xs font-extrabold text-amber-300">
+                    {currency === 'KES' ? `KES ${tier.price.toLocaleString()}` : `$${tier.usd} USD`}
+                  </span>
+                  <span className="text-[10px] font-semibold text-white/50">
+                    {currency === 'KES' ? `~$${tier.usd} USD` : `~KES ${tier.price.toLocaleString()}`}
+                  </span>
                 </div>
               </button>
             ))}
@@ -448,7 +479,7 @@ export default function Home() {
             </div>
 
             <Link
-              to={`/quote?length=${selectedDuration}`}
+              to={`/quote?length=${selectedDuration}&currency=${currency}`}
               className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 transition-colors shadow"
             >
               Start This Project <ArrowRight size={13} />
@@ -684,6 +715,82 @@ export default function Home() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── KENYAN DIASPORA & GLOBAL BUSINESSES ──────────────────────────────── */}
+      <section className="py-20 px-6 relative bg-gradient-to-b from-[#0c0916] via-[#150a2a] to-[#07050d] border-t border-purple-500/20">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold mb-3 bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                <Globe size={13} className="text-amber-400" />
+                <span>FOR KENYAN DIASPORA &amp; GLOBAL BRANDS</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+                Run Your Business in Kenya From Abroad? We Are Your On-Ground Media Studio.
+              </h2>
+              <p className="text-sm text-white/70 max-w-2xl mt-2 leading-relaxed">
+                Whether you are managing luxury Airbnbs, real estate developments, retail stores, or tech startups from London, Texas, Dubai, or Toronto — get broadcast-grade commercial video ads produced in Nairobi without the hassle of local coordination.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
+              <Link
+                to="/quote?currency=USD"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_20px_rgba(147,51,234,0.4)] transition-all"
+              >
+                <CreditCard size={14} className="text-amber-300" /> Quote in USD ($15–$480)
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-7 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md flex flex-col justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-2xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300 mb-4 font-bold">
+                  01
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2">100% Remote Video Direction</h3>
+                <p className="text-xs text-white/65 leading-relaxed">
+                  Brief our team online in 60 seconds. We write the script, voice the audio with Kenyan or global talent, and shoot or animate your commercial. You review a watermarked preview link with 2 included revision rounds.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-white/5 text-[11px] font-semibold text-emerald-400 flex items-center gap-1.5">
+                <CheckCircle2 size={13} /> Zero travel or on-site supervision needed
+              </div>
+            </div>
+
+            <div className="p-7 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md flex flex-col justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-300 mb-4 font-bold">
+                  02
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2">Pay in USD with Visa &amp; Mastercard</h3>
+                <p className="text-xs text-white/65 leading-relaxed">
+                  Pay securely using any international credit or debit card through PesaPal. Transparent 70% deposit to start ($10–$336 USD) and 30% milestone balance payable only when you approve the final cut.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-white/5 text-[11px] font-semibold text-amber-300 flex items-center gap-1.5">
+                <CheckCircle2 size={13} /> No foreign exchange hassle or M-Pesa requirement
+              </div>
+            </div>
+
+            <div className="p-7 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md flex flex-col justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-300 mb-4 font-bold">
+                  03
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2">Kenyan Culture or Global Polish</h3>
+                <p className="text-xs text-white/65 leading-relaxed">
+                  Target local Kenyan customers with authentic Kenyan English, Swahili, or Sheng — or choose North American/British corporate voiceovers to pitch international diaspora investors.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-white/5 text-[11px] font-semibold text-blue-300 flex items-center gap-1.5">
+                <CheckCircle2 size={13} /> 6 authentic accent profiles ready
+              </div>
+            </div>
           </div>
         </div>
       </section>
