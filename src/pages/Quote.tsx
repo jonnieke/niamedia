@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import {
   Film, CheckCircle2, ArrowRight, Clock, Zap,
   Phone, Building2, MessageSquare, ChevronRight, Star, Mic, Loader2, Paperclip, Sparkles, Trash2, Lock, FileText,
-  Sliders, Palette, Volume2, ShieldCheck, Check, Edit3, ArrowLeft, RefreshCw, Layers, HelpCircle
+  Sliders, Palette, Volume2, ShieldCheck, Check, Edit3, ArrowLeft, RefreshCw, Layers, HelpCircle,
+  Smartphone, CreditCard
 } from 'lucide-react'
 import PublicHeader from '../components/layout/PublicHeader'
 import { supabase } from '../lib/supabase'
@@ -436,7 +437,13 @@ export default function Quote() {
     }
     return demoCtx.product ? `Promoting: ${demoCtx.product}` : ''
   })
-  const [supportingFiles, setSupportingFiles] = useState<{ id: string; file: File }[]>([])
+  const [supportingFiles, setSupportingFiles] = useState<{
+    id: string
+    file: File
+    width?: number
+    height?: number
+    isLowRes?: boolean
+  }[]>([])
   const [isListening, setIsListening] = useState(false)
   const [listeningText, setListeningText] = useState('')
   const [speechSupported, setSpeechSupported] = useState(false)
@@ -452,6 +459,10 @@ export default function Quote() {
   const [showQuotationModal, setShowQuotationModal] = useState(false)
   const [pesapalLoading, setPesapalLoading] = useState(false)
   const [pesapalError, setPesapalError] = useState('')
+  const [stkPhone, setStkPhone] = useState('')
+  const [stkLoading, setStkLoading] = useState(false)
+  const [stkSent, setStkSent] = useState(false)
+  const [stkMsg, setStkMsg] = useState('')
   const [portalToken, setPortalToken] = useState<string | null>(null)
   const [portalChecking, setPortalChecking] = useState(false)
 
@@ -512,11 +523,27 @@ export default function Quote() {
 
   const handleSupportingFiles = (incoming: FileList | null) => {
     if (!incoming) return
-    const next = Array.from(incoming).map(file => ({
-      id: `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      file,
-    }))
-    setSupportingFiles(prev => [...prev, ...next])
+    Array.from(incoming).forEach(file => {
+      const id = `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2)}`
+      if (file.type.startsWith('image/')) {
+        const img = new Image()
+        const url = URL.createObjectURL(file)
+        img.onload = () => {
+          const width = img.naturalWidth
+          const height = img.naturalHeight
+          const isLowRes = width < 800 || height < 600
+          setSupportingFiles(prev => [...prev, { id, file, width, height, isLowRes }])
+          URL.revokeObjectURL(url)
+        }
+        img.onerror = () => {
+          setSupportingFiles(prev => [...prev, { id, file }])
+          URL.revokeObjectURL(url)
+        }
+        img.src = url
+      } else {
+        setSupportingFiles(prev => [...prev, { id, file }])
+      }
+    })
   }
 
   const removeSupportingFile = (id: string) => {
@@ -781,6 +808,49 @@ export default function Quote() {
     }
   }
 
+  // Direct M-Pesa STK Push with seamless PesaPal fallback
+  const handleDirectMpesaStk = async () => {
+    const rawNumber = (stkPhone || successData?.phone || phone || '').trim()
+    if (!rawNumber) {
+      setPesapalError('Please enter your Safaricom M-Pesa phone number.')
+      return
+    }
+    setStkLoading(true)
+    setPesapalError('')
+    setStkMsg('')
+
+    try {
+      const qId = successData?.quoteId || `quote_${Date.now()}`
+      const orderId = qId.startsWith('quote_') ? qId : `quote_${qId}`
+      const depositAmt = successData?.depositAmount || Math.round(price.total * 0.7)
+
+      const { data, error: fnErr } = await supabase.functions.invoke('mpesa-payment', {
+        body: {
+          phone: rawNumber,
+          amount: depositAmt,
+          reference: orderId,
+        },
+      })
+
+      if (fnErr || data?.error) {
+        if (data?.usePesapal) {
+          // Gracefully fallback to PesaPal gateway
+          await handlePayDeposit()
+          return
+        }
+        throw new Error(data?.error || fnErr?.message || 'Direct STK push failed')
+      }
+
+      setStkSent(true)
+      setStkMsg(`📲 STK Push prompt sent to ${rawNumber}! Check your phone now and enter your M-Pesa PIN for KES ${depositAmt.toLocaleString()}.`)
+    } catch (err: any) {
+      console.warn('Direct STK failed, falling back to PesaPal:', err)
+      await handlePayDeposit()
+    } finally {
+      setStkLoading(false)
+    }
+  }
+
   // WhatsApp pre-fill message
   const waMessage = encodeURIComponent(
     `Hi Nia Media, I need a commercial video.\n\nBusiness: ${bizName}\nStage: ${BUSINESS_SIZES.find(s => s.id === businessStage)?.label || 'Startup'}\nGoal: ${BUSINESS_GOALS.find(g => g.id === primaryGoal)?.label || 'Social Ads'}\nMarket: ${TARGET_MARKETS.find(m => m.id === targetMarket)?.label || 'Kenya'}\nPackage: ${LENGTHS.find(l => l.id === length)?.label}\nStyle: ${VISUAL_STYLES.find(s => s.id === visualStyle)?.title}\nPlatforms: ${platforms.join(', ')}\nDelivery: ${RUSH.find(r => r.id === rush)?.label}\nEstimated Total: KES ${price.total.toLocaleString()} (~$${price.usdTotal} USD)\n70% Deposit to Start: KES ${Math.round(price.total * 0.7).toLocaleString()} (~$${Math.round(price.usdTotal * 0.7)} USD)\n\nWhat I am promoting: ${brief || 'Will share brief on WhatsApp'}\nContact: ${phone}`
@@ -960,34 +1030,69 @@ export default function Quote() {
                   </p>
                 )}
 
+                {/* Option 1: Direct M-Pesa STK Push */}
+                <div className="mb-4 p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-2 text-left">
+                  <span className="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+                    <Smartphone size={14} />
+                    <span>Instant M-Pesa STK Push (Phone PIN Prompt):</span>
+                  </span>
+                  <div className="flex gap-2">
+                    <input
+                      type="tel"
+                      placeholder="e.g. 0712345678"
+                      value={stkPhone || successData?.phone || phone || ''}
+                      onChange={(e) => setStkPhone(e.target.value)}
+                      className="w-full bg-black/60 border border-white/20 rounded-xl px-3 py-2.5 text-xs text-white placeholder-white/30 focus:outline-none focus:border-emerald-400 font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleDirectMpesaStk}
+                      disabled={stkLoading || pesapalLoading}
+                      className="shrink-0 px-4 py-2.5 rounded-xl text-xs font-bold text-white shadow-sm flex items-center gap-1.5 hover:opacity-90 active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+                      style={{ background: 'linear-gradient(135deg, #059669, #10b981)' }}
+                    >
+                      {stkLoading ? <Loader2 size={13} className="animate-spin" /> : <Smartphone size={13} />}
+                      <span>Prompt PIN</span>
+                    </button>
+                  </div>
+                  {stkMsg && (
+                    <p className="text-[11px] text-emerald-200 bg-emerald-500/20 p-2.5 rounded-lg border border-emerald-500/30 leading-relaxed">
+                      {stkMsg}
+                    </p>
+                  )}
+                  <p className="text-[10px] text-purple-200/50">
+                    Enter Safaricom number to trigger immediate pop-up on your handset.
+                  </p>
+                </div>
+
+                {/* Option 2: PesaPal Gateway (Card / M-Pesa / Airtel) */}
                 <button
                   type="button"
                   onClick={handlePayDeposit}
-                  disabled={pesapalLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-sm font-extrabold text-white shadow-md transition-all hover:opacity-95 active:scale-[0.99] disabled:opacity-60 cursor-pointer"
-                  style={{ background: 'linear-gradient(135deg, #059669, #0284c7)' }}
+                  disabled={pesapalLoading || stkLoading}
+                  className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-extrabold text-white shadow-md transition-all hover:opacity-95 active:scale-[0.99] disabled:opacity-60 cursor-pointer border border-white/20 bg-white/10 hover:bg-white/15"
                 >
                   {pesapalLoading ? (
                     <>
-                      <Loader2 size={16} className="animate-spin" />
+                      <Loader2 size={15} className="animate-spin" />
                       Connecting to PesaPal...
                     </>
                   ) : (
                     <>
-                      <Lock size={15} />
-                      Pay 70% Deposit (KES {(successData?.depositAmount || Math.round(price.total * 0.7)).toLocaleString()})
+                      <CreditCard size={15} />
+                      Pay via PesaPal Gateway (Visa / Master / M-Pesa)
                     </>
                   )}
                 </button>
 
                 <div className="flex items-center justify-center gap-2.5 mt-3 text-[10px] text-purple-200/50 font-medium">
-                  <span>🔒 M-Pesa</span>
+                  <span>🔒 Safaricom Daraja STK</span>
                   <span>•</span>
                   <span>Visa</span>
                   <span>•</span>
                   <span>Mastercard</span>
                   <span>•</span>
-                  <span>PesaPal Secure Checkout</span>
+                  <span>PesaPal IPN</span>
                 </div>
               </div>
             )}
@@ -1650,23 +1755,43 @@ export default function Quote() {
                       )}
 
                       {supportingFiles.length > 0 && (
-                        <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap gap-2">
-                          {supportingFiles.map(item => (
-                            <div
-                              key={item.id}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-xs text-gray-700"
-                            >
-                              <Paperclip size={12} className="text-gray-400" />
-                              <span className="truncate max-w-[150px]">{item.file.name}</span>
-                              <button
-                                type="button"
-                                onClick={() => removeSupportingFile(item.id)}
-                                className="text-gray-400 hover:text-red-500 ml-1"
+                        <div className="mt-4 pt-3 border-t border-gray-100 space-y-2">
+                          <div className="flex flex-wrap gap-2">
+                            {supportingFiles.map(item => (
+                              <div
+                                key={item.id}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs ${
+                                  item.isLowRes
+                                    ? 'border-amber-300 bg-amber-50 text-amber-900'
+                                    : item.width
+                                    ? 'border-emerald-300 bg-emerald-50 text-emerald-900'
+                                    : 'border-gray-200 bg-gray-50 text-gray-700'
+                                }`}
                               >
-                                <Trash2 size={12} />
-                              </button>
-                            </div>
-                          ))}
+                                <Paperclip size={12} className={item.isLowRes ? 'text-amber-500' : 'text-gray-400'} />
+                                <span className="truncate max-w-[150px] font-medium">{item.file.name}</span>
+                                {item.width && item.height && (
+                                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                                    item.isLowRes ? 'bg-amber-200 text-amber-800' : 'bg-emerald-200 text-emerald-800'
+                                  }`}>
+                                    {item.isLowRes ? `⚠️ Low Res (${item.width}×${item.height})` : `✅ HD (${item.width}×${item.height})`}
+                                  </span>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => removeSupportingFile(item.id)}
+                                  className="text-gray-400 hover:text-red-500 ml-1 cursor-pointer"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          {supportingFiles.some(f => f.isLowRes) && (
+                            <p className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                              💡 <strong>Asset Tip:</strong> One or more attached images are under 1080px resolution. For crisp 4K commercial video rendering, we recommend attaching a vector SVG/PDF logo or image above 1080px.
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>

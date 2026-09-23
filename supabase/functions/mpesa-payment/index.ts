@@ -7,11 +7,21 @@ Deno.serve(async (req: Request) => {
   try {
     const { phone, amount, invoiceId, reference } = await req.json()
 
-    const consumerKey = Deno.env.get("MPESA_CONSUMER_KEY")!
-    const consumerSecret = Deno.env.get("MPESA_CONSUMER_SECRET")!
+    const consumerKey = Deno.env.get("MPESA_CONSUMER_KEY")
+    const consumerSecret = Deno.env.get("MPESA_CONSUMER_SECRET")
     const shortCode = Deno.env.get("MPESA_BUSINESS_SHORT_CODE") ?? "174379"
-    const passkey = Deno.env.get("MPESA_PASSKEY")!
+    const passkey = Deno.env.get("MPESA_PASSKEY")
     const callbackUrl = Deno.env.get("MPESA_CALLBACK_URL") ?? `${Deno.env.get("SUPABASE_URL")}/functions/v1/mpesa-callback`
+
+    if (!consumerKey || !consumerSecret || !passkey) {
+      return new Response(JSON.stringify({
+        error: "Direct Safaricom Daraja STK is not configured. Please use PesaPal checkout.",
+        usePesapal: true,
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      })
+    }
 
     // 1. Get OAuth token
     const authRes = await fetch(

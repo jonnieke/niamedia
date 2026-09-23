@@ -154,20 +154,28 @@ export default function Pricing() {
             <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#dbeafe' }}>
               <Users size={20} className="text-blue-600" />
             </div>
-            <h2 className="text-lg font-extrabold text-gray-900 mb-1">Video & Poster Retainer</h2>
-            <p className="text-xs text-gray-500 mb-4">Fresh commercial videos and branded posters produced for your business every month.</p>
-            <div className="mb-5">
+            <h2 className="text-lg font-extrabold text-gray-900 mb-1">Video &amp; Content Retainer</h2>
+            <p className="text-xs text-gray-500 mb-4">Fresh commercial videos and branded posters produced for your business on a monthly or quarterly pass.</p>
+            <div className="mb-4">
               <span className="text-3xl font-extrabold text-gray-900">KES 15,000</span>
               <span className="text-sm text-gray-400"> / month</span>
-              <p className="text-xs text-emerald-600 font-semibold mt-1">Starter tier • Save up to 20% on high volumes</p>
+              <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                  Monthly Starter
+                </span>
+                <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+                  Termly Pass: KES 38k (Save 15%)
+                </span>
+              </div>
             </div>
             <ul className="space-y-2.5 flex-1 mb-6">
               {[
-                '2 commercial videos produced every month (15s–30s)',
-                '2 matching branded posters for social media & WhatsApp',
-                'Custom voiceover & scriptwriting included',
-                '2 revision rounds on every deliverable',
-                'Save up to 20% on high volumes (Growth & Scale tiers up to KES 60k)',
+                '2 commercial videos produced every month (30s standard duration)',
+                '2 matching branded promotional posters for WhatsApp & social feeds',
+                'Professional Kenyan or Global human studio voiceovers included',
+                '2 revision rounds per deliverable & 100% worldwide broadcast rights',
+                'Quarterly Termly Pass available with 15% upfront cash savings',
+                'Growth & Scale tiers available up to KES 60k/month',
               ].map(f => (
                 <li key={f} className="flex items-start gap-2 text-xs text-gray-600">
                   <CheckCircle2 size={13} className="text-blue-500 shrink-0 mt-0.5" />{f}
@@ -175,7 +183,7 @@ export default function Pricing() {
               ))}
             </ul>
             <Link to="/package-request" className="block text-center py-3 rounded-xl text-sm font-bold border border-blue-200 text-blue-700 hover:bg-blue-50 transition-all">
-              Request Monthly Retainer
+              Request Retainer / Termly Pass
             </Link>
           </div>
         </div>
