@@ -145,20 +145,22 @@ export default function Production() {
   }
 
   async function notifyClient(project: Project) {
-    if (!project.email || !project.deliverable_url) return
+    if (!project.deliverable_url) return
     setNotifying(project.id)
-    await supabase.functions.invoke('send-client-email', {
-      body: {
-        type: 'video_delivered',
-        to: project.email,
-        name: project.contact_name ?? project.business_name,
-        businessName: project.business_name,
-        deliverableLabel: project.deliverable_label ?? 'Your video',
-        deliverableUrl: project.deliverable_url,
-        projectToken: project.token,
-        balanceDue: project.balance_due,
-      },
-    })
+    if (project.email) {
+      await supabase.functions.invoke('send-client-email', {
+        body: {
+          type: 'video_delivered',
+          to: project.email,
+          name: project.contact_name ?? project.business_name,
+          businessName: project.business_name,
+          deliverableLabel: project.deliverable_label ?? 'Your video',
+          deliverableUrl: project.deliverable_url,
+          projectToken: project.token,
+          balanceDue: project.balance_due,
+        },
+      })
+    }
     await updateStatus(project.id, 'delivered')
     if (project.phone) {
       const phoneNum = project.phone.replace(/\D/g, '').replace(/^0/, '254')

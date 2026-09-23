@@ -101,8 +101,9 @@ export default function ProposalView() {
           lastName: nameParts.slice(1).join(' ') || 'Client',
         },
       })
-      if (fnErr || !data?.redirectUrl) throw new Error(data?.error ?? 'Payment initiation failed')
-      window.location.href = data.redirectUrl as string
+      const redirect = data?.redirectUrl || data?.redirect_url
+      if (fnErr || !redirect) throw new Error(data?.error ?? fnErr?.message ?? 'Payment initiation failed')
+      window.location.href = redirect as string
     } catch (e: unknown) {
       setPayError(e instanceof Error ? e.message : 'Could not initiate payment. Please try again.')
       setPaying(false)

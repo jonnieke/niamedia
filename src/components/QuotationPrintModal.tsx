@@ -54,10 +54,11 @@ export default function QuotationPrintModal({ isOpen, onClose, data }: Quotation
       `🔒 *70% Milestone Deposit:* KES ${data.depositAmount.toLocaleString()}\n` +
       `✅ *30% Balance on Delivery:* KES ${data.balanceAmount.toLocaleString()}\n\n` +
       `*Included Deliverables:*\n` +
-      `✔ Full AI visual scenes with human-polished editing\n` +
-      `✔ Professional voiceover & licensed soundtrack\n` +
+      `✔ ${data.videoLength} Commercial Video (${data.visualStyle || 'Live-Action / 2D / 3D / AI'})\n` +
+      `✔ Matching branded promotional poster for WhatsApp & social feeds\n` +
+      `✔ Professional Kenyan or Global human studio voiceover & mastering\n` +
       `✔ 2 free revision rounds\n` +
-      `✔ Full commercial ownership rights\n\n` +
+      `✔ 100% full commercial broadcast rights\n\n` +
       `View quotation online or pay deposit: https://niamedia.co.ke/quote`
 
     navigator.clipboard.writeText(text).then(() => {
@@ -188,6 +189,14 @@ export default function QuotationPrintModal({ isOpen, onClose, data }: Quotation
                 </td>
                 <td className="py-2.5 text-right text-gray-600">Included</td>
                 <td className="py-2.5 text-right text-emerald-600 font-semibold">Full 4K / HD</td>
+              </tr>
+              <tr>
+                <td className="py-2.5 font-medium text-gray-900">
+                  Matching Branded Promotional Poster
+                  <span className="block text-[10px] text-gray-500 mt-0.5">High-resolution graphic flyer for WhatsApp broadcast & social feed</span>
+                </td>
+                <td className="py-2.5 text-right text-gray-600">Included</td>
+                <td className="py-2.5 text-right text-emerald-600 font-semibold">100% Commercial</td>
               </tr>
             </tbody>
           </table>

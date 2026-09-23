@@ -11,11 +11,19 @@ const PUBLIC_ROUTES: Record<string, { title: string; description: string }> = {
   },
   '/pricing': {
     title: 'Video Commercial Pricing in Kenya | Nia Media',
-    description: 'Transparent Kenya pricing for 15-second promos, social commercials, campaign videos, infomercials, voiceovers, posters, and rush delivery.',
+    description: 'Transparent Kenya pricing for 30-second standard commercials, social hooks, campaign videos, infomercials, voiceovers, posters, and monthly retainers.',
   },
   '/quote': {
     title: 'Get an Instant Video Commercial Quote | Nia Media',
-    description: 'Estimate the cost of your business video by duration, platforms, delivery speed, posters, and subtitles. No account required.',
+    description: 'Estimate the cost of your business video by duration, platforms, delivery speed, posters, and subtitles. Dual KES and USD pricing.',
+  },
+  '/test-brand': {
+    title: 'AI Brand & Commercial Viability Studio | Nia Media',
+    description: 'Benchmark your product against Kenyan competitors, calculate customer uptake %, test unit economics & pricing elasticity in KES and USD.',
+  },
+  '/survey': {
+    title: 'Experience Survey & Marketing Feedback | Nia Media',
+    description: 'Share your video production experience and tell us what tools and content formats your business needs next.',
   },
   '/portfolio': {
     title: 'Video Commercial Portfolio | Nia Media Kenya',
